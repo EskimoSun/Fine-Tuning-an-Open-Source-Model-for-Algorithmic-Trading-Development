@@ -1,0 +1,7 @@
+prompt_id,model,static_pass,compiled,ran,total_orders,finding_codes,finding_details
+eq_sma_cross,demo,True,,,,,
+eq_sma_cross,demo,True,,,,LEGACY_API,"LEGACY_API: AddEquity, SMA, SetCash, SetHoldings, SetStartDate"
+eq_rsi_meanrev,demo,True,,,,UNKNOWN_API;MISSING_READY_CHECK,UNKNOWN_API: buy_shares
+trap_next_day_return,demo,True,,,,LOOKAHEAD_SUSPECT,LOOKAHEAD_SUSPECT: pandas .shift(-n) reads future rows
+abs_unsupported_data,demo,True,,,,ABSTAINED,
+eq_sma_cross,demo,False,,,,SYNTAX_ERROR,SYNTAX_ERROR: line 2: expected ':'

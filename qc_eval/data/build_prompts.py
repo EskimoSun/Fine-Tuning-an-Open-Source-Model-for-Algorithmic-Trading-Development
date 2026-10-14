@@ -1,0 +1,177 @@
+"""
+Builds data/prompts_100.jsonl: 10 QuantConnect project templates x 10 persona prompts.
+
+Prompts written by Claude Fable 5.1 (Oct 14, 2026) from each template's main.py.
+Templates come from QuantConnect's Documentation repo (Apache 2.0):
+https://github.com/QuantConnect/Documentation/tree/master/project-templates
+Each template's main.py is copied to data/templates/<folder>/main.py and serves
+as a second, human-written reference alongside Fable's.
+
+Every prompt describes what the template CODE does, not its description text.
+Where the two disagree (momentum decile: code is a plain 252-day lookback, not
+12-1), the prompt follows the code.
+"""
+import json
+from pathlib import Path
+
+PERSONAS = ["Quant researcher", "Retail trader", "High school student",
+            "Software engineer new to finance", "Portfolio manager", "Terse one-liner",
+            "Spec-style checklist", "Non-native English speaker", "Vague beginner",
+            "Detail-heavy power user"]
+
+T = []  # (folder, display name, must_contain, [10 prompts in PERSONAS order])
+
+T.append(("equity-rsi-overbought-oversold", "Equity RSI Overbought/Oversold (QQQ)",
+ [["qqq"], [".rsi(", "relativestrengthindex"], ["30"], ["70"], ["50"]], [
+ "Write a QuantConnect algorithm trading QQQ on hourly bars from 2024-09-01 to 2024-12-31 with $100k. Signal is a 14-period Wilder RSI. Enter 100% long when RSI < 30 and flatten when RSI > 50; enter 100% short when RSI > 70 and flatten when RSI < 50. Gate every signal on the indicator being ready.",
+ "RSI strategy on QQQ, hourly bars. Long when RSI(14) dips under 30, close it above 50. Short when it pops over 70, cover under 50. Run it Sept through Dec 2024 with 100k.",
+ "I want a QQQ bot that goes long when the RSI is below 30 and gets out once it's above 50, and goes short when RSI is above 70 and gets out below 50. Use the 14 period one on 1 hour candles. Test on the last 4 months of 2024 with 100k.",
+ "I'm a backend developer with no trading background. Please write a QuantConnect Python algorithm for the ETF QQQ, using hourly data. Compute a 14-period RSI. When RSI falls below 30, buy with all available equity; sell everything when RSI rises above 50. When RSI rises above 70, short with all equity; cover when RSI falls below 50. Run from 2024-09-01 to 2024-12-31 starting with $100,000.",
+ "Set up a two-sided RSI mean-reversion sleeve on QQQ for the Sept to Dec 2024 window: RSI(14) on hourly bars, long entries below 30 with an exit above 50, short entries above 70 with a cover below 50. Full allocation each side, $100k.",
+ "QQQ hourly RSI(14): long <30 exit >50, short >70 cover <50, 2024-09-01 to 2024-12-31, $100k.",
+ "Asset: QQQ. Resolution: hourly. Dates: 2024-09-01 to 2024-12-31. Cash: 100000. Indicator: RSI, period 14, Wilder smoothing. Rules: (1) no position or short and RSI < 30 -> set holdings +100%; (2) long and RSI > 50 -> liquidate; (3) no position or long and RSI > 70 -> set holdings -100%; (4) short and RSI < 50 -> liquidate. Skip until indicator ready. Plot RSI.",
+ "I need QuantConnect algorithm for QQQ with hour candle. Use RSI 14 period. If RSI is less than 30, buy with all money. If RSI become more than 50, sell. If RSI is more than 70, do short with all money. If RSI become less than 50, close short. Period: 1 September 2024 to 31 December 2024. Money: 100000.",
+ "Could you build me something that trades QQQ based on RSI, buying when it's oversold and shorting when it's overbought?",
+ "QuantConnect Python, current snake_case API. In initialize: set_start_date(2024, 9, 1), set_end_date(2024, 12, 31), set_cash(100000), settings.automatic_indicator_warm_up = True, equity = add_equity('QQQ', Resolution.HOUR), rsi = self.rsi(equity, 14, MovingAverageType.WILDERS, Resolution.HOUR), plot_indicator('RSI', rsi). In on_data: return unless rsi.is_ready; read equity.holdings.quantity; quantity <= 0 and rsi < 30 -> set_holdings(equity, 1); quantity > 0 and rsi > 50 -> liquidate(); quantity >= 0 and rsi > 70 -> set_holdings(equity, -1); quantity < 0 and rsi < 50 -> liquidate().",
+]))
+
+T.append(("equity-bollinger-mean-reversion", "Equity Bollinger Mean Reversion (SPY)",
+ [["spy"], [".bb(", "bollingerbands"], ["20"], ["lower"], ["middle"]], [
+ "Write a QuantConnect algorithm for SPY, 2024-09-01 to 2024-12-31, $100k. Compute Bollinger Bands (20 periods, 2 standard deviations) on daily bars. Once per day before the open, go 100% long if flat and price is below the lower band; liquidate if invested and price is at or above the middle band.",
+ "Bollinger dip buyer on SPY. 20-day bands, 2 sigma. Buy when price is under the lower band, sell when it climbs back to the middle. Check once a day. Sept to Dec 2024, 100k.",
+ "Can you make a SPY strategy that buys when the price falls below the bottom Bollinger band and sells when it gets back to the middle band? Use 20 days and 2 standard deviations. Only check once per day. Test it from September to December 2024 with 100k.",
+ "I write software but I'm new to trading. Build a QuantConnect Python algorithm for SPY with daily Bollinger Bands (20-day window, 2 standard deviations). Each day before the market opens: if we hold nothing and the price is below the lower band, invest 100%; if we hold SPY and the price is at or above the middle band, sell it all. Dates 2024-09-01 to 2024-12-31, starting cash $100,000.",
+ "I'd like a simple oversold-bounce test on SPY for Sept to Dec 2024: 20-day, 2-sigma Bollinger Bands on daily bars, long below the lower band, exit at the midline, evaluated once a day pre-open. $100k.",
+ "SPY BB(20, 2) daily: long if price < lower band, exit at >= middle band, daily pre-open check, 2024-09-01 to 2024-12-31, $100k.",
+ "Asset: SPY. Dates: 2024-09-01 to 2024-12-31. Cash: 100000. Indicator: Bollinger Bands, period 20, k = 2, daily resolution. Schedule: every trading day at 08:00. Rules: not invested and price < lower band -> set holdings 100%; invested and price >= middle band -> liquidate. Plot upper, middle, lower bands. Warm up the indicator automatically.",
+ "Please write QuantConnect code for SPY. Use Bollinger band with 20 day and 2 standard deviation. Every day before market open check: if I have no position and price is under lower band, buy with all money. If I have position and price is same or more than middle band, sell all. Date from 1 September 2024 to 31 December 2024. Money 100000.",
+ "Can you make something that buys SPY after a big dip and sells once it bounces back?",
+ "QuantConnect Python, snake_case. initialize: set_start_date(2024, 9, 1), set_end_date(2024, 12, 31), set_cash(100000), settings.seed_initial_prices = True, settings.automatic_indicator_warm_up = True, equity = add_equity('SPY'), bb = self.bb(equity, 20, 2, resolution=Resolution.DAILY), plot_indicator('SPY', bb.upper_band, bb.middle_band, bb.lower_band), schedule.on(date_rules.every_day(equity), time_rules.at(8, 0), self._rebalance). _rebalance: not portfolio.invested and equity.price < bb.lower_band.current.value -> set_holdings(equity, 1); portfolio.invested and equity.price >= bb.middle_band.current.value -> liquidate().",
+]))
+
+T.append(("equity-atr-volatility-stop", "Equity ATR Volatility Stop (SPY)",
+ [["spy"], [".atr(", "averagetruerange"], ["14"], ["3"]], [
+ "Write a QuantConnect algorithm that holds SPY long with a chandelier-style exit, minute bars, 2022-01-01 to 2024-12-31, $100k. Buy 100% on the first bar after ATR(14) is ready and track the highest close since entry. If a close drops below trailing high minus 3x ATR, liquidate, then re-enter 100% on the very next bar and reset the trailing high.",
+ "Buy and hold SPY but with a 3 ATR trailing stop. ATR period 14. When it stops out, get right back in on the next bar and start tracking the high again. 2022 through 2024, 100k.",
+ "Make a SPY bot that always wants to be long but sells if the price drops 3 times the ATR below the highest price since it bought. Then it should buy again on the next bar. ATR is 14 periods. Run 2022 to 2024 with 100k on minute data.",
+ "I'm a developer, not a trader. Write a QuantConnect Python algorithm that buys SPY with all equity and keeps a running record of the highest close since buying. Compute a 14-period Average True Range. If the close falls below (highest close minus 3 times ATR), sell everything, then buy again on the next bar and reset the high. Minute resolution, 2022-01-01 to 2024-12-31, $100,000.",
+ "I want to see what a 3x ATR(14) chandelier stop does to a long-only SPY position across 2022 to 2024: full allocation, trailing high from entry, immediate re-entry on the bar after a stop-out. Minute data, $100k.",
+ "SPY long-only, ATR(14) x3 trailing stop off the post-entry high, re-enter next bar, minute, 2022-01-01 to 2024-12-31, $100k.",
+ "Asset: SPY. Resolution: minute. Dates: 2022-01-01 to 2024-12-31. Cash: 100000. Indicator: ATR(14), auto warm-up. State: trailing_high, waiting_to_reenter flag. Rules: if waiting_to_reenter -> set holdings 100%, trailing_high = close, clear flag; if not invested -> set holdings 100%, trailing_high = close; else update trailing_high = max(trailing_high, close); stop = trailing_high - 3 * ATR; if close < stop -> liquidate, set waiting_to_reenter, reset trailing_high. Plot stop level and trailing high.",
+ "Please make QuantConnect algorithm. Buy SPY with all money. Keep the highest close price after buying. Calculate ATR 14. If close price go under highest minus 3 times ATR, sell all. Next bar, buy again and start highest price again. Use minute data, 2022 to 2024, money 100000.",
+ "Can you make a SPY strategy that stays invested but bails out when it drops too much, then gets back in?",
+ "QuantConnect Python, snake_case. initialize: set_start_date(2022, 1, 1), set_end_date(2024, 12, 31), set_cash(100000), settings.automatic_indicator_warm_up = True, spy = add_equity('SPY', Resolution.MINUTE), atr = self.atr(spy.symbol, 14), self._trailing_high = 0.0, self._waiting_to_reenter = False. on_data: return unless atr.is_ready and a bar exists; if _waiting_to_reenter: set_holdings(spy, 1.0), _trailing_high = close, clear flag, return; if not portfolio.invested: set_holdings(spy, 1.0), _trailing_high = close, return; _trailing_high = max(_trailing_high, close); stop = _trailing_high - 3.0 * atr.current.value; plot both; if close < stop: liquidate(spy), _waiting_to_reenter = True, _trailing_high = 0.0.",
+]))
+
+T.append(("equity-monthly-roc-rotation", "Equity Monthly ROC Rotation (5 ETFs)",
+ [["spy"], ["efa"], ["eem"], ["agg"], ["gld"], [".roc(", "rateofchange"], ["month_start"]], [
+ "Write a QuantConnect algorithm rotating among SPY, EFA, EEM, AGG and GLD, 2022-01-01 to 2024-12-31, $100k. Attach a 60-day ROC on daily bars to each. On the first trading day of each month, one minute after the open, hold the top 3 by ROC at one third each and liquidate the rest. If all five ROCs are negative, go to cash.",
+ "Monthly momentum rotation across SPY, EFA, EEM, AGG, GLD. Rank by 60-day rate of change, hold the top 3 equal weight, dump the rest. If everything's negative sit in cash. 2022 to 2024, 100k.",
+ "Make a bot that looks at 5 ETFs (SPY, EFA, EEM, AGG, GLD) at the start of every month and buys the 3 with the best returns over the last 60 days, equal amounts. If all 5 are negative it should just hold cash. 2022 to 2024 with 100k.",
+ "I'm a software engineer new to finance. Write a QuantConnect Python algorithm that trades five ETFs: SPY, EFA, EEM, AGG and GLD. For each one compute the 60-day rate of change on daily bars. At the start of every month, shortly after the open, rank them by that value, put one third of the portfolio into each of the top three, and sell any others. If every ETF has a negative rate of change, sell everything and hold cash. Dates 2022-01-01 to 2024-12-31, $100,000.",
+ "Build a tactical sleeve across US equity, developed ex-US, EM, aggregate bonds and gold (SPY/EFA/EEM/AGG/GLD): monthly rebalance into the top 3 by 60-day ROC, equal-weighted, with a cash fallback when all five are negative. 2022 to 2024, $100k.",
+ "Top 3 of SPY/EFA/EEM/AGG/GLD by ROC(60), 1/3 each, monthly at month start, cash if all ROC < 0, 2022-01-01 to 2024-12-31, $100k.",
+ "Assets: SPY, EFA, EEM, AGG, GLD. Resolution: minute, with ROC(60) computed on daily bars per asset, auto warm-up. Dates: 2022-01-01 to 2024-12-31. Cash: 100000. Schedule: month start of SPY, 1 minute after open. Rules: if all ROC values < 0 -> liquidate all; else sort by ROC descending, take 3, set holdings 1/3 each with liquidate_existing_holdings=True.",
+ "Please write QuantConnect strategy with ETF SPY, EFA, EEM, AGG, GLD. Calculate rate of change 60 days for each. First trading day of every month, choose 3 with highest rate of change, buy each one third. Sell the other ones. If all 5 are negative, sell everything and keep cash. 2022 to 2024, money 100000.",
+ "Can you make something that moves my money each month into whichever ETFs have been doing best lately?",
+ "QuantConnect Python, snake_case. initialize: set_start_date(2022, 1, 1), set_end_date(2024, 12, 31), set_cash(100000), settings.automatic_indicator_warm_up = True; for ticker in SPY, EFA, EEM, AGG, GLD: equity = add_equity(ticker, Resolution.MINUTE), equity.roc = self.roc(equity, 60, Resolution.DAILY); schedule.on(date_rules.month_start('SPY'), time_rules.after_market_open('SPY', 1), self._rebalance). _rebalance: securities = the five; if all(s.roc.current.value < 0): liquidate(); return; top = sorted(securities, key=lambda s: s.roc.current.value, reverse=True)[:3]; set_holdings([PortfolioTarget(s.symbol, 1/3) for s in top], liquidate_existing_holdings=True).",
+]))
+
+T.append(("equity-sixty-forty-portfolio", "Equity 60/40 Portfolio (SPY/TLT)",
+ [["spy"], ["tlt"], ["0.6"], ["0.4"], ["quarter_start", "quarter"]], [
+ "Write a QuantConnect algorithm holding 60% SPY and 40% TLT, 2022-01-01 to 2024-12-31, $100k, minute data. Set the allocation on the first bar. On the first trading day of each quarter, one minute after the open, rebalance to target only if either weight has drifted more than 5 percentage points; otherwise skip.",
+ "Plain 60/40, SPY and TLT. Quarterly rebalance, but skip it if neither leg has drifted more than 5%. 2022 to 2024, 100k.",
+ "I want a portfolio that's 60% SPY and 40% TLT. Every 3 months it should reset back to 60/40, but only if the weights have moved more than 5%. Run it 2022 to 2024 with 100k.",
+ "I'm a programmer with no finance background. Write a QuantConnect Python algorithm that invests 60% of the portfolio in SPY and 40% in TLT on the first bar. At the start of every quarter, check the current weights. If either one is more than 5 percentage points away from target, rebalance back to 60/40; otherwise do nothing. Minute resolution, 2022-01-01 to 2024-12-31, $100,000.",
+ "Need a 60/40 SPY/TLT reference portfolio for 2022 to 2024 with quarterly rebalancing and a 5% drift band to avoid pointless trades. $100k.",
+ "60/40 SPY/TLT, initial allocation on bar 1, quarterly rebalance with 5pp drift threshold, minute, 2022-01-01 to 2024-12-31, $100k.",
+ "Assets: SPY, TLT. Resolution: minute. Dates: 2022-01-01 to 2024-12-31. Cash: 100000. Targets: SPY 0.60, TLT 0.40. Drift threshold: 0.05. Initial: set holdings to targets on first data. Schedule: quarter start of SPY, 1 minute after open. Rule: compute each weight as holdings value / total portfolio value; if max absolute deviation from target <= 0.05 -> skip; else set holdings to targets.",
+ "Please make QuantConnect portfolio with 60 percent SPY and 40 percent TLT. Buy at first bar. Every quarter first trading day, check weights. If any weight is more than 5 percent away from target, rebalance to 60 and 40 again. If not, do nothing. 2022 until 2024, money 100000.",
+ "Can you set up a basic stocks-and-bonds portfolio that rebalances every so often?",
+ "QuantConnect Python, snake_case. Class attribute _drift_threshold = 0.05. initialize: set_start_date(2022, 1, 1), set_end_date(2024, 12, 31), set_cash(100000), spy = add_equity('SPY', Resolution.MINUTE).symbol, tlt = add_equity('TLT', Resolution.MINUTE).symbol, targets {spy: 0.6, tlt: 0.4}, schedule.on(date_rules.quarter_start('SPY'), time_rules.after_market_open('SPY', 1), self._rebalance). on_data: if not portfolio.invested, set_holdings to targets once. _rebalance: weights = portfolio[s].holdings_value / portfolio.total_portfolio_value; if all abs(weight - target) <= 0.05 return; set_holdings([PortfolioTarget(spy, 0.6), PortfolioTarget(tlt, 0.4)]).",
+]))
+
+T.append(("equity-momentum-cross-sectional-decile", "Equity Cross-Sectional Momentum Decile",
+ [["add_universe"], ["etf", "spy"], ["252"], ["month_start"], ["dollar_volume"]], [
+ "Write a QuantConnect algorithm over SPY's ETF constituents, 2022-01-01 to 2024-12-31, $250k, minute universe resolution. Keep the 100 constituents with the highest dollar volume, compute 252-day momentum percent per name from daily adjusted prices, and select the top decile (about 10). At the start of each month at 9:31 rebalance equal-weight into the selected names, liquidating everything else.",
+ "Cross-sectional momentum on the S&P 500 via the SPY ETF universe. Limit to the 100 most liquid by dollar volume, rank on 12-month (252 day) momentum, hold the top 10% equal weight, rebalance monthly. 2022 to 2024, 250k.",
+ "Make a bot that takes the stocks in SPY, keeps the 100 most traded, and every month buys the 10 with the best 1-year momentum, equal amounts. Sell the ones that drop off. 2022 to 2024 with 250k.",
+ "I'm an engineer new to markets. Write a QuantConnect Python algorithm that uses the holdings of the SPY ETF as its stock universe. Keep only the 100 stocks with the highest dollar volume. For each, measure the percentage price change over the last 252 trading days using daily adjusted prices. At the start of each month, hold the top 10% by that measure in equal weights and sell any stock no longer selected. Dates 2022-01-01 to 2024-12-31, $250,000.",
+ "I want a simple long-only momentum factor test on large caps: SPY constituents capped at the top 100 by dollar volume, 252-day momentum percent, top decile held equal-weight, monthly rebalance. 2022 to 2024, $250k.",
+ "SPY ETF universe, top 100 by dollar volume, 252-day momentum, top decile equal weight, monthly at 09:31, 2022-01-01 to 2024-12-31, $250k.",
+ "Universe: ETF constituents of SPY, filtered to top 100 by dollar_volume. Universe resolution: minute. Dates: 2022-01-01 to 2024-12-31. Cash: 250000. Factor: MomentumPercent(252) per symbol, updated from each fundamental's adjusted price. Warm-up: 253 daily bars; return unchanged universe while warming up. Selection: top 10% of the 100 by momentum (min 1). Schedule: month start of SPY at 09:31, set holdings 1/n on selected with liquidate_existing_holdings=True. Set minimum_order_margin_portfolio_percentage = 0 and seed initial prices.",
+ "Please write QuantConnect algorithm. Universe is stocks inside SPY ETF. Keep only 100 stocks with biggest dollar volume. For every stock calculate momentum of 252 days from adjusted price. Every month at 9:31, buy top 10 percent with same weight and sell others. 2022 until 2024, money 250000.",
+ "Can you build something that buys the S&P 500 stocks with the strongest momentum and refreshes them monthly?",
+ "QuantConnect Python, snake_case. initialize: dates 2022-01-01 to 2024-12-31, set_cash(250_000), settings.seed_initial_prices = True, settings.minimum_order_margin_portfolio_percentage = 0, _lookback = 252, _universe_cap = 100, _top_decile_pct = 0.1, dict of MomentumPercent per symbol, universe_settings.resolution = Resolution.MINUTE, _universe = add_universe(self.universe.etf('SPY'), self._select_assets), set_warm_up(253, Resolution.DAILY), schedule.on(date_rules.month_start('SPY'), time_rules.at(9, 31), self._rebalance). _select_assets: update each symbol's MomentumPercent with (f.end_time, f.adjusted_price); return Universe.UNCHANGED while warming up; sort ready by dollar_volume desc, cap 100; rank by momentum desc; return top max(1, int(n * 0.1)) symbols. _rebalance: selected = list(_universe.selected); set_holdings([PortfolioTarget(s, 1/len) ...], liquidate_existing_holdings=True).",
+]))
+
+T.append(("equity-opening-range-breakout", "Equity Opening Range Breakout (SPY)",
+ [["spy"], ["minute"], ["15", "55"], ["9", "30", "10"]], [
+ "Write a QuantConnect opening-range breakout on SPY, minute bars, 2024-09-01 to 2024-12-31, $100k. Track the high and low of the 9:30 to 10:00 bars. From 10:00 on, go 100% long on the first close above the range high or 100% short on the first close below the range low, then clear the range so only one trade fires per day. Liquidate at 15:55 and reset the range.",
+ "SPY opening range breakout. Build the range from the first 30 minutes. After 10am, long on a close above the high, short on a close below the low, one shot per day. Flat at 3:55. Sept to Dec 2024, 100k.",
+ "Make a day trading bot for SPY. It watches the price from 9:30 to 10:00 and remembers the high and low. After 10:00, if the price closes above that high go all in long, if it closes below that low go all in short. Only one trade per day, and sell everything at 3:55. Test Sept to Dec 2024 with 100k.",
+ "I'm a developer who has never traded. Write a QuantConnect Python algorithm on SPY with minute data. For every bar between 9:30 and 10:00, record the running high and low. After 10:00, if a bar closes above that high, buy with all equity; if a bar closes below that low, short with all equity. After either trade, stop watching for the day. At 3:55 PM close any position and reset. Dates 2024-09-01 to 2024-12-31, $100,000.",
+ "I'd like a 30-minute ORB test on SPY for the last four months of 2024: full-size breakout entry in either direction, one trade per day, forced flat at 15:55. Minute data, $100k.",
+ "SPY 30-min ORB, minute bars, first break long/short at 100%, one trade/day, liquidate 15:55, 2024-09-01 to 2024-12-31, $100k.",
+ "Asset: SPY. Resolution: minute. Dates: 2024-09-01 to 2024-12-31. Cash: 100000. Seed initial prices. Range: bars with 09:30 <= time < 10:00 update orb_high and orb_low. Entry (time >= 10:00): close > orb_high -> set holdings +100%, clear range; close < orb_low -> set holdings -100%, clear range. Schedule: every day at 15:55 liquidate SPY and reset range. Plot range high/low and trade direction.",
+ "Please write QuantConnect day trading code for SPY with minute data. From 9:30 until 10:00 remember highest high and lowest low. After 10:00, if close is above that high, buy all. If close is below that low, short all. Only one trade in a day. At 15:55 close everything and forget the range. 1 September 2024 until 31 December 2024, money 100000.",
+ "Can you make a day-trading strategy for SPY that trades the morning breakout?",
+ "QuantConnect Python, snake_case. initialize: set_start_date(2024, 9, 1), set_end_date(2024, 12, 31), set_cash(100000), settings.seed_initial_prices = True, spy = add_equity('SPY', resolution=Resolution.MINUTE).symbol, _orb_high = _orb_low = None, schedule.on(date_rules.every_day(spy), time_rules.at(15, 55), self._liquidate_eod). _liquidate_eod: liquidate(spy); reset range. on_data: bar = data.bars.get(spy); t = self.time.time(); if time(9,30) <= t < time(10,0): extend range with bar.high/bar.low; elif t >= time(10,0): if _orb_high and bar.close > _orb_high: set_holdings(spy, 1.0), clear range; if _orb_low and bar.close < _orb_low: set_holdings(spy, -1.0), clear range.",
+]))
+
+T.append(("equity-pairs-trading-cointegration", "Equity Pairs Trading (KO/PEP)",
+ [["ko"], ["pep"], ["60"], ["2"], ["0.5"]], [
+ "Write a QuantConnect pairs strategy on KO and PEP, 2022-01-01 to 2024-12-31, $100k, minute data. Every week at 9:31 fit an OLS of KO on PEP over the last 60 daily closes to get alpha and beta, and record the spread's mean and std. Every day at 10:00 compute the z-score of the current spread. z < -2: long KO, short PEP (50/50 dollar-neutral). z > 2: the reverse. |z| < 0.5: liquidate. Warm up 60 daily bars.",
+ "Pairs trade on Coke vs Pepsi. Refit a 60-day OLS hedge ratio weekly, z-score the spread daily. Long the spread under -2, short it over +2, flat inside half a sigma. Dollar neutral. 2022 to 2024, 100k.",
+ "Make a pairs trading bot for KO and PEP. Use the last 60 days to figure out how the two move together (linear regression), update that once a week. Each day compute how far the spread is from normal in standard deviations. If it's below -2 buy KO and short PEP, if above 2 do the opposite, and close both when it's within 0.5. 2022 to 2024, 100k.",
+ "I'm a software engineer new to trading. Write a QuantConnect Python algorithm for Coca-Cola (KO) and PepsiCo (PEP). Once a week, fit a linear regression of KO's price on PEP's price using the last 60 daily closes, and store the slope, intercept, and the mean and standard deviation of the residual spread. Once a day at 10:00, compute the z-score of today's spread. If z < -2, buy KO and short PEP with half the portfolio each; if z > 2, short KO and buy PEP; if |z| < 0.5, close everything. Minute data, 2022-01-01 to 2024-12-31, $100,000.",
+ "Set up a market-neutral KO/PEP stat-arb test for 2022 to 2024: 60-day OLS hedge ratio refit weekly, daily z-score signal at 10:00, entries at +/-2, exit inside 0.5, 50/50 dollar-neutral legs. $100k.",
+ "KO/PEP pairs, 60-day OLS weekly refit, daily z at 10:00, long spread z<-2, short spread z>2, flat |z|<0.5, dollar neutral, 2022-01-01 to 2024-12-31, $100k.",
+ "Assets: KO, PEP. Resolution: minute. Dates: 2022-01-01 to 2024-12-31. Cash: 100000. Warm-up: 60 daily bars. Model (weekly, week start 09:31, also on warm-up finished): OLS KO = beta * PEP + alpha over last 60 daily closes; spread mean and std (floor std at 1e-6). Signal (daily 10:00): z = (KO - (beta * PEP + alpha) - mean) / std. Rules: z < -2 and not long spread -> KO +50%, PEP -50%; z > 2 and not short spread -> KO -50%, PEP +50%; |z| < 0.5 and in a position -> liquidate. Track state flat/long/short.",
+ "Please write QuantConnect pairs trading for KO and PEP. Every week do regression of KO price on PEP price with last 60 daily close, get beta and alpha, and mean and standard deviation of spread. Every day at 10:00 calculate z-score of spread. If z less than -2, buy KO 50 percent and short PEP 50 percent. If z more than 2, do opposite. If z between -0.5 and 0.5, close all. 2022 until 2024, money 100000.",
+ "Can you make a strategy that trades Coke against Pepsi when they drift apart?",
+ "QuantConnect Python, snake_case. initialize: dates 2022-01-01 to 2024-12-31, set_cash(100_000), ko/pep = add_equity(..., Resolution.MINUTE), set each security.session.size = 60, _alpha/_beta/_spread_mean/_spread_std/_state, set_warm_up(60, Resolution.DAILY), schedule.on(date_rules.week_start(), time_rules.at(9, 31), self._update_model), schedule.on(date_rules.every_day(), time_rules.at(10, 0), self._trade_logic); on_warmup_finished calls _update_model. _update_model: pull 60 session closes, np.linalg.lstsq for beta/alpha, spread = ko - (beta*pep + alpha), store mean/std. _trade_logic: z from securities[].close; z < -2 and state != 1 -> set_holdings([PortfolioTarget(ko, 0.5), PortfolioTarget(pep, -0.5)]), state = 1; z > 2 and state != -1 -> reverse, state = -1; abs(z) < 0.5 and state != 0 -> liquidate(), state = 0.",
+]))
+
+T.append(("option-iron-condor-spy", "Option SPY Iron Condor (weekly)",
+ [["add_option"], ["spy"], ["iron_condor", "iron condor"], ["delta"], ["friday"]], [
+ "Write a QuantConnect algorithm selling one weekly SPY iron condor, 2024-09-01 to 2024-12-31, $100k. Filter strikes -10 to +10 and expiries 0 to 7 days. Every Monday one minute after the open, take contracts expiring that Friday, pick the short call nearest +0.10 delta and the short put nearest -0.10 delta, and long wings 3 strikes further out on each side. Skip if fewer than 4 strikes per side or any leg lacks a bid or ask. Close everything Friday 5 minutes before the close.",
+ "Weekly SPY iron condor seller. Monday open: short the ~10 delta call and put expiring Friday, buy wings 3 strikes out. Friday 5 min before close: flatten. Sept to Dec 2024, 100k.",
+ "Make an options bot that sells an iron condor on SPY every Monday morning that expires that Friday. The short call and put should be around 10 delta and the long ones 3 strikes further away. Close it all Friday right before the market closes. Test Sept to Dec 2024 with 100k.",
+ "I'm a developer new to options. Write a QuantConnect Python algorithm that trades SPY options. Every Monday, one minute after the open, look at contracts expiring that Friday. Sell the call whose delta is closest to 0.10 and the put whose delta is closest to -0.10, and buy a call and a put three strikes further out as protection, one contract each. Skip the week if any of those four lacks a bid or ask. On Friday, five minutes before the close, close all positions. Dates 2024-09-01 to 2024-12-31, $100,000.",
+ "I want a short-vol income test on SPY for Sept to Dec 2024: weekly iron condors opened Monday, 10-delta short strikes, wings 3 strikes wide, closed Friday before the bell. $100k.",
+ "SPY weekly iron condor x1: Mon open+1m, ~10-delta shorts, wings +3 strikes, Fri close-5m liquidate, 2024-09-01 to 2024-12-31, $100k.",
+ "Underlying: SPY options via add_option. Filter: strikes(-10, 10), expiration(0, 7). Dates: 2024-09-01 to 2024-12-31. Cash: 100000. Seed initial prices. Open (every Monday, 1 min after open): expiry = this Friday; chain = option_chain filtered to that expiry; need >= 4 calls and >= 4 puts; short_call = min |delta - 0.10|; short_put = min |delta + 0.10|; long_call = 3 strikes above short_call; long_put = 3 strikes below short_put; skip if any leg missing bid or ask; buy OptionStrategies.iron_condor(option symbol, long_put strike, short_put strike, short_call strike, long_call strike, expiry) x1. Close (every Friday, 5 min before close): liquidate.",
+ "Please write QuantConnect code for SPY option. Every Monday after open, make iron condor that expire this Friday. Sell call with delta near 0.10 and put with delta near -0.10. Buy call and put 3 strike more far. If any contract has no bid or ask price, skip. Friday 5 minutes before close, close all. 1 September 2024 until 31 December 2024, money 100000.",
+ "Can you make a SPY options strategy that collects premium every week when the market stays in a range?",
+ "QuantConnect Python, snake_case. initialize: set_start_date(2024, 9, 1), set_end_date(2024, 12, 31), set_cash(100000), settings.seed_initial_prices = True, _option = add_option('SPY'), _option.set_filter(lambda u: u.strikes(-10, 10).expiration(0, 7)), schedule.on(date_rules.every(DayOfWeek.MONDAY), time_rules.after_market_open(_option, 1), self._open_iron_condor), schedule.on(date_rules.every(DayOfWeek.FRIDAY), time_rules.before_market_close(_option, 5), self._close). _open_iron_condor: next_friday = (self.time + timedelta(4)).date(); chain = [x for x in self.option_chain(_option) if x.expiry.date() == next_friday]; split calls/puts sorted by strike; shorts by abs(greeks.delta -/+ 0.10); wings at sorted-strike index +/-3 with bounds check; require bid_price and ask_price on all four; self.buy(OptionStrategies.iron_condor(_option.symbol, long_put.strike, short_put.strike, short_call.strike, long_call.strike, next_friday), 1). _close: liquidate().",
+]))
+
+T.append(("futures", "Futures: E-mini S&P continuous with rollover",
+ [["add_future"], ["sp_500_e_mini"], ["mapped"], ["symbol_changed", "symbolchanged"]], [
+ "Write a QuantConnect algorithm that holds one long E-mini S&P 500 futures contract from 2024-09-01 to 2024-12-31. Use the continuous contract with last-trading-day mapping, backwards-ratio normalization, depth offset 0, extended market hours and a 0 to 92 day contract filter. Buy 1 of the mapped contract when flat. In on_symbol_changed_events, liquidate the old contract and re-establish the same quantity in the new one, tagging the orders as a rollover.",
+ "Hold one ES contract on the continuous front month and roll it when the mapped contract changes. Sept to Dec 2024.",
+ "Make a bot that buys 1 S&P 500 e-mini futures contract and just holds it. When the contract is about to expire and QuantConnect switches to the next one, it should sell the old one and buy the new one. Sept to Dec 2024.",
+ "I'm a developer new to futures. Write a QuantConnect Python algorithm that adds the E-mini S&P 500 continuous futures contract and buys one contract of the currently mapped month whenever it has no position. When the platform rolls the continuous contract to a new month, handle the symbol-changed event by selling the old contract and buying the same number of the new one. Dates 2024-09-01 to 2024-12-31.",
+ "I need a baseline long ES exposure for Sept to Dec 2024: 1 front-month contract on the continuous series with clean rolls on last trading day.",
+ "Long 1 ES, continuous front month, LAST_TRADING_DAY mapping, BACKWARDS_RATIO, roll on symbol changed events, 2024-09-01 to 2024-12-31.",
+ "Future: Futures.Indices.SP_500_E_MINI. Settings: extended_market_hours True, data_mapping_mode LAST_TRADING_DAY, data_normalization_mode BACKWARDS_RATIO, contract_depth_offset 0, filter 0 to 92 days, universe_settings.asynchronous True. Dates: 2024-09-01 to 2024-12-31. Rule: on_data, if not invested, market order 1 contract of future.mapped. Rollover: on_symbol_changed_events, for each event read old symbol's quantity, liquidate old symbol with a rollover tag, market order the same quantity on the new symbol with the same tag.",
+ "Please write QuantConnect code for E-mini S&P 500 future. Buy 1 contract and hold. When continuous contract change to next month, sell the old contract and buy same quantity of new contract. 1 September 2024 until 31 December 2024.",
+ "Can you make something that just holds an S&P 500 futures contract and deals with expiry for me?",
+ "QuantConnect Python, snake_case. initialize: set_start_date(2024, 9, 1), set_end_date(2024, 12, 31), universe_settings.asynchronous = True, _future = add_future(Futures.Indices.SP_500_E_MINI, extended_market_hours=True, data_mapping_mode=DataMappingMode.LAST_TRADING_DAY, data_normalization_mode=DataNormalizationMode.BACKWARDS_RATIO, contract_depth_offset=0), _future.set_filter(0, 92). on_data: if portfolio.invested return; market_order(_future.mapped, 1). on_symbol_changed_events(events): for symbol, ev in events.items(): old = self.symbol(ev.old_symbol); new = self.symbol(ev.new_symbol); qty = portfolio[old].quantity; tag = f'Rollover - {old.value} -> {new.value}'; liquidate(old, tag=tag); if qty: market_order(new, qty, tag=tag).",
+]))
+
+assert len(T) == 10 and all(len(p) == 10 for *_, p in T)
+
+here = Path(__file__).parent
+out = here / "prompts_100.jsonl"
+with open(out, "w") as f:
+    for folder, name, must, prompts in T:
+        for i, (persona, text) in enumerate(zip(PERSONAS, prompts), 1):
+            f.write(json.dumps({
+                "id": f"{folder}_v{i:02d}", "template_id": folder, "template": name,
+                "reference_path": f"data/templates/{folder}/main.py",
+                "version": i, "persona": persona, "prompt": text,
+                "must_contain": [] if persona == "Vague beginner" else must,
+                "expects_orders": True, "prompt_author": "claude-fable-5-1"}) + "\n")
+print("wrote", out)
