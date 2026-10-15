@@ -51,11 +51,14 @@ Generation file format, one line per output:
 
 ## Full pipeline (100-prompt baseline)
 
-`data/prompts_100.jsonl` has 10 of QuantConnect's own project templates x 10 personas.
+`data/prompts_100.jsonl` has 10 of QuantConnect's own project templates x 10 prompts:
+3 customer segments (individual, startup, institutional) x 3 specificity levels
+(vague, precise, over_specified), plus one ceiling prompt per template. The
+Summary tab breaks results out by segment and by specificity.
 Templates come from https://github.com/QuantConnect/Documentation/tree/master/project-templates
 (Apache 2.0); each template's `main.py` is copied to `data/templates/` as a
 human-written reference alongside Fable's. The 100 prompts were written by
-Claude Fable 5.1 on Oct 14, 2026 (see data/build_prompts.py); prompt text follows
+Claude Fable 5.1 on Oct 15, 2026 (see data/build_prompts.py); prompt text follows
 each template's code, not its description. `qc_eval/pipeline.py`
 generates code with each model, compiles and backtests it on QuantConnect, has
 Fable score fidelity to the prompt, and writes everything into

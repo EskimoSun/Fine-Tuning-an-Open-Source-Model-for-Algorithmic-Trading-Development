@@ -12,8 +12,9 @@ from openpyxl.worksheet.datavalidation import DataValidation
 FIRST_ROW = 3
 MODELS = ["fable", "qwen_base", "qwen_tuned"]
 # columns per model: compile errors, runtime errors, fidelity
-MODEL_COLS = {"fable": ("E", "F", "G"), "qwen_base": ("H", "I", "J"), "qwen_tuned": ("K", "L", "M")}
-HUMAN_FLAG_COL, HUMAN_SCORE_COL, NOTES_COL = "N", "O", "P"
+MODEL_COLS = {"fable": ("F", "G", "H"), "qwen_base": ("I", "J", "K"), "qwen_tuned": ("L", "M", "N")}
+HUMAN_FLAG_COL, HUMAN_SCORE_COL, NOTES_COL = "O", "P", "Q"
+SEGMENT_COL, SPEC_COL = "C", "D"
 
 _F = "Arial"
 _thin = Side(style="thin", color="BFBFBF")
@@ -36,7 +37,10 @@ def _legend(wb):
         ("QuantConnect Fine-Tuning Eval: Prompt x Error Sheet", None),
         ("", None),
         ("Purpose", "Count errors per prompt for Fable (reference), Qwen before fine-tuning and Qwen after fine-tuning, to show error reduction."),
-        ("Layout", "Results tab: one row per prompt. 10 code templates x 10 prompt versions (personas) = 100 rows. Column A is the template file (QuantConnect project-templates repo), included under data/templates/."),
+        ("Layout", "Results tab: one row per prompt. 10 code templates x 10 prompt versions = 100 rows. Column A is the template file (QuantConnect project-templates repo), included under data/templates/."),
+        ("Prompt grid", "Versions 1-9 = 3 customer segments x 3 specificity levels. Version 10 = ceiling prompt (near-pseudocode description of the template; every model should score well on it)."),
+        ("Segments", "individual: hobbyist vocabulary, single ticker, no constraints. startup: terse researcher shorthand, in a hurry. institutional: spec-style, mentions risk limits, compliance, matching an internal implementation."),
+        ("Specificity", "vague: key parameters left out, model must choose sensibly. precise: every parameter needed to reproduce the template. over_specified: precise plus extra requirements that do not change trading (logging, plotting, naming, style)."),
         ("How it's filled", "pipeline.py writes every score column automatically. Only the yellow Human columns are filled by hand."),
         ("Compile errors", "Number of error lines in the LEAN build log from the QC compile API. 0 if it builds."),
         ("Runtime errors", "1 if the QC backtest crashed, 0 if it completed. A crash stops the backtest, so this is 0 or 1. Blank if it did not compile."),
@@ -46,8 +50,8 @@ def _legend(wb):
         ("   3", "Core idea right but one key element wrong or missing (e.g. wrong SMA length, wrong exit rule)."),
         ("   2", "Recognizably the same strategy family, but several key elements wrong."),
         ("   1", "Does not implement the requested strategy."),
-        ("Vague prompts", "'Vague beginner' versions leave details out on purpose. Judge them on whether the code is a sensible version of the request, not on missing parameters."),
-        ("Human check", "pipeline.py marks 10 random rows Y. A team member reads Qwen base's code for those rows and enters a 1-5 fidelity score in column O. Summary compares it to Fable's score."),
+        ("Vague prompts", "Vague versions leave details out on purpose. Judge them on whether the code is a sensible version of the request, not on missing parameters."),
+        ("Human check", "pipeline.py marks 10 random rows Y. A team member reads Qwen base's code for those rows and enters a 1-5 fidelity score in column P. Summary compares it to Fable's score."),
         ("Notes", "Short error detail written by the pipeline (first compile error, runtime error, static-check warnings)."),
         ("", None),
         ("Data rule", "These 100 prompts are TEST ONLY. Do not use them, or Fable's reference strategies, as training data."),
@@ -64,8 +68,8 @@ def _legend(wb):
 
 def _results(wb, prompts):
     ws = wb.create_sheet("Results")
-    groups = [("Prompt", 1, 4), ("Fable (reference)", 5, 7), ("Qwen base (pre fine-tune)", 8, 10),
-              ("Qwen tuned (post fine-tune)", 11, 13), ("Human check", 14, 15), ("", 16, 16)]
+    groups = [("Prompt", 1, 5), ("Fable (reference)", 6, 8), ("Qwen base (pre fine-tune)", 9, 11),
+              ("Qwen tuned (post fine-tune)", 12, 14), ("Human check", 15, 16), ("", 17, 17)]
     for name, c1, c2 in groups:
         ws.merge_cells(start_row=1, start_column=c1, end_row=1, end_column=c2)
         cell = ws.cell(1, c1, name)
@@ -73,10 +77,10 @@ def _results(wb, prompts):
         cell.alignment = _center
         for c in range(c1, c2 + 1):
             ws.cell(1, c).fill = _hdr
-    headers = ["Code template", "Version", "Persona", "Prompt text"] + \
+    headers = ["Code template", "Version", "Segment", "Specificity", "Prompt text"] + \
               ["Compile errors", "Runtime errors", "Fidelity (1-5)"] * 3 + \
               ["Human checked (Y/N)", "Human fidelity, Qwen base (1-5)", "Notes"]
-    keys = [None] * 4 + ["Fable"] * 3 + ["Qwen base"] * 3 + ["Qwen tuned"] * 3 + ["Human"] * 2 + [None]
+    keys = [None] * 5 + ["Fable"] * 3 + ["Qwen base"] * 3 + ["Qwen tuned"] * 3 + ["Human"] * 2 + [None]
     for c, (h, k) in enumerate(zip(headers, keys), 1):
         cell = ws.cell(2, c, h)
         cell.font = _font(bold=True)
@@ -88,17 +92,17 @@ def _results(wb, prompts):
     for i, p in enumerate(prompts):
         r = FIRST_ROW + i
         tpl = p.get("reference_path", p["template"]).replace("data/templates/", "")
-        for c, v in enumerate([tpl, p["version"], p["persona"], p["prompt"]], 1):
+        for c, v in enumerate([tpl, p["version"], p.get("segment", ""), p.get("specificity", ""), p["prompt"]], 1):
             ws.cell(r, c, v)
-        for c in range(1, 17):
+        for c in range(1, 18):
             cell = ws.cell(r, c)
             cell.font = _font()
             cell.border = _border
-            cell.alignment = _wrap if c in (4, 16) else _center
+            cell.alignment = _wrap if c in (5, 17) else _center
         for col in (HUMAN_FLAG_COL, HUMAN_SCORE_COL):
             ws[f"{col}{r}"].fill = _input
         if (i // 10) % 2:
-            for c in (1, 2, 3):
+            for c in (1, 2, 3, 4):
                 ws.cell(r, c).fill = PatternFill("solid", fgColor="F2F2F2")
 
     dv_yn = DataValidation(type="list", formula1='"Y,N"', allow_blank=True)
@@ -108,11 +112,11 @@ def _results(wb, prompts):
     dv_yn.add(f"{HUMAN_FLAG_COL}{FIRST_ROW}:{HUMAN_FLAG_COL}{last}")
     dv_fid.add(f"{HUMAN_SCORE_COL}{FIRST_ROW}:{HUMAN_SCORE_COL}{last}")
 
-    widths = [38, 8, 22, 60, 10, 10, 10, 10, 10, 10, 10, 10, 10, 12, 14, 48]
+    widths = [38, 8, 13, 14, 60, 10, 10, 10, 10, 10, 10, 10, 10, 10, 12, 14, 48]
     for i, w in enumerate(widths, 1):
         ws.column_dimensions[ws.cell(2, i).column_letter].width = w
     ws.row_dimensions[2].height = 42
-    ws.freeze_panes = "E3"
+    ws.freeze_panes = "F3"
     return last
 
 
@@ -186,7 +190,32 @@ def _summary(wb, last):
                 fmt = "0.00"
             cell = sm.cell(rr, c, f)
             cell.font, cell.number_format, cell.alignment = _font(), fmt, _center
-    sm.column_dimensions["A"].width = 40
+    r = r + 2 + n_templates + 1
+    for title, col, values in [
+        ("Errors by customer segment (Qwen base vs tuned)", SEGMENT_COL, ["individual", "startup", "institutional", "reference"]),
+        ("Errors by prompt specificity (Qwen base vs tuned)", SPEC_COL, ["vague", "precise", "over_specified", "ceiling"]),
+    ]:
+        sm.cell(r, 1, title).font = _font(bold=True)
+        for c, h in enumerate(["Group", "Qwen base errors", "Qwen tuned errors", "Qwen base avg fidelity", "Qwen tuned avg fidelity"], 1):
+            cell = sm.cell(r + 1, c, h)
+            cell.font = _font(bold=True, color="FFFFFF")
+            cell.fill = _hdr
+            cell.alignment = _center
+        for k, v in enumerate(values):
+            rr = r + 2 + k
+            sm.cell(rr, 1, v).font = _font()
+            for c, (m, kind) in enumerate([("qwen_base", "err"), ("qwen_tuned", "err"), ("qwen_base", "fid"), ("qwen_tuned", "fid")], 2):
+                ce, re, fi = MODEL_COLS[m]
+                if kind == "err":
+                    f = f'=SUMIFS({rng(ce)},{rng(col)},"{v}")+SUMIFS({rng(re)},{rng(col)},"{v}")'
+                    fmt = "0"
+                else:
+                    f = f'=IFERROR(AVERAGEIFS({rng(fi)},{rng(col)},"{v}"),"-")'
+                    fmt = "0.00"
+                cell = sm.cell(rr, c, f)
+                cell.font, cell.number_format, cell.alignment = _font(), fmt, _center
+        r = r + 2 + len(values) + 1
+    sm.column_dimensions["A"].width = 44
     for col in "BCDE":
         sm.column_dimensions[col].width = 22
 
