@@ -21,6 +21,8 @@ reflects outputs you can point to on disk.
 """
 
 import argparse
+import ast
+import hashlib
 import json
 import os
 import random
@@ -137,22 +139,86 @@ def count_compile_errors(logs):
     return max(n, 1)  # a failed build has at least one error
 
 
-def run_on_qc(qc, project_id, code, name):
-    qc.update_main(project_id, code)
-    ok, compile_id, logs = qc.compile(project_id)
-    if not ok:
-        first = next((str(l) for l in logs if "error" in str(l).lower()), str(logs[:1]))
-        return {"compile_errors": count_compile_errors(logs), "runtime_errors": None,
-                "qc_note": f"compile: {first[:200]}"}
-    bt = qc.backtest(project_id, compile_id, name)
-    if bt["status"] == "completed":
-        stats = bt.get("statistics", {})
-        return {"compile_errors": 0, "runtime_errors": 0,
-                "total_orders": stats.get("Total Orders"), "statistics": stats, "qc_note": ""}
-    if bt["status"] == "timeout":
-        return {"compile_errors": 0, "runtime_errors": 1, "qc_note": "backtest timed out"}
-    return {"compile_errors": 0, "runtime_errors": 1,
-            "qc_note": f"runtime: {str(bt.get('error'))[:200]}"}
+def run_on_qc(qc, project_id, code, name, on_progress=None):
+    """Keep full QC evidence while exposing concise spreadsheet counters.
+
+    Runtime errors count failed executions (0/1), not individual log lines.
+    Compilation counts are diagnostic-line estimates, with at least one for
+    a failed build. Unknown outcomes (timeouts/infrastructure) remain None.
+    """
+    result = {"status": "running", "stage": "syntax",
+              "source": code, "source_sha256": hashlib.sha256(code.encode()).hexdigest(),
+              "started_at": datetime.now(timezone.utc).isoformat(),
+              "compile_errors": None, "runtime_errors": None,
+              "statistics": {}, "runtime_statistics": {}, "logs": [], "qc_note": ""}
+
+    def progress(update):
+        result.update(update)
+        if on_progress:
+            on_progress(result)
+
+    try:
+        progress({})
+        try:
+            ast.parse(code, filename="main.py")
+        except SyntaxError as exc:
+            progress({"status": "syntax_error", "error": str(exc),
+                      "line": exc.lineno, "offset": exc.offset, "compile_errors": 1,
+                      "qc_note": f"syntax: {str(exc)[:200]}"})
+            return result
+
+        if project_id is None:
+            progress({"stage": "create_project"})
+            project_id = qc.create_project(f"llm-eval-{name}-{time.time_ns()}")
+        progress({"project_id": project_id, "stage": "upload"})
+        qc.update_main(project_id, code)
+        progress({"stage": "compile"})
+        ok, compile_id, logs = qc.compile(project_id, on_progress=progress)
+        progress({"compile_id": compile_id, "compile_logs": logs})
+        if not ok:
+            first = next((str(l) for l in logs if "error" in str(l).lower()), str(logs[:1]))
+            progress({"status": "compile_error", "error": logs,
+                      "compile_errors": count_compile_errors(logs),
+                      "qc_note": f"compile: {first[:200]}"})
+            return result
+
+        progress({"compile_errors": 0, "stage": "backtest"})
+        bt = qc.backtest(project_id, compile_id, name, on_progress=progress)
+        progress({key: value for key, value in bt.items() if key != "raw"})
+        failed = bt["status"] == "runtime_error"
+        runtime_detail = bt.get("error") or bt.get("stacktrace") or "runtime or initialization failed"
+        progress({"runtime_errors": int(failed),
+                  "qc_note": f"runtime: {str(runtime_detail)[:200]}" if failed else "",
+                  "stage": "logs"})
+        try:
+            qc.read_logs(project_id, result["backtest_id"], on_progress=progress)
+        except Exception as exc:
+            # Log availability must not erase the actual execution outcome.
+            progress({"log_fetch_error": str(exc)})
+        progress({"stage": "finished"})
+    except TimeoutError as exc:
+        progress({"status": "timeout", "error": str(exc), "qc_note": str(exc)})
+    except KeyboardInterrupt:
+        progress({"status": "interrupted", "error": "Stopped locally; cloud job may still run",
+                  "qc_note": "QC evaluation interrupted"})
+        raise
+    except Exception as exc:
+        update = {"status": "infrastructure_error", "error": str(exc),
+                  "error_type": type(exc).__name__, "qc_note": f"infrastructure: {str(exc)[:200]}"}
+        if hasattr(exc, "endpoint") and hasattr(exc, "response"):
+            update["api_error"] = {"endpoint": exc.endpoint, "response": exc.response}
+        progress(update)
+    finally:
+        progress({"finished_at": datetime.now(timezone.utc).isoformat()})
+    return result
+
+
+def save_record(path, rec):
+    """Atomic checkpoints keep a stopped run inspectable and valid JSON."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(path.name + ".tmp")
+    temporary.write_text(json.dumps(rec, indent=2), encoding="utf-8")
+    temporary.replace(path)
 
 
 # ---------------------------------------------------------------- main loop
@@ -161,7 +227,7 @@ def load_prompts():
         return [json.loads(l) for l in f if l.strip()]
 
 
-def process(model, p, args, qc, project_ids):
+def process(model, p, args, qc):
     path = RUNS / model / f"{p['id']}.json"
     rec = json.loads(path.read_text()) if path.exists() else {}
 
@@ -180,16 +246,32 @@ def process(model, p, args, qc, project_ids):
                    judge_reason="no code returned", qc_note="no code")
     else:
         if qc is not None and ("compile_errors" not in rec or args.regenerate or args.rerun_qc):
-            if model not in project_ids:
-                project_ids[model] = qc.create_project(f"eval-{model}-{int(time.time())}")
-            rec.update(run_on_qc(qc, project_ids[model], code, p["id"]))
-        if "fidelity" not in rec or args.regenerate or args.rejudge:
-            rec["fidelity"], rec["judge_reason"] = judge(p["prompt"], code, mock=args.mock)
+            # Replace the QC subrecord on rerun so old errors/stats cannot leak.
+            for key in ("compile_errors", "runtime_errors", "total_orders", "statistics", "qc_note"):
+                rec.pop(key, None)
+
+            def checkpoint(qc_result):
+                rec["qc_evaluation"] = dict(qc_result)
+                for key in ("compile_errors", "runtime_errors", "total_orders", "statistics", "qc_note"):
+                    if key in qc_result:
+                        rec[key] = qc_result[key]
+                rec["note"] = rec.get("qc_note", "")
+                save_record(path, rec)
+
+            run_on_qc(qc, None, code, p["id"], on_progress=checkpoint)
+        if "fidelity" not in rec or "judge_error" in rec or args.regenerate or args.rejudge:
+            try:
+                rec["fidelity"], rec["judge_reason"] = judge(p["prompt"], code, mock=args.mock)
+            except Exception as exc:
+                rec["fidelity"] = None
+                rec["judge_error"] = str(exc)
+                rec["judge_reason"] = f"judge failed: {exc}"
+            else:
+                rec.pop("judge_error", None)
 
     warn = [f"{f.code}: {f.detail}" if f.detail else f.code for f in findings]
     rec["note"] = "; ".join(x for x in [rec.get("qc_note", ""), *warn] if x)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(rec, indent=2))
+    save_record(path, rec)
     return rec
 
 
@@ -218,13 +300,13 @@ def main():
     if not SHEET.exists():
         sheet.build(prompts, SHEET)
 
-    results, project_ids = {}, {}
+    results = {}
     for model in models:
         results[model] = {}
         for i, p in enumerate(todo, 1):
             try:
-                rec = process(model, p, args, qc, project_ids)
-            except Exception as e:  # keep going; failures are recorded, not hidden
+                rec = process(model, p, args, qc)
+            except Exception as e:  # QC failures are checkpointed inside run_on_qc
                 print(f"[{model}] {p['id']}: ERROR {e}")
                 continue
             results[model][p["id"]] = rec
