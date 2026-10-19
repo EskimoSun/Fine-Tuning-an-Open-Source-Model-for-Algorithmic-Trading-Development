@@ -18,8 +18,8 @@ import random
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from .static_checks import extract_code, run_static_checks
-from .taxonomy import Finding
+from ..src.qc_eval.static_checks import extract_code, run_static_checks
+from ..src.qc_eval.taxonomy import Finding
 
 HERE = Path(__file__).parent
 PROMPTS_FILE = HERE.parent / "prompts.jsonl"
@@ -140,7 +140,7 @@ def main():
     prompts = load_prompts()
     qc = None
     if args.backtest:
-        from .qc_client import QCClient
+        from ..src.qc_eval.qc_client import QCClient
         qc = QCClient()
 
     with open(args.generations) as f:
