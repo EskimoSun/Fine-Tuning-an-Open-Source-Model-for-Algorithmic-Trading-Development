@@ -34,6 +34,7 @@ from pathlib import Path
 import requests
 
 from . import sheet
+from .rubric import FIDELITY_RUBRIC
 from .static_checks import extract_code, run_static_checks
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -60,14 +61,7 @@ Code:
 {code}
 </code>
 
-Score fidelity to the request from 1 to 5:
-5 = every requested asset, indicator, parameter, entry/exit rule and date range is present and correct
-4 = all key elements present; one minor detail off
-3 = core idea right but one key element wrong or missing
-2 = same strategy family, several key elements wrong
-1 = does not implement the requested strategy
-If the request is vague, judge whether the code is a sensible version of it; do not penalize choices the request left open.
-Judge only what the code does, not style. Do not assume it runs.
+""" + FIDELITY_RUBRIC + """
 
 Reply with JSON only: {{"score": <1-5>, "reason": "<one sentence>"}}"""
 
@@ -259,7 +253,7 @@ def process(model, p, args, qc):
                 save_record(path, rec)
 
             run_on_qc(qc, None, code, p["id"], on_progress=checkpoint)
-        if "fidelity" not in rec or "judge_error" in rec or args.regenerate or args.rejudge:
+        if not args.skip_judge and ("fidelity" not in rec or "judge_error" in rec or args.regenerate or args.rejudge):
             try:
                 rec["fidelity"], rec["judge_reason"] = judge(p["prompt"], code, mock=args.mock)
             except Exception as exc:
@@ -284,6 +278,7 @@ def main():
     ap.add_argument("--regenerate", action="store_true", help="ignore cached generations")
     ap.add_argument("--rerun-qc", action="store_true")
     ap.add_argument("--rejudge", action="store_true")
+    ap.add_argument("--skip-judge", action="store_true", help="generate/evaluate only; use qc_eval.score for detailed judging later")
     ap.add_argument("--human-sample", type=int, default=10)
     args = ap.parse_args()
 

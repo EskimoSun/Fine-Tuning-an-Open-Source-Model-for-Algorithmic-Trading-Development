@@ -5,6 +5,8 @@ WITHOUT QuantConnect access. Pure Python, no network.
 Entry point: run_static_checks(code, prompt_spec) -> list[Finding]
 """
 
+from __future__ import annotations
+
 import ast
 import re
 
@@ -89,7 +91,7 @@ def _algorithm_classes(tree: ast.AST) -> list[ast.ClassDef]:
     classes = []
     for node in ast.walk(tree):
         if isinstance(node, ast.ClassDef):
-            bases = [ast.unparse(b) for b in node.bases]
+            bases = [ast.dump(b) for b in node.bases]
             if any("QCAlgorithm" in b for b in bases):
                 classes.append(node)
     return classes

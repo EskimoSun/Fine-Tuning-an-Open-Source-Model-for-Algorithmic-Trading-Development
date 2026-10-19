@@ -4,6 +4,8 @@ Set QC_USER_ID and QC_API_TOKEN (QC_ORG_ID optional). Live API integration
 still needs verification with your account; tests use recorded-shape responses.
 """
 
+from __future__ import annotations
+
 import os
 import time
 from base64 import b64encode
@@ -103,6 +105,7 @@ class QCClient:
                 "stacktrace": bt.get("stacktrace"),
                 "has_initialize_error": bt.get("hasInitializeError", False),
                 "statistics": bt.get("statistics", {}),
+                "trade_statistics": bt.get("totalPerformance", {}).get("tradeStatistics", {}),
                 "runtime_statistics": bt.get("runtimeStatistics", {}),
                 "total_orders": bt.get("statistics", {}).get("Total Orders"), "raw": bt}
 
@@ -120,6 +123,43 @@ class QCClient:
             on_progress({"logs": list(logs)})
             if not lines or len(logs) >= page.get("length", len(logs)):
                 return logs
+
+    def _read_ready(self, endpoint, payload, max_wait=120):
+        """Orders and charts may initially return a successful 'loading' response."""
+        return self._poll(endpoint, payload,
+                          lambda body: body.get("status") != "loading",
+                          "response", lambda update: None, 2, max_wait)
+
+    def read_orders(self, project_id, backtest_id):
+        """Fetch every page; never silently treat a truncated page as all orders."""
+        orders, seen = [], set()
+        while True:
+            start = len(orders)
+            page = self._read_ready("backtests/orders/read", {
+                "projectId": project_id, "backtestId": backtest_id,
+                "start": start, "end": start + 100})
+            rows = page["orders"]
+            if isinstance(rows, dict):
+                rows = list(rows.values())
+            if not rows:
+                if len(orders) < page.get("length", len(orders)):
+                    raise ValueError("Orders ended before the reported total")
+                return orders
+            for row in rows:
+                order = row.get("order", row)
+                key = order["id"]
+                if key in seen:
+                    raise ValueError("Order pagination repeated an order ID")
+                seen.add(key)
+                orders.append(row)
+            # Some responses report page length, others total length. An extra
+            # empty-page request avoids making assumptions about that field.
+
+    def read_equity_chart(self, project_id, backtest_id, count=10000):
+        return self._read_ready("backtests/chart/read", {
+            "projectId": project_id, "backtestId": backtest_id,
+            "name": "Strategy Equity", "start": 0,
+            "end": int(time.time()), "count": count})["chart"]
 
 
 if __name__ == "__main__":
