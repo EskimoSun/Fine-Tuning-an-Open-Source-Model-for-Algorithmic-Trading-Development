@@ -83,6 +83,8 @@ def repair_one(model, spec, qc, max_repairs=3, verbose=False, print_output=False
         raise ValueError("max_repairs must be between 1 and 5")
     source_path = RUNS / model / (spec["id"] + ".json")
     source = json.loads(source_path.read_text()) if source_path.exists() else {}
+    if (not source.get("output") or source.get("model_id") == "mock") and "_prompt_" in model:
+        raise ValueError("Run the --system generation for {} before repairing it".format(model))
     if not source.get("output") or source.get("model_id") == "mock":
         output, model_id = generate(model, spec["prompt"])
         source = {"prompt_id": spec["id"], "model": model, "model_id": model_id,

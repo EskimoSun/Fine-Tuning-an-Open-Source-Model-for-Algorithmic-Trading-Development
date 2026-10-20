@@ -66,7 +66,32 @@ Follow these LEAN Python API rules exactly:
 - Options: `option = self.add_option(underlying, resolution)` then `option.set_filter(...)`; read chains from `data.option_chains` in on_data.
 - Use only APIs that exist in LEAN; do not invent helper methods on QCAlgorithm."""
 
-SYSTEM_PROMPTS = {"v1": SYSTEM, "v2": SYSTEM_V2}
+# v3: rules rewritten after v2 errors (positional enum arguments). Every example
+# below ran successfully in a QC probe backtest; signatures come from LEAN's own
+# error messages. Generic API facts only; no test prompts or gold template code.
+SYSTEM_V3 = SYSTEM + """
+
+Follow these LEAN Python API rules exactly:
+- The file must start with `from AlgorithmImports import *`. It already provides datetime, timedelta, enums, indicators and order types; add no other QuantConnect imports.
+- Define exactly one class that inherits QCAlgorithm, with `def initialize(self)`. Use snake_case for every QCAlgorithm method and property; never call PascalCase methods such as self.AddEquity or self.SetHoldings.
+- Pass every optional argument BY KEYWORD. Only the leading required arguments may be positional. Real signatures:
+  - add_equity(ticker, resolution=None, market=None, fill_forward=True, leverage=0, extended_market_hours=False, data_normalization_mode=None). It has no data_mapping_mode argument.
+  - add_future(ticker, resolution=None, market=None, fill_forward=None, leverage=0, extended_market_hours=None, data_mapping_mode=None, data_normalization_mode=None, contract_depth_offset=0). There is no `depth` argument. Example: future = self.add_future(Futures.Indices.SP_500_E_MINI, resolution=Resolution.MINUTE, extended_market_hours=True, data_mapping_mode=DataMappingMode.LAST_TRADING_DAY, data_normalization_mode=DataNormalizationMode.BACKWARDS_RATIO, contract_depth_offset=0); future.set_filter(0, 92); trade future.mapped.
+  - add_option(underlying_ticker, resolution=None). Example: option = self.add_option("SPY", resolution=Resolution.MINUTE); option.set_filter(lambda u: u.include_weeklys().strikes(-10, 10).expiration(0, 7)).
+  - bb(symbol, period, k, moving_average_type=MovingAverageType.SIMPLE, resolution=None)
+  - rsi(symbol, period, moving_average_type=MovingAverageType.WILDERS, resolution=None)
+  - macd(symbol, fast_period, slow_period, signal_period, type=MovingAverageType.EXPONENTIAL, resolution=None)
+  - sma / ema / roc / atr(symbol, period, resolution=None)
+  - set_warm_up(bar_count) or set_warm_up(timedelta(days=n)). Do not pass Resolution.DAILY to set_warm_up when any data or indicator is intraday; prefer self.settings.automatic_indicator_warm_up = True before creating indicators.
+- Indicators: read `.current.value` (Bollinger: `.upper_band.current.value`, `.middle_band.current.value`, `.lower_band.current.value`) and check `.is_ready`. Store them in fields such as self._bb or in a dict keyed by symbol; there is no security.set_indicator method. Do not name a field the same as a helper method (self.bb = self.bb(...) breaks the helper).
+- Scheduling: self.schedule.on(date_rule, time_rule, callback), where the callback takes only self. Date rules: self.date_rules.every_day(symbol), week_start(symbol), month_start(symbol), every(DayOfWeek.MONDAY). Time rules: self.time_rules.after_market_open(symbol, minutes), before_market_close(symbol, minutes), at(hour, minute). There is no at_market_open.
+- Options: in on_data, chain = slice.option_chains.get(option.symbol); each contract has .symbol, .right (OptionRight.CALL / OptionRight.PUT), .strike, .expiry, .bid_price, .ask_price, .greeks.delta. The enum is OptionRight, not OptionType. Do not use LEAN types in class-level annotations.
+- Futures rollover: def on_symbol_changed_events(self, symbol_changed_events): for symbol, changed_event in symbol_changed_events.items(): use changed_event.old_symbol and changed_event.new_symbol.
+- Enum members are UPPER_CASE: Resolution.MINUTE, Resolution.HOUR, Resolution.DAILY, OrderStatus.FILLED, BrokerageName.INTERACTIVE_BROKERS_BROKERAGE.
+- Orders: set_holdings(symbol, fraction), liquidate(symbol), market_order(symbol, quantity). Read state from self.portfolio[symbol].invested / .quantity and self.securities[symbol].price.
+- Use only APIs that exist in LEAN; do not invent helper methods."""
+
+SYSTEM_PROMPTS = {"v1": SYSTEM, "v2": SYSTEM_V2, "v3": SYSTEM_V3}
 
 
 def run_label(model, system="v1"):
@@ -150,7 +175,8 @@ def generate(model, prompt, mock=False, system=SYSTEM):
         return mock_generate(prompt), "mock"
     if model == "fable":
         return call_fable(prompt, system=system), os.environ.get("FABLE_MODEL", "claude-fable-5-1")
-    mid = os.environ["QWEN_BASE_MODEL" if model == "qwen_base" else "QWEN_TUNED_MODEL"]
+    base = model.split("_prompt_")[0]  # qwen_base_prompt_v3 is still the base model
+    mid = os.environ["QWEN_BASE_MODEL" if base == "qwen_base" else "QWEN_TUNED_MODEL"]
     return call_openai_compatible(prompt, mid, system=system), mid
 
 
@@ -341,7 +367,7 @@ def main():
     ap.add_argument("--verbose", action="store_true", help="print QC cloud stage/progress while waiting")
     ap.add_argument("--prompt-id", action="append", help="select a prompt ID (repeatable)")
     ap.add_argument("--system", choices=sorted(SYSTEM_PROMPTS), default="v1",
-                    help="system prompt version; v2 caches under runs/<model>_prompt_v2/ and does not touch the sheet")
+                    help="system prompt version; v2/v3 cache under runs/<model>_prompt_<v>/ and do not touch the sheet")
     ap.add_argument("--repair-attempts", type=int, default=0,
                     help="enable real QC -> model repair feedback, with this many repair attempts (1-5)")
     args = ap.parse_args()
@@ -356,13 +382,12 @@ def main():
     todo = todo[: args.limit] if args.limit else todo
     models = [m.strip() for m in args.models.split(",")]
 
-    if args.system != "v1" and args.repair_attempts:
-        ap.error("--repair-attempts is only wired for --system v1")
     if args.repair_attempts:
         if not 1 <= args.repair_attempts <= 5 or args.mock or args.no_qc:
             ap.error("--repair-attempts requires real QC and a value from 1 to 5")
         from .auto_repair import run_batch
-        run_batch(todo, models, args.repair_attempts, args.verbose, args.print_output)
+        run_batch(todo, [run_label(m, args.system) for m in models], args.repair_attempts,
+                  args.verbose, args.print_output)
         return
 
     qc = None
