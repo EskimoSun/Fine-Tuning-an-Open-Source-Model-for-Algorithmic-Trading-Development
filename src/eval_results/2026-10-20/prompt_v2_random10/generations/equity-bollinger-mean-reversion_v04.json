@@ -1,0 +1,9 @@
+{
+  "prompt_id": "equity-bollinger-mean-reversion_v04",
+  "model": "qwen_base_prompt_v2",
+  "base_model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "system_prompt": "v2",
+  "output": "```python\nfrom AlgorithmImports import *\n\nclass BB202DipBuy(QCAlgorithm):\n    def initialize(self):\n        self.set_start_date(2024, 10, 1)\n        self.set_end_date(2025, 1, 1)\n        self.set_cash(100000)\n        self.set_warm_up(20, Resolution.DAILY)\n\n        self.spy = self.add_equity(\"SPY\", Resolution.DAILY, DataNormalizationMode.BACKWARDS_RATIO).symbol\n        self.bb = self.bb(self.spy, 20, 2, Resolution.DAILY)\n\n        self.in_position = False\n        self.entry_price = 0.0\n\n        self.schedule.on(\n            self.date_rules.every_day(self.spy),\n            self.time_rules.at_market_close(self.spy),\n            self.check_signal\n        )\n\n    def check_signal(self):\n        if not self.bb.is_ready:\n            return\n\n        price = self.securities[self.spy].price\n        upper = self.bb.upper_band.current.value\n        middle = self.bb.middle_band.current.value\n        lower = self.bb.lower_band.current.value\n\n        if not self.in_position:\n            if price <= lower:\n                self.set_holdings(self.spy, 1.0)\n                self.in_position = True\n                self.entry_price = price\n                self.log(f\"BUY SPY at {price:.2f} (lower band {lower:.2f})\")\n        else:\n            if price >= middle:\n                self.liquidate(self.spy)\n                self.in_position = False\n                self.log(f\"SELL SPY at {price:.2f} (midline {middle:.2f})\")\n```",
+  "generated_at": "2026-10-20T21:06:48.390170+00:00"
+}

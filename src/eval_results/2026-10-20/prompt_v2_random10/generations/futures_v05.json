@@ -1,0 +1,9 @@
+{
+  "prompt_id": "futures_v05",
+  "model": "qwen_base_prompt_v2",
+  "base_model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "system_prompt": "v2",
+  "output": "```python\nfrom AlgorithmImports import *\n\n\nclass EsContinuousRollAlgorithm(QCAlgorithm):\n    def initialize(self):\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100_000)\n\n        self.symbol = self.add_future(\n            \"SP_500_E_MINI\",\n            resolution=Resolution.MINUTE,\n            data_mapping_mode=DataMappingMode.LAST_TRADING_DAY,\n            data_normalization_mode=DataNormalizationMode.BACKWARDS_RATIO,\n            depth=0,\n            extended_hours=True,\n        )\n        self.symbol.set_filter(0, 92)\n\n        self.position_qty = 1\n\n    def on_data(self, data: Slice):\n        if self.symbol not in data.futures:\n            return\n\n        if not self.portfolio.has_open_positions(self.symbol):\n            self.market_order(self.symbol, self.position_qty)\n\n    def on_symbol_changed_events(self, event: SymbolChangedEvent):\n        if event.old_symbol != self.symbol:\n            return\n\n        self.liquidate(event.old_symbol)\n        self.market_order(event.new_symbol, self.position_qty)\n```",
+  "generated_at": "2026-10-20T21:15:13.798646+00:00"
+}
