@@ -1,0 +1,9 @@
+{
+  "prompt_id": "equity-bollinger-mean-reversion_v04",
+  "model": "qwen_base_prompt_v3",
+  "base_model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "system_prompt": "v3",
+  "output": "```python\nfrom AlgorithmImports import *\n\nclass BB202DipBuyMidlineExit(QCAlgorithm):\n    \"\"\"\n    SPY Bollinger Band (20, 2) dip-buy strategy.\n    - Daily check after market open.\n    - Buy when price touches/crosses below the lower band.\n    - Exit when price crosses back above the middle band (SMA).\n    - Runs only during Q4 2024 (Oct 1 - Dec 31, 2024).\n    \"\"\"\n\n    def initialize(self):\n        self.set_start_date(2024, 10, 1)\n        self.set_end_date(2025, 1, 1)\n        self.set_cash(100_000)\n\n        self.spy = self.add_equity(\"SPY\", resolution=Resolution.DAILY)\n\n        self._bb = self.bb(self.spy.symbol, 20, 2, resolution=Resolution.DAILY)\n\n        self._in_position = False\n\n        self.schedule.on(\n            self.date_rules.every_day(self.spy.symbol),\n            self.time_rules.at(9, 35),\n            self.on_daily_check\n        )\n\n    def on_daily_check(self):\n        if not self._bb.is_ready:\n            return\n\n        price = self.spy.price\n        lower = self._bb.lower_band.current.value\n        middle = self._bb.middle_band.current.value\n\n        if not self._in_position:\n            if price <= lower:\n                self.set_holdings(self.spy.symbol, 1.0)\n                self._in_position = True\n                self.log(f\"BUY SPY at {price:.2f} (lower band {lower:.2f})\")\n        else:\n            if price >= middle:\n                self.liquidate(self.spy.symbol)\n                self._in_position = False\n                self.log(f\"SELL SPY at {price:.2f} (midline {middle:.2f})\")\n```",
+  "generated_at": "2026-10-20T21:38:52.860602+00:00"
+}

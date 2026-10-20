@@ -1,0 +1,37 @@
+{
+  "prompt_id": "equity-monthly-roc-rotation_v06",
+  "source_model": "qwen_base_prompt_v3",
+  "model_id": "qwen/qwen3.8-27b",
+  "intervention": "model_qc_feedback_repair",
+  "status": "completed",
+  "repairs_used": 1,
+  "source_output_sha256": "b20cdc07d74b3d87a154d04c11b0a0f1a32fe0bf5e87e51b94f36c8320bf1507",
+  "attempts": [
+    {
+      "round": 0,
+      "model_id": "qwen/qwen3.8-27b",
+      "generated_at": "2026-10-20T21:47:45.832380+00:00",
+      "source_sha256": "39388ab2c0350259a9c676334f2ac4020f59cddadd5f100fbfec03dea0b27241",
+      "status": "runtime_error",
+      "project_id": 38187963,
+      "backtest_id": "23b7174f0c7227a6ea3dcef9916293c3",
+      "total_orders": null,
+      "closed_trades": null,
+      "net_profit": null,
+      "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: 'Equity' object has no attribute 'attach'\n  at initialize\n    equity.attach(roc)\n    ^^^^^^^^^^^^^\n in main.py: line 22\n 'Equity' object has no attribute 'attach'"
+    },
+    {
+      "round": 1,
+      "model_id": "qwen/qwen3.8-27b",
+      "generated_at": "2026-10-20T21:48:15.992777+00:00",
+      "source_sha256": "25bd77208d9df7f432a045f599b794ab4630ea4d814ded4a1126085b480d523e",
+      "status": "completed",
+      "project_id": 38188332,
+      "backtest_id": "668d5fa6e40799dfe9b710b4fb3632ce",
+      "total_orders": "30",
+      "closed_trades": 18,
+      "net_profit": "8.328%",
+      "error": null
+    }
+  ]
+}

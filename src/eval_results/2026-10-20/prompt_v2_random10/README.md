@@ -1,6 +1,6 @@
 # Prompt-engineering condition: system prompt v2 (random 10)
 
-Same 10 prompts as the original baseline (seed 42, see
+Part of the [2026-10-20 comparison](../README.md) (v2 → v3 → v3 + repair). Same 10 prompts as the original baseline (seed 42, see
 [baseline manifest](../../2026-10-19/baseline_random10/manifest.json)), same model
 (`qwen/qwen3.8-27b` via Groq, temperature 0), same QC compile + backtest. The only
 change is the system prompt: `SYSTEM_V2` in `src/qc_eval/pipeline.py`, which

@@ -1,0 +1,63 @@
+{
+  "prompt_id": "option-iron-condor-spy_v02",
+  "source_model": "qwen_base_prompt_v3",
+  "model_id": "qwen/qwen3.8-27b",
+  "intervention": "model_qc_feedback_repair",
+  "status": "runtime_error",
+  "repairs_used": 3,
+  "source_output_sha256": "d54680ccf53c4913c716faf8c1dfca4ba5900acfea414cf8c508de02813981ab",
+  "attempts": [
+    {
+      "round": 0,
+      "model_id": "qwen/qwen3.8-27b",
+      "generated_at": "2026-10-20T21:48:41.223973+00:00",
+      "source_sha256": "664ab919831d4698786a6b305ad78159734358e6db8a519e498e4695b65130a1",
+      "status": "runtime_error",
+      "project_id": 38188016,
+      "backtest_id": "ffa544e77d69791c80772346a53eb47c",
+      "total_orders": "0",
+      "closed_trades": null,
+      "net_profit": "0%",
+      "error": "2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'\n  at open_iron_condor\n    chain = self.option_chains.get(self.option.symbol)\n            ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 45\n"
+    },
+    {
+      "round": 1,
+      "model_id": "qwen/qwen3.8-27b",
+      "generated_at": "2026-10-20T21:48:52.046139+00:00",
+      "source_sha256": "cce82052aad9fcb8465154010ef6ecf7d64a921e7f4bd8a6dc38f7265bdc6733",
+      "status": "runtime_error",
+      "project_id": 38188373,
+      "backtest_id": "12e5316412b5896e77bacd610e363b80",
+      "total_orders": "0",
+      "closed_trades": null,
+      "net_profit": "0%",
+      "error": "2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'\n  at open_iron_condor\n    chain = self.option_chains.get(self.option.symbol)\n            ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 47\n"
+    },
+    {
+      "round": 2,
+      "model_id": "qwen/qwen3.8-27b",
+      "generated_at": "2026-10-20T21:49:17.733433+00:00",
+      "source_sha256": "cce82052aad9fcb8465154010ef6ecf7d64a921e7f4bd8a6dc38f7265bdc6733",
+      "status": "runtime_error",
+      "project_id": 38188394,
+      "backtest_id": "c27cde07ddf51d58a97ef6bff9e515d1",
+      "total_orders": "0",
+      "closed_trades": null,
+      "net_profit": "0%",
+      "error": "2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'\n  at open_iron_condor\n    chain = self.option_chains.get(self.option.symbol)\n            ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 47\n"
+    },
+    {
+      "round": 3,
+      "model_id": "qwen/qwen3.8-27b",
+      "generated_at": "2026-10-20T21:50:04.488854+00:00",
+      "source_sha256": "cce82052aad9fcb8465154010ef6ecf7d64a921e7f4bd8a6dc38f7265bdc6733",
+      "status": "runtime_error",
+      "project_id": 38188436,
+      "backtest_id": "dea88fda98b25fdb9c92cb2083b7da3f",
+      "total_orders": "0",
+      "closed_trades": null,
+      "net_profit": "0%",
+      "error": "2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'\n  at open_iron_condor\n    chain = self.option_chains.get(self.option.symbol)\n            ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 47\n"
+    }
+  ]
+}
