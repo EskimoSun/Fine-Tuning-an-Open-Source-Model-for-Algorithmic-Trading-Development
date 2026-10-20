@@ -1,0 +1,9 @@
+{
+  "prompt_id": "equity-monthly-roc-rotation_v10",
+  "model": "qwen_base_prompt_v3",
+  "base_model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "system_prompt": "v3",
+  "output": "```python\nfrom AlgorithmImports import *\n\nclass MomentumRotationAlgorithm(QCAlgorithm):\n    def initialize(self):\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.automatic_indicator_warm_up = True\n\n        self._tickers = [\"SPY\", \"EFA\", \"EEM\", \"AGG\", \"GLD\"]\n        self._securities = {}\n        self._rocs = {}\n\n        for ticker in self._tickers:\n            equity = self.add_equity(ticker, resolution=Resolution.MINUTE)\n            self._securities[ticker] = equity\n            self._rocs[ticker] = self.roc(equity, 60, resolution=Resolution.DAILY)\n\n        self.schedule.on(\n            self.date_rules.month_start(\"SPY\"),\n            self.time_rules.after_market_open(\"SPY\", 1),\n            self._rebalance\n        )\n\n    def _rebalance(self):\n        securities = [self._securities[t] for t in self._tickers]\n        rocs = [self._rocs[t] for t in self._tickers]\n\n        if not all(roc.is_ready for roc in rocs):\n            return\n\n        if all(roc.current.value < 0 for roc in rocs):\n            self.liquidate()\n            return\n\n        ranked = sorted(securities, key=lambda s: self._rocs[s.symbol].current.value, reverse=True)[:3]\n        targets = [PortfolioTarget(s.symbol, 1.0 / 3.0) for s in ranked]\n        self.set_holdings(targets, liquidate_existing_holdings=True)\n```",
+  "generated_at": "2026-10-20T22:44:08.593129+00:00"
+}

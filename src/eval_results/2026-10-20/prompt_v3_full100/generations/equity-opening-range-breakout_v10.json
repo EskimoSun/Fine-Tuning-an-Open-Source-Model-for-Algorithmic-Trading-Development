@@ -1,0 +1,9 @@
+{
+  "prompt_id": "equity-opening-range-breakout_v10",
+  "model": "qwen_base_prompt_v3",
+  "base_model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "system_prompt": "v3",
+  "output": "```python\nfrom AlgorithmImports import *\n\nclass OrbBreakoutAlgorithm(QCAlgorithm):\n    def initialize(self):\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n\n        self.spy = self.add_equity('SPY', resolution=Resolution.MINUTE).symbol\n\n        self._orb_high = None\n        self._orb_low = None\n\n        self.schedule.on(\n            self.date_rules.every_day(self.spy),\n            self.time_rules.at(15, 55),\n            self._liquidate_eod\n        )\n\n    def _liquidate_eod(self):\n        self.liquidate(self.spy)\n        self._orb_high = None\n        self._orb_low = None\n\n    def on_data(self, data: Slice):\n        if not self.spy in data.bars:\n            return\n\n        bar = data.bars[self.spy]\n        t = self.time.time()\n\n        if time(9, 30) <= t < time(10, 0):\n            if self._orb_high is None or bar.high > self._orb_high:\n                self._orb_high = bar.high\n            if self._orb_low is None or bar.low < self._orb_low:\n                self._orb_low = bar.low\n        elif t >= time(10, 0):\n            if self._orb_high is not None and bar.close > self._orb_high:\n                self.set_holdings(self.spy, 1.0)\n                self._orb_high = None\n                self._orb_low = None\n            elif self._orb_low is not None and bar.close < self._orb_low:\n                self.set_holdings(self.spy, -1.0)\n                self._orb_high = None\n                self._orb_low = None\n```",
+  "generated_at": "2026-10-20T22:30:48.742246+00:00"
+}

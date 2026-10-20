@@ -1,0 +1,9 @@
+{
+  "prompt_id": "equity-bollinger-mean-reversion_v10",
+  "model": "qwen_base_prompt_v3",
+  "base_model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "system_prompt": "v3",
+  "output": "```python\nfrom AlgorithmImports import *\n\nclass BollingerRebalanceAlgorithm(QCAlgorithm):\n    def initialize(self):\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n        self.settings.automatic_indicator_warm_up = True\n\n        equity = self.add_equity('SPY')\n        self._equity = equity\n\n        self._bb = self.bb(equity, 20, 2, resolution=Resolution.DAILY)\n        self.plot_indicator('SPY', self._bb.upper_band, self._bb.middle_band, self._bb.lower_band)\n\n        self.schedule.on(self.date_rules.every_day(equity), self.time_rules.at(8, 0), self._rebalance)\n\n    def _rebalance(self):\n        if not self.portfolio.invested:\n            if self._equity.price < self._bb.lower_band.current.value:\n                self.set_holdings(self._equity, 1)\n        else:\n            if self._equity.price >= self._bb.middle_band.current.value:\n                self.liquidate()\n```",
+  "generated_at": "2026-10-20T22:05:41.161509+00:00"
+}

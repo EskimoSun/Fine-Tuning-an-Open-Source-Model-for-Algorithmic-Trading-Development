@@ -1,0 +1,9 @@
+{
+  "prompt_id": "equity-sixty-forty-portfolio_v10",
+  "model": "qwen_base_prompt_v3",
+  "base_model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "system_prompt": "v3",
+  "output": "```python\nfrom AlgorithmImports import *\n\n\nclass DriftRebalanceAlgorithm(QCAlgorithm):\n    _drift_threshold = 0.05\n\n    def initialize(self):\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        self.spy = self.add_equity('SPY', resolution=Resolution.MINUTE).symbol\n        self.tlt = self.add_equity('TLT', resolution=Resolution.MINUTE).symbol\n\n        self.targets = {self.spy: 0.6, self.tlt: 0.4}\n        self._initially_invested = False\n\n        self.schedule.on(\n            self.date_rules.quarter_start('SPY'),\n            self.time_rules.after_market_open('SPY', 1),\n            self._rebalance\n        )\n\n    def on_data(self, data: Slice):\n        if self._initially_invested:\n            return\n        if self.portfolio.invested == 0:\n            for symbol, target in self.targets.items():\n                self.set_holdings(symbol, target)\n            self._initially_invested = True\n\n    def _rebalance(self):\n        total_value = self.portfolio.total_portfolio_value\n        if total_value <= 0:\n            return\n\n        weights = {}\n        for symbol in self.targets:\n            holdings_value = self.portfolio[symbol].holdings_value\n            weights[symbol] = holdings_value / total_value\n\n        for symbol, target in self.targets.items():\n            if abs(weights[symbol] - target) > self._drift_threshold:\n                self.set_holdings([\n                    PortfolioTarget(self.spy, 0.6),\n                    PortfolioTarget(self.tlt, 0.4)\n                ])\n                return\n```",
+  "generated_at": "2026-10-20T22:45:44.588509+00:00"
+}

@@ -1,0 +1,9 @@
+{
+  "prompt_id": "equity-atr-volatility-stop_v05",
+  "model": "qwen_base_prompt_v3",
+  "base_model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "system_prompt": "v3",
+  "output": "```python\nfrom AlgorithmImports import *\n\nclass TrailingStopStrategy(QCAlgorithm):\n    def initialize(self):\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100_000)\n\n        self.spy = self.add_equity(\"SPY\", resolution=Resolution.MINUTE)\n\n        self._atr = self.atr(\"SPY\", 14, resolution=Resolution.MINUTE)\n\n        self._trailing_high = None\n        self._in_position = False\n\n    def on_data(self, data: Slice):\n        if not self._atr.is_ready:\n            return\n\n        if \"SPY\" not in data:\n            return\n\n        bar = data[\"SPY\"]\n        if bar.is_trade:\n            return\n\n        price = bar.close\n        atr_value = self._atr.current.value\n\n        if not self._in_position:\n            # Re-enter 100%\n            self.set_holdings(\"SPY\", 1.0)\n            self._in_position = True\n            self._trailing_high = price\n            return\n\n        # Update trailing high\n        if price > self._trailing_high:\n            self._trailing_high = price\n\n        stop = self._trailing_high - 3 * atr_value\n\n        if price < stop:\n            self.liquidate(\"SPY\")\n            self._in_position = False\n            self._trailing_high = None\n```",
+  "generated_at": "2026-10-20T22:08:44.064708+00:00"
+}

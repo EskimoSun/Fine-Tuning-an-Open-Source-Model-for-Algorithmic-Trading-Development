@@ -1,0 +1,9 @@
+{
+  "prompt_id": "equity-atr-volatility-stop_v06",
+  "model": "qwen_base_prompt_v3",
+  "base_model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "system_prompt": "v3",
+  "output": "```python\nfrom AlgorithmImports import *\n\n\nclass TrailingAtrStrategy(QCAlgorithm):\n    def initialize(self):\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100_000)\n\n        self.spy = self.add_equity(\"SPY\", resolution=Resolution.MINUTE)\n\n        self.settings.automatic_indicator_warm_up = True\n        self._atr = self.atr(\"SPY\", 14, resolution=Resolution.MINUTE)\n\n        self._trailing_high = 0.0\n        self._stop = 0.0\n\n        self.plot(\"Trailing High\", \"Trailing High\", self._trailing_high)\n        self.plot(\"Stop\", \"Stop\", self._stop)\n\n    def on_data(self, data: Slice):\n        if not self._atr.is_ready:\n            return\n\n        if \"SPY\" not in data.bars:\n            return\n\n        bar = data.bars[\"SPY\"]\n        close = bar.close\n        atr_value = self._atr.current.value\n\n        if self.portfolio[\"SPY\"].quantity == 0:\n            self._trailing_high = close\n            self._stop = close - 3 * atr_value\n            self.set_holdings(\"SPY\", 1.0)\n            return\n\n        if close > self._trailing_high:\n            self._trailing_high = close\n\n        self._stop = self._trailing_high - 3 * atr_value\n\n        if close < self._stop:\n            self.liquidate(\"SPY\")\n            self._trailing_high = close\n            self._stop = close - 3 * atr_value\n```",
+  "generated_at": "2026-10-20T22:09:07.191395+00:00"
+}
