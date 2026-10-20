@@ -7,7 +7,7 @@
   "rows": [
     {
       "prompt_id": "equity-rsi-overbought-oversold_v04",
-      "strategy": "QQQ 小时 RSI",
+      "strategy": "QQQ hourly RSI",
       "status": "completed",
       "repairs_used": 2,
       "orders": "16",
@@ -19,7 +19,7 @@
     },
     {
       "prompt_id": "equity-monthly-roc-rotation_v06",
-      "strategy": "月度 ROC 轮动",
+      "strategy": "Monthly ROC rotation",
       "status": "completed",
       "repairs_used": 3,
       "orders": "87",
@@ -31,7 +31,7 @@
     },
     {
       "prompt_id": "futures_v05",
-      "strategy": "ES 连续期货",
+      "strategy": "ES continuous futures",
       "status": "runtime_error",
       "repairs_used": 3,
       "orders": null,

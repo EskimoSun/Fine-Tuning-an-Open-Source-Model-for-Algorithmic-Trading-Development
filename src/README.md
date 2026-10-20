@@ -6,6 +6,12 @@ For prompt-first 1–5 scoring plus gold-template trade/timing/DTW comparisons o
 existing Qwen generations, see [SCORING.md](SCORING.md). Run
 `python -m qc_eval.score --help` from this directory.
 
+The agreed Excel deliverable is [QC_Eval_Prompt_Error_Sheet.xlsx](QC_Eval_Prompt_Error_Sheet.xlsx).
+It retains `Legend / Results / Summary` and the original 100-prompt model layout.
+`QC Feedback` reports repaired candidates separately; `Judge Details` contains the
+eight-dimensional evidence. See [Excel output](SCORING.md#excel-output) to refresh
+the English workbook from the published snapshot without API calls.
+
 ## What works now (no QC access needed)
 
 - `prompts.jsonl`: 25 benchmark prompts across equities, portfolio,

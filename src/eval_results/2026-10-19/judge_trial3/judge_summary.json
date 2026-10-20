@@ -3,7 +3,7 @@
   "rows": [
     {
       "prompt_id": "equity-rsi-overbought-oversold_v04",
-      "name": "QQQ 小时 RSI",
+      "name": "QQQ hourly RSI",
       "score": 5,
       "judge_status": "judged",
       "execution": "completed",
@@ -15,7 +15,7 @@
     },
     {
       "prompt_id": "equity-monthly-roc-rotation_v06",
-      "name": "月度 ROC 轮动",
+      "name": "Monthly ROC rotation",
       "score": 4,
       "judge_status": "judged",
       "execution": "completed",
@@ -25,7 +25,7 @@
     },
     {
       "prompt_id": "futures_v05",
-      "name": "ES 连续期货",
+      "name": "ES continuous futures",
       "score": 3,
       "judge_status": "judged",
       "execution": "runtime_error",

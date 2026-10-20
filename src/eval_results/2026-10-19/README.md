@@ -5,6 +5,10 @@ All included model outputs are real. The original baseline and feedback-repaired
 candidates are separate experiments. These are observed results, not a claim of
 strategy profitability or a validated final benchmark.
 
+The agreed [Excel workbook](../../QC_Eval_Prompt_Error_Sheet.xlsx) includes these
+results using the original 100-prompt layout, with separate QC-feedback results
+and judge evidence. All deliverables and code use English.
+
 ## Original random sample
 
 Fixed seed 42, 10 prompts, 6 unique Gold templates. All six Gold templates completed.

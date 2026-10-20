@@ -50,6 +50,7 @@ Use hourly on_data or consolidated hourly bars for hourly decisions, not one dai
 scheduled call. self.history can return a DataFrame; do not treat it as a Slice list.
 Store indicators in fields like self._bb and self._rsi; do not shadow helper methods.
 Never include API keys or other credentials in algorithm code.
+Use English for identifiers, comments, docstrings, log messages, and response text.
 """
 
 

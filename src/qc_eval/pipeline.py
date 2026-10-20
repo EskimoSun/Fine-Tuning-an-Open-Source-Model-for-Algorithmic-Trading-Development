@@ -48,6 +48,7 @@ SHEET = ROOT / "QC_Eval_Prompt_Error_Sheet.xlsx"
 SYSTEM = (
     "You write QuantConnect LEAN algorithms in Python using the current snake_case API. "
     "Return one complete main.py in a single ```python code block. "
+    "Use English for all identifiers, comments, docstrings, log messages, and response text. "
     "If the request cannot be done with QuantConnect data, say so instead of inventing an API."
 )
 

@@ -4,6 +4,36 @@ Run commands from the repository's `src` directory with the `.venv` activated.
 Python 3.8 is supported. Existing dependencies (`requests`, `openpyxl`) suffice;
 DTW is implemented with the Python standard library.
 
+## Excel output
+
+The agreed workbook is `QC_Eval_Prompt_Error_Sheet.xlsx`. Its original `Legend`,
+`Results`, and `Summary` tabs and 100 prompt rows are retained. `Results` keeps
+the original Fable / Qwen base / Qwen tuned / human columns. Repaired-code judge
+scores belong on `QC Feedback`, not in the raw Qwen base column. `Judge Details`
+contains eight requirement dimensions and candidate line evidence for each judgment.
+All code and report output must use English.
+
+The checked-in workbook includes the published random-ten baseline and three
+feedback-repair candidates. It contains actual error counters, the original
+Claude scores of 5/4/3, separate filled-order and closed-trade counts, timing error,
+equity DTW, and review notes. Incompatible RSI date windows and failed futures
+execution leave similarity cells blank. Gold executions do not fill the Fable
+generation columns. Summary formulas have cached calculated values.
+
+To refresh the workbook from the published snapshot without API calls, install
+Node.js with `@oai/artifact-tool`, then run from `src`:
+
+```bash
+python -m qc_eval.export_excel --snapshot eval_results/2026-10-19
+```
+
+Use `--output` for a different destination and `--node` for an explicit Node.js
+executable. If the package is installed outside the project, set
+`ARTIFACT_TOOL_ROOT` to the directory containing that `node_modules` folder.
+The exporter preserves the template layout and human-entered values, recalculates
+formulas, and never generates candidates, submits backtests, or calls a judge.
+Archived JSON judgments remain unchanged when report labels are translated.
+
 ## Use your QC account for automatic model repair
 
 The pipeline, scoring command, and QC client now load the repository-root `.env`

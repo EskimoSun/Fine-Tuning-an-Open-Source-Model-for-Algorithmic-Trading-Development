@@ -152,6 +152,7 @@ activemq-data/
 # Environments
 .env
 .envrc
+*.xlsx.inspect.ndjson
 .venv
 env/
 venv/
