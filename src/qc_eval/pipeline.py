@@ -52,6 +52,27 @@ SYSTEM = (
     "If the request cannot be done with QuantConnect data, say so instead of inventing an API."
 )
 
+# Prompt-engineering condition: SYSTEM plus explicit LEAN API conventions.
+# Generic API rules only; no test prompts or gold template code.
+SYSTEM_V2 = SYSTEM + """
+
+Follow these LEAN Python API rules exactly:
+- The file must start with `from AlgorithmImports import *`. No other QuantConnect imports are needed; it already provides datetime, timedelta, enums, indicators and order types.
+- Define exactly one class that inherits QCAlgorithm, with `def initialize(self)`.
+- Use snake_case ONLY for every QCAlgorithm method and property: initialize, on_data, add_equity, set_start_date, set_end_date, set_cash, set_warm_up, self.rsi(...), self.sma(...), self.bb(symbol, 20, 2, resolution=Resolution.DAILY), self.atr(...), self.roc(...), self.schedule.on(self.date_rules.every_day(symbol), self.time_rules.after_market_open(symbol, 1), fn), self.portfolio, self.securities, self.time, set_holdings, liquidate, market_order, plot. Never call PascalCase methods such as self.AddEquity, self.SetHoldings or self.Indicator.
+- Enum members are UPPER_CASE: Resolution.MINUTE / Resolution.HOUR / Resolution.DAILY, BrokerageName.INTERACTIVE_BROKERS_BROKERAGE, DataMappingMode.LAST_TRADING_DAY, DataNormalizationMode.BACKWARDS_RATIO, OrderStatus.FILLED.
+- Read indicator values with `.current.value` (for Bollinger Bands: `.upper_band.current.value`, `.middle_band.current.value`, `.lower_band.current.value`) and check `.is_ready` before using them.
+- Weekly or monthly schedules use self.date_rules.week_start(symbol), self.date_rules.every(DayOfWeek.MONDAY) or self.date_rules.month_start(symbol), not DateRules.Weekly.
+- Options: `option = self.add_option(underlying, resolution)` then `option.set_filter(...)`; read chains from `data.option_chains` in on_data.
+- Use only APIs that exist in LEAN; do not invent helper methods on QCAlgorithm."""
+
+SYSTEM_PROMPTS = {"v1": SYSTEM, "v2": SYSTEM_V2}
+
+
+def run_label(model, system="v1"):
+    """Cache label: v1 keeps the original runs/<model>/ directory."""
+    return model if system == "v1" else "{}_prompt_{}".format(model, system)
+
 JUDGE = """You are grading whether a QuantConnect algorithm implements a user's request.
 
 Request:
@@ -242,7 +263,9 @@ def load_prompts():
 
 
 def process(model, p, args, qc):
-    path = RUNS / model / f"{p['id']}.json"
+    system_version = getattr(args, "system", "v1")
+    label = run_label(model, system_version)
+    path = RUNS / label / f"{p['id']}.json"
     rec = json.loads(path.read_text()) if path.exists() else {}
 
     replace_mock = not args.mock and rec.get("model_id") == "mock"
@@ -250,8 +273,10 @@ def process(model, p, args, qc):
     if needs_generation:
         print("[{}] {}: requesting {} model output".format(
             model, p["id"], "mock" if args.mock else "REAL"), flush=True)
-        out, model_id = generate(model, p["prompt"], mock=args.mock)
-        rec = {"prompt_id": p["id"], "model": model, "model_id": model_id, "output": out,
+        out, model_id = generate(model, p["prompt"], mock=args.mock,
+                                 system=SYSTEM_PROMPTS[system_version])
+        rec = {"prompt_id": p["id"], "model": label, "base_model": model, "model_id": model_id,
+               "system_prompt": system_version, "output": out,
                "generated_at": datetime.now(timezone.utc).isoformat()}
     if getattr(args, "print_output", False):
         print_model_output(model, p["id"], rec.get("model_id"), rec["output"],
@@ -315,6 +340,8 @@ def main():
     ap.add_argument("--print-output", action="store_true", help="print raw model output, actual model ID and cache provenance")
     ap.add_argument("--verbose", action="store_true", help="print QC cloud stage/progress while waiting")
     ap.add_argument("--prompt-id", action="append", help="select a prompt ID (repeatable)")
+    ap.add_argument("--system", choices=sorted(SYSTEM_PROMPTS), default="v1",
+                    help="system prompt version; v2 caches under runs/<model>_prompt_v2/ and does not touch the sheet")
     ap.add_argument("--repair-attempts", type=int, default=0,
                     help="enable real QC -> model repair feedback, with this many repair attempts (1-5)")
     args = ap.parse_args()
@@ -329,6 +356,8 @@ def main():
     todo = todo[: args.limit] if args.limit else todo
     models = [m.strip() for m in args.models.split(",")]
 
+    if args.system != "v1" and args.repair_attempts:
+        ap.error("--repair-attempts is only wired for --system v1")
     if args.repair_attempts:
         if not 1 <= args.repair_attempts <= 5 or args.mock or args.no_qc:
             ap.error("--repair-attempts requires real QC and a value from 1 to 5")
@@ -342,7 +371,7 @@ def main():
         qc = QCClient()
         assert qc.authenticate(), "QuantConnect auth failed: check QC_USER_ID / QC_API_TOKEN"
 
-    if not SHEET.exists():
+    if args.system == "v1" and not SHEET.exists():
         sheet.build(prompts, SHEET)
 
     results = {}
@@ -358,6 +387,12 @@ def main():
             print(f"[{model}] {i}/{len(todo)} {p['id']}: compile={rec.get('compile_errors')} "
                   f"runtime={rec.get('runtime_errors')} fidelity={rec.get('fidelity')} "
                   f"model_id={rec.get('model_id')} mock={rec.get('model_id') == 'mock'}", flush=True)
+
+    if args.system != "v1":
+        # Separate prompt-engineering condition: keep the agreed sheet unchanged.
+        print("\n--system {}: results cached under runs/<model>_prompt_{}/; sheet not modified".format(
+            args.system, args.system))
+        return
 
     rng = random.Random(42)  # fixed seed so the human sample is the same every run
     human = rng.sample([p["id"] for p in todo], min(args.human_sample, len(todo)))
