@@ -1,0 +1,164 @@
+[qwen_base] equity-rsi-overbought-oversold_v04: requesting REAL model output
+[QC qwen_base/equity-rsi-overbought-oversold_v04] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/equity-rsi-overbought-oversold_v04] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/equity-rsi-overbought-oversold_v04] stage=upload status=running compile=None cloud=None progress=pending project=38187804 backtest=None
+[QC qwen_base/equity-rsi-overbought-oversold_v04] stage=compile status=running compile=None cloud=None progress=pending project=38187804 backtest=None
+[QC qwen_base/equity-rsi-overbought-oversold_v04] stage=compile status=running compile=InQueue cloud=None progress=pending project=38187804 backtest=None
+[QC qwen_base/equity-rsi-overbought-oversold_v04] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38187804 backtest=None
+[QC qwen_base/equity-rsi-overbought-oversold_v04] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38187804 backtest=None
+[QC qwen_base/equity-rsi-overbought-oversold_v04] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38187804 backtest=dc9675597f308c40d4993d5ade33c7dd
+[QC qwen_base/equity-rsi-overbought-oversold_v04] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38187804 backtest=dc9675597f308c40d4993d5ade33c7dd
+[QC qwen_base/equity-rsi-overbought-oversold_v04] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38187804 backtest=dc9675597f308c40d4993d5ade33c7dd
+[QC qwen_base/equity-rsi-overbought-oversold_v04] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38187804 backtest=dc9675597f308c40d4993d5ade33c7dd
+[QC qwen_base/equity-rsi-overbought-oversold_v04] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38187804 backtest=dc9675597f308c40d4993d5ade33c7dd
+[qwen_base] 1/10 equity-rsi-overbought-oversold_v04: compile=0 runtime=1 fidelity=None model_id=qwen/qwen3.8-27b mock=False
+[qwen_base] equity-bollinger-mean-reversion_v04: requesting REAL model output
+[QC qwen_base/equity-bollinger-mean-reversion_v04] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v04] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v04] stage=upload status=running compile=None cloud=None progress=pending project=38187833 backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v04] stage=compile status=running compile=None cloud=None progress=pending project=38187833 backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v04] stage=compile status=running compile=InQueue cloud=None progress=pending project=38187833 backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v04] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38187833 backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v04] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38187833 backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v04] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38187833 backtest=6f366f469d9bdca11c91ba384eea6a9c
+[QC qwen_base/equity-bollinger-mean-reversion_v04] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=38187833 backtest=6f366f469d9bdca11c91ba384eea6a9c
+[QC qwen_base/equity-bollinger-mean-reversion_v04] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38187833 backtest=6f366f469d9bdca11c91ba384eea6a9c
+[QC qwen_base/equity-bollinger-mean-reversion_v04] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38187833 backtest=6f366f469d9bdca11c91ba384eea6a9c
+[QC qwen_base/equity-bollinger-mean-reversion_v04] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38187833 backtest=6f366f469d9bdca11c91ba384eea6a9c
+[qwen_base] 2/10 equity-bollinger-mean-reversion_v04: compile=0 runtime=0 fidelity=None model_id=qwen/qwen3.8-27b mock=False
+[qwen_base] equity-bollinger-mean-reversion_v05: requesting REAL model output
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 12.0s (1/2)
+[QC qwen_base/equity-bollinger-mean-reversion_v05] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v05] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v05] stage=upload status=running compile=None cloud=None progress=pending project=38187872 backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v05] stage=compile status=running compile=None cloud=None progress=pending project=38187872 backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v05] stage=compile status=running compile=InQueue cloud=None progress=pending project=38187872 backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v05] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38187872 backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v05] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38187872 backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v05] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38187872 backtest=1c7dbdb3185ea04cd0af5a856c2dfa3b
+[QC qwen_base/equity-bollinger-mean-reversion_v05] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=38187872 backtest=1c7dbdb3185ea04cd0af5a856c2dfa3b
+[QC qwen_base/equity-bollinger-mean-reversion_v05] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38187872 backtest=1c7dbdb3185ea04cd0af5a856c2dfa3b
+[QC qwen_base/equity-bollinger-mean-reversion_v05] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38187872 backtest=1c7dbdb3185ea04cd0af5a856c2dfa3b
+[QC qwen_base/equity-bollinger-mean-reversion_v05] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38187872 backtest=1c7dbdb3185ea04cd0af5a856c2dfa3b
+[qwen_base] 3/10 equity-bollinger-mean-reversion_v05: compile=0 runtime=0 fidelity=None model_id=qwen/qwen3.8-27b mock=False
+[qwen_base] equity-bollinger-mean-reversion_v08: requesting REAL model output
+[QC qwen_base/equity-bollinger-mean-reversion_v08] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v08] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v08] stage=upload status=running compile=None cloud=None progress=pending project=38187892 backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v08] stage=compile status=running compile=None cloud=None progress=pending project=38187892 backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v08] stage=compile status=running compile=InQueue cloud=None progress=pending project=38187892 backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v08] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38187892 backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v08] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38187892 backtest=None
+[QC qwen_base/equity-bollinger-mean-reversion_v08] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38187892 backtest=93010156cb019190f6fd298ed51c70b8
+[QC qwen_base/equity-bollinger-mean-reversion_v08] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=38187892 backtest=93010156cb019190f6fd298ed51c70b8
+[QC qwen_base/equity-bollinger-mean-reversion_v08] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38187892 backtest=93010156cb019190f6fd298ed51c70b8
+[QC qwen_base/equity-bollinger-mean-reversion_v08] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38187892 backtest=93010156cb019190f6fd298ed51c70b8
+[QC qwen_base/equity-bollinger-mean-reversion_v08] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38187892 backtest=93010156cb019190f6fd298ed51c70b8
+[qwen_base] 4/10 equity-bollinger-mean-reversion_v08: compile=0 runtime=0 fidelity=None model_id=qwen/qwen3.8-27b mock=False
+[qwen_base] equity-atr-volatility-stop_v09: requesting REAL model output
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 2.0s (1/2)
+[QC qwen_base/equity-atr-volatility-stop_v09] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/equity-atr-volatility-stop_v09] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/equity-atr-volatility-stop_v09] stage=upload status=running compile=None cloud=None progress=pending project=38187904 backtest=None
+[QC qwen_base/equity-atr-volatility-stop_v09] stage=compile status=running compile=None cloud=None progress=pending project=38187904 backtest=None
+[QC qwen_base/equity-atr-volatility-stop_v09] stage=compile status=running compile=InQueue cloud=None progress=pending project=38187904 backtest=None
+[QC qwen_base/equity-atr-volatility-stop_v09] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38187904 backtest=None
+[QC qwen_base/equity-atr-volatility-stop_v09] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38187904 backtest=None
+[QC qwen_base/equity-atr-volatility-stop_v09] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38187904 backtest=1f8230b1bee12e99464645cf705b9958
+[QC qwen_base/equity-atr-volatility-stop_v09] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38187904 backtest=1f8230b1bee12e99464645cf705b9958
+[QC qwen_base/equity-atr-volatility-stop_v09] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38187904 backtest=1f8230b1bee12e99464645cf705b9958
+[QC qwen_base/equity-atr-volatility-stop_v09] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38187904 backtest=1f8230b1bee12e99464645cf705b9958
+[QC qwen_base/equity-atr-volatility-stop_v09] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38187904 backtest=1f8230b1bee12e99464645cf705b9958
+[qwen_base] 5/10 equity-atr-volatility-stop_v09: compile=0 runtime=1 fidelity=None model_id=qwen/qwen3.8-27b mock=False
+[qwen_base] equity-monthly-roc-rotation_v02: requesting REAL model output
+[QC qwen_base/equity-monthly-roc-rotation_v02] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/equity-monthly-roc-rotation_v02] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/equity-monthly-roc-rotation_v02] stage=upload status=running compile=None cloud=None progress=pending project=38187927 backtest=None
+[QC qwen_base/equity-monthly-roc-rotation_v02] stage=compile status=running compile=None cloud=None progress=pending project=38187927 backtest=None
+[QC qwen_base/equity-monthly-roc-rotation_v02] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38187927 backtest=None
+[QC qwen_base/equity-monthly-roc-rotation_v02] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38187927 backtest=None
+[QC qwen_base/equity-monthly-roc-rotation_v02] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38187927 backtest=3d6ed95af7027e5470aa6b6b1c2b9a18
+[QC qwen_base/equity-monthly-roc-rotation_v02] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=38187927 backtest=3d6ed95af7027e5470aa6b6b1c2b9a18
+[QC qwen_base/equity-monthly-roc-rotation_v02] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38187927 backtest=3d6ed95af7027e5470aa6b6b1c2b9a18
+[QC qwen_base/equity-monthly-roc-rotation_v02] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38187927 backtest=3d6ed95af7027e5470aa6b6b1c2b9a18
+[QC qwen_base/equity-monthly-roc-rotation_v02] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38187927 backtest=3d6ed95af7027e5470aa6b6b1c2b9a18
+[qwen_base] 6/10 equity-monthly-roc-rotation_v02: compile=0 runtime=0 fidelity=None model_id=qwen/qwen3.8-27b mock=False
+[qwen_base] equity-monthly-roc-rotation_v06: requesting REAL model output
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 13.0s (1/2)
+[QC qwen_base/equity-monthly-roc-rotation_v06] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/equity-monthly-roc-rotation_v06] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/equity-monthly-roc-rotation_v06] stage=upload status=running compile=None cloud=None progress=pending project=38187963 backtest=None
+[QC qwen_base/equity-monthly-roc-rotation_v06] stage=compile status=running compile=None cloud=None progress=pending project=38187963 backtest=None
+[QC qwen_base/equity-monthly-roc-rotation_v06] stage=compile status=running compile=InQueue cloud=None progress=pending project=38187963 backtest=None
+[QC qwen_base/equity-monthly-roc-rotation_v06] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38187963 backtest=None
+[QC qwen_base/equity-monthly-roc-rotation_v06] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38187963 backtest=None
+[QC qwen_base/equity-monthly-roc-rotation_v06] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38187963 backtest=23b7174f0c7227a6ea3dcef9916293c3
+[QC qwen_base/equity-monthly-roc-rotation_v06] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38187963 backtest=23b7174f0c7227a6ea3dcef9916293c3
+[QC qwen_base/equity-monthly-roc-rotation_v06] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38187963 backtest=23b7174f0c7227a6ea3dcef9916293c3
+[QC qwen_base/equity-monthly-roc-rotation_v06] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38187963 backtest=23b7174f0c7227a6ea3dcef9916293c3
+[QC qwen_base/equity-monthly-roc-rotation_v06] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38187963 backtest=23b7174f0c7227a6ea3dcef9916293c3
+[QC qwen_base/equity-monthly-roc-rotation_v06] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38187963 backtest=23b7174f0c7227a6ea3dcef9916293c3
+[qwen_base] 7/10 equity-monthly-roc-rotation_v06: compile=0 runtime=1 fidelity=None model_id=qwen/qwen3.8-27b mock=False
+[qwen_base] option-iron-condor-spy_v02: requesting REAL model output
+[QC qwen_base/option-iron-condor-spy_v02] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/option-iron-condor-spy_v02] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/option-iron-condor-spy_v02] stage=upload status=running compile=None cloud=None progress=pending project=38188016 backtest=None
+[QC qwen_base/option-iron-condor-spy_v02] stage=compile status=running compile=None cloud=None progress=pending project=38188016 backtest=None
+[QC qwen_base/option-iron-condor-spy_v02] stage=compile status=running compile=InQueue cloud=None progress=pending project=38188016 backtest=None
+[QC qwen_base/option-iron-condor-spy_v02] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38188016 backtest=None
+[QC qwen_base/option-iron-condor-spy_v02] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38188016 backtest=None
+[QC qwen_base/option-iron-condor-spy_v02] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38188016 backtest=ffa544e77d69791c80772346a53eb47c
+[QC qwen_base/option-iron-condor-spy_v02] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188016 backtest=ffa544e77d69791c80772346a53eb47c
+[QC qwen_base/option-iron-condor-spy_v02] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188016 backtest=ffa544e77d69791c80772346a53eb47c
+[QC qwen_base/option-iron-condor-spy_v02] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188016 backtest=ffa544e77d69791c80772346a53eb47c
+[QC qwen_base/option-iron-condor-spy_v02] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188016 backtest=ffa544e77d69791c80772346a53eb47c
+[qwen_base] 8/10 option-iron-condor-spy_v02: compile=0 runtime=1 fidelity=None model_id=qwen/qwen3.8-27b mock=False
+[qwen_base] option-iron-condor-spy_v07: requesting REAL model output
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 2.0s (1/2)
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 4.0s (2/2)
+[qwen_base] option-iron-condor-spy_v07: ERROR 429 Client Error: Too Many Requests for url: https://api.groq.com/openai/v1/chat/completions
+[qwen_base] futures_v05: requesting REAL model output
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 2.0s (1/2)
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 1s (2/2)
+[qwen_base] futures_v05: ERROR 429 Client Error: Too Many Requests for url: https://api.groq.com/openai/v1/chat/completions
+
+--system v3: results cached under runs/<model>_prompt_v3/; sheet not modified
+[qwen_base] option-iron-condor-spy_v07: requesting REAL model output
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 2.0s (1/2)
+[QC qwen_base/option-iron-condor-spy_v07] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/option-iron-condor-spy_v07] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/option-iron-condor-spy_v07] stage=upload status=running compile=None cloud=None progress=pending project=38188060 backtest=None
+[QC qwen_base/option-iron-condor-spy_v07] stage=compile status=running compile=None cloud=None progress=pending project=38188060 backtest=None
+[QC qwen_base/option-iron-condor-spy_v07] stage=compile status=running compile=InQueue cloud=None progress=pending project=38188060 backtest=None
+[QC qwen_base/option-iron-condor-spy_v07] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38188060 backtest=None
+[QC qwen_base/option-iron-condor-spy_v07] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38188060 backtest=None
+[QC qwen_base/option-iron-condor-spy_v07] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38188060 backtest=1e357ef86453cc9727046d3fd068daaa
+[QC qwen_base/option-iron-condor-spy_v07] stage=backtest status=running compile=BuildSuccess cloud=In Progress... progress=6.6% project=38188060 backtest=1e357ef86453cc9727046d3fd068daaa
+[QC qwen_base/option-iron-condor-spy_v07] stage=backtest status=running compile=BuildSuccess cloud=In Progress... progress=14.9% project=38188060 backtest=1e357ef86453cc9727046d3fd068daaa
+[QC qwen_base/option-iron-condor-spy_v07] stage=backtest status=running compile=BuildSuccess cloud=In Progress... progress=37.2% project=38188060 backtest=1e357ef86453cc9727046d3fd068daaa
+[QC qwen_base/option-iron-condor-spy_v07] stage=backtest status=running compile=BuildSuccess cloud=In Progress... progress=46.3% project=38188060 backtest=1e357ef86453cc9727046d3fd068daaa
+[QC qwen_base/option-iron-condor-spy_v07] stage=backtest status=running compile=BuildSuccess cloud=In Progress... progress=61.2% project=38188060 backtest=1e357ef86453cc9727046d3fd068daaa
+[QC qwen_base/option-iron-condor-spy_v07] stage=backtest status=running compile=BuildSuccess cloud=In Progress... progress=71.1% project=38188060 backtest=1e357ef86453cc9727046d3fd068daaa
+[QC qwen_base/option-iron-condor-spy_v07] stage=backtest status=running compile=BuildSuccess cloud=In Progress... progress=92.6% project=38188060 backtest=1e357ef86453cc9727046d3fd068daaa
+[QC qwen_base/option-iron-condor-spy_v07] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=38188060 backtest=1e357ef86453cc9727046d3fd068daaa
+[QC qwen_base/option-iron-condor-spy_v07] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38188060 backtest=1e357ef86453cc9727046d3fd068daaa
+[QC qwen_base/option-iron-condor-spy_v07] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38188060 backtest=1e357ef86453cc9727046d3fd068daaa
+[QC qwen_base/option-iron-condor-spy_v07] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38188060 backtest=1e357ef86453cc9727046d3fd068daaa
+[qwen_base] 1/2 option-iron-condor-spy_v07: compile=0 runtime=0 fidelity=None model_id=qwen/qwen3.8-27b mock=False
+[qwen_base] futures_v05: requesting REAL model output
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 2.0s (1/2)
+[QC qwen_base/futures_v05] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/futures_v05] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC qwen_base/futures_v05] stage=upload status=running compile=None cloud=None progress=pending project=38188107 backtest=None
+[QC qwen_base/futures_v05] stage=compile status=running compile=None cloud=None progress=pending project=38188107 backtest=None
+[QC qwen_base/futures_v05] stage=compile status=running compile=InQueue cloud=None progress=pending project=38188107 backtest=None
+[QC qwen_base/futures_v05] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38188107 backtest=None
+[QC qwen_base/futures_v05] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38188107 backtest=None
+[QC qwen_base/futures_v05] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38188107 backtest=22d273610b24d83e4f84504a24b5cb84
+[QC qwen_base/futures_v05] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=38188107 backtest=22d273610b24d83e4f84504a24b5cb84
+[QC qwen_base/futures_v05] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38188107 backtest=22d273610b24d83e4f84504a24b5cb84
+[QC qwen_base/futures_v05] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38188107 backtest=22d273610b24d83e4f84504a24b5cb84
+[QC qwen_base/futures_v05] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38188107 backtest=22d273610b24d83e4f84504a24b5cb84
+[qwen_base] 2/2 futures_v05: compile=0 runtime=0 fidelity=None model_id=qwen/qwen3.8-27b mock=False
+
+--system v3: results cached under runs/<model>_prompt_v3/; sheet not modified
