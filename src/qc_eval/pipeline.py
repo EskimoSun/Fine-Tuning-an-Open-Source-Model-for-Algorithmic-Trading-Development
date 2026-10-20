@@ -34,7 +34,9 @@ from pathlib import Path
 import requests
 
 from . import sheet
+from .config import load_env
 from .rubric import FIDELITY_RUBRIC
+from .reporting import QCProgressPrinter, print_model_output
 from .static_checks import extract_code, run_static_checks
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -73,21 +75,38 @@ def call_fable(prompt, system=SYSTEM, max_tokens=4096):
         headers={"x-api-key": os.environ["ANTHROPIC_API_KEY"],
                  "anthropic-version": "2023-06-01", "content-type": "application/json"},
         json={"model": os.environ.get("FABLE_MODEL", "claude-fable-5-1"),
-              "max_tokens": max_tokens, "temperature": 0, "system": system,
+              "max_tokens": max_tokens, "system": system,
               "messages": [{"role": "user", "content": prompt}]},
         timeout=300)
     r.raise_for_status()
-    return "".join(b.get("text", "") for b in r.json()["content"])
+    response = r.json()
+    if response.get("stop_reason") == "max_tokens":
+        raise RuntimeError("Anthropic response reached max_tokens (thinking and text share this budget); no complete judgment was returned")
+    return "".join(b.get("text", "") for b in response["content"] if b.get("type") == "text")
 
 
-def call_openai_compatible(prompt, model, max_tokens=4096):
-    r = requests.post(
-        f"{os.environ['QWEN_BASE_URL'].rstrip('/')}/chat/completions",
-        headers={"Authorization": f"Bearer {os.environ['QWEN_API_KEY']}"},
-        json={"model": model, "max_tokens": max_tokens, "temperature": 0,
-              "messages": [{"role": "system", "content": SYSTEM},
-                           {"role": "user", "content": prompt}]},
-        timeout=300)
+def call_openai_compatible(prompt, model, max_tokens=4096, system=SYSTEM):
+    for attempt in range(3):
+        r = requests.post(
+            f"{os.environ['QWEN_BASE_URL'].rstrip('/')}/chat/completions",
+            headers={"Authorization": f"Bearer {os.environ['QWEN_API_KEY']}"},
+            json={"model": model, "max_tokens": max_tokens, "temperature": 0,
+                  "messages": [{"role": "system", "content": system},
+                               {"role": "user", "content": prompt}]},
+            timeout=300)
+        if r.status_code not in (429, 503) or attempt == 2:
+            break
+        try:
+            delay = max(1, float(r.headers.get("Retry-After", 2 ** (attempt + 1))))
+        except ValueError:
+            delay = 2 ** (attempt + 1)
+        if delay > 30:
+            # A daily quota or long wait needs a later resumed command, not
+            # unlimited retries. No successful generation is ever resampled.
+            break
+        print("[{}] HTTP {}; retrying the failed request in {}s ({}/2)".format(
+            model, r.status_code, delay, attempt + 1), flush=True)
+        time.sleep(delay)
     r.raise_for_status()
     return r.json()["choices"][0]["message"]["content"]
 
@@ -104,13 +123,13 @@ def mock_generate(prompt):
             '            self.set_holdings(self.spy, 1)\n        else:\n            self.liquidate()\n```')
 
 
-def generate(model, prompt, mock=False):
+def generate(model, prompt, mock=False, system=SYSTEM):
     if mock:
         return mock_generate(prompt), "mock"
     if model == "fable":
-        return call_fable(prompt), os.environ.get("FABLE_MODEL", "claude-fable-5-1")
+        return call_fable(prompt, system=system), os.environ.get("FABLE_MODEL", "claude-fable-5-1")
     mid = os.environ["QWEN_BASE_MODEL" if model == "qwen_base" else "QWEN_TUNED_MODEL"]
-    return call_openai_compatible(prompt, mid), mid
+    return call_openai_compatible(prompt, mid, system=system), mid
 
 
 def judge(prompt, code, mock=False):
@@ -225,10 +244,17 @@ def process(model, p, args, qc):
     path = RUNS / model / f"{p['id']}.json"
     rec = json.loads(path.read_text()) if path.exists() else {}
 
-    if "output" not in rec or args.regenerate:
+    replace_mock = not args.mock and rec.get("model_id") == "mock"
+    needs_generation = "output" not in rec or args.regenerate or replace_mock
+    if needs_generation:
+        print("[{}] {}: requesting {} model output".format(
+            model, p["id"], "mock" if args.mock else "REAL"), flush=True)
         out, model_id = generate(model, p["prompt"], mock=args.mock)
         rec = {"prompt_id": p["id"], "model": model, "model_id": model_id, "output": out,
                "generated_at": datetime.now(timezone.utc).isoformat()}
+    if getattr(args, "print_output", False):
+        print_model_output(model, p["id"], rec.get("model_id"), rec["output"],
+                           "fresh_generation" if needs_generation else "saved_generation")
 
     code = extract_code(rec["output"])
     rec["has_code"] = code is not None
@@ -244,6 +270,8 @@ def process(model, p, args, qc):
             for key in ("compile_errors", "runtime_errors", "total_orders", "statistics", "qc_note"):
                 rec.pop(key, None)
 
+            reporter = QCProgressPrinter(model + "/" + p["id"]) if getattr(args, "verbose", False) else None
+
             def checkpoint(qc_result):
                 rec["qc_evaluation"] = dict(qc_result)
                 for key in ("compile_errors", "runtime_errors", "total_orders", "statistics", "qc_note"):
@@ -251,6 +279,8 @@ def process(model, p, args, qc):
                         rec[key] = qc_result[key]
                 rec["note"] = rec.get("qc_note", "")
                 save_record(path, rec)
+                if reporter:
+                    reporter(qc_result)
 
             run_on_qc(qc, None, code, p["id"], on_progress=checkpoint)
         if not args.skip_judge and ("fidelity" not in rec or "judge_error" in rec or args.regenerate or args.rejudge):
@@ -270,6 +300,7 @@ def process(model, p, args, qc):
 
 
 def main():
+    load_env()
     ap = argparse.ArgumentParser()
     ap.add_argument("--models", default="fable,qwen_base")
     ap.add_argument("--limit", type=int, help="only the first N prompts")
@@ -280,11 +311,29 @@ def main():
     ap.add_argument("--rejudge", action="store_true")
     ap.add_argument("--skip-judge", action="store_true", help="generate/evaluate only; use qc_eval.score for detailed judging later")
     ap.add_argument("--human-sample", type=int, default=10)
+    ap.add_argument("--print-output", action="store_true", help="print raw model output, actual model ID and cache provenance")
+    ap.add_argument("--verbose", action="store_true", help="print QC cloud stage/progress while waiting")
+    ap.add_argument("--prompt-id", action="append", help="select a prompt ID (repeatable)")
+    ap.add_argument("--repair-attempts", type=int, default=0,
+                    help="enable real QC -> model repair feedback, with this many repair attempts (1-5)")
     args = ap.parse_args()
 
     prompts = load_prompts()
-    todo = prompts[: args.limit] if args.limit else prompts
+    todo = prompts
+    if args.prompt_id:
+        unknown = set(args.prompt_id) - {p["id"] for p in prompts}
+        if unknown:
+            ap.error("Unknown prompt IDs: " + ", ".join(sorted(unknown)))
+        todo = [p for p in prompts if p["id"] in args.prompt_id]
+    todo = todo[: args.limit] if args.limit else todo
     models = [m.strip() for m in args.models.split(",")]
+
+    if args.repair_attempts:
+        if not 1 <= args.repair_attempts <= 5 or args.mock or args.no_qc:
+            ap.error("--repair-attempts requires real QC and a value from 1 to 5")
+        from .auto_repair import run_batch
+        run_batch(todo, models, args.repair_attempts, args.verbose, args.print_output)
+        return
 
     qc = None
     if not args.no_qc and not args.mock:
@@ -306,7 +355,8 @@ def main():
                 continue
             results[model][p["id"]] = rec
             print(f"[{model}] {i}/{len(todo)} {p['id']}: compile={rec.get('compile_errors')} "
-                  f"runtime={rec.get('runtime_errors')} fidelity={rec.get('fidelity')}")
+                  f"runtime={rec.get('runtime_errors')} fidelity={rec.get('fidelity')} "
+                  f"model_id={rec.get('model_id')} mock={rec.get('model_id') == 'mock'}", flush=True)
 
     rng = random.Random(42)  # fixed seed so the human sample is the same every run
     human = rng.sample([p["id"] for p in todo], min(args.human_sample, len(todo)))

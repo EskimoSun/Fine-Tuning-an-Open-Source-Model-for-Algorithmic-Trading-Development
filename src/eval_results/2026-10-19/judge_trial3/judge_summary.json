@@ -1,0 +1,37 @@
+{
+  "judge_model": "claude-opus-5-5",
+  "rows": [
+    {
+      "prompt_id": "equity-rsi-overbought-oversold_v04",
+      "name": "QQQ 小时 RSI",
+      "score": 5,
+      "judge_status": "judged",
+      "execution": "completed",
+      "reason": "The candidate implements every element the request names. It trades QQQ on hourly bars with an RSI(14, Wilders) mean-reversion rule: long when RSI < 30, short when RSI > 70, exit when RSI returns to 50. The backtest window is exactly Q4 2024 (Oct 1 to Dec 31). The request left the thresholds, RSI period and sizing open, and the candidate's choices are conventional and sensible. The only small gap is that there is no indicator warm-up, so roughly the first 14 hourly bars of October cannot generate trades. That is an unrequested detail and does not affect fidelity.",
+      "needs_human_review": true,
+      "template_conflicts": [
+        "The template starts on 2024-09-01, but the request asks for Q4 2024. The candidate correctly follows the request and starts on 2024-10-01."
+      ]
+    },
+    {
+      "prompt_id": "equity-monthly-roc-rotation_v06",
+      "name": "月度 ROC 轮动",
+      "score": 4,
+      "judge_status": "judged",
+      "execution": "completed",
+      "reason": "The candidate implements nearly every requested element. It trades SPY, EFA, EEM, AGG and GLD at minute resolution with a daily ROC(60) attached to each security object. Automatic warm-up is enabled, no history() calls are made, and naming is snake_case. It rebalances at month start +1 minute after open, holds the top 3 at 1/3 each, liquidates the rest, and liquidates everything when all ROC < 0. Dates and cash are correct. The one explicit detail missed is that weights are set with per-symbol set_holdings(symbol, 1/3) instead of PortfolioTarget objects (lines 67-68). Secondary notes: the date/time rules omit an anchor symbol (lines 30-31), which may matter at execution but expresses the requested intent, and an unrequested IB brokerage model was added (line 14).",
+      "needs_human_review": false,
+      "template_conflicts": []
+    },
+    {
+      "prompt_id": "futures_v05",
+      "name": "ES 连续期货",
+      "score": 3,
+      "judge_status": "judged",
+      "execution": "runtime_error",
+      "reason": "The subscription matches the request exactly: ES continuous future, LAST_TRADING_DAY mapping, BACKWARDS_RATIO, depth 0, extended hours, a 0-92 day filter, and the requested dates. The entry rule (flat -> market order for 1 contract of .mapped) is also present. The rollover rule is weak. The code does not use the on_symbol_changed_events algorithm hook. Instead it attaches a custom handler to a security-level event attribute. The 'flat' state and the rollover quantity come from a manually tracked counter (_position_qty), not from actual portfolio holdings. The counter is updated in two places (line 71 and line 80). It only counts fills where the symbol equals the current mapped contract. As a result it does not reliably reflect holdings, and the rollover will likely re-enter a quantity different from the old position. That breaks 'liquidate old, re-enter same qty on new'. One key rule is wrong, so the score is 3.",
+      "needs_human_review": true,
+      "template_conflicts": []
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "source_model": "qwen_base",
+  "intervention": "model_qc_feedback_repair",
+  "selected": 3,
+  "completed": 2,
+  "max_repairs_per_strategy": 3,
+  "rows": [
+    {
+      "prompt_id": "equity-rsi-overbought-oversold_v04",
+      "strategy": "QQQ 小时 RSI",
+      "status": "completed",
+      "repairs_used": 2,
+      "orders": "16",
+      "closed_trades": 8,
+      "net_profit": "1.636%",
+      "project_id": 38141131,
+      "backtest_id": "2d57596ab61bf73cbf2c8c6b8cc3823e",
+      "new_qc_submissions": 2
+    },
+    {
+      "prompt_id": "equity-monthly-roc-rotation_v06",
+      "strategy": "月度 ROC 轮动",
+      "status": "completed",
+      "repairs_used": 3,
+      "orders": "87",
+      "closed_trades": 55,
+      "net_profit": "0.482%",
+      "project_id": 38141844,
+      "backtest_id": "8d9406616b5914c82485eb7e74ba5bde",
+      "new_qc_submissions": 3
+    },
+    {
+      "prompt_id": "futures_v05",
+      "strategy": "ES 连续期货",
+      "status": "runtime_error",
+      "repairs_used": 3,
+      "orders": null,
+      "closed_trades": null,
+      "net_profit": null,
+      "project_id": 38141996,
+      "backtest_id": "092bece16e35fc361fe1eceb02488f5e",
+      "new_qc_submissions": 3
+    }
+  ]
+}

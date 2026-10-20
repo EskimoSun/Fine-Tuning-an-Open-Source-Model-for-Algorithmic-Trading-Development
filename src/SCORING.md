@@ -4,6 +4,47 @@ Run commands from the repository's `src` directory with the `.venv` activated.
 Python 3.8 is supported. Existing dependencies (`requests`, `openpyxl`) suffice;
 DTW is implemented with the Python standard library.
 
+## Use your QC account for automatic model repair
+
+The pipeline, scoring command, and QC client now load the repository-root `.env`
+automatically. Existing exported environment variables take precedence. Configure
+`QC_USER_ID`, `QC_API_TOKEN`, `QWEN_BASE_URL`, `QWEN_API_KEY`, and `QWEN_BASE_MODEL`
+there; no `source` command is needed. Credentials stay in the local API clients.
+
+From `src`, run a bounded real QC feedback loop:
+
+```bash
+python -u -m qc_eval.pipeline --models qwen_base --prompt-id equity-bollinger-mean-reversion_v05 --repair-attempts 3 --skip-judge --verbose --print-output
+```
+
+This reuses the original real generation and source-matched QC execution when
+available. For failed code it sends the prompt, current code, and selected QC
+errors to the same model, then compiles/backtests the model's revised code on your
+QC account. Each revised algorithm runs over the full requested period. It stops
+on a completed backtest or after three model repairs; infrastructure failures are
+reported rather than treated as algorithm errors. No mock or Gold template is
+sent to the repair model. A small common API reference accompanies repair requests.
+
+The baseline under `runs/qwen_base/` remains unchanged. Every model response,
+repair request, Python file and QC result is stored under
+`runs/qc_repair/qwen_base/<prompt_id>/`. Saved successful model responses are
+reused on resume. Only completed candidates are published to
+`runs/qwen_base_qc_repaired/`, with `model_qc_feedback_repair` provenance. Compare
+these as a separate experiment. This mode writes JSON records rather than the
+legacy Excel workbook; `--regenerate`, `--rerun-qc`, and judge flags do not alter
+the repair-mode cache or invoke a judge. Use `qc_eval.score` separately:
+
+```bash
+python -m qc_eval.score --models qwen_base_qc_repaired --prompt-id equity-bollinger-mean-reversion_v05 --qc --require-real --verbose
+```
+
+Successful execution is not a 1–5 prompt adherence judgment. Add `--judge` only
+after configuring the judge. Failed/unavailable metrics remain unscored.
+
+Real smoke test: Bollinger `v05` reused its original `self.Indicator` failure,
+then completed on the first Qwen repair with 4 orders and 2 closed trades.
+QC project `38140214`, backtest `08119b5d0529beeedc2fc5c9d0e9dd08`.
+
 ## Recommended interpretation
 
 Report three separate results:
@@ -45,12 +86,15 @@ export QWEN_BASE_URL="your_openai_compatible_provider_base_url"
 export QWEN_API_KEY="your_provider_key"
 export QWEN_BASE_MODEL="a_valid_model_id_on_that_endpoint"
 
-python -m qc_eval.pipeline --models qwen_base --limit 5 --regenerate --no-qc --skip-judge
+python -m qc_eval.pipeline --models qwen_base --limit 5 --no-qc --skip-judge
 ```
 
 `--skip-judge` avoids paying for the old, shorter judge before running the new
 requirement-level judge. `--no-qc` leaves execution to the scoring command.
-`--regenerate` replaces mock generations; omit it when real outputs already exist.
+Real runs automatically replace cached mock generations and preserve existing
+real outputs, including failed baseline attempts. Do not use `--regenerate` when
+continuing a baseline: it replaces real outputs too. Reserve it for a separately
+tracked experiment.
 The old pipeline's Excel workbook is separate from the new JSON reports.
 
 ## 2. Score existing code
@@ -72,6 +116,9 @@ cloud resources. Projects created by evaluation remain in your account.
 
 `--judge` makes paid Anthropic calls and requires an explicit `FABLE_MODEL`.
 The same model grades every candidate using the shared rubric in `qc_eval/rubric.py`.
+The Anthropic client omits sampling parameters for modern model compatibility,
+extracts only text blocks, and rejects token-truncated replies. The detailed judge
+uses an 8192-token output budget, shared by thinking and answer text on Opus 5.5.
 It sees the template as an example, with explicit instructions that the prompt
 is authoritative. It checks assets, indicators, parameters, entries, exits,
 dates, resolution/schedule, and sizing. Missing, malformed, or contradictory judge
@@ -104,6 +151,37 @@ Each line must contain `prompt_id`, `model` (matching `--models`), and `output`
 (raw model text or raw algorithm Python). `model_id` and `qc_evaluation` are
 optional. Prompt IDs must match `data/prompts_100.jsonl`. Duplicate (model,
 prompt_id) pairs are rejected. Existing pipeline caches are not modified.
+
+## Print real outputs and execution evidence
+
+To print the actual provider response (including its model ID and whether it was
+newly generated or loaded from cache), use:
+
+```bash
+python -u -m qc_eval.pipeline --models qwen_base --limit 5 --no-qc --skip-judge --print-output
+```
+
+Missing outputs and old mock entries are replaced with real provider responses.
+Existing real outputs, even invalid strategies, are retained. Short HTTP 429/503
+failures are retried at most twice; unsuccessful requests never return fake code.
+Use repeatable `--prompt-id` arguments to select individual prompts.
+
+For a reviewed repair with visible cloud progress, source code, statistics,
+compile diagnostics, log tail and behavior metrics:
+
+```bash
+python -u -m qc_eval.score --models qwen_repaired --prompt-id equity-rsi-overbought-oversold_v02 --qc --print-output --verbose --require-real
+```
+
+`--require-real` rejects missing/mock entries before any QC authentication or
+job submission. `--verbose` labels reused backtests explicitly and shows cloud
+stages/progress for new ones. A reused result remains evidence from an actual
+cloud job; `--rerun-qc` requests new cloud executions if needed. `--print-output`
+prints saved candidate text; repaired text is labeled `manual_code_repair`.
+
+Cloud equity supports named point objects as well as compact arrays; candle
+arrays use their close, following LEAN's
+[candlestick serializer](https://www.lean.io/docs/v2/lean-engine/class-reference/CandlestickJsonConverter_8cs_source.html).
 
 ## Behavior measurements
 

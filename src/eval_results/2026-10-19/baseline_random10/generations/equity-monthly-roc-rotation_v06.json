@@ -1,0 +1,17 @@
+{
+  "prompt_id": "equity-monthly-roc-rotation_v06",
+  "model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "output": "```python\n# QuantConnect LEAN algorithm\n# Rebalance top 3 by 60-day ROC at month start +1 minute\n# All ROC < 0 -> liquidate all\n\nfrom AlgorithmImports import *\n\n\nclass RocRotationAlgorithm(QCAlgorithm):\n\n    def initialize(self):\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100_000)\n        self.set_brokerage_model(BrokerageName.INTERACTIVE_BROKERS, AccountType.MARGIN)\n\n        self.symbols = [\"SPY\", \"EFA\", \"EEM\", \"AGG\", \"GLD\"]\n        self.roc_window = 60  # 60 daily bars\n\n        # Attach ROC to each security object\n        for symbol in self.symbols:\n            sec = self.add_equity(symbol, Resolution.MINUTE)\n            sec.set_warm_up(self.roc_window, Resolution.DAILY)\n            sec.roc = None  # placeholder, updated in on_data\n\n        # Schedule rebalance at month start + 1 minute\n        self.schedule.on(\n            self.date_rules.month_start(),\n            self.time_rules.after_market_open(1, TimeUnit.MINUTES),\n            self.rebalance\n        )\n\n    def on_data(self, data: Slice):\n        # Compute ROC(60) on daily bars for each security\n        for symbol in self.symbols:\n            if symbol not in data:\n                continue\n            sec = self.securities[symbol]\n            # sec.roc is attached to the security object\n            if sec.roc is None:\n                continue\n            # Get daily bars from the security's data\n            daily_bars = data.get(symbol, Resolution.DAILY)\n            if daily_bars is None or len(daily_bars) < self.roc_window + 1:\n                continue\n            # ROC = (current_close / close_60_bars_ago) - 1\n            current_close = daily_bars[-1].close\n            past_close = daily_bars[-(self.roc_window + 1)].close\n            if past_close == 0:\n                continue\n            sec.roc = (current_close / past_close) - 1\n\n    def rebalance(self):\n        # Collect ROC values\n        roc_values = {}\n        for symbol in self.symbols:\n            sec = self.securities[symbol]\n            if sec.roc is not None:\n                roc_values[symbol] = sec.roc\n\n        if not roc_values:\n            return\n\n        # If all ROC < 0, liquidate everything\n        if all(v < 0 for v in roc_values.values()):\n            self.liquidate()\n            self.log(\"All ROC < 0, liquidated all positions.\")\n            return\n\n        # Sort by ROC descending, pick top 3\n        sorted_symbols = sorted(roc_values.keys(), key=lambda s: roc_values[s], reverse=True)\n        top3 = sorted_symbols[:3]\n\n        # Liquidate any holdings not in top3\n        for symbol in self.symbols:\n            if symbol not in top3 and self.portfolio[symbol].quantity != 0:\n                self.liquidate(symbol)\n\n        # Target 1/3 of portfolio in each top-3 security\n        for symbol in top3:\n            self.set_holdings(symbol, 1.0 / 3.0, PortfolioTargetType.PERCENT_PORTFOLIO)\n\n        self.log(f\"Rebalanced to top 3: {top3} with ROCs: {[roc_values[s] for s in top3]}\")\n```",
+  "generated_at": "2026-10-20T01:32:07.296683+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ".roc( / rateofchange"
+    }
+  ],
+  "note": "PROMPT_MISS: .roc( / rateofchange"
+}

@@ -12,7 +12,7 @@ from qc_eval.behavior import (compare_behavior, dtw_distance, equity_points,
 from qc_eval.fidelity import DIMENSIONS, judge_request, parse_judgment
 from qc_eval.qc_client import QCClient
 from qc_eval.pipeline import ROOT, load_prompts, mock_generate
-from qc_eval.score import digest, ensure_evaluation, score_one, summarize
+from qc_eval.score import digest, ensure_evaluation, format_progress, score_one, summarize
 
 
 T = 1704196800  # 2024-01-02 UTC
@@ -111,6 +111,19 @@ class BehaviorTests(unittest.TestCase):
     def test_candle_and_line_equity(self):
         candle = {"series": {"Equity": {"values": [{"x": T, "close": 100}]}}}
         self.assertEqual(equity_points(candle), [(float(T), 100)])
+
+    def test_live_compact_equity_arrays_use_candle_close(self):
+        for values in ([[T, 101]], [[T, 90, 120, 80, 101]]):
+            compact = {"series": {"Equity": {"values": values}}}
+            self.assertEqual(equity_points(compact), [(float(T), 101)])
+        gold, candidate = run(), run()
+        for result in (gold, candidate):
+            result["equity_chart"] = {"series": {"Equity": {"values": [
+                [T, 100, 100, 100, 100], [T + 86400, 100, 110, 95, 105],
+                [T + 2 * 86400, 105, 112, 100, 110]]}}}
+        metrics = compare_behavior(gold, candidate)
+        self.assertEqual(metrics["status"], "available")
+        self.assertEqual(metrics["equity"]["dtw_distance"], 0)
 
     def test_no_timezone_or_nonfinite_evidence(self):
         with self.assertRaises(ValueError):
@@ -246,6 +259,30 @@ class ScoringTests(unittest.TestCase):
                 self.assertTrue(result["has_code"])
                 judge.assert_not_called()
 
+    def test_real_generation_replaces_mock_but_preserves_existing_baseline(self):
+        from qc_eval.pipeline import process
+        spec = load_prompts()[0]
+        args = argparse.Namespace(regenerate=False, mock=False, skip_judge=True,
+                                  rerun_qc=False, rejudge=False)
+        for cached_model in ("mock", "real-model"):
+            with self.subTest(cached_model=cached_model), tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp) / "qwen_base" / (spec["id"] + ".json")
+                path.parent.mkdir()
+                original = {"model_id": cached_model, "output": CODE,
+                            "generated_at": "original-time"}
+                path.write_text(json.dumps(original))
+                with patch("qc_eval.pipeline.RUNS", Path(tmp)), patch(
+                        "qc_eval.pipeline.generate", return_value=(mock_generate("test"), "real-model")) as generate:
+                    result = process("qwen_base", spec, args, None)
+                self.assertEqual(result["model_id"], "real-model")
+                if cached_model == "mock":
+                    generate.assert_called_once()
+                    self.assertNotEqual(result["output"], CODE)
+                else:
+                    generate.assert_not_called()
+                    self.assertEqual(result["output"], CODE)
+                    self.assertEqual(result["generated_at"], "original-time")
+
     def test_evidence_reused_only_for_same_code(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "cached.json"
@@ -289,6 +326,20 @@ class ScoringTests(unittest.TestCase):
         self.assertEqual(summary["fidelity_mean"], 5)
         self.assertEqual(summary["rows_with_fidelity"], 1)
         self.assertEqual(summary["requested_rows"], 2)
+
+    def test_failed_execution_visible_even_when_report_was_scored(self):
+        result = {"prompt_id": "a", "model": "qwen_base", "status": "scored",
+                  "fidelity": {"status": "not_judged", "score": None},
+                  "execution": {"reference": {"status": "completed"},
+                                "candidate": {"status": "runtime_error", "qc_note": "Resolution has no attribute &#039;Hourly&#039;"}},
+                  "behavior": {"status": "unavailable", "errors": ["candidate backtest did not complete successfully"]}}
+        output = format_progress(result)
+        self.assertIn("candidate=runtime_error", output)
+        self.assertIn("reference=completed", output)
+        self.assertIn("'Hourly'", output)
+        summary = summarize([result])["all"]
+        self.assertEqual(summary["candidate_execution_statuses"], {"runtime_error": 1})
+        self.assertEqual(summary["behavior_statuses"], {"unavailable": 1})
 
 
 if __name__ == "__main__":

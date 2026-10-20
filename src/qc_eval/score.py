@@ -6,6 +6,7 @@ requests; --judge enables paid model judging. Never generates new Qwen code.
 
 import argparse
 import hashlib
+import html
 import json
 import os
 from collections import Counter
@@ -13,8 +14,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .behavior import compare_behavior
+from .config import load_env
 from .fidelity import judge_fidelity, judge_request
 from .pipeline import ROOT, RUNS, load_prompts, run_on_qc, save_record
+from .reporting import QCProgressPrinter, print_execution, print_model_output
 from .static_checks import extract_code, run_static_checks
 
 SCORING_VERSION = 1
@@ -25,20 +28,29 @@ def digest(value):
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
-def ensure_evaluation(code, path, name, qc=None, seed=None, rerun=False):
+def ensure_evaluation(code, path, name, qc=None, seed=None, rerun=False, verbose=False):
     """Reuse only evidence bound to this exact source; failed runs need explicit retry."""
     source_hash = digest(code)
     cached = json.loads(path.read_text()) if path.exists() else {}
     result = next((r for r in (cached, seed or {})
                    if r.get("source_sha256") == source_hash), None)
+    reporter = QCProgressPrinter(name) if verbose else None
+    def checkpoint(update):
+        save_record(path, update)
+        if reporter:
+            reporter(update)
     if result is None or rerun:
         if qc is None:
             return {"status": "not_run", "source_sha256": source_hash}
-        result = run_on_qc(qc, None, code, name,
-                           on_progress=lambda r: save_record(path, r))
+        result = run_on_qc(qc, None, code, name, on_progress=checkpoint)
+    elif verbose:
+        print("[QC {}] reusing saved execution status={} backtest={}".format(
+            name, result.get("status"), result.get("backtest_id")), flush=True)
     if result.get("status") == "completed" and qc is not None:
         for field, method in (("orders", qc.read_orders), ("equity_chart", qc.read_equity_chart)):
             if field not in result:
+                if verbose:
+                    print("[QC {}] downloading {}".format(name, field), flush=True)
                 try:
                     result[field] = method(result["project_id"], result["backtest_id"])
                     result.pop(field + "_fetch_error", None)
@@ -47,6 +59,8 @@ def ensure_evaluation(code, path, name, qc=None, seed=None, rerun=False):
                 save_record(path, result)
         result["evidence_note"] = "Equity chart requests up to 10000 observations; daily diagnostics are not intraday rule proofs."
     save_record(path, result)
+    if verbose:
+        print_execution(name, result)
     return result
 
 
@@ -63,16 +77,21 @@ def score_one(model, spec, record, args, qc):
     previous = json.loads(output_path.read_text()) if output_path.exists() else {}
     result = {"scoring_version": SCORING_VERSION, "prompt_id": spec["id"],
               "model": model, "model_id": record.get("model_id"),
+              "intervention": record.get("intervention", "none"),
+              "repair": record.get("repair"),
               "template_id": spec["template_id"], "prompt": spec["prompt"],
               "specificity": spec.get("specificity"), "segment": spec.get("segment"),
               "scored_at": datetime.now(timezone.utc).isoformat(),
               "prompt_sha256": digest(spec["prompt"])}
     if record.get("model_id") == "mock":
         result.update(status="mock_generation", fidelity={"score": None},
-                      note="Run the generation pipeline with --regenerate and real model credentials first.")
+                      note="Run the generation pipeline with real credentials; mock cache entries are automatically replaced.")
         save_record(output_path, result)
         return result
     code = extract_code(record["output"])
+    if getattr(args, "print_output", False):
+        print_model_output(model, spec["id"], record.get("model_id"), record["output"],
+                           record.get("intervention", "saved_generation"))
     if code is None:
         result.update(status="no_code", fidelity={"score": 1, "status": "no_code",
                       "reason": "No algorithm was returned for this trading prompt.",
@@ -87,10 +106,12 @@ def score_one(model, spec, record, args, qc):
     candidate_path = args.output_dir / "evaluations" / model / (spec["id"] + ".json")
     # Gold is cached once per template/source hash, not once per prompt variant.
     gold = ensure_evaluation(reference, gold_path, "gold-" + spec["template_id"], qc,
-                             rerun=args.rerun_qc and spec["template_id"] not in args.gold_refreshed)
+                             rerun=args.rerun_qc and spec["template_id"] not in args.gold_refreshed,
+                             verbose=getattr(args, "verbose", False))
     args.gold_refreshed.add(spec["template_id"])
     candidate = ensure_evaluation(code, candidate_path, model + "-" + spec["id"], qc,
-                                  seed=record.get("qc_evaluation"), rerun=args.rerun_qc)
+                                  seed=record.get("qc_evaluation"), rerun=args.rerun_qc,
+                                  verbose=getattr(args, "verbose", False))
     result["execution"] = {"reference": {k: gold.get(k) for k in ("status", "project_id", "backtest_id", "qc_note")},
                            "candidate": {k: candidate.get(k) for k in ("status", "project_id", "backtest_id", "qc_note")}}
     result["behavior"] = compare_behavior(gold, candidate, args.time_tolerance_seconds, args.dtw_window)
@@ -130,6 +151,9 @@ def summarize(results):
                 "fidelity_distribution": dict(Counter(scores)),
                 "statuses": dict(Counter(r["status"] for r in rows)),
                 "judge_statuses": dict(Counter(r.get("fidelity", {}).get("status", "not_judged") for r in rows)),
+                "reference_execution_statuses": dict(Counter(r.get("execution", {}).get("reference", {}).get("status", "not_run") for r in rows)),
+                "candidate_execution_statuses": dict(Counter(r.get("execution", {}).get("candidate", {}).get("status", "not_run") for r in rows)),
+                "behavior_statuses": dict(Counter(r.get("behavior", {}).get("status", "unavailable") for r in rows)),
                 "behavior_available": sum(r.get("behavior", {}).get("status") == "available" for r in rows),
                 "human_review_rows": [r["prompt_id"] for r in rows if r.get("fidelity", {}).get("needs_human_review")]}
     summary = {"all": group(results), "by_model": {}, "by_specificity": {}}
@@ -139,7 +163,27 @@ def summarize(results):
     return summary
 
 
+def format_progress(result):
+    """Report creation and successful execution are different outcomes."""
+    execution = result.get("execution", {})
+    reference = execution.get("reference", {})
+    candidate = execution.get("candidate", {})
+    fidelity = result.get("fidelity", {})
+    lines = ["[{}] {}: {} reference={} candidate={} fidelity={} judge={} behavior={}".format(
+        result["model"], result["prompt_id"], result["status"],
+        reference.get("status", "not_run"), candidate.get("status", "not_run"),
+        fidelity.get("score"), fidelity.get("status", "not_judged"),
+        result.get("behavior", {}).get("status", "unavailable"))]
+    for name, run in (("reference", reference), ("candidate", candidate)):
+        if run.get("qc_note"):
+            lines.append("  {}: {}".format(name, " ".join(html.unescape(run["qc_note"]).split())))
+    for error in result.get("behavior", {}).get("errors", []):
+        lines.append("  behavior: " + error)
+    return "\n".join(lines)
+
+
 def main():
+    load_env()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--models", default="qwen_base", help="comma-separated saved generation model labels")
     parser.add_argument("--limit", type=int)
@@ -152,6 +196,9 @@ def main():
     parser.add_argument("--time-tolerance-seconds", type=float, default=60)
     parser.add_argument("--dtw-window", type=int, default=1, help="maximum DTW shift in daily observations; 0 disables warping")
     parser.add_argument("--output-dir", type=Path, default=OUTPUT)
+    parser.add_argument("--print-output", action="store_true", help="print the actual saved candidate code and model ID")
+    parser.add_argument("--verbose", action="store_true", help="print live QC progress, statistics, log tail and behavior metrics")
+    parser.add_argument("--require-real", action="store_true", help="stop before cloud calls if any selected generation is missing or mock")
     args = parser.parse_args()
     if args.time_tolerance_seconds < 0 or args.dtw_window < 0 or (args.limit is not None and args.limit <= 0):
         parser.error("Use nonnegative tolerances and a positive --limit")
@@ -181,6 +228,18 @@ def main():
                 if key in supplied:
                     parser.error("Duplicate generation: " + str(key))
                 supplied[key] = record
+    if args.require_real:
+        invalid = []
+        for model in models:
+            for spec in prompts:
+                path = RUNS / model / (spec["id"] + ".json")
+                record = supplied.get((model, spec["id"])) if args.generations else (
+                    json.loads(path.read_text()) if path.exists() else None)
+                if record is None or record.get("model_id") == "mock":
+                    invalid.append(model + "/" + spec["id"])
+        if invalid:
+            parser.error("Real generation required; missing/mock outputs: " + ", ".join(invalid)
+                         + ". Generate real outputs first; cloud evaluation was not started.")
     qc = None
     if args.qc:
         from .qc_client import QCClient
@@ -208,8 +267,9 @@ def main():
                           "status": "scoring_error", "error": str(exc), "fidelity": {"score": None}}
                 save_record(args.output_dir / model / (spec["id"] + ".json"), result)
             results.append(result)
-            print("[{}] {}: {} fidelity={} behavior={}".format(model, spec["id"], result["status"],
-                  result.get("fidelity", {}).get("score"), result.get("behavior", {}).get("status")))
+            print(format_progress(result), flush=True)
+            if args.verbose and "behavior" in result:
+                print("BEHAVIOR METRICS:\n" + json.dumps(result["behavior"], indent=2, ensure_ascii=False), flush=True)
     summary = summarize(results)
     save_record(args.output_dir / "summary.json", summary)
     print("Reports: " + str(args.output_dir.resolve()))

@@ -94,9 +94,16 @@ def equity_points(chart):
         values = list(values.values())
     result = {}
     for point in values:
-        # LEAN equity may be candle points (close) or line points (y).
-        value = number(point["y"] if "y" in point else point["close"])
-        result[timestamp(point["x"])] = value
+        # QC cloud also serializes compact arrays: [x,y] for lines and
+        # [x,open,high,low,close] for candles. Live evidence uses this shape.
+        if isinstance(point, (list, tuple)):
+            if len(point) not in (2, 5):
+                raise ValueError("Unsupported compact equity point length: " + str(len(point)))
+            x, value = point[0], point[-1]
+        else:
+            x = point["x"]
+            value = point["y"] if "y" in point else point["close"]
+        result[timestamp(x)] = number(value)
     if not result:
         raise ValueError("Equity series is empty")
     return sorted(result.items())

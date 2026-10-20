@@ -1,0 +1,276 @@
+{
+  "seed": 42,
+  "sample_size": 10,
+  "real_outputs": 10,
+  "mock_outputs": 0,
+  "fresh_api_generations": 9,
+  "reused_real_generations": 1,
+  "python_syntax_pass": 10,
+  "rows_with_static_failures": 6,
+  "finding_counts": {
+    "LEGACY_API": 8,
+    "NO_ORDERS": 1,
+    "PROMPT_MISS": 6,
+    "UNKNOWN_API": 1
+  },
+  "qc_run_for_this_sample": false,
+  "judge_run_for_this_sample": false,
+  "rows": [
+    {
+      "prompt_id": "option-iron-condor-spy_v02",
+      "model_id": "qwen/qwen3.8-27b",
+      "mock": false,
+      "generated_at": "2026-10-20T01:30:07.799867+00:00",
+      "source": "fresh_api_generation",
+      "template": "option-iron-condor-spy",
+      "segment": "individual",
+      "specificity": "precise",
+      "syntax": "pass",
+      "static_findings": [
+        {
+          "code": "LEGACY_API",
+          "stage": "static",
+          "severity": "warning",
+          "detail": "AddEquity, AddOption, GetDelta, Log, OrderOption, SetCash, SetEndDate, SetStartDate"
+        },
+        {
+          "code": "NO_ORDERS",
+          "stage": "static",
+          "severity": "fail",
+          "detail": ""
+        },
+        {
+          "code": "PROMPT_MISS",
+          "stage": "static",
+          "severity": "fail",
+          "detail": "add_option"
+        }
+      ],
+      "source_sha256": "228de7e31bf3698ea1ddf6066f40a574b82296b1d553d55dadb0d14c61f8c301",
+      "qc": "not_run_for_this_sample",
+      "fidelity": null
+    },
+    {
+      "prompt_id": "equity-bollinger-mean-reversion_v05",
+      "model_id": "qwen/qwen3.8-27b",
+      "mock": false,
+      "generated_at": "2026-10-20T01:30:44.414251+00:00",
+      "source": "fresh_api_generation",
+      "template": "equity-bollinger-mean-reversion",
+      "segment": "startup",
+      "specificity": "precise",
+      "syntax": "pass",
+      "static_findings": [
+        {
+          "code": "LEGACY_API",
+          "stage": "static",
+          "severity": "warning",
+          "detail": "AddEquity, Indicator, Liquidate, Log, SetCash, SetEndDate, SetHoldings, SetStartDate"
+        },
+        {
+          "code": "PROMPT_MISS",
+          "stage": "static",
+          "severity": "fail",
+          "detail": ".bb( / bollingerbands"
+        }
+      ],
+      "source_sha256": "60742a1832827a2dc0f4abc5b7b4520aead830b335927e408c94024dd7cf33de",
+      "qc": "not_run_for_this_sample",
+      "fidelity": null
+    },
+    {
+      "prompt_id": "equity-rsi-overbought-oversold_v04",
+      "model_id": "qwen/qwen3.8-27b",
+      "mock": false,
+      "generated_at": "2026-10-19T21:39:04.884014+00:00",
+      "source": "existing_real_generation",
+      "template": "equity-rsi-overbought-oversold",
+      "segment": "startup",
+      "specificity": "vague",
+      "syntax": "pass",
+      "static_findings": [
+        {
+          "code": "LEGACY_API",
+          "stage": "static",
+          "severity": "warning",
+          "detail": "AddEquity, CalculateRSI, History, Liquidate, Log, SetCash, SetEndDate, SetHoldings, SetStartDate"
+        }
+      ],
+      "source_sha256": "5865a622b8911e4aa671dc386dc8b643087729b99891cf6124265596145c05c8",
+      "qc": "not_run_for_this_sample",
+      "fidelity": null
+    },
+    {
+      "prompt_id": "futures_v05",
+      "model_id": "qwen/qwen3.8-27b",
+      "mock": false,
+      "generated_at": "2026-10-20T01:31:21.002024+00:00",
+      "source": "fresh_api_generation",
+      "template": "futures",
+      "segment": "startup",
+      "specificity": "precise",
+      "syntax": "pass",
+      "static_findings": [
+        {
+          "code": "LEGACY_API",
+          "stage": "static",
+          "severity": "warning",
+          "detail": "AddFuture, Liquidate, Log, MarketOrder, SetCash, SetEndDate, SetStartDate"
+        },
+        {
+          "code": "PROMPT_MISS",
+          "stage": "static",
+          "severity": "fail",
+          "detail": "add_future"
+        }
+      ],
+      "source_sha256": "a1c74a95c489f0663b1c9fab303dc4307e9ce96019f9344d21cd1739381b8f4a",
+      "qc": "not_run_for_this_sample",
+      "fidelity": null
+    },
+    {
+      "prompt_id": "equity-monthly-roc-rotation_v06",
+      "model_id": "qwen/qwen3.8-27b",
+      "mock": false,
+      "generated_at": "2026-10-20T01:32:07.296683+00:00",
+      "source": "fresh_api_generation",
+      "template": "equity-monthly-roc-rotation",
+      "segment": "startup",
+      "specificity": "over_specified",
+      "syntax": "pass",
+      "static_findings": [
+        {
+          "code": "PROMPT_MISS",
+          "stage": "static",
+          "severity": "fail",
+          "detail": ".roc( / rateofchange"
+        }
+      ],
+      "source_sha256": "dd77adb09484c2f013f1c2d896d677b7ce1f5bf3e10a902facc7b174c800d43c",
+      "qc": "not_run_for_this_sample",
+      "fidelity": null
+    },
+    {
+      "prompt_id": "equity-monthly-roc-rotation_v02",
+      "model_id": "qwen/qwen3.8-27b",
+      "mock": false,
+      "generated_at": "2026-10-20T01:33:03.727830+00:00",
+      "source": "fresh_api_generation",
+      "template": "equity-monthly-roc-rotation",
+      "segment": "individual",
+      "specificity": "precise",
+      "syntax": "pass",
+      "static_findings": [
+        {
+          "code": "LEGACY_API",
+          "stage": "static",
+          "severity": "warning",
+          "detail": "AddEquity, Debug, History, Liquidate, MarketOrder, SetCash, SetEndDate, SetStartDate"
+        },
+        {
+          "code": "PROMPT_MISS",
+          "stage": "static",
+          "severity": "fail",
+          "detail": "month_start"
+        }
+      ],
+      "source_sha256": "b61044d6c7083507209509eb595831bac5bc92f287bea361858bbd9183015869",
+      "qc": "not_run_for_this_sample",
+      "fidelity": null
+    },
+    {
+      "prompt_id": "equity-atr-volatility-stop_v09",
+      "model_id": "qwen/qwen3.8-27b",
+      "mock": false,
+      "generated_at": "2026-10-20T01:33:41.781941+00:00",
+      "source": "fresh_api_generation",
+      "template": "equity-atr-volatility-stop",
+      "segment": "institutional",
+      "specificity": "over_specified",
+      "syntax": "pass",
+      "static_findings": [
+        {
+          "code": "LEGACY_API",
+          "stage": "static",
+          "severity": "warning",
+          "detail": "ATR"
+        }
+      ],
+      "source_sha256": "9072d305b95d911a250c23548ba62ac3efa0faa563c40e2b9ee59b44aa5a7f99",
+      "qc": "not_run_for_this_sample",
+      "fidelity": null
+    },
+    {
+      "prompt_id": "equity-bollinger-mean-reversion_v08",
+      "model_id": "qwen/qwen3.8-27b",
+      "mock": false,
+      "generated_at": "2026-10-20T01:34:32.292733+00:00",
+      "source": "fresh_api_generation",
+      "template": "equity-bollinger-mean-reversion",
+      "segment": "institutional",
+      "specificity": "precise",
+      "syntax": "pass",
+      "static_findings": [
+        {
+          "code": "LEGACY_API",
+          "stage": "static",
+          "severity": "warning",
+          "detail": "AddEquity, Debug, Indicator, Liquidate, SetCash, SetEndDate, SetHoldings, SetStartDate"
+        },
+        {
+          "code": "PROMPT_MISS",
+          "stage": "static",
+          "severity": "fail",
+          "detail": ".bb( / bollingerbands"
+        }
+      ],
+      "source_sha256": "b54dd931db7ba7713ed0fce75c54c22fb86c637d95f673d8706de169e309d822",
+      "qc": "not_run_for_this_sample",
+      "fidelity": null
+    },
+    {
+      "prompt_id": "equity-bollinger-mean-reversion_v04",
+      "model_id": "qwen/qwen3.8-27b",
+      "mock": false,
+      "generated_at": "2026-10-20T01:35:08.606191+00:00",
+      "source": "fresh_api_generation",
+      "template": "equity-bollinger-mean-reversion",
+      "segment": "startup",
+      "specificity": "vague",
+      "syntax": "pass",
+      "static_findings": [
+        {
+          "code": "UNKNOWN_API",
+          "stage": "static",
+          "severity": "warning",
+          "detail": "bollinger_bands"
+        }
+      ],
+      "source_sha256": "f41a7c826e77c4e7133bc5f1c62a035394542b86bc52c9a079bb1417a260f0e7",
+      "qc": "not_run_for_this_sample",
+      "fidelity": null
+    },
+    {
+      "prompt_id": "option-iron-condor-spy_v07",
+      "model_id": "qwen/qwen3.8-27b",
+      "mock": false,
+      "generated_at": "2026-10-20T01:35:46.340316+00:00",
+      "source": "fresh_api_generation",
+      "template": "option-iron-condor-spy",
+      "segment": "institutional",
+      "specificity": "vague",
+      "syntax": "pass",
+      "static_findings": [
+        {
+          "code": "LEGACY_API",
+          "stage": "static",
+          "severity": "warning",
+          "detail": "AddEquity, FindClosestStrike, Liquidate, Log, NextWeeklyExpiration, OptionChain, OrderOption, SetBrokerageModel, SetCash, SetEndDate"
+        }
+      ],
+      "source_sha256": "2d9e27ed7b4b185b753e0d60eee2d415d8e5e571d2f7fb4cd9d3c2d8c74cc313",
+      "qc": "not_run_for_this_sample",
+      "fidelity": null
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+[qwen_qc_feedback_trial] equity-rsi-overbought-oversold_v04: scored reference=completed candidate=completed fidelity=5 judge=judged behavior=partial
+  behavior: Need matching date ranges and >=95% common daily observations
+[qwen_qc_feedback_trial] equity-monthly-roc-rotation_v06: scored reference=completed candidate=completed fidelity=4 judge=judged behavior=available
+[qwen_qc_feedback_trial] futures_v05: scored reference=completed candidate=runtime_error fidelity=3 judge=judged behavior=unavailable
+  candidate: runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Engine.Run(): During the algorithm initialization, the following exception has occurred: 'Future' object has no attribute 'on_symbol_changed_event', at initialize,
+  behavior: candidate backtest did not complete successfully
+Reports: src/runs/judge_trial3/scoring
+{
+  "requested_rows": 3,
+  "rows_with_fidelity": 3,
+  "fidelity_mean": 4.0,
+  "fidelity_distribution": {
+    "5": 1,
+    "4": 1,
+    "3": 1
+  },
+  "statuses": {
+    "scored": 3
+  },
+  "judge_statuses": {
+    "judged": 3
+  },
+  "reference_execution_statuses": {
+    "completed": 3
+  },
+  "candidate_execution_statuses": {
+    "completed": 2,
+    "runtime_error": 1
+  },
+  "behavior_statuses": {
+    "partial": 1,
+    "available": 1,
+    "unavailable": 1
+  },
+  "behavior_available": 1,
+  "human_review_rows": [
+    "equity-rsi-overbought-oversold_v04",
+    "futures_v05"
+  ]
+}

@@ -1,0 +1,2051 @@
+QC authenticated; real cloud feedback repair enabled
+
+=== MODEL OUTPUT qwen_base_qc_repaired / equity-rsi-overbought-oversold_v04 ===
+model_id=qwen/qwen3.8-27b source=original mock=False
+```python
+# QuantConnect LEAN Algorithm
+# QQQ RSI Mean Reversion Strategy
+# Hourly timeframe, Long when RSI < 30, Short when RSI > 70
+# Exit at RSI midline (50)
+# Backtest period: Q4 2024 (Oct 1, 2024 - Dec 31, 2024)
+
+from AlgorithmImports import *
+
+class QQQRSIMeanReversion(QCAlgorithm):
+    def Initialize(self):
+        # Set backtest period: Q4 2024
+        self.SetStartDate(2024, 10, 1)
+        self.SetEndDate(2024, 12, 31)
+        
+        # Set initial capital
+        self.SetCash(100000)
+        
+        # Add QQQ equity
+        self.symbol = self.AddEquity("QQQ", Resolution.Hourly).Symbol
+        
+        # RSI parameters
+        self.rsi_period = 14
+        self.oversold_level = 30
+        self.overbought_level = 70
+        self.midline = 50
+        
+        # Position tracking
+        self.in_position = False
+        self.position_side = None  # 'long' or 'short'
+        
+        # Schedule hourly data
+        self.Schedule.On(self.DateRules.Every(self.symbol), self.TimeRules.AfterMarketOpen(self.symbol, 0), self.OnHourlyBar)
+        
+        # Log initialization
+        self.Log("QQQ RSI Mean Reversion Strategy Initialized")
+        self.Log(f"RSI Period: {self.rsi_period}, Oversold: {self.oversold_level}, Overbought: {self.overbought_level}, Midline: {self.midline}")
+
+    def OnHourlyBar(self, context):
+        # Get historical data for RSI calculation
+        # We need at least rsi_period + 1 bars
+        lookback = self.rsi_period + 1
+        history = self.History(self.symbol, lookback, Resolution.Hourly)
+        
+        if history is None or len(history) < lookback:
+            return
+        
+        # Calculate RSI
+        rsi = self.CalculateRSI(history, self.rsi_period)
+        
+        if rsi is None:
+            return
+        
+        current_price = self.Securities[self.symbol].Price
+        
+        # Check if we have an open position
+        if self.in_position:
+            # Check for exit condition: RSI crosses midline
+            if self.position_side == 'long' and rsi >= self.midline:
+                self.Liquidate(self.symbol)
+                self.Log(f"EXIT LONG: RSI={rsi:.2f} >= Midline={self.midline}, Price={current_price:.2f}")
+                self.in_position = False
+                self.position_side = None
+            elif self.position_side == 'short' and rsi <= self.midline:
+                self.Liquidate(self.symbol)
+                self.Log(f"EXIT SHORT: RSI={rsi:.2f} <= Midline={self.midline}, Price={current_price:.2f}")
+                self.in_position = False
+                self.position_side = None
+        else:
+            # No position, check for entry conditions
+            if rsi < self.oversold_level:
+                # Go long
+                self.SetHoldings(self.symbol, 1.0)
+                self.in_position = True
+                self.position_side = 'long'
+                self.Log(f"ENTRY LONG: RSI={rsi:.2f} < Oversold={self.oversold_level}, Price={current_price:.2f}")
+            elif rsi > self.overbought_level:
+                # Go short
+                self.SetHoldings(self.symbol, -1.0)
+                self.in_position = True
+                self.position_side = 'short'
+                self.Log(f"ENTRY SHORT: RSI={rsi:.2f} > Overbought={self.overbought_level}, Price={current_price:.2f}")
+
+    def CalculateRSI(self, history, period):
+        """
+        Calculate RSI from historical price data.
+        history: list of Slice objects with Close prices
+        period: RSI lookback period
+        """
+        if history is None or len(history) < period + 1:
+            return None
+        
+        # Extract close prices in chronological order
+        closes = []
+        for bar in history:
+            if self.symbol in bar:
+                closes.append(bar[self.symbol].Close)
+        
+        if len(closes) < period + 1:
+            return None
+        
+        # Calculate price changes
+        changes = [closes[i+1] - closes[i] for i in range(len(closes)-1)]
+        
+        if len(changes) < period:
+            return None
+        
+        # Separate gains and losses
+        gains = [max(change, 0) for change in changes]
+        losses = [max(-change, 0) for change in changes]
+        
+        # Calculate average gain and loss (simple average for initial period)
+        avg_gain = sum(gains[:period]) / period
+        avg_loss = sum(losses[:period]) / period
+        
+        # If avg_loss is 0, RSI is 100
+        if avg_loss == 0:
+            return 100.0
+        
+        # Calculate RS and RSI
+        rs = avg_gain / avg_loss
+        rsi = 100 - (100 / (1 + rs))
+        
+        return rsi
+
+    def OnEnd(self):
+        # Liquidate any remaining positions
+        if self.in_position:
+            self.Liquidate(self.symbol)
+            self.Log(f"END: Liquidated remaining position. Side: {self.position_side}")
+        
+        self.Log("Algorithm Ended")
+```
+=== END MODEL OUTPUT ===
+
+[QC repair-equity-rsi-overbought-oversold_v04-r0] reusing saved execution status=runtime_error backtest=ea2caa79dd93f8a3dc79b30f9184e2dd
+
+=== QC RESULT repair-equity-rsi-overbought-oversold_v04-r0 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38129207,
+  "compile_id": "fb3073a82807437ab7a3079eae6cdffb-32c8feec6b421f6f4bf0b9940ea93cc9",
+  "backtest_id": "ea2caa79dd93f8a3dc79b30f9184e2dd",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": null,
+  "statistics": {},
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2024-10-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object 'Resolution' has no attribute 'Hourly' Did you mean: 'HOUR'?\n  at Initialize\n    self.symbol = self.AddEquity("QQQ", Resolution.Hourly).Symbol\n                                        ^^^^^^^^^^^^^^^^^\n in main.py: line 19\n type object 'Resolution' has no attribute 'Hourly' Did you mean: 'HOUR'?",
+  "qc_note": "runtime: 2024-10-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object 'Resolution' has no attribute 'Hourly' Did you mean: 'HOUR'?\n  "
+}
+compile_logs (last 20 of 13):
+Warning main.py Line: 12 Column: 9 - "QQQRSIMeanReversion" has no attribute "SetStartDate"; maybe "self.set_start_date(2024, 1, 1)"?
+Warning main.py Line: 13 Column: 9 - "QQQRSIMeanReversion" has no attribute "SetEndDate"; maybe "self.set_end_date(2020, 12, 31)"?
+Warning main.py Line: 16 Column: 9 - "QQQRSIMeanReversion" has no attribute "SetCash"; maybe "self.set_cash(1000000)"?
+Warning main.py Line: 19 Column: 9 - Cannot assign to a method; maybe "self._equity = self.add_equity("QQQ", Resolution.HOUR)"?
+Warning main.py Line: 19 Column: 23 - "QQQRSIMeanReversion" has no attribute "AddEquity"
+Warning main.py Line: 19 Column: 45 - "Resolution" has no attribute "Hourly". Valid attributes are: [SECOND,MINUTE,DAILY,TICK,HOUR]
+Warning main.py Line: 32 Column: 9 - "QQQRSIMeanReversion" has no attribute "Schedule"; maybe "self.universe_settings.schedule.on(self.date_rules.month_start('SPY'))"?
+Warning main.py Line: 32 Column: 26 - "QQQRSIMeanReversion" has no attribute "DateRules"
+Warning main.py Line: 32 Column: 61 - "QQQRSIMeanReversion" has no attribute "TimeRules"
+Warning main.py Line: 35 Column: 9 - "QQQRSIMeanReversion" has no attribute "Log"; maybe "self._algorithm.log(f"CustomSlippageModel: {slippage}")"?
+Warning main.py Line: 36 Column: 9 - "QQQRSIMeanReversion" has no attribute "Log"; maybe "self._algorithm.log(f"CustomSlippageModel: {slippage}")"?
+Warning main.py Line: 42 Column: 19 - "QQQRSIMeanReversion" has no attribute "History"; maybe "history = self.history(Bitstamp, self._btc, 200, Resolution.DAILY)"?
+Build Request Successful for Project ID: 38129207, with CompileID: fb3073a82807437ab7a3079eae6cdffb-32c8feec6b421f6f4bf0b9940ea93cc9, Lean Version: 2.5.0.0.18194
+=== END QC RESULT ===
+
+[repair equity-rsi-overbought-oversold_v04] round=0 status=runtime_error backtest=ea2caa79dd93f8a3dc79b30f9184e2dd
+[repair equity-rsi-overbought-oversold_v04] requesting model correction 1/3
+
+=== MODEL OUTPUT qwen_base_qc_repaired / equity-rsi-overbought-oversold_v04 ===
+model_id=qwen/qwen3.8-27b source=qc_feedback_round_1 mock=False
+```python
+# QuantConnect LEAN Algorithm
+# QQQ RSI Mean Reversion Strategy
+# Hourly timeframe, Long when RSI < 30, Short when RSI > 70
+# Exit at RSI midline (50)
+# Backtest period: Q4 2024 (Oct 1, 2024 - Dec 31, 2024)
+
+from AlgorithmImports import *
+from datetime import datetime, timedelta
+
+class QQQRSIMeanReversion(QCAlgorithm):
+    def initialize(self):
+        # Set backtest period: Q4 2024
+        self.set_start_date(2024, 10, 1)
+        self.set_end_date(2024, 12, 31)
+        
+        # Set initial capital
+        self.set_cash(100000)
+        
+        # Add QQQ equity with hourly resolution
+        self.symbol = self.add_equity("QQQ", Resolution.HOUR).symbol
+        
+        # RSI parameters
+        self.rsi_period = 14
+        self.oversold_level = 30
+        self.overbought_level = 70
+        self.midline = 50
+        
+        # Position tracking
+        self.in_position = False
+        self.position_side = None  # 'long' or 'short'
+        
+        # Create RSI indicator
+        self._rsi = self.rsi(self.symbol, self.rsi_period, MovingAverageType.WILDERS, Resolution.HOUR)
+        
+        # Log initialization
+        self.log("QQQ RSI Mean Reversion Strategy Initialized")
+        self.log(f"RSI Period: {self.rsi_period}, Oversold: {self.oversold_level}, Overbought: {self.overbought_level}, Midline: {self.midline}")
+
+    def on_data(self, data: Slice):
+        # Only process if we have the symbol in data
+        if self.symbol not in data:
+            return
+        
+        # Check if RSI indicator is ready
+        if not self._rsi.is_ready:
+            return
+        
+        # Get current RSI value
+        rsi = self._rsi.current.value
+        
+        # Get current price
+        current_price = data[self.symbol].close
+        
+        # Check if we have an open position
+        if self.in_position:
+            # Check for exit condition: RSI crosses midline
+            if self.position_side == 'long' and rsi >= self.midline:
+                self.liquidate(self.symbol)
+                self.log(f"EXIT LONG: RSI={rsi:.2f} >= Midline={self.midline}, Price={current_price:.2f}")
+                self.in_position = False
+                self.position_side = None
+            elif self.position_side == 'short' and rsi <= self.midline:
+                self.liquidate(self.symbol)
+                self.log(f"EXIT SHORT: RSI={rsi:.2f} <= Midline={self.midline}, Price={current_price:.2f}")
+                self.in_position = False
+                self.position_side = None
+        else:
+            # No position, check for entry conditions
+            if rsi < self.oversold_level:
+                # Go long
+                self.set_holdings(self.symbol, 1.0)
+                self.in_position = True
+                self.position_side = 'long'
+                self.log(f"ENTRY LONG: RSI={rsi:.2f} < Oversold={self.oversold_level}, Price={current_price:.2f}")
+            elif rsi > self.overbought_level:
+                # Go short
+                self.set_holdings(self.symbol, -1.0)
+                self.in_position = True
+                self.position_side = 'short'
+                self.log(f"ENTRY SHORT: RSI={rsi:.2f} > Overbought={self.overbought_level}, Price={current_price:.2f}")
+
+    def on_end(self):
+        # Liquidate any remaining positions
+        if self.in_position:
+            self.liquidate(self.symbol)
+            self.log(f"END: Liquidated remaining position. Side: {self.position_side}")
+        
+        self.log("Algorithm Ended")
+```
+=== END MODEL OUTPUT ===
+
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=upload status=running compile=None cloud=None progress=pending project=38141114 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=compile status=running compile=None cloud=None progress=pending project=38141114 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=compile status=running compile=InQueue cloud=None progress=pending project=38141114 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38141114 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38141114 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38141114 backtest=0c7d9cc48b428f614dc3d93b5a6098d0
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141114 backtest=0c7d9cc48b428f614dc3d93b5a6098d0
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141114 backtest=0c7d9cc48b428f614dc3d93b5a6098d0
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141114 backtest=0c7d9cc48b428f614dc3d93b5a6098d0
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141114 backtest=0c7d9cc48b428f614dc3d93b5a6098d0
+
+=== QC RESULT repair-equity-rsi-overbought-oversold_v04-r1 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38141114,
+  "compile_id": "bb11962ac7f87d2e3dc868469197b79e-8e2a35e8222f54fe8f1f8de318a1d4cf",
+  "backtest_id": "0c7d9cc48b428f614dc3d93b5a6098d0",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "15",
+  "statistics": {
+    "Total Orders": "15",
+    "Average Win": "0.97%",
+    "Average Loss": "-1.80%",
+    "Compounding Annual Return": "3.178%",
+    "Drawdown": "4.700%",
+    "Expectancy": "0.099",
+    "Start Equity": "100000",
+    "End Equity": "100714.35",
+    "Net Profit": "0.714%",
+    "Sharpe Ratio": "-0.27",
+    "Sortino Ratio": "-0.282",
+    "Probabilistic Sharpe Ratio": "23.439%",
+    "Loss Rate": "29%",
+    "Win Rate": "71%",
+    "Profit-Loss Ratio": "0.54",
+    "Alpha": "-0.003",
+    "Beta": "-0.202",
+    "Annual Standard Deviation": "0.085",
+    "Annual Variance": "0.007",
+    "Information Ratio": "-0.797",
+    "Tracking Error": "0.149",
+    "Treynor Ratio": "0.113",
+    "Total Fees": "$15.37",
+    "Estimated Strategy Capacity": "$130000000.00",
+    "Lowest Capacity Asset": "QQQ RIWIV7K5Z9LX",
+    "Portfolio Turnover": "18.09%",
+    "Drawdown Recovery": "4"
+  },
+  "trade_statistics": {
+    "startDateTime": "2024-10-14T14:00:00Z",
+    "endDateTime": "2024-12-18T20:00:00Z",
+    "totalNumberOfTrades": 7,
+    "numberOfWinningTrades": 5,
+    "numberOfLosingTrades": 2,
+    "totalProfitLoss": "1207.54",
+    "totalProfit": "4919.90",
+    "totalLoss": "-3712.36",
+    "largestProfit": "1858.02",
+    "largestLoss": "-2021.47",
+    "averageProfitLoss": "172.5057",
+    "averageProfit": "983.9800",
+    "averageLoss": "-1856.18",
+    "averageTradeDuration": "4.15:25:42.8571428",
+    "averageWinningTradeDuration": "3.20:00:00",
+    "averageLosingTradeDuration": "6.16:00:00",
+    "medianTradeDuration": "5.01:00:00",
+    "medianWinningTradeDuration": "4.04:00:00",
+    "medianLosingTradeDuration": "7.05:00:00",
+    "maxConsecutiveWinningTrades": 3,
+    "maxConsecutiveLosingTrades": 1,
+    "profitLossRatio": "0.5301",
+    "winLossRatio": "2.5",
+    "winRate": "0.7143",
+    "lossRate": "0.2857",
+    "averageMAE": "-1316.5443",
+    "averageMFE": "817.5686",
+    "largestMAE": "-2956.69",
+    "largestMFE": "2642.19",
+    "maximumClosedTradeDrawdown": "-3215.55",
+    "maximumIntraTradeDrawdown": "-4958.95",
+    "profitLossStandardDeviation": "1466.7877",
+    "profitLossDownsideDeviation": "233.7554",
+    "profitFactor": "1.3253",
+    "sharpeRatio": "0.1176",
+    "sortinoRatio": "0.7380",
+    "profitToMaxDrawdownRatio": "0.3755",
+    "maximumEndTradeDrawdown": "2956.69",
+    "averageEndTradeDrawdown": "-645.0629",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "14.370"
+  },
+  "error": "2024-12-23 00:00:00 Runtime Error: 'NoneType' object has no attribute 'close'\n  at on_data\n    current_price = data[self.symbol].close\n                    ^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 52\n",
+  "qc_note": "runtime: 2024-12-23 00:00:00 Runtime Error: 'NoneType' object has no attribute 'close'\n  at on_data\n    current_price = data[self.symbol].close\n                    ^^^^^^^^^^^^^^^^^^^^^^^\n "
+}
+compile_logs (last 20 of 7):
+Warning main.py Line: 20 Column: 9 - Cannot assign to a method; maybe "self._equity = self.add_equity("QQQ", Resolution.HOUR)"?
+Warning main.py Line: 33 Column: 30 - Argument 1 to "rsi" of "QCAlgorithm" has incompatible type "Callable[[str?], Symbol]"; expected "Symbol | str | BaseContract | Security"; maybe "self._rsi = self.rsi(self._equity, 14, MovingAverageType.WILDERS, Resolution.HOUR)"?
+Warning main.py Line: 41 Column: 12 - Unsupported operand types for in ("Callable[[str?], Symbol]" and "Slice")
+Warning main.py Line: 52 Column: 25 - No overload variant of "__getitem__" of "Slice" matches argument type "Callable[[str?], Symbol]"
+Warning main.py Line: 71 Column: 17 - No overload variant of "set_holdings" of "QCAlgorithm" matches argument types "Callable[[str?], Symbol]", "float"; maybe "self.set_holdings(self._symbol, 1.0)"?
+Warning main.py Line: 77 Column: 17 - No overload variant of "set_holdings" of "QCAlgorithm" matches argument types "Callable[[str?], Symbol]", "float"; maybe "self.set_holdings(self._spy.symbol, -1.0)"?
+Build Request Successful for Project ID: 38141114, with CompileID: bb11962ac7f87d2e3dc868469197b79e-8e2a35e8222f54fe8f1f8de318a1d4cf, Lean Version: 2.5.0.0.18194
+logs (last 20 of 21):
+2024-10-01 00:00:00 QQQ RSI Mean Reversion Strategy Initialized
+2024-10-01 00:00:00 RSI Period: 14, Oversold: 30, Overbought: 70, Midline: 50
+2024-10-14 10:00:00 ENTRY SHORT: RSI=71.37 > Overbought=70, Price=493.62
+2024-10-15 11:00:00 EXIT SHORT: RSI=45.30 <= Midline=50, Price=487.29
+2024-10-23 14:00:00 ENTRY LONG: RSI=28.63 < Oversold=30, Price=481.30
+2024-10-24 16:00:00 Warning: market orders submitted while the market is closed are automatically converted into MarketOnOpen orders to fill at the next market open.
+2024-10-24 16:00:00 EXIT LONG: RSI=50.95 >= Midline=50, Price=487.39
+2024-10-31 10:00:00 ENTRY LONG: RSI=26.92 < Oversold=30, Price=482.73
+2024-11-05 10:00:00 EXIT LONG: RSI=54.58 >= Midline=50, Price=486.06
+2024-11-06 10:00:00 ENTRY SHORT: RSI=71.26 > Overbought=70, Price=495.32
+2024-11-12 13:00:00 EXIT SHORT: RSI=49.28 <= Midline=50, Price=504.99
+2024-11-15 10:00:00 ENTRY LONG: RSI=25.32 < Oversold=30, Price=496.26
+2024-11-19 14:00:00 EXIT LONG: RSI=53.71 >= Midline=50, Price=498.69
+2024-12-02 10:00:00 ENTRY SHORT: RSI=70.71 > Overbought=70, Price=508.50
+2024-12-09 15:00:00 EXIT SHORT: RSI=49.84 <= Midline=50, Price=516.96
+2024-12-11 13:00:00 ENTRY SHORT: RSI=70.65 > Overbought=70, Price=524.34
+2024-12-18 15:00:00 EXIT SHORT: RSI=31.13 <= Midline=50, Price=521.32
+2024-12-18 16:00:00 ENTRY LONG: RSI=19.97 < Oversold=30, Price=511.30
+2024-12-23 00:00:00 Runtime Error: 'NoneType' object has no attribute 'close'
+  at on_data
+    current_price = data[self.symbol].close
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+ in main.py: line 52
+
+2024-12-23 00:00:00 Algorithm Id:(0c7d9cc48b428f614dc3d93b5a6098d0) completed in 3.44 seconds at 0k data points per second. Processing total of 815 data points.
+=== END QC RESULT ===
+
+[repair equity-rsi-overbought-oversold_v04] round=1 status=runtime_error backtest=0c7d9cc48b428f614dc3d93b5a6098d0
+[repair equity-rsi-overbought-oversold_v04] requesting model correction 2/3
+
+=== MODEL OUTPUT qwen_base_qc_repaired / equity-rsi-overbought-oversold_v04 ===
+model_id=qwen/qwen3.8-27b source=qc_feedback_round_2 mock=False
+```python
+# QuantConnect LEAN Algorithm
+# QQQ RSI Mean Reversion Strategy
+# Hourly timeframe, Long when RSI < 30, Short when RSI > 70
+# Exit at RSI midline (50)
+# Backtest period: Q4 2024 (Oct 1, 2024 - Dec 31, 2024)
+
+from AlgorithmImports import *
+from datetime import datetime, timedelta
+
+class QQQRSIMeanReversion(QCAlgorithm):
+    def initialize(self):
+        # Set backtest period: Q4 2024
+        self.set_start_date(2024, 10, 1)
+        self.set_end_date(2024, 12, 31)
+        
+        # Set initial capital
+        self.set_cash(100000)
+        
+        # Add QQQ equity with hourly resolution
+        self._equity = self.add_equity("QQQ", Resolution.HOUR)
+        self.symbol = self._equity.symbol
+        
+        # RSI parameters
+        self.rsi_period = 14
+        self.oversold_level = 30
+        self.overbought_level = 70
+        self.midline = 50
+        
+        # Position tracking
+        self.in_position = False
+        self.position_side = None  # 'long' or 'short'
+        
+        # Create RSI indicator
+        self._rsi = self.rsi(self.symbol, self.rsi_period, MovingAverageType.WILDERS, Resolution.HOUR)
+        
+        # Log initialization
+        self.log("QQQ RSI Mean Reversion Strategy Initialized")
+        self.log(f"RSI Period: {self.rsi_period}, Oversold: {self.oversold_level}, Overbought: {self.overbought_level}, Midline: {self.midline}")
+
+    def on_data(self, data: Slice):
+        # Only process if we have the symbol in data
+        if self.symbol not in data:
+            return
+        
+        # Check if RSI indicator is ready
+        if not self._rsi.is_ready:
+            return
+        
+        # Get current RSI value
+        rsi = self._rsi.current.value
+        
+        # Get current price safely
+        if self.symbol not in data or data[self.symbol] is None:
+            return
+        current_price = data[self.symbol].close
+        
+        # Check if we have an open position
+        if self.in_position:
+            # Check for exit condition: RSI crosses midline
+            if self.position_side == 'long' and rsi >= self.midline:
+                self.liquidate(self.symbol)
+                self.log(f"EXIT LONG: RSI={rsi:.2f} >= Midline={self.midline}, Price={current_price:.2f}")
+                self.in_position = False
+                self.position_side = None
+            elif self.position_side == 'short' and rsi <= self.midline:
+                self.liquidate(self.symbol)
+                self.log(f"EXIT SHORT: RSI={rsi:.2f} <= Midline={self.midline}, Price={current_price:.2f}")
+                self.in_position = False
+                self.position_side = None
+        else:
+            # No position, check for entry conditions
+            if rsi < self.oversold_level:
+                # Go long
+                self.set_holdings(self.symbol, 1.0)
+                self.in_position = True
+                self.position_side = 'long'
+                self.log(f"ENTRY LONG: RSI={rsi:.2f} < Oversold={self.oversold_level}, Price={current_price:.2f}")
+            elif rsi > self.overbought_level:
+                # Go short
+                self.set_holdings(self.symbol, -1.0)
+                self.in_position = True
+                self.position_side = 'short'
+                self.log(f"ENTRY SHORT: RSI={rsi:.2f} > Overbought={self.overbought_level}, Price={current_price:.2f}")
+
+    def on_end(self):
+        # Liquidate any remaining positions
+        if self.in_position:
+            self.liquidate(self.symbol)
+            self.log(f"END: Liquidated remaining position. Side: {self.position_side}")
+        
+        self.log("Algorithm Ended")
+```
+=== END MODEL OUTPUT ===
+
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=upload status=running compile=None cloud=None progress=pending project=38141131 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=compile status=running compile=None cloud=None progress=pending project=38141131 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=compile status=running compile=InQueue cloud=None progress=pending project=38141131 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38141131 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38141131 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38141131 backtest=2d57596ab61bf73cbf2c8c6b8cc3823e
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=38141131 backtest=2d57596ab61bf73cbf2c8c6b8cc3823e
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38141131 backtest=2d57596ab61bf73cbf2c8c6b8cc3823e
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38141131 backtest=2d57596ab61bf73cbf2c8c6b8cc3823e
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38141131 backtest=2d57596ab61bf73cbf2c8c6b8cc3823e
+[QC repair-equity-rsi-overbought-oversold_v04-r2] downloading orders
+[QC repair-equity-rsi-overbought-oversold_v04-r2] downloading equity_chart
+
+=== QC RESULT repair-equity-rsi-overbought-oversold_v04-r2 ===
+{
+  "status": "completed",
+  "stage": "finished",
+  "project_id": 38141131,
+  "compile_id": "6a4923f7a6fe1273210ce22928dbc661-d1e1cc7972d7f3c308e43559a5a43d8f",
+  "backtest_id": "2d57596ab61bf73cbf2c8c6b8cc3823e",
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "total_orders": "16",
+  "statistics": {
+    "Total Orders": "16",
+    "Average Win": "0.88%",
+    "Average Loss": "-1.80%",
+    "Compounding Annual Return": "6.672%",
+    "Drawdown": "4.700%",
+    "Expectancy": "0.117",
+    "Start Equity": "100000",
+    "End Equity": "101636.08",
+    "Net Profit": "1.636%",
+    "Sharpe Ratio": "0.014",
+    "Sortino Ratio": "0.014",
+    "Probabilistic Sharpe Ratio": "27.495%",
+    "Loss Rate": "25%",
+    "Win Rate": "75%",
+    "Profit-Loss Ratio": "0.49",
+    "Alpha": "0.01",
+    "Beta": "-0.166",
+    "Annual Standard Deviation": "0.082",
+    "Annual Variance": "0.007",
+    "Information Ratio": "-0.372",
+    "Tracking Error": "0.145",
+    "Treynor Ratio": "-0.007",
+    "Total Fees": "$16.37",
+    "Estimated Strategy Capacity": "$100000000.00",
+    "Lowest Capacity Asset": "QQQ RIWIV7K5Z9LX",
+    "Portfolio Turnover": "17.41%",
+    "Drawdown Recovery": "4"
+  },
+  "trade_statistics": {
+    "startDateTime": "2024-10-14T14:00:00Z",
+    "endDateTime": "2024-12-23T19:00:00Z",
+    "totalNumberOfTrades": 8,
+    "numberOfWinningTrades": 6,
+    "numberOfLosingTrades": 2,
+    "totalProfitLoss": "1652.45",
+    "totalProfit": "5364.81",
+    "totalLoss": "-3712.36",
+    "largestProfit": "1858.02",
+    "largestLoss": "-2021.47",
+    "averageProfitLoss": "206.5562",
+    "averageProfit": "894.1350",
+    "averageLoss": "-1856.18",
+    "averageTradeDuration": "4.14:00:00",
+    "averageWinningTradeDuration": "3.21:20:00",
+    "averageLosingTradeDuration": "6.16:00:00",
+    "medianTradeDuration": "5.01:00:00",
+    "medianWinningTradeDuration": "4.04:00:00",
+    "medianLosingTradeDuration": "7.05:00:00",
+    "maxConsecutiveWinningTrades": 3,
+    "maxConsecutiveLosingTrades": 1,
+    "profitLossRatio": "0.4817",
+    "winLossRatio": "3",
+    "winRate": "0.75",
+    "lossRate": "0.25",
+    "averageMAE": "-1400.3912",
+    "averageMFE": "774.6112",
+    "largestMAE": "-2956.69",
+    "largestMFE": "2642.19",
+    "maximumClosedTradeDrawdown": "-3215.55",
+    "maximumIntraTradeDrawdown": "-4958.95",
+    "profitLossStandardDeviation": "1361.3925",
+    "profitLossDownsideDeviation": "233.7554",
+    "profitFactor": "1.4451",
+    "sharpeRatio": "0.1517",
+    "sortinoRatio": "0.8836",
+    "profitToMaxDrawdownRatio": "0.5139",
+    "maximumEndTradeDrawdown": "2956.69",
+    "averageEndTradeDrawdown": "-568.0550",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "16.370"
+  },
+  "error": null,
+  "qc_note": ""
+}
+compile_logs (last 20 of 9):
+Warning main.py Line: 21 Column: 9 - Cannot assign to a method; maybe "symbol = self.add_equity(ticker, Resolution.MINUTE).symbol"?
+Warning main.py Line: 34 Column: 30 - Argument 1 to "rsi" of "QCAlgorithm" has incompatible type "Callable[[str?], Symbol]"; expected "Symbol | str | BaseContract | Security"; maybe "self._rsi = self.rsi(self._equity, 14, MovingAverageType.WILDERS, Resolution.HOUR)"?
+Warning main.py Line: 42 Column: 12 - Unsupported operand types for in ("Callable[[str?], Symbol]" and "Slice")
+Warning main.py Line: 53 Column: 12 - Unsupported operand types for in ("Callable[[str?], Symbol]" and "Slice")
+Warning main.py Line: 53 Column: 39 - No overload variant of "__getitem__" of "Slice" matches argument type "Callable[[str?], Symbol]"
+Warning main.py Line: 55 Column: 25 - No overload variant of "__getitem__" of "Slice" matches argument type "Callable[[str?], Symbol]"
+Warning main.py Line: 74 Column: 17 - No overload variant of "set_holdings" of "QCAlgorithm" matches argument types "Callable[[str?], Symbol]", "float"; maybe "self.set_holdings(self._symbol, 1.0)"?
+Warning main.py Line: 80 Column: 17 - No overload variant of "set_holdings" of "QCAlgorithm" matches argument types "Callable[[str?], Symbol]", "float"; maybe "self.set_holdings(self._spy.symbol, -1.0)"?
+Build Request Successful for Project ID: 38141131, with CompileID: 6a4923f7a6fe1273210ce22928dbc661-d1e1cc7972d7f3c308e43559a5a43d8f, Lean Version: 2.5.0.0.18194
+logs (last 20 of 21):
+2024-10-01 00:00:00 QQQ RSI Mean Reversion Strategy Initialized
+2024-10-01 00:00:00 RSI Period: 14, Oversold: 30, Overbought: 70, Midline: 50
+2024-10-14 10:00:00 ENTRY SHORT: RSI=71.37 > Overbought=70, Price=493.62
+2024-10-15 11:00:00 EXIT SHORT: RSI=45.30 <= Midline=50, Price=487.29
+2024-10-23 14:00:00 ENTRY LONG: RSI=28.63 < Oversold=30, Price=481.30
+2024-10-24 16:00:00 Warning: market orders submitted while the market is closed are automatically converted into MarketOnOpen orders to fill at the next market open.
+2024-10-24 16:00:00 EXIT LONG: RSI=50.95 >= Midline=50, Price=487.39
+2024-10-31 10:00:00 ENTRY LONG: RSI=26.92 < Oversold=30, Price=482.73
+2024-11-05 10:00:00 EXIT LONG: RSI=54.58 >= Midline=50, Price=486.06
+2024-11-06 10:00:00 ENTRY SHORT: RSI=71.26 > Overbought=70, Price=495.32
+2024-11-12 13:00:00 EXIT SHORT: RSI=49.28 <= Midline=50, Price=504.99
+2024-11-15 10:00:00 ENTRY LONG: RSI=25.32 < Oversold=30, Price=496.26
+2024-11-19 14:00:00 EXIT LONG: RSI=53.71 >= Midline=50, Price=498.69
+2024-12-02 10:00:00 ENTRY SHORT: RSI=70.71 > Overbought=70, Price=508.50
+2024-12-09 15:00:00 EXIT SHORT: RSI=49.84 <= Midline=50, Price=516.96
+2024-12-11 13:00:00 ENTRY SHORT: RSI=70.65 > Overbought=70, Price=524.34
+2024-12-18 15:00:00 EXIT SHORT: RSI=31.13 <= Midline=50, Price=521.32
+2024-12-18 16:00:00 ENTRY LONG: RSI=19.97 < Oversold=30, Price=511.30
+2024-12-23 14:00:00 EXIT LONG: RSI=50.63 >= Midline=50, Price=518.15
+2024-12-31 16:00:00 Algorithm Id:(2d57596ab61bf73cbf2c8c6b8cc3823e) completed in 1.03 seconds at 1k data points per second. Processing total of 893 data points.
+=== END QC RESULT ===
+
+[repair equity-rsi-overbought-oversold_v04] round=2 status=completed backtest=2d57596ab61bf73cbf2c8c6b8cc3823e
+
+=== MODEL OUTPUT qwen_base_qc_repaired / equity-monthly-roc-rotation_v06 ===
+model_id=qwen/qwen3.8-27b source=original mock=False
+```python
+# QuantConnect LEAN algorithm
+# Rebalance top 3 by 60-day ROC at month start +1 minute
+# All ROC < 0 -> liquidate all
+
+from AlgorithmImports import *
+
+
+class RocRotationAlgorithm(QCAlgorithm):
+
+    def initialize(self):
+        self.set_start_date(2022, 1, 1)
+        self.set_end_date(2024, 12, 31)
+        self.set_cash(100_000)
+        self.set_brokerage_model(BrokerageName.INTERACTIVE_BROKERS, AccountType.MARGIN)
+
+        self.symbols = ["SPY", "EFA", "EEM", "AGG", "GLD"]
+        self.roc_window = 60  # 60 daily bars
+
+        # Attach ROC to each security object
+        for symbol in self.symbols:
+            sec = self.add_equity(symbol, Resolution.MINUTE)
+            sec.set_warm_up(self.roc_window, Resolution.DAILY)
+            sec.roc = None  # placeholder, updated in on_data
+
+        # Schedule rebalance at month start + 1 minute
+        self.schedule.on(
+            self.date_rules.month_start(),
+            self.time_rules.after_market_open(1, TimeUnit.MINUTES),
+            self.rebalance
+        )
+
+    def on_data(self, data: Slice):
+        # Compute ROC(60) on daily bars for each security
+        for symbol in self.symbols:
+            if symbol not in data:
+                continue
+            sec = self.securities[symbol]
+            # sec.roc is attached to the security object
+            if sec.roc is None:
+                continue
+            # Get daily bars from the security's data
+            daily_bars = data.get(symbol, Resolution.DAILY)
+            if daily_bars is None or len(daily_bars) < self.roc_window + 1:
+                continue
+            # ROC = (current_close / close_60_bars_ago) - 1
+            current_close = daily_bars[-1].close
+            past_close = daily_bars[-(self.roc_window + 1)].close
+            if past_close == 0:
+                continue
+            sec.roc = (current_close / past_close) - 1
+
+    def rebalance(self):
+        # Collect ROC values
+        roc_values = {}
+        for symbol in self.symbols:
+            sec = self.securities[symbol]
+            if sec.roc is not None:
+                roc_values[symbol] = sec.roc
+
+        if not roc_values:
+            return
+
+        # If all ROC < 0, liquidate everything
+        if all(v < 0 for v in roc_values.values()):
+            self.liquidate()
+            self.log("All ROC < 0, liquidated all positions.")
+            return
+
+        # Sort by ROC descending, pick top 3
+        sorted_symbols = sorted(roc_values.keys(), key=lambda s: roc_values[s], reverse=True)
+        top3 = sorted_symbols[:3]
+
+        # Liquidate any holdings not in top3
+        for symbol in self.symbols:
+            if symbol not in top3 and self.portfolio[symbol].quantity != 0:
+                self.liquidate(symbol)
+
+        # Target 1/3 of portfolio in each top-3 security
+        for symbol in top3:
+            self.set_holdings(symbol, 1.0 / 3.0, PortfolioTargetType.PERCENT_PORTFOLIO)
+
+        self.log(f"Rebalanced to top 3: {top3} with ROCs: {[roc_values[s] for s in top3]}")
+```
+=== END MODEL OUTPUT ===
+
+[QC repair-equity-monthly-roc-rotation_v06-r0] reusing saved execution status=runtime_error backtest=094a3e33c171cd07ad14620af380b892
+
+=== QC RESULT repair-equity-monthly-roc-rotation_v06-r0 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38139407,
+  "compile_id": "f2e20486dce53a8bb6419ad3d334f339-3c904cf10a59b6c703c94944f31f9fb9",
+  "backtest_id": "094a3e33c171cd07ad14620af380b892",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": null,
+  "statistics": {},
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "[ERROR] FATAL UNHANDLED EXCEPTION:Engine.Run(): During the algorithm initialization, the following exception has occurred: type object 'BrokerageName' has no attribute 'INTERACTIVE_BROKERS' Did you mean: 'INTERACTIVE_BROKERS_FIX', 'INTERACTIVE_BROKERS_BROKERAGE'?,  at initialize,    self.set_brokerage_model(BrokerageName.INTERACTIVE_BROKERS, AccountType.MARGIN),                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^, in main.py: line 14, type object 'BrokerageName' has no attribute 'INTERACTIVE_BROKERS' Did you mean: 'INTERACTIVE_BROKERS_FIX', 'INTERACTIVE_BROKERS_BROKERAGE'?,Extensions.SetRuntimeError(): Extensions.SetRuntimeError(): RuntimeError at 01/01/2022 05:00:00 UTC. Context: RuntimeError System.Exception: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object 'BrokerageName' has no attribute 'INTERACTIVE_BROKERS' Did you mean: 'INTERACTIVE_BROKERS_FIX', 'INTERACTIVE_BROKERS_BROKERAGE'?,  at initialize,    self.set_brokerage_model(BrokerageName.INTERACT",
+  "qc_note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Engine.Run(): During the algorithm initialization, the following exception has occurred: type object 'BrokerageName' has no attribute 'INTERACTIVE_BROKERS' Did you me"
+}
+compile_logs (last 20 of 4):
+Warning main.py Line: 14 Column: 34 - "BrokerageName" has no attribute "INTERACTIVE_BROKERS". Valid attributes are: [INTERACTIVE_BROKERS_BROKERAGE,QUANT_CONNECT_BROKERAGE,INTERACTIVE_BROKERS_FIX,TRADING_TECHNOLOGIES,BINANCE_COIN_FUTURES,TRADIER_BROKERAGE,OANDA_BROKERAGE,BINANCE_FUTURES,FXCM_BROKERAGE,CHARLES_SCHWAB,ALPHA_STREAMS,TD_AMERITRADE,TRADE_STATION,TERMINAL_LINK,BLOOMBERG_FIX,CLEAR_STREET,TASTYTRADE,BINANCE_US,WOLVERINE,BITFINEX,COINBASE,DEFAULT,BINANCE,ZERODHA,ALPACA,ATREYU,KRAKEN,EXANTE,WEBULL,PUBLIC,SAMCO,FTXUS,BYBIT,GDAX,AXOS,DYDX,FTX,RBI,EZE]
+Warning main.py Line: 28 Column: 50 - Name "TimeUnit" is not defined
+Warning main.py Line: 80 Column: 50 - Name "PortfolioTargetType" is not defined
+Build Request Successful for Project ID: 38139407, with CompileID: f2e20486dce53a8bb6419ad3d334f339-3c904cf10a59b6c703c94944f31f9fb9, Lean Version: 2.5.0.0.18194
+=== END QC RESULT ===
+
+[repair equity-monthly-roc-rotation_v06] round=0 status=runtime_error backtest=094a3e33c171cd07ad14620af380b892
+[repair equity-monthly-roc-rotation_v06] requesting model correction 1/3
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 1s (1/2)
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 4.0s (2/2)
+Traceback (most recent call last):
+  File "/Users/zhang/opt/anaconda3/lib/python3.8/runpy.py", line 194, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/Users/zhang/opt/anaconda3/lib/python3.8/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "src/qc_eval/pipeline.py", line 366, in <module>
+    main()
+  File "src/qc_eval/pipeline.py", line 332, in main
+    run_batch(todo, models, args.repair_attempts, args.verbose, args.print_output)
+  File "src/qc_eval/auto_repair.py", line 186, in run_batch
+    results.append(repair_one(model, spec, qc, max_repairs, verbose, print_output))
+  File "src/qc_eval/auto_repair.py", line 124, in repair_one
+    output, model_id = generate(model, request, system=REPAIR_SYSTEM)
+  File "src/qc_eval/pipeline.py", line 129, in generate
+    return call_openai_compatible(prompt, mid, system=system), mid
+  File "src/qc_eval/pipeline.py", line 107, in call_openai_compatible
+    r.raise_for_status()
+  File ".venv/lib/python3.8/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 429 Client Error: Too Many Requests for url: https://api.groq.com/openai/v1/chat/completions
+QC authenticated; real cloud feedback repair enabled
+[repair equity-monthly-roc-rotation_v06] requesting model correction 1/3
+
+=== MODEL OUTPUT qwen_base_qc_repaired / equity-monthly-roc-rotation_v06 ===
+model_id=qwen/qwen3.8-27b source=qc_feedback_round_1 mock=False
+```python
+# QuantConnect LEAN algorithm
+# Rebalance top 3 by 60-day ROC at month start +1 minute
+# All ROC < 0 -> liquidate all
+
+from AlgorithmImports import *
+
+
+class RocRotationAlgorithm(QCAlgorithm):
+
+    def initialize(self):
+        self.set_start_date(2022, 1, 1)
+        self.set_end_date(2024, 12, 31)
+        self.set_cash(100_000)
+        self.set_brokerage_model(BrokerageName.INTERACTIVE_BROKERS_BROKERAGE, AccountType.MARGIN)
+
+        self.symbols = ["SPY", "EFA", "EEM", "AGG", "GLD"]
+        self.roc_window = 60  # 60 daily bars
+
+        # Enable automatic indicator warm-up
+        self.settings.automatic_indicator_warm_up = True
+
+        # Attach ROC to each security object
+        for symbol in self.symbols:
+            sec = self.add_equity(symbol, Resolution.MINUTE)
+            sec.set_warm_up(self.roc_window, Resolution.DAILY)
+            # Create ROC indicator on daily resolution
+            sec.roc = self.roc(symbol, self.roc_window, Resolution.DAILY)
+
+        # Schedule rebalance at month start + 1 minute after market open
+        self.schedule.on(
+            self.date_rules.month_start(),
+            self.time_rules.after_market_open(1, TimeUnit.MINUTES),
+            self.rebalance
+        )
+
+    def on_data(self, data: Slice):
+        # No need to compute ROC manually; indicators are updated automatically
+        # We just ensure indicators are ready before rebalance
+        pass
+
+    def rebalance(self):
+        # Collect ROC values from the attached indicators
+        roc_values = {}
+        for symbol in self.symbols:
+            sec = self.securities[symbol]
+            if sec.roc is not None and sec.roc.is_ready:
+                roc_values[symbol] = sec.roc.current.value
+
+        if not roc_values:
+            return
+
+        # If all ROC < 0, liquidate everything
+        if all(v < 0 for v in roc_values.values()):
+            self.liquidate()
+            self.log("All ROC < 0, liquidated all positions.")
+            return
+
+        # Sort by ROC descending, pick top 3
+        sorted_symbols = sorted(roc_values.keys(), key=lambda s: roc_values[s], reverse=True)
+        top3 = sorted_symbols[:3]
+
+        # Liquidate any holdings not in top3
+        for symbol in self.symbols:
+            if symbol not in top3 and self.portfolio[symbol].quantity != 0:
+                self.liquidate(symbol)
+
+        # Target 1/3 of portfolio in each top-3 security
+        for symbol in top3:
+            self.set_holdings(symbol, 1.0 / 3.0, PortfolioTargetType.PERCENT_PORTFOLIO)
+
+        self.log(f"Rebalanced to top 3: {top3} with ROCs: {[roc_values[s] for s in top3]}")
+```
+=== END MODEL OUTPUT ===
+
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=upload status=running compile=None cloud=None progress=pending project=38141728 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=compile status=running compile=None cloud=None progress=pending project=38141728 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38141728 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38141728 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38141728 backtest=f19c99ef8732b21efaae3883dfe25385
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141728 backtest=f19c99ef8732b21efaae3883dfe25385
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141728 backtest=f19c99ef8732b21efaae3883dfe25385
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141728 backtest=f19c99ef8732b21efaae3883dfe25385
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141728 backtest=f19c99ef8732b21efaae3883dfe25385
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141728 backtest=f19c99ef8732b21efaae3883dfe25385
+
+=== QC RESULT repair-equity-monthly-roc-rotation_v06-r1 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38141728,
+  "compile_id": "2b95dc639a4f4fee01b6d31770d62840-d9da715189a1aac3cec238bd7ecd751d",
+  "backtest_id": "f19c99ef8732b21efaae3883dfe25385",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": null,
+  "statistics": {},
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: 'Equity' object has no attribute 'set_warm_up'\n  at initialize\n    sec.set_warm_up(self.roc_window, Resolution.DAILY)\n    ^^^^^^^^^^^^^^^\n in main.py: line 25\n 'Equity' object has no attribute 'set_warm_up'",
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: 'Equity' object has no attribute 'set_warm_up'\n  at initialize\n    sec.set_warm_up(se"
+}
+compile_logs (last 20 of 3):
+Warning main.py Line: 32 Column: 50 - Name "TimeUnit" is not defined
+Warning main.py Line: 69 Column: 50 - Name "PortfolioTargetType" is not defined
+Build Request Successful for Project ID: 38141728, with CompileID: 2b95dc639a4f4fee01b6d31770d62840-d9da715189a1aac3cec238bd7ecd751d, Lean Version: 2.5.0.0.18194
+=== END QC RESULT ===
+
+[repair equity-monthly-roc-rotation_v06] round=1 status=runtime_error backtest=f19c99ef8732b21efaae3883dfe25385
+[repair equity-monthly-roc-rotation_v06] requesting model correction 2/3
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 2.0s (1/2)
+
+=== MODEL OUTPUT qwen_base_qc_repaired / equity-monthly-roc-rotation_v06 ===
+model_id=qwen/qwen3.8-27b source=qc_feedback_round_2 mock=False
+```python
+# QuantConnect LEAN algorithm
+# Rebalance top 3 by 60-day ROC at month start +1 minute
+# All ROC < 0 -> liquidate all
+
+from AlgorithmImports import *
+
+
+class RocRotationAlgorithm(QCAlgorithm):
+
+    def initialize(self):
+        self.set_start_date(2022, 1, 1)
+        self.set_end_date(2024, 12, 31)
+        self.set_cash(100_000)
+        self.set_brokerage_model(BrokerageName.INTERACTIVE_BROKERS_BROKERAGE, AccountType.MARGIN)
+
+        self.symbols = ["SPY", "EFA", "EEM", "AGG", "GLD"]
+        self.roc_window = 60  # 60 daily bars
+
+        # Enable automatic indicator warm-up
+        self.settings.automatic_indicator_warm_up = True
+
+        # Attach ROC to each security object
+        for symbol in self.symbols:
+            sec = self.add_equity(symbol, Resolution.MINUTE)
+            # Create ROC indicator on daily resolution
+            sec.roc = self.roc(symbol, self.roc_window, Resolution.DAILY)
+
+        # Schedule rebalance at month start + 1 minute after market open
+        self.schedule.on(
+            self.date_rules.month_start(),
+            self.time_rules.after_market_open(1, TimeUnit.MINUTES),
+            self.rebalance
+        )
+
+    def on_data(self, data: Slice):
+        # No need to compute ROC manually; indicators are updated automatically
+        # We just ensure indicators are ready before rebalance
+        pass
+
+    def rebalance(self):
+        # Collect ROC values from the attached indicators
+        roc_values = {}
+        for symbol in self.symbols:
+            sec = self.securities[symbol]
+            if sec.roc is not None and sec.roc.is_ready:
+                roc_values[symbol] = sec.roc.current.value
+
+        if not roc_values:
+            return
+
+        # If all ROC < 0, liquidate everything
+        if all(v < 0 for v in roc_values.values()):
+            self.liquidate()
+            self.log("All ROC < 0, liquidated all positions.")
+            return
+
+        # Sort by ROC descending, pick top 3
+        sorted_symbols = sorted(roc_values.keys(), key=lambda s: roc_values[s], reverse=True)
+        top3 = sorted_symbols[:3]
+
+        # Liquidate any holdings not in top3
+        for symbol in self.symbols:
+            if symbol not in top3 and self.portfolio[symbol].quantity != 0:
+                self.liquidate(symbol)
+
+        # Target 1/3 of portfolio in each top-3 security
+        for symbol in top3:
+            self.set_holdings(symbol, 1.0 / 3.0, PortfolioTargetType.PERCENT_PORTFOLIO)
+
+        self.log(f"Rebalanced to top 3: {top3} with ROCs: {[roc_values[s] for s in top3]}")
+```
+=== END MODEL OUTPUT ===
+
+[QC repair-equity-monthly-roc-rotation_v06-r2] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r2] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r2] stage=upload status=running compile=None cloud=None progress=pending project=38141788 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r2] stage=compile status=running compile=None cloud=None progress=pending project=38141788 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r2] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38141788 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r2] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38141788 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r2] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38141788 backtest=a9f8eee85e956e13c35b29de3f7a1b5a
+[QC repair-equity-monthly-roc-rotation_v06-r2] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141788 backtest=a9f8eee85e956e13c35b29de3f7a1b5a
+[QC repair-equity-monthly-roc-rotation_v06-r2] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141788 backtest=a9f8eee85e956e13c35b29de3f7a1b5a
+[QC repair-equity-monthly-roc-rotation_v06-r2] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141788 backtest=a9f8eee85e956e13c35b29de3f7a1b5a
+[QC repair-equity-monthly-roc-rotation_v06-r2] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141788 backtest=a9f8eee85e956e13c35b29de3f7a1b5a
+[QC repair-equity-monthly-roc-rotation_v06-r2] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141788 backtest=a9f8eee85e956e13c35b29de3f7a1b5a
+
+=== QC RESULT repair-equity-monthly-roc-rotation_v06-r2 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38141788,
+  "compile_id": "2304bef0803ca214407769aa0462654d-5d0312d588e986b01be06a088707bb0f",
+  "backtest_id": "a9f8eee85e956e13c35b29de3f7a1b5a",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": null,
+  "statistics": {},
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name 'TimeUnit' is not defined\n  at initialize\n    self.time_rules.after_market_open(1, TimeUnit.MINUTES),\n                                         ^^^^^^^^\n in main.py: line 31\n name 'TimeUnit' is not defined",
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name 'TimeUnit' is not defined\n  at initialize\n    self.time_rules.after_market_open(1, TimeUni"
+}
+compile_logs (last 20 of 3):
+Warning main.py Line: 31 Column: 50 - Name "TimeUnit" is not defined
+Warning main.py Line: 68 Column: 50 - Name "PortfolioTargetType" is not defined
+Build Request Successful for Project ID: 38141788, with CompileID: 2304bef0803ca214407769aa0462654d-5d0312d588e986b01be06a088707bb0f, Lean Version: 2.5.0.0.18194
+=== END QC RESULT ===
+
+[repair equity-monthly-roc-rotation_v06] round=2 status=runtime_error backtest=a9f8eee85e956e13c35b29de3f7a1b5a
+[repair equity-monthly-roc-rotation_v06] requesting model correction 3/3
+
+=== MODEL OUTPUT qwen_base_qc_repaired / equity-monthly-roc-rotation_v06 ===
+model_id=qwen/qwen3.8-27b source=qc_feedback_round_3 mock=False
+```python
+# QuantConnect LEAN algorithm
+# Rebalance top 3 by 60-day ROC at month start +1 minute
+# All ROC < 0 -> liquidate all
+
+from AlgorithmImports import *
+
+
+class RocRotationAlgorithm(QCAlgorithm):
+
+    def initialize(self):
+        self.set_start_date(2022, 1, 1)
+        self.set_end_date(2024, 12, 31)
+        self.set_cash(100_000)
+        self.set_brokerage_model(BrokerageName.INTERACTIVE_BROKERS_BROKERAGE, AccountType.MARGIN)
+
+        self.symbols = ["SPY", "EFA", "EEM", "AGG", "GLD"]
+        self.roc_window = 60  # 60 daily bars
+
+        # Enable automatic indicator warm-up
+        self.settings.automatic_indicator_warm_up = True
+
+        # Attach ROC to each security object
+        for symbol in self.symbols:
+            sec = self.add_equity(symbol, Resolution.MINUTE)
+            # Create ROC indicator on daily resolution
+            sec.roc = self.roc(symbol, self.roc_window, Resolution.DAILY)
+
+        # Schedule rebalance at month start + 1 minute after market open
+        self.schedule.on(
+            self.date_rules.month_start(),
+            self.time_rules.after_market_open(1),
+            self.rebalance
+        )
+
+    def on_data(self, data: Slice):
+        # No need to compute ROC manually; indicators are updated automatically
+        # We just ensure indicators are ready before rebalance
+        pass
+
+    def rebalance(self):
+        # Collect ROC values from the attached indicators
+        roc_values = {}
+        for symbol in self.symbols:
+            sec = self.securities[symbol]
+            if sec.roc is not None and sec.roc.is_ready:
+                roc_values[symbol] = sec.roc.current.value
+
+        if not roc_values:
+            return
+
+        # If all ROC < 0, liquidate everything
+        if all(v < 0 for v in roc_values.values()):
+            self.liquidate()
+            self.log("All ROC < 0, liquidated all positions.")
+            return
+
+        # Sort by ROC descending, pick top 3
+        sorted_symbols = sorted(roc_values.keys(), key=lambda s: roc_values[s], reverse=True)
+        top3 = sorted_symbols[:3]
+
+        # Liquidate any holdings not in top3
+        for symbol in self.symbols:
+            if symbol not in top3 and self.portfolio[symbol].quantity != 0:
+                self.liquidate(symbol)
+
+        # Target 1/3 of portfolio in each top-3 security
+        for symbol in top3:
+            self.set_holdings(symbol, 1.0 / 3.0)
+
+        self.log(f"Rebalanced to top 3: {top3} with ROCs: {[roc_values[s] for s in top3]}")
+```
+=== END MODEL OUTPUT ===
+
+[QC repair-equity-monthly-roc-rotation_v06-r3] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r3] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r3] stage=upload status=running compile=None cloud=None progress=pending project=38141844 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r3] stage=compile status=running compile=None cloud=None progress=pending project=38141844 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r3] stage=compile status=running compile=InQueue cloud=None progress=pending project=38141844 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r3] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38141844 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r3] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38141844 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r3] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38141844 backtest=8d9406616b5914c82485eb7e74ba5bde
+[QC repair-equity-monthly-roc-rotation_v06-r3] stage=backtest status=running compile=BuildSuccess cloud=In Progress... progress=34.3% project=38141844 backtest=8d9406616b5914c82485eb7e74ba5bde
+[QC repair-equity-monthly-roc-rotation_v06-r3] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=38141844 backtest=8d9406616b5914c82485eb7e74ba5bde
+[QC repair-equity-monthly-roc-rotation_v06-r3] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38141844 backtest=8d9406616b5914c82485eb7e74ba5bde
+[QC repair-equity-monthly-roc-rotation_v06-r3] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38141844 backtest=8d9406616b5914c82485eb7e74ba5bde
+[QC repair-equity-monthly-roc-rotation_v06-r3] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38141844 backtest=8d9406616b5914c82485eb7e74ba5bde
+[QC repair-equity-monthly-roc-rotation_v06-r3] downloading orders
+[QC repair-equity-monthly-roc-rotation_v06-r3] downloading equity_chart
+
+=== QC RESULT repair-equity-monthly-roc-rotation_v06-r3 ===
+{
+  "status": "completed",
+  "stage": "finished",
+  "project_id": 38141844,
+  "compile_id": "265bc96fb04a4b6ecd803a60f017dde3-838c936696b122ec1a4b0f0f05daab77",
+  "backtest_id": "8d9406616b5914c82485eb7e74ba5bde",
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "total_orders": "87",
+  "statistics": {
+    "Total Orders": "87",
+    "Average Win": "0.74%",
+    "Average Loss": "-1.68%",
+    "Compounding Annual Return": "0.160%",
+    "Drawdown": "21.200%",
+    "Expectancy": "-0.020",
+    "Start Equity": "100000",
+    "End Equity": "100482.17",
+    "Net Profit": "0.482%",
+    "Sharpe Ratio": "-0.425",
+    "Sortino Ratio": "-0.452",
+    "Probabilistic Sharpe Ratio": "0.140%",
+    "Loss Rate": "32%",
+    "Win Rate": "68%",
+    "Profit-Loss Ratio": "0.44",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0.086",
+    "Annual Variance": "0.007",
+    "Information Ratio": "0.056",
+    "Tracking Error": "0.086",
+    "Treynor Ratio": "0",
+    "Total Fees": "$148.32",
+    "Estimated Strategy Capacity": "$6700000.00",
+    "Lowest Capacity Asset": "EEM SNQLASP67O85",
+    "Portfolio Turnover": "1.74%",
+    "Drawdown Recovery": "917"
+  },
+  "trade_statistics": {
+    "startDateTime": "2022-02-01T14:31:00Z",
+    "endDateTime": "2024-11-01T13:31:00Z",
+    "totalNumberOfTrades": 55,
+    "numberOfWinningTrades": 36,
+    "numberOfLosingTrades": 19,
+    "totalProfitLoss": "-2114.39",
+    "totalProfit": "21023.58",
+    "totalLoss": "-23137.97",
+    "largestProfit": "5443.60",
+    "largestLoss": "-5069.37",
+    "averageProfitLoss": "-38.4435",
+    "averageProfit": "583.9883",
+    "averageLoss": "-1217.7879",
+    "averageTradeDuration": "98.12:57:49.0909091",
+    "averageWinningTradeDuration": "122.18:31:40.0000001",
+    "averageLosingTradeDuration": "52.15:03:09.4736843",
+    "medianTradeDuration": "62.00:00:00",
+    "medianWinningTradeDuration": "92.00:00:00",
+    "medianLosingTradeDuration": "31.00:00:00",
+    "maxConsecutiveWinningTrades": 14,
+    "maxConsecutiveLosingTrades": 10,
+    "profitLossRatio": "0.4795",
+    "winLossRatio": "1.8947",
+    "winRate": "0.6545",
+    "lossRate": "0.3455",
+    "averageMAE": "-758.0176",
+    "averageMFE": "711.2598",
+    "largestMAE": "-6152.04",
+    "largestMFE": "6803.99",
+    "maximumClosedTradeDrawdown": "-17150.54",
+    "maximumIntraTradeDrawdown": "-21931.63",
+    "profitLossStandardDeviation": "1477.6712",
+    "profitLossDownsideDeviation": "1371.9951",
+    "profitFactor": "0.9086",
+    "sharpeRatio": "-0.0260",
+    "sortinoRatio": "-0.0280",
+    "profitToMaxDrawdownRatio": "-0.1233",
+    "maximumEndTradeDrawdown": "7113.64",
+    "averageEndTradeDrawdown": "-749.7033",
+    "maximumDrawdownDuration": "58.23:00:00",
+    "totalFees": "141.410"
+  },
+  "error": null,
+  "qc_note": ""
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 38141844, with CompileID: 265bc96fb04a4b6ecd803a60f017dde3-838c936696b122ec1a4b0f0f05daab77, Lean Version: 2.5.0.0.18194
+logs (last 20 of 28):
+2022-11-01 09:31:00 All ROC < 0, liquidated all positions.
+2022-12-01 09:31:00 Rebalanced to top 3: ['EFA', 'SPY', 'GLD'] with ROCs: [0.11273209549071618, 0.04758699422264846, 0.040927177414261356]
+2023-02-01 09:31:00 Rebalanced to top 3: ['EFA', 'EEM', 'GLD'] with ROCs: [0.2194422351076909, 0.21606572418756792, 0.1773082223242995]
+2023-03-01 09:31:00 Rebalanced to top 3: ['EFA', 'GLD', 'AGG'] with ROCs: [0.03737346475162996, 0.030155937139736667, -0.0029933578244403054]
+2023-05-01 09:31:00 Warning: Portfolio rebalance result ignored as it resulted in a single share trade recommendation which can generate high fees. To disable minimum order size checks please set self.settings.minimum_order_margin_portfolio_percentage = 0.
+2023-05-01 09:31:00 Rebalanced to top 3: ['EFA', 'GLD', 'SPY'] with ROCs: [0.019808837789167477, 0.017229041668960204, 0.01635247803291111]
+2023-06-01 09:31:00 Rebalanced to top 3: ['GLD', 'SPY', 'AGG'] with ROCs: [0.06234704579885794, 0.037023577977038265, 0.02299674605393475]
+2023-08-01 09:31:00 Rebalanced to top 3: ['SPY', 'EEM', 'EFA'] with ROCs: [0.12614799329616883, 0.09644178808243295, 0.039272051495866905]
+2023-09-01 09:31:00 Rebalanced to top 3: ['SPY', 'EFA', 'AGG'] with ROCs: [0.05605509226149235, 0.00015879140682302853, -0.009001786084211809]
+2023-11-01 09:31:00 Rebalanced to top 3: ['GLD', 'AGG', 'SPY'] with ROCs: [0.023973745689175662, -0.04019672798088319, -0.06885736407356423]
+2023-12-01 09:31:00 Rebalanced to top 3: ['GLD', 'SPY', 'EFA'] with ROCs: [0.06140696170499916, 0.026422071608469676, 0.024038461538461536]
+2024-02-01 09:31:00 Rebalanced to top 3: ['SPY', 'EFA', 'AGG'] with ROCs: [0.12554055241625564, 0.1018513826254483, 0.06472026270240991]
+2024-03-01 09:31:00 Rebalanced to top 3: ['SPY', 'EFA', 'EEM'] with ROCs: [0.11117408484795348, 0.06885358182318856, 0.02557968884497985]
+2024-04-01 09:31:00 Rebalanced to top 3: ['SPY', 'GLD', 'EFA'] with ROCs: [0.11011350846990445, 0.07864932885906041, 0.071802442625151]
+2024-05-01 09:31:00 Rebalanced to top 3: ['GLD', 'EEM', 'EFA'] with ROCs: [0.12332325963628651, 0.06054333764553687, 0.02821024617431803]
+2024-07-01 09:31:00 Rebalanced to top 3: ['SPY', 'EEM', 'GLD'] with ROCs: [0.05114594727345443, 0.038100360115448866, 0.010670301776816772]
+2024-08-01 09:31:00 Rebalanced to top 3: ['SPY', 'GLD', 'AGG'] with ROCs: [0.08077016286880118, 0.06381480090157778, 0.03680222512668014]
+2024-10-01 09:31:00 Rebalanced to top 3: ['GLD', 'EEM', 'AGG'] with ROCs: [0.1001674738604988, 0.051111620444648176, 0.04425482018390103]
+2024-11-01 09:31:00 Rebalanced to top 3: ['GLD', 'SPY', 'EEM'] with ROCs: [0.14944457039220133, 0.09972562571358723, 0.08679706601466992]
+2024-12-31 16:00:00 Algorithm Id:(8d9406616b5914c82485eb7e74ba5bde) completed in 10.86 seconds at 270k data points per second. Processing total of 2,926,266 data points.
+=== END QC RESULT ===
+
+[repair equity-monthly-roc-rotation_v06] round=3 status=completed backtest=8d9406616b5914c82485eb7e74ba5bde
+
+=== MODEL OUTPUT qwen_base_qc_repaired / futures_v05 ===
+model_id=qwen/qwen3.8-27b source=original mock=False
+```python
+# QuantConnect LEAN Algorithm
+# ES (SP_500_E_MINI) continuous future with LAST_TRADING_DAY mapping
+# Strategy: Flat -> market order 1 of mapped contract
+# On symbol changed: liquidate old, re-enter same qty on new
+# Period: 2024-09-01 to 2024-12-31
+
+from AlgorithmImports import *
+
+class EsContinuousLastTradingDayAlgorithm(QCAlgorithm):
+    def Initialize(self):
+        # Set start and end dates
+        self.SetStartDate(2024, 9, 1)
+        self.SetEndDate(2024, 12, 31)
+        self.SetCash(100000)
+
+        # Add continuous future with LAST_TRADING_DAY mapping
+        # BACKWARDS_RATIO, depth 0, extended hours, filter 0-92 days
+        self._es = self.AddFuture(
+            "SP_500_E_MINI",
+            Resolution.DAILY,
+            MarketDataMappingMethod.LAST_TRADING_DAY,
+            dataNormalizationMode=DataNormalizationMode.BACKWARDS_RATIO,
+            depth=0,
+            extendedMarketHours=True,
+            filter=FutureFilter(0, 92)
+        ).Symbol
+
+        # Track current position quantity
+        self._position_qty = 0
+
+        # Subscribe to symbol changed events
+        self._es.SymbolChanged += self.OnSymbolChanged
+
+    def OnSymbolChanged(self, sender, args):
+        """
+        Handle symbol changed event:
+        - Liquidate old contract
+        - Re-enter same quantity on new contract
+        """
+        old_symbol = args.OldSymbol
+        new_symbol = args.NewSymbol
+
+        # Liquidate old position
+        if self._position_qty != 0:
+            self.Liquidate(old_symbol)
+            self.Log(f"Liquidated {self._position_qty} contracts of {old_symbol}")
+
+        # Re-enter same quantity on new contract
+        if self._position_qty != 0:
+            self.MarketOrder(new_symbol, self._position_qty)
+            self.Log(f"Entered {self._position_qty} contracts of {new_symbol}")
+
+    def OnData(self, data: Slice):
+        """
+        Main data handler:
+        - If flat, place market order for 1 contract of the mapped symbol
+        """
+        # Check if we have data for our ES symbol
+        if not data.ContainsKey(self._es):
+            return
+
+        # Get the current mapped symbol (the actual contract)
+        current_symbol = self._es
+
+        # Check if we are flat
+        if self._position_qty == 0:
+            # Place market order for 1 contract
+            self.MarketOrder(current_symbol, 1)
+            self._position_qty = 1
+            self.Log(f"Entered 1 contract of {current_symbol}")
+
+    def OnOrderEvent(self, orderEvent: OrderEvent):
+        """
+        Track position changes from order events
+        """
+        if orderEvent.Symbol == self._es:
+            if orderEvent.Status == OrderStatus.FILLED:
+                self._position_qty += orderEvent.FillQuantity
+                self.Log(f"Order filled: {orderEvent.FillQuantity} contracts, total position: {self._position_qty}")
+```
+=== END MODEL OUTPUT ===
+
+[QC repair-futures_v05-r0] reusing saved execution status=runtime_error backtest=f9117ed895dfb189cb1690aa87ebae52
+
+=== QC RESULT repair-futures_v05-r0 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38139357,
+  "compile_id": "75dba3f4866edea49936a3981274c3c4-79fdea69f49222be2d7df0113b542b7b",
+  "backtest_id": "f9117ed895dfb189cb1690aa87ebae52",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": null,
+  "statistics": {},
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: name 'MarketDataMappingMethod' is not defined\n  at Initialize\n    MarketDataMappingMethod.LAST_TRADING_DAY,\n    ^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 21\n name 'MarketDataMappingMethod' is not defined",
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: name 'MarketDataMappingMethod' is not defined\n  at Initialize\n    MarketDataMappingMethod.LAST_"
+}
+compile_logs (last 20 of 13):
+Warning main.py Line: 12 Column: 9 - "EsContinuousLastTradingDayAlgorithm" has no attribute "SetStartDate"; maybe "self.set_start_date(2024, 9, 12)"?
+Warning main.py Line: 13 Column: 9 - "EsContinuousLastTradingDayAlgorithm" has no attribute "SetEndDate"; maybe "self.set_end_date(2020, 12, 31)"?
+Warning main.py Line: 14 Column: 9 - "EsContinuousLastTradingDayAlgorithm" has no attribute "SetCash"; maybe "self.set_cash(1000000)"?
+Warning main.py Line: 18 Column: 20 - "EsContinuousLastTradingDayAlgorithm" has no attribute "AddFuture"; maybe "self._future = self.add_future(Futures.Indices.SP_500_E_MINI, extended_market_hours=True, data_mapping_mode=DataMappingMode.LAST_TRADING_DAY, data_normalization_mode=DataNormalizationMode.BACKWARDS_RATIO, contract_depth_offset=0)"?
+Warning main.py Line: 21 Column: 13 - Name "MarketDataMappingMethod" is not defined
+Warning main.py Line: 25 Column: 20 - Name "FutureFilter" is not defined
+Warning main.py Line: 45 Column: 13 - "EsContinuousLastTradingDayAlgorithm" has no attribute "Liquidate"; maybe "self.liquidate(self._symbol)"?
+Warning main.py Line: 46 Column: 13 - "EsContinuousLastTradingDayAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 50 Column: 13 - "EsContinuousLastTradingDayAlgorithm" has no attribute "MarketOrder"
+Warning main.py Line: 51 Column: 13 - "EsContinuousLastTradingDayAlgorithm" has no attribute "Log"
+Warning main.py Line: 59 Column: 16 - "Slice" has no attribute "ContainsKey"; maybe "contains_key"?
+Warning main.py Line: 68 Column: 13 - "EsContinuousLastTradingDayAlgorithm" has no attribute "MarketOrder"
+Build Request Successful for Project ID: 38139357, with CompileID: 75dba3f4866edea49936a3981274c3c4-79fdea69f49222be2d7df0113b542b7b, Lean Version: 2.5.0.0.18194
+=== END QC RESULT ===
+
+[repair futures_v05] round=0 status=runtime_error backtest=f9117ed895dfb189cb1690aa87ebae52
+[repair futures_v05] requesting model correction 1/3
+
+=== MODEL OUTPUT qwen_base_qc_repaired / futures_v05 ===
+model_id=qwen/qwen3.8-27b source=qc_feedback_round_1 mock=False
+```python
+# QuantConnect LEAN Algorithm
+# ES (SP_500_E_MINI) continuous future with LAST_TRADING_DAY mapping
+# Strategy: Flat -> market order 1 of mapped contract
+# On symbol changed: liquidate old, re-enter same quantity on new
+# Period: 2024-09-01 to 2024-12-31
+
+from AlgorithmImports import *
+from datetime import datetime, timedelta
+
+class EsContinuousLastTradingDayAlgorithm(QCAlgorithm):
+    def initialize(self):
+        # Set start and end dates
+        self.set_start_date(2024, 9, 1)
+        self.set_end_date(2024, 12, 31)
+        self.set_cash(100000)
+
+        # Add continuous future with LAST_TRADING_DAY mapping
+        # BACKWARDS_RATIO, depth 0, extended hours, filter 0-92 days
+        self._es = self.add_future(
+            Futures.Indices.SP_500_E_MINI,
+            extended_market_hours=True,
+            data_mapping_mode=DataMappingMode.LAST_TRADING_DAY,
+            data_normalization_mode=DataNormalizationMode.BACKWARDS_RATIO,
+            contract_depth_offset=0
+        )
+        
+        # Set filter for 0-92 days
+        self._es.set_filter(0, 92)
+        
+        # Track current position quantity
+        self._position_qty = 0
+        
+        # Subscribe to symbol changed events
+        self._es.on_symbol_changed_event += self.on_symbol_changed
+
+    def on_symbol_changed(self, sender, args):
+        """
+        Handle symbol changed event:
+        - Liquidate old contract
+        - Re-enter same quantity on new contract
+        """
+        old_symbol = args.old_symbol
+        new_symbol = args.new_symbol
+
+        # Liquidate old position
+        if self._position_qty != 0:
+            self.liquidate(old_symbol)
+            self.log(f"Liquidated {self._position_qty} contracts of {old_symbol}")
+
+        # Re-enter same quantity on new contract
+        if self._position_qty != 0:
+            self.market_order(new_symbol, self._position_qty)
+            self.log(f"Entered {self._position_qty} contracts of {new_symbol}")
+
+    def on_data(self, data: Slice):
+        """
+        Main data handler:
+        - If flat, place market order for 1 contract of the mapped symbol
+        """
+        # Check if we have data for our ES symbol
+        if not data.contains_key(self._es):
+            return
+
+        # Get the current mapped symbol (the actual contract)
+        current_symbol = self._es.mapped
+        
+        # Check if we are flat
+        if self._position_qty == 0:
+            # Place market order for 1 contract
+            self.market_order(current_symbol, 1)
+            self._position_qty = 1
+            self.log(f"Entered 1 contract of {current_symbol}")
+
+    def on_order_event(self, order_event: OrderEvent):
+        """
+        Track position changes from order events
+        """
+        if order_event.symbol == self._es.mapped:
+            if order_event.status == OrderStatus.FILLED:
+                self._position_qty += order_event.fill_quantity
+                self.log(f"Order filled: {order_event.fill_quantity} contracts, total position: {self._position_qty}")
+```
+=== END MODEL OUTPUT ===
+
+[QC repair-futures_v05-r1] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-futures_v05-r1] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-futures_v05-r1] stage=upload status=running compile=None cloud=None progress=pending project=38141881 backtest=None
+[QC repair-futures_v05-r1] stage=compile status=running compile=None cloud=None progress=pending project=38141881 backtest=None
+[QC repair-futures_v05-r1] stage=compile status=running compile=InQueue cloud=None progress=pending project=38141881 backtest=None
+[QC repair-futures_v05-r1] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38141881 backtest=None
+[QC repair-futures_v05-r1] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38141881 backtest=None
+[QC repair-futures_v05-r1] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38141881 backtest=268c0efe8f943f04e243a099744ed6d4
+[QC repair-futures_v05-r1] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141881 backtest=268c0efe8f943f04e243a099744ed6d4
+[QC repair-futures_v05-r1] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141881 backtest=268c0efe8f943f04e243a099744ed6d4
+[QC repair-futures_v05-r1] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141881 backtest=268c0efe8f943f04e243a099744ed6d4
+[QC repair-futures_v05-r1] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141881 backtest=268c0efe8f943f04e243a099744ed6d4
+[QC repair-futures_v05-r1] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141881 backtest=268c0efe8f943f04e243a099744ed6d4
+
+=== QC RESULT repair-futures_v05-r1 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38141881,
+  "compile_id": "d3913fba64cb1b89d147e3e9a5077ca7-2c9a18bb1f2dc80f873a9ee326b46f27",
+  "backtest_id": "268c0efe8f943f04e243a099744ed6d4",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": null,
+  "statistics": {},
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: 'Future' object has no attribute 'on_symbol_changed_event'\n  at initialize\n    self._es.on_symbol_changed_event += self.on_symbol_changed\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 34\n 'Future' object has no attribute 'on_symbol_changed_event'",
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: 'Future' object has no attribute 'on_symbol_changed_event'\n  at initialize\n    self._"
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 38141881, with CompileID: d3913fba64cb1b89d147e3e9a5077ca7-2c9a18bb1f2dc80f873a9ee326b46f27, Lean Version: 2.5.0.0.18194
+=== END QC RESULT ===
+
+[repair futures_v05] round=1 status=runtime_error backtest=268c0efe8f943f04e243a099744ed6d4
+[repair futures_v05] requesting model correction 2/3
+
+=== MODEL OUTPUT qwen_base_qc_repaired / futures_v05 ===
+model_id=qwen/qwen3.8-27b source=qc_feedback_round_2 mock=False
+```python
+# QuantConnect LEAN Algorithm
+# ES (SP_500_E_MINI) continuous future with LAST_TRADING_DAY mapping
+# Strategy: Flat -> market order 1 of mapped contract
+# On symbol changed: liquidate old, re-enter same quantity on new
+# Period: 2024-09-01 to 2024-12-31
+
+from AlgorithmImports import *
+from datetime import datetime, timedelta
+
+class EsContinuousLastTradingDayAlgorithm(QCAlgorithm):
+    def initialize(self):
+        # Set start and end dates
+        self.set_start_date(2024, 9, 1)
+        self.set_end_date(2024, 12, 31)
+        self.set_cash(100000)
+
+        # Add continuous future with LAST_TRADING_DAY mapping
+        # BACKWARDS_RATIO, depth 0, extended hours, filter 0-92 days
+        self._es = self.add_future(
+            Futures.Indices.SP_500_E_MINI,
+            extended_market_hours=True,
+            data_mapping_mode=DataMappingMode.LAST_TRADING_DAY,
+            data_normalization_mode=DataNormalizationMode.BACKWARDS_RATIO,
+            contract_depth_offset=0
+        )
+        
+        # Set filter for 0-92 days
+        self._es.set_filter(0, 92)
+        
+        # Track current position quantity
+        self._position_qty = 0
+        
+        # Subscribe to symbol changed events
+        self._es.on_symbol_changed_event += self.on_symbol_changed
+
+    def on_symbol_changed(self, sender, args):
+        """
+        Handle symbol changed event:
+        - Liquidate old contract
+        - Re-enter same quantity on new contract
+        """
+        old_symbol = args.old_symbol
+        new_symbol = args.new_symbol
+
+        # Liquidate old position
+        if self._position_qty != 0:
+            self.liquidate(old_symbol)
+            self.log(f"Liquidated {self._position_qty} contracts of {old_symbol}")
+
+        # Re-enter same quantity on new contract
+        if self._position_qty != 0:
+            self.market_order(new_symbol, self._position_qty)
+            self.log(f"Entered {self._position_qty} contracts of {new_symbol}")
+
+    def on_data(self, data: Slice):
+        """
+        Main data handler:
+        - If flat, place market order for 1 contract of the mapped symbol
+        """
+        # Check if we have data for our ES symbol
+        if not data.contains_key(self._es):
+            return
+
+        # Get the current mapped symbol (the actual contract)
+        current_symbol = self._es.mapped
+        
+        # Check if we are flat
+        if self._position_qty == 0:
+            # Place market order for 1 contract
+            self.market_order(current_symbol, 1)
+            self._position_qty = 1
+            self.log(f"Entered 1 contract of {current_symbol}")
+
+    def on_order_event(self, order_event: OrderEvent):
+        """
+        Track position changes from order events
+        """
+        if order_event.symbol == self._es.mapped:
+            if order_event.status == OrderStatus.FILLED:
+                self._position_qty += order_event.fill_quantity
+                self.log(f"Order filled: {order_event.fill_quantity} contracts, total position: {self._position_qty}")
+```
+=== END MODEL OUTPUT ===
+
+[QC repair-futures_v05-r2] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-futures_v05-r2] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-futures_v05-r2] stage=upload status=running compile=None cloud=None progress=pending project=38141940 backtest=None
+[QC repair-futures_v05-r2] stage=compile status=running compile=None cloud=None progress=pending project=38141940 backtest=None
+[QC repair-futures_v05-r2] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38141940 backtest=None
+[QC repair-futures_v05-r2] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38141940 backtest=None
+[QC repair-futures_v05-r2] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38141940 backtest=70f9afdc48afb857e5ba03091c0c0078
+[QC repair-futures_v05-r2] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141940 backtest=70f9afdc48afb857e5ba03091c0c0078
+[QC repair-futures_v05-r2] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141940 backtest=70f9afdc48afb857e5ba03091c0c0078
+[QC repair-futures_v05-r2] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141940 backtest=70f9afdc48afb857e5ba03091c0c0078
+[QC repair-futures_v05-r2] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141940 backtest=70f9afdc48afb857e5ba03091c0c0078
+[QC repair-futures_v05-r2] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141940 backtest=70f9afdc48afb857e5ba03091c0c0078
+
+=== QC RESULT repair-futures_v05-r2 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38141940,
+  "compile_id": "4a038c68a11ab9040832738902297163-2c9a18bb1f2dc80f873a9ee326b46f27",
+  "backtest_id": "70f9afdc48afb857e5ba03091c0c0078",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": null,
+  "statistics": {},
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: 'Future' object has no attribute 'on_symbol_changed_event'\n  at initialize\n    self._es.on_symbol_changed_event += self.on_symbol_changed\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 34\n 'Future' object has no attribute 'on_symbol_changed_event'",
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: 'Future' object has no attribute 'on_symbol_changed_event'\n  at initialize\n    self._"
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 38141940, with CompileID: 4a038c68a11ab9040832738902297163-2c9a18bb1f2dc80f873a9ee326b46f27, Lean Version: 2.5.0.0.18194
+=== END QC RESULT ===
+
+[repair futures_v05] round=2 status=runtime_error backtest=70f9afdc48afb857e5ba03091c0c0078
+[repair futures_v05] requesting model correction 3/3
+
+=== MODEL OUTPUT qwen_base_qc_repaired / futures_v05 ===
+model_id=qwen/qwen3.8-27b source=qc_feedback_round_3 mock=False
+```python
+# QuantConnect LEAN Algorithm
+# ES (SP_500_E_MINI) continuous future with LAST_TRADING_DAY mapping
+# Strategy: Flat -> market order 1 of mapped contract
+# On symbol changed: liquidate old, re-enter same quantity on new
+# Period: 2024-09-01 to 2024-12-31
+
+from AlgorithmImports import *
+from datetime import datetime, timedelta
+
+class EsContinuousLastTradingDayAlgorithm(QCAlgorithm):
+    def initialize(self):
+        # Set start and end dates
+        self.set_start_date(2024, 9, 1)
+        self.set_end_date(2024, 12, 31)
+        self.set_cash(100000)
+
+        # Add continuous future with LAST_TRADING_DAY mapping
+        # BACKWARDS_RATIO, depth 0, extended hours, filter 0-92 days
+        self._es = self.add_future(
+            Futures.Indices.SP_500_E_MINI,
+            extended_market_hours=True,
+            data_mapping_mode=DataMappingMode.LAST_TRADING_DAY,
+            data_normalization_mode=DataNormalizationMode.BACKWARDS_RATIO,
+            contract_depth_offset=0
+        )
+        
+        # Set filter for 0-92 days
+        self._es.set_filter(0, 92)
+        
+        # Track current position quantity
+        self._position_qty = 0
+        
+        # Subscribe to symbol changed events
+        self._es.on_symbol_changed_event += self.on_symbol_changed
+
+    def on_symbol_changed(self, sender, args):
+        """
+        Handle symbol changed event:
+        - Liquidate old contract
+        - Re-enter same quantity on new contract
+        """
+        old_symbol = args.old_symbol
+        new_symbol = args.new_symbol
+
+        # Liquidate old position
+        if self._position_qty != 0:
+            self.liquidate(old_symbol)
+            self.log(f"Liquidated {self._position_qty} contracts of {old_symbol}")
+
+        # Re-enter same quantity on new contract
+        if self._position_qty != 0:
+            self.market_order(new_symbol, self._position_qty)
+            self.log(f"Entered {self._position_qty} contracts of {new_symbol}")
+
+    def on_data(self, data: Slice):
+        """
+        Main data handler:
+        - If flat, place market order for 1 contract of the mapped symbol
+        """
+        # Check if we have data for our ES symbol
+        if not data.contains_key(self._es):
+            return
+
+        # Get the current mapped symbol (the actual contract)
+        current_symbol = self._es.mapped
+        
+        # Check if we are flat
+        if self._position_qty == 0:
+            # Place market order for 1 contract
+            self.market_order(current_symbol, 1)
+            self._position_qty = 1
+            self.log(f"Entered 1 contract of {current_symbol}")
+
+    def on_order_event(self, order_event: OrderEvent):
+        """
+        Track position changes from order events
+        """
+        if order_event.symbol == self._es.mapped:
+            if order_event.status == OrderStatus.FILLED:
+                self._position_qty += order_event.fill_quantity
+                self.log(f"Order filled: {order_event.fill_quantity} contracts, total position: {self._position_qty}")
+```
+=== END MODEL OUTPUT ===
+
+[QC repair-futures_v05-r3] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-futures_v05-r3] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-futures_v05-r3] stage=upload status=running compile=None cloud=None progress=pending project=38141996 backtest=None
+[QC repair-futures_v05-r3] stage=compile status=running compile=None cloud=None progress=pending project=38141996 backtest=None
+[QC repair-futures_v05-r3] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38141996 backtest=None
+[QC repair-futures_v05-r3] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38141996 backtest=None
+[QC repair-futures_v05-r3] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38141996 backtest=092bece16e35fc361fe1eceb02488f5e
+[QC repair-futures_v05-r3] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141996 backtest=092bece16e35fc361fe1eceb02488f5e
+[QC repair-futures_v05-r3] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141996 backtest=092bece16e35fc361fe1eceb02488f5e
+[QC repair-futures_v05-r3] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141996 backtest=092bece16e35fc361fe1eceb02488f5e
+[QC repair-futures_v05-r3] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141996 backtest=092bece16e35fc361fe1eceb02488f5e
+[QC repair-futures_v05-r3] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38141996 backtest=092bece16e35fc361fe1eceb02488f5e
+
+=== QC RESULT repair-futures_v05-r3 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38141996,
+  "compile_id": "c31eab2e0d4563de0faf36e5ab52a88c-2c9a18bb1f2dc80f873a9ee326b46f27",
+  "backtest_id": "092bece16e35fc361fe1eceb02488f5e",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": null,
+  "statistics": {},
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "[ERROR] FATAL UNHANDLED EXCEPTION:Engine.Run(): During the algorithm initialization, the following exception has occurred: 'Future' object has no attribute 'on_symbol_changed_event',  at initialize,    self._es.on_symbol_changed_event += self.on_symbol_changed,    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^, in main.py: line 34, 'Future' object has no attribute 'on_symbol_changed_event',Extensions.SetRuntimeError(): Extensions.SetRuntimeError(): RuntimeError at 09/01/2024 04:00:00 UTC. Context: RuntimeError System.Exception: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: 'Future' object has no attribute 'on_symbol_changed_event',  at initialize,    self._es.on_symbol_changed_event += self.on_symbol_changed,    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^, in main.py: line 34, 'Future' object has no attribute 'on_symbol_changed_event',ApiConnection.TryRequest(https://www.quantconnect.com/api/v2/cloud/backtest/status/update): Error: request timed out, no response received (timeout 10s) after 1001",
+  "qc_note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Engine.Run(): During the algorithm initialization, the following exception has occurred: 'Future' object has no attribute 'on_symbol_changed_event',  at initialize,  "
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 38141996, with CompileID: c31eab2e0d4563de0faf36e5ab52a88c-2c9a18bb1f2dc80f873a9ee326b46f27, Lean Version: 2.5.0.0.18194
+=== END QC RESULT ===
+
+[repair futures_v05] round=3 status=runtime_error backtest=092bece16e35fc361fe1eceb02488f5e
+[
+  {
+    "model": "qwen_base",
+    "prompt_id": "equity-rsi-overbought-oversold_v04",
+    "status": "completed",
+    "repairs_used": 2
+  },
+  {
+    "model": "qwen_base",
+    "prompt_id": "equity-monthly-roc-rotation_v06",
+    "status": "completed",
+    "repairs_used": 3
+  },
+  {
+    "model": "qwen_base",
+    "prompt_id": "futures_v05",
+    "status": "runtime_error",
+    "repairs_used": 3
+  }
+]

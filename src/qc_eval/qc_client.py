@@ -12,6 +12,7 @@ from base64 import b64encode
 from hashlib import sha256
 
 import requests
+from .config import load_env
 
 BASE_URL = "https://www.quantconnect.com/api/v2"
 
@@ -26,6 +27,7 @@ class QCAPIError(RuntimeError):
 class QCClient:
     def __init__(self, user_id: str | None = None, api_token: str | None = None,
                  org_id: str | None = None):
+        load_env()
         self.user_id = user_id or os.environ["QC_USER_ID"]
         self.api_token = api_token or os.environ["QC_API_TOKEN"]
         self.org_id = org_id or os.environ.get("QC_ORG_ID")

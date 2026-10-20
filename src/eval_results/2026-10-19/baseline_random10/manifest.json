@@ -1,0 +1,273 @@
+{
+  "seed": 42,
+  "count": 10,
+  "model": "qwen_base",
+  "created_at": "2026-10-20T01:30:02.097332+00:00",
+  "prompts": [
+    {
+      "id": "option-iron-condor-spy_v02",
+      "template_id": "option-iron-condor-spy",
+      "template": "Option SPY Iron Condor (weekly)",
+      "reference_path": "data/templates/option-iron-condor-spy/main.py",
+      "version": 2,
+      "segment": "individual",
+      "specificity": "precise",
+      "persona": "individual / precise",
+      "prompt": "Every Monday a minute after the open, open an iron condor on SPY expiring that Friday: sell the call closest to 0.10 delta and the put closest to -0.10 delta, and buy a call and a put 3 strikes further out, one contract. Skip the week if any leg has no bid or ask. Close everything Friday 5 minutes before the close. Sept 1 to Dec 31 2024, 100k.",
+      "must_contain": [
+        [
+          "add_option"
+        ],
+        [
+          "spy"
+        ],
+        [
+          "iron_condor",
+          "iron condor"
+        ],
+        [
+          "delta"
+        ],
+        [
+          "friday"
+        ]
+      ],
+      "expects_orders": true,
+      "prompt_author": "claude-fable-5-1"
+    },
+    {
+      "id": "equity-bollinger-mean-reversion_v05",
+      "template_id": "equity-bollinger-mean-reversion",
+      "template": "Equity Bollinger Mean Reversion (SPY)",
+      "reference_path": "data/templates/equity-bollinger-mean-reversion/main.py",
+      "version": 5,
+      "segment": "startup",
+      "specificity": "precise",
+      "persona": "startup / precise",
+      "prompt": "SPY, BB(20, 2) on daily bars. Daily check pre-open: flat and price < lower band -> 100% long; invested and price >= middle band -> liquidate. 2024-09-01 to 2024-12-31, 100k.",
+      "must_contain": [
+        [
+          "spy"
+        ],
+        [
+          ".bb(",
+          "bollingerbands"
+        ],
+        [
+          "20"
+        ],
+        [
+          "lower"
+        ],
+        [
+          "middle"
+        ]
+      ],
+      "expects_orders": true,
+      "prompt_author": "claude-fable-5-1"
+    },
+    {
+      "id": "equity-rsi-overbought-oversold_v04",
+      "template_id": "equity-rsi-overbought-oversold",
+      "template": "Equity RSI Overbought/Oversold (QQQ)",
+      "reference_path": "data/templates/equity-rsi-overbought-oversold/main.py",
+      "version": 4,
+      "segment": "startup",
+      "specificity": "vague",
+      "persona": "startup / vague",
+      "prompt": "QQQ RSI mean-rev, hourly, long oversold / short overbought, exit at midline. Q4 2024. Need it today.",
+      "must_contain": [],
+      "expects_orders": true,
+      "prompt_author": "claude-fable-5-1"
+    },
+    {
+      "id": "futures_v05",
+      "template_id": "futures",
+      "template": "Futures: E-mini S&P continuous with rollover",
+      "reference_path": "data/templates/futures/main.py",
+      "version": 5,
+      "segment": "startup",
+      "specificity": "precise",
+      "persona": "startup / precise",
+      "prompt": "ES (SP_500_E_MINI) continuous: LAST_TRADING_DAY mapping, BACKWARDS_RATIO, depth 0, ext hours, filter 0-92d. Flat -> market order 1 of .mapped. on_symbol_changed_events: liquidate old, re-enter same qty on new. 2024-09-01 to 2024-12-31.",
+      "must_contain": [
+        [
+          "add_future"
+        ],
+        [
+          "sp_500_e_mini"
+        ],
+        [
+          "mapped"
+        ],
+        [
+          "symbol_changed",
+          "symbolchanged"
+        ]
+      ],
+      "expects_orders": true,
+      "prompt_author": "claude-fable-5-1"
+    },
+    {
+      "id": "equity-monthly-roc-rotation_v06",
+      "template_id": "equity-monthly-roc-rotation",
+      "template": "Equity Monthly ROC Rotation (5 ETFs)",
+      "reference_path": "data/templates/equity-monthly-roc-rotation/main.py",
+      "version": 6,
+      "segment": "startup",
+      "specificity": "over_specified",
+      "persona": "startup / over_specified",
+      "prompt": "SPY EFA EEM AGG GLD at minute res, ROC(60) on daily bars. Month start +1m after open: top 3 by ROC at 1/3 each via PortfolioTarget, liquidate rest; all ROC < 0 -> liquidate all. 2022-01-01 to 2024-12-31, 100k. Auto warm-up, snake_case, attach roc to each security object, no history() calls.",
+      "must_contain": [
+        [
+          "spy"
+        ],
+        [
+          "efa"
+        ],
+        [
+          "eem"
+        ],
+        [
+          "agg"
+        ],
+        [
+          "gld"
+        ],
+        [
+          ".roc(",
+          "rateofchange"
+        ],
+        [
+          "month_start"
+        ]
+      ],
+      "expects_orders": true,
+      "prompt_author": "claude-fable-5-1"
+    },
+    {
+      "id": "equity-monthly-roc-rotation_v02",
+      "template_id": "equity-monthly-roc-rotation",
+      "template": "Equity Monthly ROC Rotation (5 ETFs)",
+      "reference_path": "data/templates/equity-monthly-roc-rotation/main.py",
+      "version": 2,
+      "segment": "individual",
+      "specificity": "precise",
+      "persona": "individual / precise",
+      "prompt": "Trade SPY, EFA, EEM, AGG and GLD. For each one use the 60 day rate of change on daily bars. On the first trading day of each month, put a third of my money into each of the top 3 by rate of change and sell the others. If all five are negative, sell everything and hold cash. Jan 1 2022 to Dec 31 2024, 100k.",
+      "must_contain": [
+        [
+          "spy"
+        ],
+        [
+          "efa"
+        ],
+        [
+          "eem"
+        ],
+        [
+          "agg"
+        ],
+        [
+          "gld"
+        ],
+        [
+          ".roc(",
+          "rateofchange"
+        ],
+        [
+          "month_start"
+        ]
+      ],
+      "expects_orders": true,
+      "prompt_author": "claude-fable-5-1"
+    },
+    {
+      "id": "equity-atr-volatility-stop_v09",
+      "template_id": "equity-atr-volatility-stop",
+      "template": "Equity ATR Volatility Stop (SPY)",
+      "reference_path": "data/templates/equity-atr-volatility-stop/main.py",
+      "version": 9,
+      "segment": "institutional",
+      "specificity": "over_specified",
+      "persona": "institutional / over_specified",
+      "prompt": "Implement the desk's ATR chandelier stop reference on SPY. Resolution: minute. Window: 2022-01-01 to 2024-12-31. Capital: 100,000. Indicator: ATR, 14 periods, automatic warm-up. Rules: when flat, allocate 100% long and set the trailing high to the entry close; update the trailing high with each higher close; stop level is trailing high minus 3 times ATR; if a close falls below the stop, liquidate, then re-enter 100% on the next bar and reset the trailing high. Compliance: plot the stop level and trailing high for audit, no signals before the ATR is ready, snake_case API per our style guide, type annotations, no leverage, no short positions.",
+      "must_contain": [
+        [
+          "spy"
+        ],
+        [
+          ".atr(",
+          "averagetruerange"
+        ],
+        [
+          "14"
+        ],
+        [
+          "3"
+        ]
+      ],
+      "expects_orders": true,
+      "prompt_author": "claude-fable-5-1"
+    },
+    {
+      "id": "equity-bollinger-mean-reversion_v08",
+      "template_id": "equity-bollinger-mean-reversion",
+      "template": "Equity Bollinger Mean Reversion (SPY)",
+      "reference_path": "data/templates/equity-bollinger-mean-reversion/main.py",
+      "version": 8,
+      "segment": "institutional",
+      "specificity": "precise",
+      "persona": "institutional / precise",
+      "prompt": "Implement the desk's Bollinger mean-reversion reference on SPY. Window: 2024-09-01 to 2024-12-31. Capital: 100,000. Indicator: Bollinger Bands, 20-period, 2 standard deviations, daily resolution. Evaluation: once per trading day at 08:00. Rules: not invested and price below the lower band, allocate 100% long; invested and price at or above the middle band, liquidate.",
+      "must_contain": [
+        [
+          "spy"
+        ],
+        [
+          ".bb(",
+          "bollingerbands"
+        ],
+        [
+          "20"
+        ],
+        [
+          "lower"
+        ],
+        [
+          "middle"
+        ]
+      ],
+      "expects_orders": true,
+      "prompt_author": "claude-fable-5-1"
+    },
+    {
+      "id": "equity-bollinger-mean-reversion_v04",
+      "template_id": "equity-bollinger-mean-reversion",
+      "template": "Equity Bollinger Mean Reversion (SPY)",
+      "reference_path": "data/templates/equity-bollinger-mean-reversion/main.py",
+      "version": 4,
+      "segment": "startup",
+      "specificity": "vague",
+      "persona": "startup / vague",
+      "prompt": "SPY BB(20,2) dip buy, exit at midline, daily check. Q4 2024. Quick.",
+      "must_contain": [],
+      "expects_orders": true,
+      "prompt_author": "claude-fable-5-1"
+    },
+    {
+      "id": "option-iron-condor-spy_v07",
+      "template_id": "option-iron-condor-spy",
+      "template": "Option SPY Iron Condor (weekly)",
+      "reference_path": "data/templates/option-iron-condor-spy/main.py",
+      "version": 7,
+      "segment": "institutional",
+      "specificity": "vague",
+      "persona": "institutional / vague",
+      "prompt": "We need a weekly SPY iron condor income reference for the September to December 2024 window, consistent with our internal implementation: short strikes near 10 delta, defined-risk wings, opened Monday and closed before Friday's close. Standard paper account.",
+      "must_contain": [],
+      "expects_orders": true,
+      "prompt_author": "claude-fable-5-1"
+    }
+  ]
+}
