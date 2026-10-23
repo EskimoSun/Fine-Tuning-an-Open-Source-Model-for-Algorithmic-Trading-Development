@@ -174,7 +174,7 @@ def generate(model, prompt, mock=False, system=SYSTEM):
     if mock:
         return mock_generate(prompt), "mock"
     if model == "fable":
-        return call_fable(prompt, system=system), os.environ.get("FABLE_MODEL", "claude-fable-5-1")
+        return call_fable(prompt, system=system, max_tokens=8192), os.environ.get("FABLE_MODEL", "claude-fable-5-1")
     base = model.split("_prompt_")[0]  # qwen_base_prompt_v3 is still the base model
     mid = os.environ["QWEN_BASE_MODEL" if base == "qwen_base" else "QWEN_TUNED_MODEL"]
     return call_openai_compatible(prompt, mid, system=system), mid
@@ -183,7 +183,7 @@ def generate(model, prompt, mock=False, system=SYSTEM):
 def judge(prompt, code, mock=False):
     if mock:
         return None, "mock: not judged"
-    text = call_fable(JUDGE.format(prompt=prompt, code=code), system="You are a strict code reviewer.", max_tokens=300)
+    text = call_fable(JUDGE.format(prompt=prompt, code=code), system="You are a strict code reviewer.", max_tokens=2048)
     m = re.search(r"\{.*\}", text, re.DOTALL)
     try:
         obj = json.loads(m.group(0))
@@ -299,8 +299,20 @@ def process(model, p, args, qc):
     if needs_generation:
         print("[{}] {}: requesting {} model output".format(
             model, p["id"], "mock" if args.mock else "REAL"), flush=True)
-        out, model_id = generate(model, p["prompt"], mock=args.mock,
-                                 system=SYSTEM_PROMPTS[system_version])
+        try:
+            out, model_id = generate(model, p["prompt"], mock=args.mock,
+                                     system=SYSTEM_PROMPTS[system_version])
+        except Exception as exc:
+            # A truncated/failed generation is a result, not a lost attempt:
+            # record it so it is visible in the sheet instead of vanishing.
+            rec = {"prompt_id": p["id"], "model": label, "base_model": model, "model_id": None,
+                   "system_prompt": system_version, "output": None, "has_code": False,
+                   "compile_errors": None, "runtime_errors": None, "fidelity": None,
+                   "generation_error": str(exc), "qc_note": "generation failed: " + str(exc),
+                   "generated_at": datetime.now(timezone.utc).isoformat()}
+            rec["note"] = rec["qc_note"]
+            save_record(path, rec)
+            return rec
         rec = {"prompt_id": p["id"], "model": label, "base_model": model, "model_id": model_id,
                "system_prompt": system_version, "output": out,
                "generated_at": datetime.now(timezone.utc).isoformat()}
