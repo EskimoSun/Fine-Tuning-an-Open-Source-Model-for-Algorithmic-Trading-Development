@@ -222,3 +222,4 @@ __marimo__/
 
 src/runs/
 .DS_Store
+src/finetune/qc_project.json
