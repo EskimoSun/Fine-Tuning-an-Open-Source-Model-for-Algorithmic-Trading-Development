@@ -12,6 +12,8 @@ Checks
   unique      no two prompts identical (case/whitespace-insensitive)
   parameters  every non-vague prompt states the template's start date, end date and cash
               where the template code sets them
+  tickers     every non-vague prompt names each ticker the template code subscribes to
+              with add_equity / add_crypto / add_forex / add_cfd / add_index / add_option
   leakage     token Jaccard vs the 100 test prompts <= 0.6 (the same guard as
               finetune/build_dataset.py), reported with the maximum
   jsonl       train_prompts.jsonl matches the txt rows
@@ -91,6 +93,18 @@ def code_params(folder):
     return (tuple(int(x) for x in s.groups()) if s else None,
             tuple(int(x) for x in e.groups()) if e else None,
             int(c.group(1).replace("_", "").replace(",", "")) if c else None)
+
+
+TICKER_CALL = re.compile(r"add_(?:equity|crypto|forex|cfd|index|option|crypto_future|index_option)\(\s*[\"']([A-Z0-9]+)[\"']")
+TICKER_LOOP = re.compile(r"for ticker in [\[{]([^\]}]+)[\]}]")
+
+
+def code_tickers(folder):
+    code = (TRAIN / folder / "main.py").read_text(encoding="utf-8")
+    tickers = set(TICKER_CALL.findall(code))
+    for group in TICKER_LOOP.findall(code):
+        tickers |= set(re.findall(r"[\"']([A-Z0-9]{2,8})[\"']", group))
+    return tickers
 
 
 def tokens(text):
@@ -173,6 +187,14 @@ def main(argv=None):
             miss.append(f"cash {cash}")
         if miss:
             failures.append(f"parameters: line {r['line']} {r['folder']} {r['segment']}/{r['spec']} missing {miss}")
+
+    # tickers
+    for r in rows:
+        if r["spec"] == "vague" or r["folder"] not in train_folders:
+            continue
+        missing = [t for t in code_tickers(r["folder"]) if t.lower() not in r["prompt"].lower()]
+        if missing:
+            failures.append(f"tickers: line {r['line']} {r['folder']} {r['segment']}/{r['spec']} missing {missing}")
 
     # leakage
     test_tok = [tokens(json.loads(l)["prompt"]) for l in TEST_PROMPTS.read_text(encoding="utf-8").splitlines() if l.strip()]
