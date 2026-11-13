@@ -1,0 +1,284 @@
+{
+  "prompt_id": "equity-monthly-roc-rotation_v01",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass ETFUniverseSelectionAlgorithm(QCAlgorithm):\n    _weight_by_symbol: dict[Symbol, float] = {}\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        # Select SPY, EFA, EEM, AGG and GLD.\n        for ticker in [\"SPY\", \"EFA\", \"EEM\", \"AGG\", \"GLD\"]:\n            symbol = self.add_equity(ticker, Resolution.MINUTE).symbol\n            self._weight_by_symbol[symbol] = 0.2\n        # Create a PortfolioSelectionUniverse that selects the weight by default.\n        self._universe = self.add_universe(ETFUniverseSelectionAlgorithm._select_assets)\n        # Add a SheddingUniverse to filter the selected ETFs to only include the ones that are increasing.\n        self._universe.set_filter(SheddingUniverse(self._filter_assets))\n        # Schedule a rebalance every month.\n        self.schedule.on(\n            self.date_rules.month_start(), \n            self.time_rules.at(9, 0), \n            self._rebalance\n        )\n\n    def _select_assets(self, data: List[ETFUniverse]) -> List[Symbol]:\n        # Select all the ETFs in the universe.\n        return [d.symbol for d in data if d.price]\n\n    def _filter_assets(self, selected: List[Symbol]) -> List[Symbol]:\n        # Select the top 3 performing ETFs based on the last 3 months' performance.\n        count = 0\n        targets = []\n        for symbol in selected:\n            etf = self.securities[symbol]\n            # Create a 3-month return indicator to rank the ETFs.\n            indicator = etf.return_over_period(3)\n            # Alternatively, use a manual indicator.\n            # indicator = IndicatorExtensions.of(EquityReturnOverPeriod(3), symbol)\n            # self.warm_up_indicator(symbol, indicator)\n            targets.append((symbol, indicator))\n            count += 1\n        # We need at least 2 active ETFs to form a portfolio.\n        if count < 2:\n            return []\n        # Sort the ETFs by their 3-month return.\n        targets.sort(key=lambda x: x[1].current.value, reverse=True)\n        # Select the top 3 performing ETFs.\n        return [s[0] for s in targets[:3]]\n\n    def _rebalance(self) -> None:\n        # Create equal weight portfolio of the selected ETFs.\n        selected = self._universe.selected\n        if not selected:\n            return\n        # Select 80% of the portfolio weight to the selected ETFs.\n        weight = 0.8 / len(selected)\n        targets = [PortfolioTarget(symbol, weight) for symbol in selected]\n        # Place orders to rebalance the portfolio.\n        self.set_holdings(targets, True)\n```",
+  "generated_at": "2026-11-12T23:24:59.526180+00:00",
+  "has_code": true,
+  "static_findings": [],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass ETFUniverseSelectionAlgorithm(QCAlgorithm):\n    _weight_by_symbol: dict[Symbol, float] = {}\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        # Select SPY, EFA, EEM, AGG and GLD.\n        for ticker in [\"SPY\", \"EFA\", \"EEM\", \"AGG\", \"GLD\"]:\n            symbol = self.add_equity(ticker, Resolution.MINUTE).symbol\n            self._weight_by_symbol[symbol] = 0.2\n        # Create a PortfolioSelectionUniverse that selects the weight by default.\n        self._universe = self.add_universe(ETFUniverseSelectionAlgorithm._select_assets)\n        # Add a SheddingUniverse to filter the selected ETFs to only include the ones that are increasing.\n        self._universe.set_filter(SheddingUniverse(self._filter_assets))\n        # Schedule a rebalance every month.\n        self.schedule.on(\n            self.date_rules.month_start(), \n            self.time_rules.at(9, 0), \n            self._rebalance\n        )\n\n    def _select_assets(self, data: List[ETFUniverse]) -> List[Symbol]:\n        # Select all the ETFs in the universe.\n        return [d.symbol for d in data if d.price]\n\n    def _filter_assets(self, selected: List[Symbol]) -> List[Symbol]:\n        # Select the top 3 performing ETFs based on the last 3 months' performance.\n        count = 0\n        targets = []\n        for symbol in selected:\n            etf = self.securities[symbol]\n            # Create a 3-month return indicator to rank the ETFs.\n            indicator = etf.return_over_period(3)\n            # Alternatively, use a manual indicator.\n            # indicator = IndicatorExtensions.of(EquityReturnOverPeriod(3), symbol)\n            # self.warm_up_indicator(symbol, indicator)\n            targets.append((symbol, indicator))\n            count += 1\n        # We need at least 2 active ETFs to form a portfolio.\n        if count < 2:\n            return []\n        # Sort the ETFs by their 3-month return.\n        targets.sort(key=lambda x: x[1].current.value, reverse=True)\n        # Select the top 3 performing ETFs.\n        return [s[0] for s in targets[:3]]\n\n    def _rebalance(self) -> None:\n        # Create equal weight portfolio of the selected ETFs.\n        selected = self._universe.selected\n        if not selected:\n            return\n        # Select 80% of the portfolio weight to the selected ETFs.\n        weight = 0.8 / len(selected)\n        targets = [PortfolioTarget(symbol, weight) for symbol in selected]\n        # Place orders to rebalance the portfolio.\n        self.set_holdings(targets, True)\n",
+    "source_sha256": "e98761b91f40905e3a40e03b857ea2baf84a8f62461f774a3952b4ce2e37b78d",
+    "started_at": "2026-11-12T23:24:59.529594+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39314151,
+    "compile_id": "7438f0876097ad95d3b60c71ccbfb9ce-f8c538d35a90a1e5cc504600a64f2f35",
+    "compile_created": {
+      "compileId": "7438f0876097ad95d3b60c71ccbfb9ce-f8c538d35a90a1e5cc504600a64f2f35",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39314151,
+      "signature": "f8c538d35a90a1e5cc504600a64f2f35",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "7438f0876097ad95d3b60c71ccbfb9ce-f8c538d35a90a1e5cc504600a64f2f35",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39314151, with CompileID: 7438f0876097ad95d3b60c71ccbfb9ce-f8c538d35a90a1e5cc504600a64f2f35, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39314151, with CompileID: 7438f0876097ad95d3b60c71ccbfb9ce-f8c538d35a90a1e5cc504600a64f2f35, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "8a77618df506d0b6df61c0bccafaa689",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-monthly-roc-rotation_v01",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314151,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "8a77618df506d0b6df61c0bccafaa689",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 12
+        },
+        "backtestStart": "2026-11-12 23:25:03",
+        "backtestEnd": "2026-11-12 23:25:03",
+        "created": "2026-11-12 23:25:03",
+        "snapshotId": 39314154,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-monthly-roc-rotation_v01",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314151,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "8a77618df506d0b6df61c0bccafaa689",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 12
+        },
+        "backtestStart": "2026-11-12 23:25:03",
+        "backtestEnd": "2026-11-12 23:25:03",
+        "created": "2026-11-12 23:25:03",
+        "snapshotId": 39314154,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;ETFUniverse&#039; is not defined\n  at ETFUniverseSelectionAlgorithm\n    def _select_assets(self, data: List[ETFUniverse]) -&gt; List[Symbol]:\n                                        ^^^^^^^^^^^\n in main.py: line 30\n  at \n    class ETFUniverseSelectionAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;ETFUniverse&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;ETFUniverse&#039; is not defined\n  at ETFUniverseSelectionAlgorithm\n    def _select_assets(self, data: List[ETFUniverse]) -&gt; List[Symbol]:\n                                        ^^^^^^^^^^^\n in main.py: line 30\n  at \n    class ETFUniverseSelectionAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;ETFUniverse&#039; is not defined",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'ETFUniverse' is not defined\n  at ETFUniverseSelectionAlgorithm\n    def _select_assets(self, data: List[ETFUniverse]) -> List[Symbol]:\n                                        ^^^^^^^^^^^\n in main.py: line 30\n  at <module>\n    class ETFUniverseSelectionAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'ETFUniverse' is not defined",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "6.7%",
+          "Used RAM (MB)": "225",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-8a77618df506d0b6df61c0bccafaa689",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:13"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;ETFUniverse&#039; is not defined\n  at ETFUniverseSelectionAlgorithm\n    def _select_assets(self, data: List[ETFUniverse]) -&gt; List[Symbol]:\n                                        ^^^^^^^^^^^\n in main.py: line 30\n  at \n    class ETFUniverseSelectionAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;ETFUniverse&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;ETFUniverse&#039; is not defined\n  at ETFUniverseSelectionAlgorithm\n    def _select_assets(self, data: List[ETFUniverse]) -&gt; List[Symbol]:\n                                        ^^^^^^^^^^^\n in main.py: line 30\n  at \n    class ETFUniverseSelectionAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;ETFUniverse&#039; is not defined",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'ETFUniverse' is not defined\n  at ETFUniverseSelectionAlgorithm\n    def _select_assets(self, data: List[ETFUniverse]) -> List[Symbol]:\n                                        ^^^^^^^^^^^\n in main.py: line 30\n  at <module>\n    class ETFUniverseSelectionAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'ETFUniverse' is not defined",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:25:52.583209+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "total_orders": null
+}

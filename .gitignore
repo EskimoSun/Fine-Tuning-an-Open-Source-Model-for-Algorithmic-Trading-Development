@@ -220,6 +220,12 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-src/runs/
+# Ignore runs except tuned
+!src/runs/
+src/runs/*
+!src/runs/qwen_tuned/
+
 .DS_Store
 src/finetune/qc_project.json
+.python-version
+.vscode/

@@ -1,0 +1,324 @@
+{
+  "prompt_id": "equity-pairs-trading-cointegration_v06",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass StatisticalArbitrageAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        self._target = self.add_equity(\"KO\", Resolution.DAILY)\n        self._peer = self.add_equity(\"PEP\", Resolution.DAILY)\n\n        self._model = OLSRegressionModel()\n        self._residual_std_deviator = StandardDeviationOfResiduals(self._model)\n        self._z_score = ZScore(self._residual_std_deviator)\n\n        self.warm_up_model(self._target.symbol, self._peer.symbol)\n\n    def warm_up_model(self, target: Symbol, peer: Symbol) -> None:\n        history = self.history[PEP](target, 60, Resolution.DAILY)\n        for data_point in history:\n            self._model.fit(data_point.time, data_point.end_time, data_point.close, data_point.close)\n        self._residual_std_deviator.update(self._target, self._peer, 60)\n        self._z_score.update(self._residual_std_deviator)\n\n    def on_data(self, data: Slice) -> None:\n        if not self._z_score.is_ready:\n            return\n\n        target_price = self._target.price\n        peer_price = self._peer.price\n        residual = target_price - self._model.predict(peer_price)\n\n        if not self._target.invested and residual < -2 * self._residual_std_deviator.current.value:\n            self.set_holdings(self._target, 1, True)\n        elif not self._peer.invested and residual > 2 * self._residual_std_deviator.current.value:\n            self.set_holdings(self._peer, 1, True)\n        elif (self._target.invested or self._peer.invested) and abs(residual) < 0.5 * self._residual_std_deviator.current.value:\n            self.liquidate(self._target, self._peer)\n```",
+  "generated_at": "2026-11-12T23:57:14.945017+00:00",
+  "has_code": true,
+  "static_findings": [],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass StatisticalArbitrageAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        self._target = self.add_equity(\"KO\", Resolution.DAILY)\n        self._peer = self.add_equity(\"PEP\", Resolution.DAILY)\n\n        self._model = OLSRegressionModel()\n        self._residual_std_deviator = StandardDeviationOfResiduals(self._model)\n        self._z_score = ZScore(self._residual_std_deviator)\n\n        self.warm_up_model(self._target.symbol, self._peer.symbol)\n\n    def warm_up_model(self, target: Symbol, peer: Symbol) -> None:\n        history = self.history[PEP](target, 60, Resolution.DAILY)\n        for data_point in history:\n            self._model.fit(data_point.time, data_point.end_time, data_point.close, data_point.close)\n        self._residual_std_deviator.update(self._target, self._peer, 60)\n        self._z_score.update(self._residual_std_deviator)\n\n    def on_data(self, data: Slice) -> None:\n        if not self._z_score.is_ready:\n            return\n\n        target_price = self._target.price\n        peer_price = self._peer.price\n        residual = target_price - self._model.predict(peer_price)\n\n        if not self._target.invested and residual < -2 * self._residual_std_deviator.current.value:\n            self.set_holdings(self._target, 1, True)\n        elif not self._peer.invested and residual > 2 * self._residual_std_deviator.current.value:\n            self.set_holdings(self._peer, 1, True)\n        elif (self._target.invested or self._peer.invested) and abs(residual) < 0.5 * self._residual_std_deviator.current.value:\n            self.liquidate(self._target, self._peer)\n",
+    "source_sha256": "6c49c241edad23ed184c49b95e25971ed08400fc401746cf7efed81c86128abc",
+    "started_at": "2026-11-12T23:57:14.948205+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;OLSRegressionModel&#039; is not defined\n  at initialize\n    self._model = OLSRegressionModel()",
+    "project_id": 39315235,
+    "compile_id": "fbb3ef2eed33d0cb9a85ada2d8401fa0-adc54190c74661597a3c204e69dda8bc",
+    "compile_created": {
+      "compileId": "fbb3ef2eed33d0cb9a85ada2d8401fa0-adc54190c74661597a3c204e69dda8bc",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39315235,
+      "signature": "adc54190c74661597a3c204e69dda8bc",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "fbb3ef2eed33d0cb9a85ada2d8401fa0-adc54190c74661597a3c204e69dda8bc",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39315235, with CompileID: fbb3ef2eed33d0cb9a85ada2d8401fa0-adc54190c74661597a3c204e69dda8bc, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39315235, with CompileID: fbb3ef2eed33d0cb9a85ada2d8401fa0-adc54190c74661597a3c204e69dda8bc, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "1088fb84ef516bfaf90f253e7f907fe0",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v06",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315235,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "1088fb84ef516bfaf90f253e7f907fe0",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 13
+        },
+        "backtestStart": "2026-11-12 23:57:18",
+        "backtestEnd": "2026-11-12 23:57:18",
+        "created": "2026-11-12 23:57:18",
+        "snapshotId": 39315240,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v06",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315235,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "1088fb84ef516bfaf90f253e7f907fe0",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 13
+        },
+        "backtestStart": "2026-11-12 23:57:18",
+        "backtestEnd": "2026-11-12 23:57:18",
+        "created": "2026-11-12 23:57:18",
+        "snapshotId": 39315240,
+        "status": "Runtime Error",
+        "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;OLSRegressionModel&#039; is not defined\n  at initialize\n    self._model = OLSRegressionModel()\n                  ^^^^^^^^^^^^^^^^^^\n in main.py: line 18\n name &#039;OLSRegressionModel&#039; is not defined",
+        "stacktrace": "name 'OLSRegressionModel' is not defined\n  at initialize\n    self._model = OLSRegressionModel()\n                  ^^^^^^^^^^^^^^^^^^\n in main.py: line 18\n name 'OLSRegressionModel' is not defined",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "7.1%",
+          "Used RAM (MB)": "223",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-1088fb84ef516bfaf90f253e7f907fe0",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:13"
+        }
+      },
+      "success": true
+    },
+    "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;OLSRegressionModel&#039; is not defined\n  at initialize\n    self._model = OLSRegressionModel()\n                  ^^^^^^^^^^^^^^^^^^\n in main.py: line 18\n name &#039;OLSRegressionModel&#039; is not defined",
+    "stacktrace": "name 'OLSRegressionModel' is not defined\n  at initialize\n    self._model = OLSRegressionModel()\n                  ^^^^^^^^^^^^^^^^^^\n in main.py: line 18\n name 'OLSRegressionModel' is not defined",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:58:07.737290+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;OLSRegressionModel&#039; is not defined\n  at initialize\n    self._model = OLSRegressionModel()",
+  "note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;OLSRegressionModel&#039; is not defined\n  at initialize\n    self._model = OLSRegressionModel()",
+  "total_orders": null
+}

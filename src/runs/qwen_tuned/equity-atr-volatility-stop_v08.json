@@ -1,0 +1,331 @@
+{
+  "prompt_id": "equity-atr-volatility-stop_v08",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityChandelierExitAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        self._equity = self.add_equity(\"SPY\", Resolution.MINUTE)\n        self._atr = self.atr(self._equity.symbol, 14, MovingAverageType.SIMPLE, Resolution.DAILY)\n        # Alternatively, use a manual indicator.\n        # self._atr = AverageTrueRange(14)\n        # self.warm_up_indicator(self._equity, self._atr, Resolution.DAILY)\n        # self.register_indicator(self._equity, self._atr, Resolution.DAILY)\n        self._trailing_high = self.highest(self._equity, 20, Resolution.DAILY)\n        # Alternatively, use a manual indicator.\n        # self._trailing_high = Highest(20)\n        # self.warm_up_indicator(self._equity, self._trailing_high, Resolution.DAILY)\n        # self.register_indicator(self._equity, self._trailing_high, Resolution.DAILY)\n        self._stop_loss_multiplier = 3.0\n        self._previous_price = self._equity.price\n        self._in_position = False\n        self.plot_indicator(\"ATR\", self._atr)\n\n    def on_data(self, data: Slice) -> None:\n        if not data.bars or not self._atr.is_ready:\n            return\n        price = self._equity.close\n        if not self._in_position:\n            if price > self._trailing_high.current.value:\n                self._trailing_high.update(price)\n            if price > self._atr.current.value * self._stop_loss_multiplier:\n                self.set_holdings(self._equity, 1)\n                self._in_position = True\n        else:\n            if price < self._atr.current.value * self._stop_loss_multiplier:\n                self.liquidate(self._equity)\n                self._in_position = False\n            elif price > self._trailing_high.current.value:\n                self._trailing_high.update(price)\n```",
+  "generated_at": "2026-11-12T23:22:05.237116+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "highest"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityChandelierExitAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        self._equity = self.add_equity(\"SPY\", Resolution.MINUTE)\n        self._atr = self.atr(self._equity.symbol, 14, MovingAverageType.SIMPLE, Resolution.DAILY)\n        # Alternatively, use a manual indicator.\n        # self._atr = AverageTrueRange(14)\n        # self.warm_up_indicator(self._equity, self._atr, Resolution.DAILY)\n        # self.register_indicator(self._equity, self._atr, Resolution.DAILY)\n        self._trailing_high = self.highest(self._equity, 20, Resolution.DAILY)\n        # Alternatively, use a manual indicator.\n        # self._trailing_high = Highest(20)\n        # self.warm_up_indicator(self._equity, self._trailing_high, Resolution.DAILY)\n        # self.register_indicator(self._equity, self._trailing_high, Resolution.DAILY)\n        self._stop_loss_multiplier = 3.0\n        self._previous_price = self._equity.price\n        self._in_position = False\n        self.plot_indicator(\"ATR\", self._atr)\n\n    def on_data(self, data: Slice) -> None:\n        if not data.bars or not self._atr.is_ready:\n            return\n        price = self._equity.close\n        if not self._in_position:\n            if price > self._trailing_high.current.value:\n                self._trailing_high.update(price)\n            if price > self._atr.current.value * self._stop_loss_multiplier:\n                self.set_holdings(self._equity, 1)\n                self._in_position = True\n        else:\n            if price < self._atr.current.value * self._stop_loss_multiplier:\n                self.liquidate(self._equity)\n                self._in_position = False\n            elif price > self._trailing_high.current.value:\n                self._trailing_high.update(price)\n",
+    "source_sha256": "94ea7fd10148305da53177c2ad0213dad79a722b676c371e18e073a1572130c8",
+    "started_at": "2026-11-12T23:22:05.239320+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;EquityChandelierExitAlgorithm&#039; object has no attribute &#039;highest&#039;\n  at initialize\n   ",
+    "project_id": 39314041,
+    "compile_id": "0f3899a64f50795cec94c5d895aa8566-397f10a93f919cba9d4c6f5be4f422b4",
+    "compile_created": {
+      "compileId": "0f3899a64f50795cec94c5d895aa8566-397f10a93f919cba9d4c6f5be4f422b4",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39314041,
+      "signature": "397f10a93f919cba9d4c6f5be4f422b4",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "0f3899a64f50795cec94c5d895aa8566-397f10a93f919cba9d4c6f5be4f422b4",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39314041, with CompileID: 0f3899a64f50795cec94c5d895aa8566-397f10a93f919cba9d4c6f5be4f422b4, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39314041, with CompileID: 0f3899a64f50795cec94c5d895aa8566-397f10a93f919cba9d4c6f5be4f422b4, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "2596c7fe4312e2b88a6df3c48aafc271",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-atr-volatility-stop_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314041,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "2596c7fe4312e2b88a6df3c48aafc271",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 10
+        },
+        "backtestStart": "2026-11-12 23:22:09",
+        "backtestEnd": "2026-11-12 23:22:09",
+        "created": "2026-11-12 23:22:09",
+        "snapshotId": 39314044,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-atr-volatility-stop_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314041,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "2596c7fe4312e2b88a6df3c48aafc271",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 10
+        },
+        "backtestStart": "2026-11-12 23:22:09",
+        "backtestEnd": "2026-11-12 23:22:09",
+        "created": "2026-11-12 23:22:09",
+        "snapshotId": 39314044,
+        "status": "Runtime Error",
+        "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;EquityChandelierExitAlgorithm&#039; object has no attribute &#039;highest&#039;\n  at initialize\n    self._trailing_high = self.highest(self._equity, 20, Resolution.DAILY)\n                          ^^^^^^^^^^^^\n in main.py: line 19\n &#039;EquityChandelierExitAlgorithm&#039; object has no attribute &#039;highest&#039;",
+        "stacktrace": "'EquityChandelierExitAlgorithm' object has no attribute 'highest'\n  at initialize\n    self._trailing_high = self.highest(self._equity, 20, Resolution.DAILY)\n                          ^^^^^^^^^^^^\n in main.py: line 19\n 'EquityChandelierExitAlgorithm' object has no attribute 'highest'",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "18.2%",
+          "Used RAM (MB)": "215",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-2596c7fe4312e2b88a6df3c48aafc271",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:14"
+        }
+      },
+      "success": true
+    },
+    "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;EquityChandelierExitAlgorithm&#039; object has no attribute &#039;highest&#039;\n  at initialize\n    self._trailing_high = self.highest(self._equity, 20, Resolution.DAILY)\n                          ^^^^^^^^^^^^\n in main.py: line 19\n &#039;EquityChandelierExitAlgorithm&#039; object has no attribute &#039;highest&#039;",
+    "stacktrace": "'EquityChandelierExitAlgorithm' object has no attribute 'highest'\n  at initialize\n    self._trailing_high = self.highest(self._equity, 20, Resolution.DAILY)\n                          ^^^^^^^^^^^^\n in main.py: line 19\n 'EquityChandelierExitAlgorithm' object has no attribute 'highest'",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:23:00.019712+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;EquityChandelierExitAlgorithm&#039; object has no attribute &#039;highest&#039;\n  at initialize\n   ",
+  "note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;EquityChandelierExitAlgorithm&#039; object has no attribute &#039;highest&#039;\n  at initialize\n   ; UNKNOWN_API: highest",
+  "total_orders": null
+}

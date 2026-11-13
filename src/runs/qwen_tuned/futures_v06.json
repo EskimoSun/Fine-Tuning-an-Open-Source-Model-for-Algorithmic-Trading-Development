@@ -1,0 +1,331 @@
+{
+  "prompt_id": "futures_v06",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass FutureContractRollingAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # Filter the mapped future to only select contracts that are expanding their front month position.\n        self._symbol = self.add_future(Symbol.create_canonical_future(\"SP_500_E_MINI\", market=Market.USA), data_mapping_mode=FutureDataMappingType.LAST_TRADING_DAY, contract_depth_offset=0)\n        self.set_filter(self._symbol, FutureFilter.BACKWARDS_RATIO, 0.92)\n        # Set the universe settings to use the improved universe selection model.\n        self.universe_settings.asynchronous = True\n        # Warm up the indicator so it is immediately ready to use.\n        self.settings.warm_up_indicator_initial_values = True\n\n    def on_data(self, slice: Slice) -> None:\n        if self.portfolio.invested:\n            return\n        # Create the order for the mapped future.\n        mapped_future = self.mapped_futures[self._symbol]\n        self.market_order(mapped_future, 1)\n\n    def on_securities_changed(self, changes: SecurityChanges) -> None:\n        # Handle the contract rollover.\n        for old_contract in changes.removed_securities.get(self._symbol):\n            self.liquidate(old_contract, tag=f\"Expiry {old_contract.end_time}\")\n        # Create a liquidate order for the expired contract.\n        for new_contract in changes.added_securities.get(self._symbol):\n            if new_contract.is_expired:\n                continue\n            self.market_order(new_contract, -1, tag=f\"Rollover {new_contract.symbol}\")\n```",
+  "generated_at": "2026-11-13T00:12:53.609570+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "symbol_changed / symbolchanged"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass FutureContractRollingAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # Filter the mapped future to only select contracts that are expanding their front month position.\n        self._symbol = self.add_future(Symbol.create_canonical_future(\"SP_500_E_MINI\", market=Market.USA), data_mapping_mode=FutureDataMappingType.LAST_TRADING_DAY, contract_depth_offset=0)\n        self.set_filter(self._symbol, FutureFilter.BACKWARDS_RATIO, 0.92)\n        # Set the universe settings to use the improved universe selection model.\n        self.universe_settings.asynchronous = True\n        # Warm up the indicator so it is immediately ready to use.\n        self.settings.warm_up_indicator_initial_values = True\n\n    def on_data(self, slice: Slice) -> None:\n        if self.portfolio.invested:\n            return\n        # Create the order for the mapped future.\n        mapped_future = self.mapped_futures[self._symbol]\n        self.market_order(mapped_future, 1)\n\n    def on_securities_changed(self, changes: SecurityChanges) -> None:\n        # Handle the contract rollover.\n        for old_contract in changes.removed_securities.get(self._symbol):\n            self.liquidate(old_contract, tag=f\"Expiry {old_contract.end_time}\")\n        # Create a liquidate order for the expired contract.\n        for new_contract in changes.added_securities.get(self._symbol):\n            if new_contract.is_expired:\n                continue\n            self.market_order(new_contract, -1, tag=f\"Rollover {new_contract.symbol}\")\n",
+    "source_sha256": "70b6bc5ab3b4ac40ad2ae1fb9c55ad66aa1b1b2c2bedf79a8546224059ef8df2",
+    "started_at": "2026-11-13T00:12:53.611900+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Symbol&#039; has no attribute &#039;create_canonical_future&#039; Did you mean: &#039;c",
+    "project_id": 39315870,
+    "compile_id": "c2da22e24ef0f5f7a21018831ff5eab6-b1b7adfe936f884452c24f21fa2ec4a4",
+    "compile_created": {
+      "compileId": "c2da22e24ef0f5f7a21018831ff5eab6-b1b7adfe936f884452c24f21fa2ec4a4",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39315870,
+      "signature": "b1b7adfe936f884452c24f21fa2ec4a4",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "c2da22e24ef0f5f7a21018831ff5eab6-b1b7adfe936f884452c24f21fa2ec4a4",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39315870, with CompileID: c2da22e24ef0f5f7a21018831ff5eab6-b1b7adfe936f884452c24f21fa2ec4a4, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39315870, with CompileID: c2da22e24ef0f5f7a21018831ff5eab6-b1b7adfe936f884452c24f21fa2ec4a4, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "d4ef21f84fb10b7de35753ca38cff803",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v06",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315870,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "d4ef21f84fb10b7de35753ca38cff803",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 11
+        },
+        "backtestStart": "2026-11-13 00:12:57",
+        "backtestEnd": "2026-11-13 00:12:57",
+        "created": "2026-11-13 00:12:57",
+        "snapshotId": 39315873,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-15T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v06",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315870,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "d4ef21f84fb10b7de35753ca38cff803",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 11
+        },
+        "backtestStart": "2026-11-13 00:12:57",
+        "backtestEnd": "2026-11-13 00:12:57",
+        "created": "2026-11-13 00:12:57",
+        "snapshotId": 39315873,
+        "status": "Runtime Error",
+        "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Symbol&#039; has no attribute &#039;create_canonical_future&#039; Did you mean: &#039;create_canonical_option&#039;, &#039;create_future&#039;?\n  at initialize\n    self._symbol = self.add_future(Symbol.create_canonical_future(&quot;SP_500_E_MINI&quot;, market=Market.USA), data_mapping_mode=FutureDataMappingType.LAST_TRADING_DAY, contract_depth_offset=0)\n                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 11\n type object &#039;Symbol&#039; has no attribute &#039;create_canonical_future&#039; Did you mean: &#039;create_canonical_option&#039;, &#039;create_future&#039;?",
+        "stacktrace": "type object 'Symbol' has no attribute 'create_canonical_future' Did you mean: 'create_canonical_option', 'create_future'?\n  at initialize\n    self._symbol = self.add_future(Symbol.create_canonical_future(\"SP_500_E_MINI\", market=Market.USA), data_mapping_mode=FutureDataMappingType.LAST_TRADING_DAY, contract_depth_offset=0)\n                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 11\n type object 'Symbol' has no attribute 'create_canonical_future' Did you mean: 'create_canonical_option', 'create_future'?",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-15T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "11.9%",
+          "Used RAM (MB)": "233",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-d4ef21f84fb10b7de35753ca38cff803",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:14"
+        }
+      },
+      "success": true
+    },
+    "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Symbol&#039; has no attribute &#039;create_canonical_future&#039; Did you mean: &#039;create_canonical_option&#039;, &#039;create_future&#039;?\n  at initialize\n    self._symbol = self.add_future(Symbol.create_canonical_future(&quot;SP_500_E_MINI&quot;, market=Market.USA), data_mapping_mode=FutureDataMappingType.LAST_TRADING_DAY, contract_depth_offset=0)\n                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 11\n type object &#039;Symbol&#039; has no attribute &#039;create_canonical_future&#039; Did you mean: &#039;create_canonical_option&#039;, &#039;create_future&#039;?",
+    "stacktrace": "type object 'Symbol' has no attribute 'create_canonical_future' Did you mean: 'create_canonical_option', 'create_future'?\n  at initialize\n    self._symbol = self.add_future(Symbol.create_canonical_future(\"SP_500_E_MINI\", market=Market.USA), data_mapping_mode=FutureDataMappingType.LAST_TRADING_DAY, contract_depth_offset=0)\n                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 11\n type object 'Symbol' has no attribute 'create_canonical_future' Did you mean: 'create_canonical_option', 'create_future'?",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-13T00:13:49.368934+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Symbol&#039; has no attribute &#039;create_canonical_future&#039; Did you mean: &#039;c",
+  "note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Symbol&#039; has no attribute &#039;create_canonical_future&#039; Did you mean: &#039;c; PROMPT_MISS: symbol_changed / symbolchanged",
+  "total_orders": null
+}

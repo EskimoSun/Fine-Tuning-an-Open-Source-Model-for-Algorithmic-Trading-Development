@@ -1,0 +1,324 @@
+{
+  "prompt_id": "equity-rsi-overbought-oversold_v01",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityRSIAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        self._qqq = self.add_equity(\"QQQ\", Resolution.HOUR)\n\n        self._rsi = self.rsi(self._qqq.symbol, 14, Resolution.HOUR)\n        # Alternatively, use a manual indicator.\n        # self._rsi = RelativeStrengthIndex(14)\n        # self.warm_up_indicator(self._qqq, self._rsi)\n        # self.register_indicator(self._qqq, self._rsi)\n\n        self.plot_indicator(\"RSI\", self._rsi)\n\n    def on_data(self, data: Slice) -> None:\n        if not self._rsi.is_ready:\n            return\n\n        rsi_value = self._rsi.current.value\n        quantity = self._qqq.holdings.quantity\n\n        if quantity == 0 and rsi_value < 30:\n            self.set_holdings(self._qqq.symbol, 1)\n        elif quantity > 0 and rsi_value > 70:\n            self.liquidate()\n```",
+  "generated_at": "2026-11-12T22:48:59.281150+00:00",
+  "has_code": true,
+  "static_findings": [],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityRSIAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        self._qqq = self.add_equity(\"QQQ\", Resolution.HOUR)\n\n        self._rsi = self.rsi(self._qqq.symbol, 14, Resolution.HOUR)\n        # Alternatively, use a manual indicator.\n        # self._rsi = RelativeStrengthIndex(14)\n        # self.warm_up_indicator(self._qqq, self._rsi)\n        # self.register_indicator(self._qqq, self._rsi)\n\n        self.plot_indicator(\"RSI\", self._rsi)\n\n    def on_data(self, data: Slice) -> None:\n        if not self._rsi.is_ready:\n            return\n\n        rsi_value = self._rsi.current.value\n        quantity = self._qqq.holdings.quantity\n\n        if quantity == 0 and rsi_value < 30:\n            self.set_holdings(self._qqq.symbol, 1)\n        elif quantity > 0 and rsi_value > 70:\n            self.liquidate()\n",
+    "source_sha256": "ae4ef8aca7f852751acdd7ae58bfbe5d182ae8d8382315435d5e6fc0ae18d46a",
+    "started_at": "2026-11-12T22:48:59.284064+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the ex",
+    "project_id": 39312753,
+    "compile_id": "c356823dbc590abf1d81830e2d94e590-0b08b8c95c9cb882bfcce8e896442f38",
+    "compile_created": {
+      "compileId": "c356823dbc590abf1d81830e2d94e590-0b08b8c95c9cb882bfcce8e896442f38",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39312753,
+      "signature": "0b08b8c95c9cb882bfcce8e896442f38",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "c356823dbc590abf1d81830e2d94e590-0b08b8c95c9cb882bfcce8e896442f38",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39312753, with CompileID: c356823dbc590abf1d81830e2d94e590-0b08b8c95c9cb882bfcce8e896442f38, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39312753, with CompileID: c356823dbc590abf1d81830e2d94e590-0b08b8c95c9cb882bfcce8e896442f38, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "86c2c21a64114eb6ef2e6ce325ab87f7",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-rsi-overbought-oversold_v01",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39312753,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "86c2c21a64114eb6ef2e6ce325ab87f7",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 12
+        },
+        "backtestStart": "2026-11-12 22:49:03",
+        "backtestEnd": "2026-11-12 22:49:03",
+        "created": "2026-11-12 22:49:03",
+        "snapshotId": 39312758,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-rsi-overbought-oversold_v01",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39312753,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "86c2c21a64114eb6ef2e6ce325ab87f7",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 12
+        },
+        "backtestStart": "2026-11-12 22:49:03",
+        "backtestEnd": "2026-11-12 22:49:03",
+        "created": "2026-11-12 22:49:03",
+        "snapshotId": 39312758,
+        "status": "Runtime Error",
+        "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the rsi method. Please checkout the API documentation. The expected signature is:\n  rsi(symbol: Symbol, period: int, moving_average_type: MovingAverageType = MovingAverageType.WILDERS, resolution: Optional[Resolution] = None, selector: Callable[[IBaseData], float] = None)\nArgument mismatch: argument 3 (&#039;moving_average_type&#039;) expected MovingAverageType, got Resolution.\n  at initialize\n    self._rsi = self.rsi(self._qqq.symbol, 14, Resolution.HOUR)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 16\n No method matches given arguments for rsi: (, , ). The expected signature is:\n  rsi(symbol: Symbol, period: int, moving_average_type: MovingAverageType = MovingAverageType.WILDERS, resolution: Optional[Resolution] = None, selector: Callable[[IBaseData], float] = None)\nArgument mismatch: argument 3 (&#039;moving_average_type&#039;) expected MovingAverageType, got Resolution.",
+        "stacktrace": "Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the rsi method. Please checkout the API documentation. The expected signature is:\n  rsi(symbol: Symbol, period: int, moving_average_type: MovingAverageType = MovingAverageType.WILDERS, resolution: Optional[Resolution] = None, selector: Callable[[IBaseData], float] = None)\nArgument mismatch: argument 3 ('moving_average_type') expected MovingAverageType, got Resolution.\n  at initialize\n    self._rsi = self.rsi(self._qqq.symbol, 14, Resolution.HOUR)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 16\n No method matches given arguments for rsi: (<class 'QuantConnect.Symbol'>, <class 'int'>, <class 'QuantConnect.Resolution'>). The expected signature is:\n  rsi(symbol: Symbol, period: int, moving_average_type: MovingAverageType = MovingAverageType.WILDERS, resolution: Optional[Resolution] = None, selector: Callable[[IBaseData], float] = None)\nArgument mismatch: argument 3 ('moving_average_type') expected MovingAverageType, got Resolution.",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "7.0%",
+          "Used RAM (MB)": "224",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-86c2c21a64114eb6ef2e6ce325ab87f7",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:13"
+        }
+      },
+      "success": true
+    },
+    "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the rsi method. Please checkout the API documentation. The expected signature is:\n  rsi(symbol: Symbol, period: int, moving_average_type: MovingAverageType = MovingAverageType.WILDERS, resolution: Optional[Resolution] = None, selector: Callable[[IBaseData], float] = None)\nArgument mismatch: argument 3 (&#039;moving_average_type&#039;) expected MovingAverageType, got Resolution.\n  at initialize\n    self._rsi = self.rsi(self._qqq.symbol, 14, Resolution.HOUR)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 16\n No method matches given arguments for rsi: (, , ). The expected signature is:\n  rsi(symbol: Symbol, period: int, moving_average_type: MovingAverageType = MovingAverageType.WILDERS, resolution: Optional[Resolution] = None, selector: Callable[[IBaseData], float] = None)\nArgument mismatch: argument 3 (&#039;moving_average_type&#039;) expected MovingAverageType, got Resolution.",
+    "stacktrace": "Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the rsi method. Please checkout the API documentation. The expected signature is:\n  rsi(symbol: Symbol, period: int, moving_average_type: MovingAverageType = MovingAverageType.WILDERS, resolution: Optional[Resolution] = None, selector: Callable[[IBaseData], float] = None)\nArgument mismatch: argument 3 ('moving_average_type') expected MovingAverageType, got Resolution.\n  at initialize\n    self._rsi = self.rsi(self._qqq.symbol, 14, Resolution.HOUR)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 16\n No method matches given arguments for rsi: (<class 'QuantConnect.Symbol'>, <class 'int'>, <class 'QuantConnect.Resolution'>). The expected signature is:\n  rsi(symbol: Symbol, period: int, moving_average_type: MovingAverageType = MovingAverageType.WILDERS, resolution: Optional[Resolution] = None, selector: Callable[[IBaseData], float] = None)\nArgument mismatch: argument 3 ('moving_average_type') expected MovingAverageType, got Resolution.",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T22:49:54.560648+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the ex",
+  "note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the ex",
+  "total_orders": null
+}

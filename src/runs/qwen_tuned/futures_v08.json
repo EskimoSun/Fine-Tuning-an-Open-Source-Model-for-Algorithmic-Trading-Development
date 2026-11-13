@@ -1,0 +1,303 @@
+{
+  "prompt_id": "futures_v08",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass FutureContractExampleAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # Set the data normalization mode as backwards_ratio for daily SPX future data\n        self.set_data_normalization_mode(FutureDataNormalizationMode.BACKWARDS_RATIO)\n        # Set the data mapping mode as last_trading_day for daily SPX future data\n        self.set_data_mapping_mode(ContinuousMappingMode.LAST_TRADING_DAY)\n        # Set the filter mode as extended_market_hours for extended market hours SPX future data\n        self.set_filter_mode(FilterMode.EXTENDED_market_HOURS)\n\n        self._future = self.add_future(Futures.Indices.SP_500_E_MINI, mapping_mode=ContinuousMappingMode.LAST_TRADING_DAY, normalization_mode=FutureDataNormalizationMode.BACKWARDS_RATIO, filter_end_date_offset=92, filter_start_date_offset=0)\n        # Alternatively, use the convenience method.\n        # self._future = self.add_future(Futures.Indices.SP_500_E_MINI)\n        # Set the contract management mode as rolling for automatic contract rollover\n        self._future.set_contract_management_mode(ContractManagementMode.ROLLING)\n\n    def on_data(self, slice: Slice) -> None:\n        if not self._future.is_ready:\n            return\n        # Only trade if the contract is ready\n        price = self._future.price\n        if price > 4000:\n            self.market_order(self._future, 1)\n        elif price < 4000:\n            self.market_order(self._future, -1)\n\n    def on_contract_changed(self, changed_contract: FutureContract) -> None:\n        if changed_contract.is_new:\n            self.liquidate(self._future, tag=f\"Liquidated {self._future.symbol} on contract change\")\n```",
+  "generated_at": "2026-11-13T00:14:52.970455+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "set_data_mapping_mode, set_data_normalization_mode, set_filter_mode"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "mapped"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "symbol_changed / symbolchanged"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass FutureContractExampleAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # Set the data normalization mode as backwards_ratio for daily SPX future data\n        self.set_data_normalization_mode(FutureDataNormalizationMode.BACKWARDS_RATIO)\n        # Set the data mapping mode as last_trading_day for daily SPX future data\n        self.set_data_mapping_mode(ContinuousMappingMode.LAST_TRADING_DAY)\n        # Set the filter mode as extended_market_hours for extended market hours SPX future data\n        self.set_filter_mode(FilterMode.EXTENDED_market_HOURS)\n\n        self._future = self.add_future(Futures.Indices.SP_500_E_MINI, mapping_mode=ContinuousMappingMode.LAST_TRADING_DAY, normalization_mode=FutureDataNormalizationMode.BACKWARDS_RATIO, filter_end_date_offset=92, filter_start_date_offset=0)\n        # Alternatively, use the convenience method.\n        # self._future = self.add_future(Futures.Indices.SP_500_E_MINI)\n        # Set the contract management mode as rolling for automatic contract rollover\n        self._future.set_contract_management_mode(ContractManagementMode.ROLLING)\n\n    def on_data(self, slice: Slice) -> None:\n        if not self._future.is_ready:\n            return\n        # Only trade if the contract is ready\n        price = self._future.price\n        if price > 4000:\n            self.market_order(self._future, 1)\n        elif price < 4000:\n            self.market_order(self._future, -1)\n\n    def on_contract_changed(self, changed_contract: FutureContract) -> None:\n        if changed_contract.is_new:\n            self.liquidate(self._future, tag=f\"Liquidated {self._future.symbol} on contract change\")\n",
+    "source_sha256": "fe887884e53ba77cdeaa3dac25f91ef50935de33d99255a791ce676222a48ba5",
+    "started_at": "2026-11-13T00:14:52.972716+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39315939,
+    "compile_id": "33cfe5b5b1bd16ce608a6ccc0ac86a0c-e0d16331863b3a487715566e3f72a2c4",
+    "compile_created": {
+      "compileId": "33cfe5b5b1bd16ce608a6ccc0ac86a0c-e0d16331863b3a487715566e3f72a2c4",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39315939,
+      "signature": "e0d16331863b3a487715566e3f72a2c4",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "33cfe5b5b1bd16ce608a6ccc0ac86a0c-e0d16331863b3a487715566e3f72a2c4",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39315939, with CompileID: 33cfe5b5b1bd16ce608a6ccc0ac86a0c-e0d16331863b3a487715566e3f72a2c4, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39315939, with CompileID: 33cfe5b5b1bd16ce608a6ccc0ac86a0c-e0d16331863b3a487715566e3f72a2c4, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "6ae181ba5fba2901e2ce553164d043f8",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315939,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "6ae181ba5fba2901e2ce553164d043f8",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 13
+        },
+        "backtestStart": "2026-11-13 00:14:56",
+        "backtestEnd": "2026-11-13 00:14:56",
+        "created": "2026-11-13 00:14:56",
+        "snapshotId": 39315941,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-15T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315939,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "6ae181ba5fba2901e2ce553164d043f8",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 13
+        },
+        "backtestStart": "2026-11-13 00:14:56",
+        "backtestEnd": "2026-11-13 00:14:56",
+        "created": "2026-11-13 00:14:56",
+        "snapshotId": 39315941,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;FutureContract&#039; is not defined\n  at FutureContractExampleAlgorithm\n    def on_contract_changed(self, changed_contract: FutureContract) -&gt; None:\n                                                    ^^^^^^^^^^^^^^\n in main.py: line 33\n  at \n    class FutureContractExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;FutureContract&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;FutureContract&#039; is not defined\n  at FutureContractExampleAlgorithm\n    def on_contract_changed(self, changed_contract: FutureContract) -&gt; None:\n                                                    ^^^^^^^^^^^^^^\n in main.py: line 33\n  at \n    class FutureContractExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;FutureContract&#039; is not defined",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'FutureContract' is not defined\n  at FutureContractExampleAlgorithm\n    def on_contract_changed(self, changed_contract: FutureContract) -> None:\n                                                    ^^^^^^^^^^^^^^\n in main.py: line 33\n  at <module>\n    class FutureContractExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'FutureContract' is not defined",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-15T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "7.4%",
+          "Used RAM (MB)": "257",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-6ae181ba5fba2901e2ce553164d043f8",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:14"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;FutureContract&#039; is not defined\n  at FutureContractExampleAlgorithm\n    def on_contract_changed(self, changed_contract: FutureContract) -&gt; None:\n                                                    ^^^^^^^^^^^^^^\n in main.py: line 33\n  at \n    class FutureContractExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;FutureContract&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;FutureContract&#039; is not defined\n  at FutureContractExampleAlgorithm\n    def on_contract_changed(self, changed_contract: FutureContract) -&gt; None:\n                                                    ^^^^^^^^^^^^^^\n in main.py: line 33\n  at \n    class FutureContractExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;FutureContract&#039; is not defined",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'FutureContract' is not defined\n  at FutureContractExampleAlgorithm\n    def on_contract_changed(self, changed_contract: FutureContract) -> None:\n                                                    ^^^^^^^^^^^^^^\n in main.py: line 33\n  at <module>\n    class FutureContractExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'FutureContract' is not defined",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-13T00:15:47.383639+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; UNKNOWN_API: set_data_mapping_mode, set_data_normalization_mode, set_filter_mode; PROMPT_MISS: mapped; PROMPT_MISS: symbol_changed / symbolchanged",
+  "total_orders": null
+}

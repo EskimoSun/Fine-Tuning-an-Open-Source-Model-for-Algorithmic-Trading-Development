@@ -1,0 +1,337 @@
+{
+  "prompt_id": "equity-opening-range-breakout_v05",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityDailyRangeBreakAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        self._spy = self.add_equity(\"SPY\", Resolution.MINUTE).symbol\n\n        # Daily consolidator to feed the indicators with.\n        self._consolidator = SelfConsolidator(Resolution.DAILY)\n        # Alternatively, use a manual consolidator.\n        # self._consolidator = ManualConsolidator(Resolution.DAILY)\n        # self.schedule.on(self._spy, self.date_rules.every_day(self._spy), self._consolidator.update)\n\n        # Indicators to track the daily high and low.\n        self._high = IndicatorExtensions.max([\n            IndicatorExtensions.constant(0),\n            self._consolidator.close.tail(2).max()\n        ])\n        self._low = IndicatorExtensions.min([\n            IndicatorExtensions.constant(0),\n            self._consolidator.close.tail(2).min()\n        ])\n\n        # Indicators to flag a break of the daily high or low.\n        self._bullish = IndicatorExtensions.greater(self._consolidator.open, self._high)\n        self._bearish = IndicatorExtensions.less(self._consolidator.open, self._low)\n\n        # Warm up so the indicators are ready from the start.\n        self.set_warm_up(1, Resolution.DAILY)\n\n    def on_data(self, slice: Slice) -> None:\n        # Update the consolidator with the consolidated daily bar.\n        bar = slice.bars.get(self._spy)\n        if not bar:\n            return\n        self._consolidator.update(bar)\n\n        # We'll trade if the open is above the previous day's high, indicating a bullish break.\n        if not self._bullish.is_ready:\n            return\n        if bar.open > self._high.current.value:\n            self.set_holdings(self._spy, 1.0)\n            self._bullish = False\n            self._bearish = False\n\n        # We'll trade if the open is below the previous day's low, indicating a bearish break.\n        if not self._bearish.is_ready:\n            return\n        if bar.open < self._low.current.value:\n            self.set_holdings(self._spy, -1.0)\n            self._bullish = False\n            self._bearish = False\n\n        # Liquidate any remaining position before the market close.\n        if self.time >= self.market_close(self._spy):\n            self.liquidate(self._spy)\n```",
+  "generated_at": "2026-11-12T23:48:20.155301+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "market_close"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "15 / 55"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityDailyRangeBreakAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        self._spy = self.add_equity(\"SPY\", Resolution.MINUTE).symbol\n\n        # Daily consolidator to feed the indicators with.\n        self._consolidator = SelfConsolidator(Resolution.DAILY)\n        # Alternatively, use a manual consolidator.\n        # self._consolidator = ManualConsolidator(Resolution.DAILY)\n        # self.schedule.on(self._spy, self.date_rules.every_day(self._spy), self._consolidator.update)\n\n        # Indicators to track the daily high and low.\n        self._high = IndicatorExtensions.max([\n            IndicatorExtensions.constant(0),\n            self._consolidator.close.tail(2).max()\n        ])\n        self._low = IndicatorExtensions.min([\n            IndicatorExtensions.constant(0),\n            self._consolidator.close.tail(2).min()\n        ])\n\n        # Indicators to flag a break of the daily high or low.\n        self._bullish = IndicatorExtensions.greater(self._consolidator.open, self._high)\n        self._bearish = IndicatorExtensions.less(self._consolidator.open, self._low)\n\n        # Warm up so the indicators are ready from the start.\n        self.set_warm_up(1, Resolution.DAILY)\n\n    def on_data(self, slice: Slice) -> None:\n        # Update the consolidator with the consolidated daily bar.\n        bar = slice.bars.get(self._spy)\n        if not bar:\n            return\n        self._consolidator.update(bar)\n\n        # We'll trade if the open is above the previous day's high, indicating a bullish break.\n        if not self._bullish.is_ready:\n            return\n        if bar.open > self._high.current.value:\n            self.set_holdings(self._spy, 1.0)\n            self._bullish = False\n            self._bearish = False\n\n        # We'll trade if the open is below the previous day's low, indicating a bearish break.\n        if not self._bearish.is_ready:\n            return\n        if bar.open < self._low.current.value:\n            self.set_holdings(self._spy, -1.0)\n            self._bullish = False\n            self._bearish = False\n\n        # Liquidate any remaining position before the market close.\n        if self.time >= self.market_close(self._spy):\n            self.liquidate(self._spy)\n",
+    "source_sha256": "37f8b6cd7ca512c5eca891faf2e37dc7b4743e562f49fd825eb96a12c1a434a9",
+    "started_at": "2026-11-12T23:48:20.158440+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;SelfConsolidator&#039; is not defined\n  at initialize\n    self._consolidator = SelfConsolidato",
+    "project_id": 39314922,
+    "compile_id": "339c2bfb056d607a1d8f2b21fe12898e-d72ea79f40a87f3f48e5754594518f27",
+    "compile_created": {
+      "compileId": "339c2bfb056d607a1d8f2b21fe12898e-d72ea79f40a87f3f48e5754594518f27",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39314922,
+      "signature": "d72ea79f40a87f3f48e5754594518f27",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "339c2bfb056d607a1d8f2b21fe12898e-d72ea79f40a87f3f48e5754594518f27",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39314922, with CompileID: 339c2bfb056d607a1d8f2b21fe12898e-d72ea79f40a87f3f48e5754594518f27, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39314922, with CompileID: 339c2bfb056d607a1d8f2b21fe12898e-d72ea79f40a87f3f48e5754594518f27, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "c1b7142528ddd6fc43b6591776cb85ab",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-opening-range-breakout_v05",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314922,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "c1b7142528ddd6fc43b6591776cb85ab",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 9
+        },
+        "backtestStart": "2026-11-12 23:48:23",
+        "backtestEnd": "2026-11-12 23:48:23",
+        "created": "2026-11-12 23:48:23",
+        "snapshotId": 39314927,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-opening-range-breakout_v05",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314922,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "c1b7142528ddd6fc43b6591776cb85ab",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 9
+        },
+        "backtestStart": "2026-11-12 23:48:23",
+        "backtestEnd": "2026-11-12 23:48:23",
+        "created": "2026-11-12 23:48:23",
+        "snapshotId": 39314927,
+        "status": "Runtime Error",
+        "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;SelfConsolidator&#039; is not defined\n  at initialize\n    self._consolidator = SelfConsolidator(Resolution.DAILY)\n                         ^^^^^^^^^^^^^^^^\n in main.py: line 14\n name &#039;SelfConsolidator&#039; is not defined",
+        "stacktrace": "name 'SelfConsolidator' is not defined\n  at initialize\n    self._consolidator = SelfConsolidator(Resolution.DAILY)\n                         ^^^^^^^^^^^^^^^^\n in main.py: line 14\n name 'SelfConsolidator' is not defined",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "0.8%",
+          "Used RAM (MB)": "245",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-47-c1b7142528ddd6fc43b6591776cb85ab",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:11"
+        }
+      },
+      "success": true
+    },
+    "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;SelfConsolidator&#039; is not defined\n  at initialize\n    self._consolidator = SelfConsolidator(Resolution.DAILY)\n                         ^^^^^^^^^^^^^^^^\n in main.py: line 14\n name &#039;SelfConsolidator&#039; is not defined",
+    "stacktrace": "name 'SelfConsolidator' is not defined\n  at initialize\n    self._consolidator = SelfConsolidator(Resolution.DAILY)\n                         ^^^^^^^^^^^^^^^^\n in main.py: line 14\n name 'SelfConsolidator' is not defined",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:49:12.066193+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;SelfConsolidator&#039; is not defined\n  at initialize\n    self._consolidator = SelfConsolidato",
+  "note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;SelfConsolidator&#039; is not defined\n  at initialize\n    self._consolidator = SelfConsolidato; UNKNOWN_API: market_close; PROMPT_MISS: 15 / 55",
+  "total_orders": null
+}

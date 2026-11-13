@@ -1,0 +1,326 @@
+{
+  "prompt_id": "equity-bollinger-mean-reversion_v04",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityBBBandDivergenceAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        self._spy = self.add_equity(\"SPY\")\n\n        self._bb = self.bb(self._spy, 20, 2, Resolution.DAILY)\n        # Alternatively, use a manual indicator.\n        # self._bb = BollingerBands(20, 2)\n        # self.warm_up_indicator(self._spy, self._bb, Resolution.DAILY)\n        # self.register_indicator(self._spy, self._bb, Resolution.DAILY)\n\n        self.plot_indicator(\"BB\", self._bb)\n\n    def on_data(self, data: Slice) -> None:\n        if not self._bb.is_ready:\n            return\n\n        price = self._spy.price\n        upper = self._bb.upper_band.current.value\n        middle = self._bb.middle_band.current.value\n        lower = self._bb.lower_band.current.value\n\n        if self.portfolio[self._spy].is_long:\n            if price > middle:\n                self.liquidate(self._spy)\n        elif price < middle:\n            self.set_holdings(self._spy, 1)\n```",
+  "generated_at": "2026-11-12T23:08:33.098060+00:00",
+  "has_code": true,
+  "static_findings": [],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityBBBandDivergenceAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        self._spy = self.add_equity(\"SPY\")\n\n        self._bb = self.bb(self._spy, 20, 2, Resolution.DAILY)\n        # Alternatively, use a manual indicator.\n        # self._bb = BollingerBands(20, 2)\n        # self.warm_up_indicator(self._spy, self._bb, Resolution.DAILY)\n        # self.register_indicator(self._spy, self._bb, Resolution.DAILY)\n\n        self.plot_indicator(\"BB\", self._bb)\n\n    def on_data(self, data: Slice) -> None:\n        if not self._bb.is_ready:\n            return\n\n        price = self._spy.price\n        upper = self._bb.upper_band.current.value\n        middle = self._bb.middle_band.current.value\n        lower = self._bb.lower_band.current.value\n\n        if self.portfolio[self._spy].is_long:\n            if price > middle:\n                self.liquidate(self._spy)\n        elif price < middle:\n            self.set_holdings(self._spy, 1)\n",
+    "source_sha256": "34853ee82b1be10cca14fdd694e5fba2b7d70e684608ea4d8482a83c33c7de19",
+    "started_at": "2026-11-12T23:08:33.100286+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the ex",
+    "project_id": 39313554,
+    "compile_id": "e6d2fade6dff1ce88f050434725c9b49-4a57d20da028e43ccf96d9d4aeaabfe8",
+    "compile_created": {
+      "compileId": "e6d2fade6dff1ce88f050434725c9b49-4a57d20da028e43ccf96d9d4aeaabfe8",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39313554,
+      "signature": "4a57d20da028e43ccf96d9d4aeaabfe8",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "e6d2fade6dff1ce88f050434725c9b49-4a57d20da028e43ccf96d9d4aeaabfe8",
+      "state": "BuildSuccess",
+      "logs": [
+        "Warning main.py Line: 16 Column: 46 - Argument 4 to \"bb\" of \"QCAlgorithm\" has incompatible type \"Resolution\"; expected \"MovingAverageType\"; maybe \"self._bb = self.bb(self._equity, 20, 2, resolution=Resolution.DAILY)\"?",
+        "Build Request Successful for Project ID: 39313554, with CompileID: e6d2fade6dff1ce88f050434725c9b49-4a57d20da028e43ccf96d9d4aeaabfe8, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Warning main.py Line: 16 Column: 46 - Argument 4 to \"bb\" of \"QCAlgorithm\" has incompatible type \"Resolution\"; expected \"MovingAverageType\"; maybe \"self._bb = self.bb(self._equity, 20, 2, resolution=Resolution.DAILY)\"?",
+      "Build Request Successful for Project ID: 39313554, with CompileID: e6d2fade6dff1ce88f050434725c9b49-4a57d20da028e43ccf96d9d4aeaabfe8, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "71d8f36e30580918af7358ec23927b17",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-bollinger-mean-reversion_v04",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39313554,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "71d8f36e30580918af7358ec23927b17",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 9
+        },
+        "backtestStart": "2026-11-12 23:08:36",
+        "backtestEnd": "2026-11-12 23:08:36",
+        "created": "2026-11-12 23:08:36",
+        "snapshotId": 39313555,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-bollinger-mean-reversion_v04",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39313554,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "71d8f36e30580918af7358ec23927b17",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 9
+        },
+        "backtestStart": "2026-11-12 23:08:36",
+        "backtestEnd": "2026-11-12 23:08:36",
+        "created": "2026-11-12 23:08:36",
+        "snapshotId": 39313555,
+        "status": "Runtime Error",
+        "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the bb method. Please checkout the API documentation. The expected signature is:\n  bb(symbol: Symbol, period: int, k: float, moving_average_type: MovingAverageType = MovingAverageType.SIMPLE, resolution: Optional[Resolution] = None, selector: Callable[[IBaseData], float] = None)\nArgument mismatch: argument 4 (&#039;moving_average_type&#039;) expected MovingAverageType, got Resolution.\n  at initialize\n    self._bb = self.bb(self._spy, 20, 2, Resolution.DAILY)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 16\n No method matches given arguments for bb: (, , , ). The expected signature is:\n  bb(symbol: Symbol, period: int, k: float, moving_average_type: MovingAverageType = MovingAverageType.SIMPLE, resolution: Optional[Resolution] = None, selector: Callable[[IBaseData], float] = None)\nArgument mismatch: argument 4 (&#039;moving_average_type&#039;) expected MovingAverageType, got Resolution.",
+        "stacktrace": "Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the bb method. Please checkout the API documentation. The expected signature is:\n  bb(symbol: Symbol, period: int, k: float, moving_average_type: MovingAverageType = MovingAverageType.SIMPLE, resolution: Optional[Resolution] = None, selector: Callable[[IBaseData], float] = None)\nArgument mismatch: argument 4 ('moving_average_type') expected MovingAverageType, got Resolution.\n  at initialize\n    self._bb = self.bb(self._spy, 20, 2, Resolution.DAILY)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 16\n No method matches given arguments for bb: (<class 'QuantConnect.Securities.Equity.Equity'>, <class 'int'>, <class 'int'>, <class 'QuantConnect.Resolution'>). The expected signature is:\n  bb(symbol: Symbol, period: int, k: float, moving_average_type: MovingAverageType = MovingAverageType.SIMPLE, resolution: Optional[Resolution] = None, selector: Callable[[IBaseData], float] = None)\nArgument mismatch: argument 4 ('moving_average_type') expected MovingAverageType, got Resolution.",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "17.3%",
+          "Used RAM (MB)": "226",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-71d8f36e30580918af7358ec23927b17",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:13"
+        }
+      },
+      "success": true
+    },
+    "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the bb method. Please checkout the API documentation. The expected signature is:\n  bb(symbol: Symbol, period: int, k: float, moving_average_type: MovingAverageType = MovingAverageType.SIMPLE, resolution: Optional[Resolution] = None, selector: Callable[[IBaseData], float] = None)\nArgument mismatch: argument 4 (&#039;moving_average_type&#039;) expected MovingAverageType, got Resolution.\n  at initialize\n    self._bb = self.bb(self._spy, 20, 2, Resolution.DAILY)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 16\n No method matches given arguments for bb: (, , , ). The expected signature is:\n  bb(symbol: Symbol, period: int, k: float, moving_average_type: MovingAverageType = MovingAverageType.SIMPLE, resolution: Optional[Resolution] = None, selector: Callable[[IBaseData], float] = None)\nArgument mismatch: argument 4 (&#039;moving_average_type&#039;) expected MovingAverageType, got Resolution.",
+    "stacktrace": "Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the bb method. Please checkout the API documentation. The expected signature is:\n  bb(symbol: Symbol, period: int, k: float, moving_average_type: MovingAverageType = MovingAverageType.SIMPLE, resolution: Optional[Resolution] = None, selector: Callable[[IBaseData], float] = None)\nArgument mismatch: argument 4 ('moving_average_type') expected MovingAverageType, got Resolution.\n  at initialize\n    self._bb = self.bb(self._spy, 20, 2, Resolution.DAILY)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 16\n No method matches given arguments for bb: (<class 'QuantConnect.Securities.Equity.Equity'>, <class 'int'>, <class 'int'>, <class 'QuantConnect.Resolution'>). The expected signature is:\n  bb(symbol: Symbol, period: int, k: float, moving_average_type: MovingAverageType = MovingAverageType.SIMPLE, resolution: Optional[Resolution] = None, selector: Callable[[IBaseData], float] = None)\nArgument mismatch: argument 4 ('moving_average_type') expected MovingAverageType, got Resolution.",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:09:28.597667+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the ex",
+  "note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the ex",
+  "total_orders": null
+}

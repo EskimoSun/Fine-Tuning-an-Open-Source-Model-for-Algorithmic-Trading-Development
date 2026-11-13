@@ -1,0 +1,324 @@
+{
+  "prompt_id": "equity-monthly-roc-rotation_v05",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass ETFROCRotationAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        tickers = [\"SPY\", \"EFA\", \"EEM\", \"AGG\", \"GLD\"]\n        for ticker in tickers:\n            # Minute-resolution data, but rank on a daily ROC indicator.\n            equity = self.add_equity(ticker, Market.ETF)\n            equity.roc = self.roc(equity, 60, Resolution.DAILY)\n            # Alternatively, use a manual indicator.\n            # equity.roc = RateOfChange(60)\n            # self.warm_up_indicator(equity, equity.roc, Resolution.DAILY)\n            # self.register_indicator(equity, equity.roc, Resolution.DAILY)\n\n        self.schedule.on(\n            self.date_rules.month_start(\"SPY\"),\n            self.time_rules.after_market_open(\"SPY\", 1),\n            self._rebalance\n        )\n\n    def _rebalance(self) -> None:\n        securities = list(self.securities.values())\n        if not all(security.roc.is_ready for security in securities):\n            return\n\n        ranked = sorted(\n            securities,\n            key=lambda security: security.roc.current.value,\n            reverse=True\n        )\n\n        top_3 = ranked[:3]\n        if not top_3:\n            self.set_holdings({}, True)\n            return\n\n        weight = 1.0 / 3.0\n        targets = [PortfolioTarget(security.symbol, weight) for security in top_3]\n        self.set_holdings(targets, liquidate_existing_holdings=True)\n```",
+  "generated_at": "2026-11-12T23:27:11.065310+00:00",
+  "has_code": true,
+  "static_findings": [],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass ETFROCRotationAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        tickers = [\"SPY\", \"EFA\", \"EEM\", \"AGG\", \"GLD\"]\n        for ticker in tickers:\n            # Minute-resolution data, but rank on a daily ROC indicator.\n            equity = self.add_equity(ticker, Market.ETF)\n            equity.roc = self.roc(equity, 60, Resolution.DAILY)\n            # Alternatively, use a manual indicator.\n            # equity.roc = RateOfChange(60)\n            # self.warm_up_indicator(equity, equity.roc, Resolution.DAILY)\n            # self.register_indicator(equity, equity.roc, Resolution.DAILY)\n\n        self.schedule.on(\n            self.date_rules.month_start(\"SPY\"),\n            self.time_rules.after_market_open(\"SPY\", 1),\n            self._rebalance\n        )\n\n    def _rebalance(self) -> None:\n        securities = list(self.securities.values())\n        if not all(security.roc.is_ready for security in securities):\n            return\n\n        ranked = sorted(\n            securities,\n            key=lambda security: security.roc.current.value,\n            reverse=True\n        )\n\n        top_3 = ranked[:3]\n        if not top_3:\n            self.set_holdings({}, True)\n            return\n\n        weight = 1.0 / 3.0\n        targets = [PortfolioTarget(security.symbol, weight) for security in top_3]\n        self.set_holdings(targets, liquidate_existing_holdings=True)\n",
+    "source_sha256": "2b08b3291776e1290a9dc91f0849e864def3bcff76e16992378304e29ba4acf6",
+    "started_at": "2026-11-12T23:27:11.068597+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Market&#039; has no attribute &#039;ETF&#039;\n  at initialize\n    equity = self.add_equ",
+    "project_id": 39314227,
+    "compile_id": "e032ffb9472be564b46eb750de234114-6a130be9f282a91372dc68f39b1aa323",
+    "compile_created": {
+      "compileId": "e032ffb9472be564b46eb750de234114-6a130be9f282a91372dc68f39b1aa323",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39314227,
+      "signature": "6a130be9f282a91372dc68f39b1aa323",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "e032ffb9472be564b46eb750de234114-6a130be9f282a91372dc68f39b1aa323",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39314227, with CompileID: e032ffb9472be564b46eb750de234114-6a130be9f282a91372dc68f39b1aa323, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39314227, with CompileID: e032ffb9472be564b46eb750de234114-6a130be9f282a91372dc68f39b1aa323, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "d8e4a669e025f309ff28f4f2afeec260",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-monthly-roc-rotation_v05",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314227,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "d8e4a669e025f309ff28f4f2afeec260",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 10
+        },
+        "backtestStart": "2026-11-12 23:27:14",
+        "backtestEnd": "2026-11-12 23:27:14",
+        "created": "2026-11-12 23:27:14",
+        "snapshotId": 39314230,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-monthly-roc-rotation_v05",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314227,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "d8e4a669e025f309ff28f4f2afeec260",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 10
+        },
+        "backtestStart": "2026-11-12 23:27:14",
+        "backtestEnd": "2026-11-12 23:27:14",
+        "created": "2026-11-12 23:27:14",
+        "snapshotId": 39314230,
+        "status": "Runtime Error",
+        "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Market&#039; has no attribute &#039;ETF&#039;\n  at initialize\n    equity = self.add_equity(ticker, Market.ETF)\n                                     ^^^^^^^^^^\n in main.py: line 16\n type object &#039;Market&#039; has no attribute &#039;ETF&#039;",
+        "stacktrace": "type object 'Market' has no attribute 'ETF'\n  at initialize\n    equity = self.add_equity(ticker, Market.ETF)\n                                     ^^^^^^^^^^\n in main.py: line 16\n type object 'Market' has no attribute 'ETF'",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "20.4%",
+          "Used RAM (MB)": "193",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-d8e4a669e025f309ff28f4f2afeec260",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:14"
+        }
+      },
+      "success": true
+    },
+    "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Market&#039; has no attribute &#039;ETF&#039;\n  at initialize\n    equity = self.add_equity(ticker, Market.ETF)\n                                     ^^^^^^^^^^\n in main.py: line 16\n type object &#039;Market&#039; has no attribute &#039;ETF&#039;",
+    "stacktrace": "type object 'Market' has no attribute 'ETF'\n  at initialize\n    equity = self.add_equity(ticker, Market.ETF)\n                                     ^^^^^^^^^^\n in main.py: line 16\n type object 'Market' has no attribute 'ETF'",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:28:07.474835+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Market&#039; has no attribute &#039;ETF&#039;\n  at initialize\n    equity = self.add_equ",
+  "note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Market&#039; has no attribute &#039;ETF&#039;\n  at initialize\n    equity = self.add_equ",
+  "total_orders": null
+}

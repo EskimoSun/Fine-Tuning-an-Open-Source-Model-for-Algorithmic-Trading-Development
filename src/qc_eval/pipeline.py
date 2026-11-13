@@ -155,7 +155,16 @@ def call_openai_compatible(prompt, model, max_tokens=4096, system=SYSTEM):
             model, r.status_code, delay, attempt + 1), flush=True)
         time.sleep(delay)
     r.raise_for_status()
-    return r.json()["choices"][0]["message"]["content"]
+    choice = r.json()["choices"][0]
+    content = choice["message"].get("content")
+    if content is None:
+        # Some endpoints return null content (e.g. the whole budget went to a
+        # reasoning field). Score it as "no code returned" instead of crashing.
+        reasoning = choice["message"].get("reasoning") or choice["message"].get("reasoning_content") or ""
+        print("[{}] empty content: finish_reason={} reasoning_chars={}".format(
+            model, choice.get("finish_reason"), len(reasoning)), flush=True)
+        content = ""
+    return content
 
 
 def mock_generate(prompt):
