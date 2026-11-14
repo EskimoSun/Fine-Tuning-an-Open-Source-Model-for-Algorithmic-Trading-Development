@@ -1,0 +1,311 @@
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass SP500LowPctUpcomingEarningsUniverseAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(250000)\n        self.settings.seed_initial_prices = True\n        self.universe_settings.resolution = Resolution.MINUTE\n        # Refilter the ETF constituents monthly to match the rebalance cadence.\n        self.universe_settings.schedule.on(self.date_rules.month_start('SPY'))\n        # Add a universe of SPY constituents ranked by dollar volume.\n        self._universe = self.add_universe(self.universe.etf('SPY', universe_filter_func=self._select_assets))\n        # Add a momentum indicator for all securities in the universe.\n        self._momentum = self.momentum(self._universe, 252, Resolution.DAILY)\n        # Create a Scheduled Event to rebalance the portfolio monthly.\n        self.schedule.on(self.date_rules.month_start('SPY'), self.time_rules.at(9, 31, 0), self._rebalance)\n\n    def _select_assets(self, constituents: list[ETFConstituentUniverse]) -> list[Symbol]:\n        # Filter for securities with 10%+ weight in the ETF and 30+ days of daily data.\n        filtered = [c.symbol for c in constituents\n                    if c.weight and c.symbol in self.securities and\n                    self.securities[c.symbol].history.length >= 30]\n        # Sort the filtered symbols by dollar volume, largest first.\n        return [x for x in sorted([self.securities[symbol].dollar_volume\n                                  for symbol in filtered], reverse=True)[:100]]\n\n    def _rebalance(self) -> None:\n        if not self._momentum.is_ready:\n            return\n        # Rank all universe members by raw return and keep the top 10%.\n        ranked = sorted(self._momentum.keys(), key=lambda s: self._momentum[s])[-len(self._universe.selected)[:10]:]\n        # Build target weights for the top performers and liquidate the rest.\n        targets = [PortfolioTarget(symbol, 1.0 / len(ranked)) for symbol in ranked]\n        self.set_holdings(targets, True)\n",
+  "source_sha256": "3536d93c87efa3c92c4a1854bec95d7c687cb3da1415fd47d02d3ab619bbdaaf",
+  "started_at": "2026-11-14T22:53:26.552998+00:00",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "runtime_statistics": {
+    "Equity": "$250,000.00",
+    "Fees": "-$0.00",
+    "Holdings": "$0.00",
+    "Net Profit": "$0.00",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Return": "0.00 %",
+    "Unrealized": "$0.00",
+    "Volume": "$0.00"
+  },
+  "logs": [],
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;SP500LowPctUpcomingEarningsUniverseAlgorithm&#039; object has no attribute &#039;momentum&#039;\n  a",
+  "project_id": 39414565,
+  "compile_id": "8c00a2ad8d06e8d979a7374c22690384-82307b600be42d223e6325e21d90cce9",
+  "compile_created": {
+    "compileId": "8c00a2ad8d06e8d979a7374c22690384-82307b600be42d223e6325e21d90cce9",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39414565,
+    "signature": "82307b600be42d223e6325e21d90cce9",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "8c00a2ad8d06e8d979a7374c22690384-82307b600be42d223e6325e21d90cce9",
+    "state": "BuildSuccess",
+    "logs": [
+      "Warning main.py Line: 18 Column: 26 - \"SP500LowPctUpcomingEarningsUniverseAlgorithm\" has no attribute \"momentum\"; maybe \"_momentum\"?",
+      "Warning main.py Line: 35 Column: 82 - Value of type \"int\" is not indexable",
+      "Build Request Successful for Project ID: 39414565, with CompileID: 8c00a2ad8d06e8d979a7374c22690384-82307b600be42d223e6325e21d90cce9, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Warning main.py Line: 18 Column: 26 - \"SP500LowPctUpcomingEarningsUniverseAlgorithm\" has no attribute \"momentum\"; maybe \"_momentum\"?",
+    "Warning main.py Line: 35 Column: 82 - Value of type \"int\" is not indexable",
+    "Build Request Successful for Project ID: 39414565, with CompileID: 8c00a2ad8d06e8d979a7374c22690384-82307b600be42d223e6325e21d90cce9, Lean Version: 2.5.0.0.18263"
+  ],
+  "backtest_id": "ee7e11a6bd8c6c0595d5076ad9c8c7b2",
+  "backtest_created": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-equity-momentum-cross-sectional-decile_v09",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39414565,
+      "completed": false,
+      "optimizationId": null,
+      "backtestId": "ee7e11a6bd8c6c0595d5076ad9c8c7b2",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 1,
+        "backtestCount": 1,
+        "parameters": 11
+      },
+      "backtestStart": "2026-11-14 22:53:40",
+      "backtestEnd": "2026-11-14 22:53:40",
+      "created": "2026-11-14 22:53:40",
+      "snapshotId": 39414573,
+      "status": "In Queue...",
+      "error": null,
+      "stacktrace": null,
+      "progress": 0,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": null,
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null
+    },
+    "debugging": false,
+    "success": true
+  },
+  "raw_backtest": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-equity-momentum-cross-sectional-decile_v09",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39414565,
+      "completed": true,
+      "optimizationId": null,
+      "backtestId": "ee7e11a6bd8c6c0595d5076ad9c8c7b2",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 1,
+        "backtestCount": 1,
+        "parameters": 11
+      },
+      "backtestStart": "2026-11-14 22:53:40",
+      "backtestEnd": "2026-11-14 22:53:40",
+      "created": "2026-11-14 22:53:40",
+      "snapshotId": 39414573,
+      "status": "Runtime Error",
+      "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;SP500LowPctUpcomingEarningsUniverseAlgorithm&#039; object has no attribute &#039;momentum&#039;\n  at initialize\n    self._momentum = self.momentum(self._universe, 252, Resolution.DAILY)\n                     ^^^^^^^^^^^^^\n in main.py: line 18\n &#039;SP500LowPctUpcomingEarningsUniverseAlgorithm&#039; object has no attribute &#039;momentum&#039;",
+      "stacktrace": "'SP500LowPctUpcomingEarningsUniverseAlgorithm' object has no attribute 'momentum'\n  at initialize\n    self._momentum = self.momentum(self._universe, 252, Resolution.DAILY)\n                     ^^^^^^^^^^^^^\n in main.py: line 18\n 'SP500LowPctUpcomingEarningsUniverseAlgorithm' object has no attribute 'momentum'",
+      "progress": 1,
+      "hasInitializeError": true,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {
+        "Equity": "$250,000.00",
+        "Fees": "-$0.00",
+        "Holdings": "$0.00",
+        "Net Profit": "$0.00",
+        "Probabilistic Sharpe Ratio": "0%",
+        "Return": "0.00 %",
+        "Unrealized": "$0.00",
+        "Volume": "$0.00"
+      },
+      "statistics": {},
+      "totalPerformance": {
+        "tradeStatistics": {
+          "startDateTime": null,
+          "endDateTime": null,
+          "totalNumberOfTrades": 0,
+          "numberOfWinningTrades": 0,
+          "numberOfLosingTrades": 0,
+          "totalProfitLoss": "0",
+          "totalProfit": "0",
+          "totalLoss": "0",
+          "largestProfit": "0",
+          "largestLoss": "0",
+          "averageProfitLoss": "0",
+          "averageProfit": "0",
+          "averageLoss": "0",
+          "averageTradeDuration": "00:00:00",
+          "averageWinningTradeDuration": "00:00:00",
+          "averageLosingTradeDuration": "00:00:00",
+          "medianTradeDuration": "00:00:00",
+          "medianWinningTradeDuration": "00:00:00",
+          "medianLosingTradeDuration": "00:00:00",
+          "maxConsecutiveWinningTrades": 0,
+          "maxConsecutiveLosingTrades": 0,
+          "profitLossRatio": "0",
+          "winLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "averageMAE": "0",
+          "averageMFE": "0",
+          "largestMAE": "0",
+          "largestMFE": "0",
+          "maximumClosedTradeDrawdown": "0",
+          "maximumIntraTradeDrawdown": "0",
+          "profitLossStandardDeviation": "0",
+          "profitLossDownsideDeviation": "0",
+          "profitFactor": "0",
+          "sharpeRatio": "0",
+          "sortinoRatio": "0",
+          "profitToMaxDrawdownRatio": "0",
+          "maximumEndTradeDrawdown": "0",
+          "averageEndTradeDrawdown": "0",
+          "maximumDrawdownDuration": "00:00:00",
+          "totalFees": "0"
+        },
+        "portfolioStatistics": {
+          "averageWinRate": "0",
+          "averageLossRate": "0",
+          "profitLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "expectancy": "0",
+          "startEquity": "0",
+          "endEquity": "0",
+          "compoundingAnnualReturn": "0",
+          "drawdown": "0",
+          "totalNetProfit": "0",
+          "sharpeRatio": "0",
+          "probabilisticSharpeRatio": "0",
+          "sortinoRatio": "0",
+          "alpha": "0",
+          "beta": "0",
+          "annualStandardDeviation": "0",
+          "annualVariance": "0",
+          "informationRatio": "0",
+          "trackingError": "0",
+          "treynorRatio": "0",
+          "portfolioTurnover": "0",
+          "valueAtRisk99": "0",
+          "valueAtRisk95": "0",
+          "drawdownRecovery": "0"
+        },
+        "closedTrades": []
+      },
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": [
+        {
+          "name": "PortfolioValueIsNotPositiveAnalysis",
+          "issue": "The portfolio equity dropped to zero or below.",
+          "sample": true,
+          "solutions": [
+            "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+            "Reduce position sizes.",
+            "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+            "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+          ]
+        },
+        {
+          "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+          "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+          "sample": {
+            "pValue": 0.5
+          },
+          "solutions": [
+            "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+          ]
+        }
+      ],
+      "serverStatistics": {
+        "CPU Usage": "7.2%",
+        "Used RAM (MB)": "242",
+        "Total RAM (MB)": "16384",
+        "Hostname": "BACKTESTING-com-ee7e11a6bd8c6c0595d5076ad9c8c7b2",
+        "LEAN Version": "v2.5.0.0.18263",
+        "Up Time": "0d 00:00:13"
+      }
+    },
+    "success": true
+  },
+  "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;SP500LowPctUpcomingEarningsUniverseAlgorithm&#039; object has no attribute &#039;momentum&#039;\n  at initialize\n    self._momentum = self.momentum(self._universe, 252, Resolution.DAILY)\n                     ^^^^^^^^^^^^^\n in main.py: line 18\n &#039;SP500LowPctUpcomingEarningsUniverseAlgorithm&#039; object has no attribute &#039;momentum&#039;",
+  "stacktrace": "'SP500LowPctUpcomingEarningsUniverseAlgorithm' object has no attribute 'momentum'\n  at initialize\n    self._momentum = self.momentum(self._universe, 252, Resolution.DAILY)\n                     ^^^^^^^^^^^^^\n in main.py: line 18\n 'SP500LowPctUpcomingEarningsUniverseAlgorithm' object has no attribute 'momentum'",
+  "has_initialize_error": true,
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "total_orders": null,
+  "finished_at": "2026-11-14T22:54:30.033720+00:00"
+}

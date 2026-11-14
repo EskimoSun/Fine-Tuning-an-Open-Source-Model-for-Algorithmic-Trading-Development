@@ -1,0 +1,313 @@
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityOptionChandelierExitAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        self._option = self.add_option(\"SPY\")\n        self._option.set_filter(0, 1)\n        self._option.chandelier_exit = self.chandelier_exit(self._option, 22, 3*self._option.atr(14).current.value)\n        # Alternatively, use a manual indicator.\n        # self._option.chandelier_exit = ChandelierExit(22, 3*self._option.atr(14).current.value)\n        # self.warm_up_indicator(self._option, self._option.chandelier_exit, Resolution.DAILY)\n        # self.register_indicator(self._option, self._option.chandelier_exit, Resolution.DAILY)\n        self.plot_indicator(\"Chandelier Exit\", self._option.chandelier_exit)\n\n    def on_data(self, data: Slice) -> None:\n        if not self._option.chandelier_exit.is_ready:\n            return\n        # Stop loss based on Chandelier Exit: close if price falls below the dynamic stop level.\n        # We will buy if the price is above the stop level\n        # and sell if the price is below the stop level\n        if not self._option.holdings.invested and data.end_time >= self.time + timedelta(1) and self._option.price > self._option.chandelier_exit.current.value:\n            self.buy(self._option, 1)\n        elif self._option.holdings.invested and data.end_time >= self.time + timedelta(1) and self._option.price < self._option.chandelier_exit.current.value:\n            self.liquidate(self._option)\n",
+  "source_sha256": "f37057c1cb638b4dd83515c14221e323434da29661aa64e02d233b388e145c3b",
+  "started_at": "2026-11-14T22:14:35.100405+00:00",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "runtime_statistics": {
+    "Equity": "$100,000.00",
+    "Fees": "-$0.00",
+    "Holdings": "$0.00",
+    "Net Profit": "$0.00",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Return": "0.00 %",
+    "Unrealized": "$0.00",
+    "Volume": "$0.00"
+  },
+  "logs": [],
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;EquityOptionChandelierExitAlgorithm&#039; object has no attribute &#039;chandelier_exit&#039;\n  at ",
+  "project_id": 39412955,
+  "compile_id": "fd41ddd0d3bbf381ff51e184ccd07365-7ee1016b42b1a11cba61153b373f40f4",
+  "compile_created": {
+    "compileId": "fd41ddd0d3bbf381ff51e184ccd07365-7ee1016b42b1a11cba61153b373f40f4",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39412955,
+    "signature": "7ee1016b42b1a11cba61153b373f40f4",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "fd41ddd0d3bbf381ff51e184ccd07365-7ee1016b42b1a11cba61153b373f40f4",
+    "state": "BuildSuccess",
+    "logs": [
+      "Warning main.py Line: 15 Column: 40 - \"EquityOptionChandelierExitAlgorithm\" has no attribute \"chandelier_exit\"",
+      "Warning main.py Line: 28 Column: 51 - \"Slice\" has no attribute \"end_time\"",
+      "Warning main.py Line: 30 Column: 49 - \"Slice\" has no attribute \"end_time\"",
+      "Build Request Successful for Project ID: 39412955, with CompileID: fd41ddd0d3bbf381ff51e184ccd07365-7ee1016b42b1a11cba61153b373f40f4, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Warning main.py Line: 15 Column: 40 - \"EquityOptionChandelierExitAlgorithm\" has no attribute \"chandelier_exit\"",
+    "Warning main.py Line: 28 Column: 51 - \"Slice\" has no attribute \"end_time\"",
+    "Warning main.py Line: 30 Column: 49 - \"Slice\" has no attribute \"end_time\"",
+    "Build Request Successful for Project ID: 39412955, with CompileID: fd41ddd0d3bbf381ff51e184ccd07365-7ee1016b42b1a11cba61153b373f40f4, Lean Version: 2.5.0.0.18263"
+  ],
+  "backtest_id": "ccbceacb8efbd5efbdd47ca599f8d804",
+  "backtest_created": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-equity-atr-volatility-stop_v04",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39412955,
+      "completed": false,
+      "optimizationId": null,
+      "backtestId": "ccbceacb8efbd5efbdd47ca599f8d804",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 1,
+        "backtestCount": 1,
+        "parameters": 0
+      },
+      "backtestStart": "2026-11-14 22:14:39",
+      "backtestEnd": "2026-11-14 22:14:39",
+      "created": "2026-11-14 22:14:39",
+      "snapshotId": 39412959,
+      "status": "In Queue...",
+      "error": null,
+      "stacktrace": null,
+      "progress": 0,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": null,
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null
+    },
+    "debugging": false,
+    "success": true
+  },
+  "raw_backtest": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-equity-atr-volatility-stop_v04",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39412955,
+      "completed": true,
+      "optimizationId": null,
+      "backtestId": "ccbceacb8efbd5efbdd47ca599f8d804",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 1,
+        "backtestCount": 1,
+        "parameters": 0
+      },
+      "backtestStart": "2026-11-14 22:14:39",
+      "backtestEnd": "2026-11-14 22:14:39",
+      "created": "2026-11-14 22:14:39",
+      "snapshotId": 39412959,
+      "status": "Runtime Error",
+      "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;EquityOptionChandelierExitAlgorithm&#039; object has no attribute &#039;chandelier_exit&#039;\n  at initialize\n    self._option.chandelier_exit = self.chandelier_exit(self._option, 22, 3*self._option.atr(14).current.value)\n                                   ^^^^^^^^^^^^^^^^^^^^\n in main.py: line 15\n &#039;EquityOptionChandelierExitAlgorithm&#039; object has no attribute &#039;chandelier_exit&#039;",
+      "stacktrace": "'EquityOptionChandelierExitAlgorithm' object has no attribute 'chandelier_exit'\n  at initialize\n    self._option.chandelier_exit = self.chandelier_exit(self._option, 22, 3*self._option.atr(14).current.value)\n                                   ^^^^^^^^^^^^^^^^^^^^\n in main.py: line 15\n 'EquityOptionChandelierExitAlgorithm' object has no attribute 'chandelier_exit'",
+      "progress": 1,
+      "hasInitializeError": true,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {
+        "Equity": "$100,000.00",
+        "Fees": "-$0.00",
+        "Holdings": "$0.00",
+        "Net Profit": "$0.00",
+        "Probabilistic Sharpe Ratio": "0%",
+        "Return": "0.00 %",
+        "Unrealized": "$0.00",
+        "Volume": "$0.00"
+      },
+      "statistics": {},
+      "totalPerformance": {
+        "tradeStatistics": {
+          "startDateTime": null,
+          "endDateTime": null,
+          "totalNumberOfTrades": 0,
+          "numberOfWinningTrades": 0,
+          "numberOfLosingTrades": 0,
+          "totalProfitLoss": "0",
+          "totalProfit": "0",
+          "totalLoss": "0",
+          "largestProfit": "0",
+          "largestLoss": "0",
+          "averageProfitLoss": "0",
+          "averageProfit": "0",
+          "averageLoss": "0",
+          "averageTradeDuration": "00:00:00",
+          "averageWinningTradeDuration": "00:00:00",
+          "averageLosingTradeDuration": "00:00:00",
+          "medianTradeDuration": "00:00:00",
+          "medianWinningTradeDuration": "00:00:00",
+          "medianLosingTradeDuration": "00:00:00",
+          "maxConsecutiveWinningTrades": 0,
+          "maxConsecutiveLosingTrades": 0,
+          "profitLossRatio": "0",
+          "winLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "averageMAE": "0",
+          "averageMFE": "0",
+          "largestMAE": "0",
+          "largestMFE": "0",
+          "maximumClosedTradeDrawdown": "0",
+          "maximumIntraTradeDrawdown": "0",
+          "profitLossStandardDeviation": "0",
+          "profitLossDownsideDeviation": "0",
+          "profitFactor": "0",
+          "sharpeRatio": "0",
+          "sortinoRatio": "0",
+          "profitToMaxDrawdownRatio": "0",
+          "maximumEndTradeDrawdown": "0",
+          "averageEndTradeDrawdown": "0",
+          "maximumDrawdownDuration": "00:00:00",
+          "totalFees": "0"
+        },
+        "portfolioStatistics": {
+          "averageWinRate": "0",
+          "averageLossRate": "0",
+          "profitLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "expectancy": "0",
+          "startEquity": "0",
+          "endEquity": "0",
+          "compoundingAnnualReturn": "0",
+          "drawdown": "0",
+          "totalNetProfit": "0",
+          "sharpeRatio": "0",
+          "probabilisticSharpeRatio": "0",
+          "sortinoRatio": "0",
+          "alpha": "0",
+          "beta": "0",
+          "annualStandardDeviation": "0",
+          "annualVariance": "0",
+          "informationRatio": "0",
+          "trackingError": "0",
+          "treynorRatio": "0",
+          "portfolioTurnover": "0",
+          "valueAtRisk99": "0",
+          "valueAtRisk95": "0",
+          "drawdownRecovery": "0"
+        },
+        "closedTrades": []
+      },
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": [
+        {
+          "name": "PortfolioValueIsNotPositiveAnalysis",
+          "issue": "The portfolio equity dropped to zero or below.",
+          "sample": true,
+          "solutions": [
+            "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+            "Reduce position sizes.",
+            "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+            "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+          ]
+        },
+        {
+          "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+          "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+          "sample": {
+            "pValue": 0.5
+          },
+          "solutions": [
+            "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+          ]
+        }
+      ],
+      "serverStatistics": {
+        "CPU Usage": "6.8%",
+        "Used RAM (MB)": "210",
+        "Total RAM (MB)": "16384",
+        "Hostname": "BACKTESTING-com-ccbceacb8efbd5efbdd47ca599f8d804",
+        "LEAN Version": "v2.5.0.0.18263",
+        "Up Time": "0d 00:00:13"
+      }
+    },
+    "success": true
+  },
+  "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;EquityOptionChandelierExitAlgorithm&#039; object has no attribute &#039;chandelier_exit&#039;\n  at initialize\n    self._option.chandelier_exit = self.chandelier_exit(self._option, 22, 3*self._option.atr(14).current.value)\n                                   ^^^^^^^^^^^^^^^^^^^^\n in main.py: line 15\n &#039;EquityOptionChandelierExitAlgorithm&#039; object has no attribute &#039;chandelier_exit&#039;",
+  "stacktrace": "'EquityOptionChandelierExitAlgorithm' object has no attribute 'chandelier_exit'\n  at initialize\n    self._option.chandelier_exit = self.chandelier_exit(self._option, 22, 3*self._option.atr(14).current.value)\n                                   ^^^^^^^^^^^^^^^^^^^^\n in main.py: line 15\n 'EquityOptionChandelierExitAlgorithm' object has no attribute 'chandelier_exit'",
+  "has_initialize_error": true,
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "total_orders": null,
+  "finished_at": "2026-11-14T22:15:29.230572+00:00"
+}

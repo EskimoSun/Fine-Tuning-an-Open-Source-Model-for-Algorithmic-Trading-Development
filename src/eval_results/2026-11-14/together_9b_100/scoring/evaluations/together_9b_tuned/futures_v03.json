@@ -1,0 +1,268 @@
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EsRollAlgorithm(QCAlgorithm):\n    _size = 1\n    _symbol: Symbol = Symbol.create(\"ES\", Market.USA, FuturesContract.Indices.SP_500_E_MINI)\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.automatic_indicator_warm_up = True\n        self._symbol = self.add_future(self._symbol, self._get_mapping).symbol\n        self.schedule.on(self.date_rules.every_day(self._symbol), self.time_rules.after_market_open(self._symbol, 1), self._rebalance)\n\n    def _get_mapping(self, mapping: FuturesMap) -> None:\n        mapping.data_normalization_mode = DataNormalizationMode.BACKWARDS_RATIO\n        mapping.contract_depth = 3650\n\n    def _rebalance(self) -> None:\n        if not self.portfolio.invested:\n            self.set_holdings(self._symbol, self._size)\n        contract = self.securities[self._symbol].contract\n        next_contract = self._symbol.get_next_contract(contract).symbol\n        if next_contract != self._symbol:\n            self.liquidate(self._symbol, tag=f\"Rollover {self._symbol} -> {next_contract}\")\n            self.set_holdings(next_contract, self._size)\n",
+  "source_sha256": "582f964264c2ae812c1a986ed5d04ffe455599f804b2670f40dc0a75891d5bb3",
+  "started_at": "2026-11-14T23:20:50.842238+00:00",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "runtime_statistics": {},
+  "logs": [],
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "project_id": 39413106,
+  "compile_id": "fc13c141fb9f0e25ad33ed4d758fafef-2d8e2f200c0a60e2f06b8aa195817aac",
+  "compile_created": {
+    "compileId": "fc13c141fb9f0e25ad33ed4d758fafef-2d8e2f200c0a60e2f06b8aa195817aac",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413106,
+    "signature": "2d8e2f200c0a60e2f06b8aa195817aac",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "fc13c141fb9f0e25ad33ed4d758fafef-2d8e2f200c0a60e2f06b8aa195817aac",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413106, with CompileID: fc13c141fb9f0e25ad33ed4d758fafef-2d8e2f200c0a60e2f06b8aa195817aac, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413106, with CompileID: fc13c141fb9f0e25ad33ed4d758fafef-2d8e2f200c0a60e2f06b8aa195817aac, Lean Version: 2.5.0.0.18263"
+  ],
+  "backtest_id": "68aeb3f998c22ed3229f2e1309212ec3",
+  "backtest_created": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-futures_v03",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413106,
+      "completed": false,
+      "optimizationId": null,
+      "backtestId": "68aeb3f998c22ed3229f2e1309212ec3",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 18,
+        "backtestCount": 18,
+        "parameters": 8
+      },
+      "backtestStart": "2026-11-14 23:21:05",
+      "backtestEnd": "2026-11-14 23:21:05",
+      "created": "2026-11-14 23:21:05",
+      "snapshotId": 39415699,
+      "status": "In Queue...",
+      "error": null,
+      "stacktrace": null,
+      "progress": 0,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": null,
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null
+    },
+    "debugging": false,
+    "success": true
+  },
+  "raw_backtest": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-futures_v03",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413106,
+      "completed": true,
+      "optimizationId": null,
+      "backtestId": "68aeb3f998c22ed3229f2e1309212ec3",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 18,
+        "backtestCount": 18,
+        "parameters": 8
+      },
+      "backtestStart": "2026-11-14 23:21:05",
+      "backtestEnd": "2026-11-14 23:21:05",
+      "created": "2026-11-14 23:21:05",
+      "snapshotId": 39415699,
+      "status": "Runtime Error",
+      "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): type object &#039;FuturesContract&#039; has no attribute &#039;Indices&#039;\n  at EsRollAlgorithm\n    _symbol: Symbol = Symbol.create(&quot;ES&quot;, Market.USA, FuturesContract.Indices.SP_500_E_MINI)\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 7\n  at \n    class EsRollAlgorithm(QCAlgorithm):\n in main.py: line 5\n type object &#039;FuturesContract&#039; has no attribute &#039;Indices&#039; Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): type object &#039;FuturesContract&#039; has no attribute &#039;Indices&#039;\n  at EsRollAlgorithm\n    _symbol: Symbol = Symbol.create(&quot;ES&quot;, Market.USA, FuturesContract.Indices.SP_500_E_MINI)\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 7\n  at \n    class EsRollAlgorithm(QCAlgorithm):\n in main.py: line 5\n type object &#039;FuturesContract&#039; has no attribute &#039;Indices&#039;",
+      "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): type object 'FuturesContract' has no attribute 'Indices'\n  at EsRollAlgorithm\n    _symbol: Symbol = Symbol.create(\"ES\", Market.USA, FuturesContract.Indices.SP_500_E_MINI)\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 7\n  at <module>\n    class EsRollAlgorithm(QCAlgorithm):\n in main.py: line 5\n type object 'FuturesContract' has no attribute 'Indices'",
+      "progress": 1,
+      "hasInitializeError": true,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": {
+        "tradeStatistics": {
+          "startDateTime": null,
+          "endDateTime": null,
+          "totalNumberOfTrades": 0,
+          "numberOfWinningTrades": 0,
+          "numberOfLosingTrades": 0,
+          "totalProfitLoss": "0",
+          "totalProfit": "0",
+          "totalLoss": "0",
+          "largestProfit": "0",
+          "largestLoss": "0",
+          "averageProfitLoss": "0",
+          "averageProfit": "0",
+          "averageLoss": "0",
+          "averageTradeDuration": "00:00:00",
+          "averageWinningTradeDuration": "00:00:00",
+          "averageLosingTradeDuration": "00:00:00",
+          "medianTradeDuration": "00:00:00",
+          "medianWinningTradeDuration": "00:00:00",
+          "medianLosingTradeDuration": "00:00:00",
+          "maxConsecutiveWinningTrades": 0,
+          "maxConsecutiveLosingTrades": 0,
+          "profitLossRatio": "0",
+          "winLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "averageMAE": "0",
+          "averageMFE": "0",
+          "largestMAE": "0",
+          "largestMFE": "0",
+          "maximumClosedTradeDrawdown": "0",
+          "maximumIntraTradeDrawdown": "0",
+          "profitLossStandardDeviation": "0",
+          "profitLossDownsideDeviation": "0",
+          "profitFactor": "0",
+          "sharpeRatio": "0",
+          "sortinoRatio": "0",
+          "profitToMaxDrawdownRatio": "0",
+          "maximumEndTradeDrawdown": "0",
+          "averageEndTradeDrawdown": "0",
+          "maximumDrawdownDuration": "00:00:00",
+          "totalFees": "0"
+        },
+        "portfolioStatistics": {
+          "averageWinRate": "0",
+          "averageLossRate": "0",
+          "profitLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "expectancy": "0",
+          "startEquity": "0",
+          "endEquity": "0",
+          "compoundingAnnualReturn": "0",
+          "drawdown": "0",
+          "totalNetProfit": "0",
+          "sharpeRatio": "0",
+          "probabilisticSharpeRatio": "0",
+          "sortinoRatio": "0",
+          "alpha": "0",
+          "beta": "0",
+          "annualStandardDeviation": "0",
+          "annualVariance": "0",
+          "informationRatio": "0",
+          "trackingError": "0",
+          "treynorRatio": "0",
+          "portfolioTurnover": "0",
+          "valueAtRisk99": "0",
+          "valueAtRisk95": "0",
+          "drawdownRecovery": "0"
+        },
+        "closedTrades": []
+      },
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null,
+      "serverStatistics": {
+        "CPU Usage": "7.9%",
+        "Used RAM (MB)": "223",
+        "Total RAM (MB)": "16384",
+        "Hostname": "BACKTESTING-com-68aeb3f998c22ed3229f2e1309212ec3",
+        "LEAN Version": "v2.5.0.0.18263",
+        "Up Time": "0d 00:00:14"
+      }
+    },
+    "success": true
+  },
+  "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): type object &#039;FuturesContract&#039; has no attribute &#039;Indices&#039;\n  at EsRollAlgorithm\n    _symbol: Symbol = Symbol.create(&quot;ES&quot;, Market.USA, FuturesContract.Indices.SP_500_E_MINI)\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 7\n  at \n    class EsRollAlgorithm(QCAlgorithm):\n in main.py: line 5\n type object &#039;FuturesContract&#039; has no attribute &#039;Indices&#039; Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): type object &#039;FuturesContract&#039; has no attribute &#039;Indices&#039;\n  at EsRollAlgorithm\n    _symbol: Symbol = Symbol.create(&quot;ES&quot;, Market.USA, FuturesContract.Indices.SP_500_E_MINI)\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 7\n  at \n    class EsRollAlgorithm(QCAlgorithm):\n in main.py: line 5\n type object &#039;FuturesContract&#039; has no attribute &#039;Indices&#039;",
+  "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): type object 'FuturesContract' has no attribute 'Indices'\n  at EsRollAlgorithm\n    _symbol: Symbol = Symbol.create(\"ES\", Market.USA, FuturesContract.Indices.SP_500_E_MINI)\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 7\n  at <module>\n    class EsRollAlgorithm(QCAlgorithm):\n in main.py: line 5\n type object 'FuturesContract' has no attribute 'Indices'",
+  "has_initialize_error": true,
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "total_orders": null,
+  "finished_at": "2026-11-14T23:21:57.459724+00:00",
+  "shared_evaluation_project": 39413106
+}

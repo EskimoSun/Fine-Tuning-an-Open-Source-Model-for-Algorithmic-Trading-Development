@@ -1,0 +1,49 @@
+{
+  "status": "infrastructure_error",
+  "stage": "backtest",
+  "source": "# region imports\nfrom AlgorithmImports import *\nimport math\nfrom datetime import timedelta\n# endregion\n\nclass CocaCokePepsiPairTradingAlgorithm(QCAlgorithm):\n    _z_score_threshold = 2\n    _z_score_exit_threshold = 0.5\n    _drift_threshold = 0.01\n    _drift_target_percent = 0.005\n    _correlation_window = 60\n    _num_std_devs = 3\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(200000)\n        self.settings.seed_initial_prices = True\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        self._pep = self.add_equity(\"PEP\", Resolution.MINUTE)\n        self._ko = self.add_equity(\"KO\", Resolution.MINUTE)\n        self._pair = self.get_pair(self._pep, self._ko)\n        self._pair.correlation = self.correlation(self._pair, self._correlation_window)\n        self._pair.mean = self.rolling_mean(self._pair, self._correlation_window)\n        self._pair.standard_deviation = self.rolling_standard_deviation(self._pair, self._correlation_window)\n        self.schedule.on(self.date_rules.week_start(self._pep), self.time_rules.after_market_open(self._pep, 1), self._rebalance)\n\n    def on_data(self, data: Slice) -> None:\n        bar = data.bars.get(self._pair)\n        if not bar:\n            return\n        price = bar.close\n        inverted = 1 / price\n        self._pair.update(inverted)\n        z_score = self._pair.current.z_score(self._num_std_devs)\n        if not self._pair.invested:\n            if z_score > self._z_score_threshold:\n                self._pair.invested = True\n                self._pair.target_percent = -self._drift_target_percent\n                self._pair.offset_percent = self._drift_target_percent\n            elif z_score < -self._z_score_threshold:\n                self._pair.invested = True\n                self._pair.target_percent = self._drift_target_percent\n                self._pair.offset_percent = -self._drift_target_percent\n        elif self._pair.invested:\n            drift = price / self._pair.mean.current.value - 1\n            if abs(drift) > self._drift_threshold and abs(z_score) < self._z_score_exit_threshold:\n                self._pair.invested = False\n                self._pair.target_percent = 0\n                self._pair.offset_percent = 0\n\n    def _rebalance(self) -> None:\n        if not self._pair.invested:\n            return\n        targets = [PortfolioTarget(self._pair.symbol, self._pair.target_percent)]\n        if self._pair.offset_percent:\n            targets.append(PortfolioTarget(self._pair.offsetting_symbol, self._pair.offset_percent))\n        self.set_holdings(targets, True)\n",
+  "source_sha256": "8d0030518175f6c2d6a9f4e90b8e45e2bf2497a52774d84dc620135a3f42013a",
+  "started_at": "2026-11-14T22:20:19.128214+00:00",
+  "compile_errors": 0,
+  "runtime_errors": null,
+  "statistics": {},
+  "runtime_statistics": {},
+  "logs": [],
+  "qc_note": "infrastructure: API request failed: backtests/create",
+  "project_id": 39413236,
+  "compile_id": "047ad0f5ed20fbea559b3396fe855c42-f5e277671c2593010c5a6b9bbfe2e2cc",
+  "compile_created": {
+    "compileId": "047ad0f5ed20fbea559b3396fe855c42-f5e277671c2593010c5a6b9bbfe2e2cc",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413236,
+    "signature": "f5e277671c2593010c5a6b9bbfe2e2cc",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "047ad0f5ed20fbea559b3396fe855c42-f5e277671c2593010c5a6b9bbfe2e2cc",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413236, with CompileID: 047ad0f5ed20fbea559b3396fe855c42-f5e277671c2593010c5a6b9bbfe2e2cc, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413236, with CompileID: 047ad0f5ed20fbea559b3396fe855c42-f5e277671c2593010c5a6b9bbfe2e2cc, Lean Version: 2.5.0.0.18263"
+  ],
+  "error": "API request failed: backtests/create",
+  "error_type": "QCAPIError",
+  "api_error": {
+    "endpoint": "backtests/create",
+    "response": {
+      "errors": [
+        "Too many backtest requests; please slow down. REF #Oi842S9vlj"
+      ],
+      "success": false
+    }
+  },
+  "finished_at": "2026-11-14T22:20:21.185198+00:00"
+}

@@ -1,0 +1,268 @@
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass FutureOnETFMappingAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        # Trade daily on the ETF itself, mapped through to the underlying future contract.\n        self._index = self.add_index(\"SPX\")\n        # Create a Futures contract for the mapped target.\n        self._contract = self.add_future(self._index, self._get_mapping_target)\n        # Schedule daily rebalancing at 9:00 AM before market open.\n        self.schedule.on(self.date_rules.every_day(self._index), self.time_rules.at(9, 0), self._rebalance)\n\n    def _get_mapping_target(self, index: BaseIndex) -> Future:\n        # Use the mapping table to get the mapped future contract.\n        mapped = self.mapping_table.get_mapping_target(index)\n        if mapped:\n            return mapped\n        # Fallback to the default mapping target if the mapping table doesn't have it.\n        return self.add_future(index)\n\n    def _rebalance(self) -> None:\n        if not self._contract.mapped:\n            return\n        # Scale the position size to 1/10th of the portfolio value.\n        weight = 1 / 10\n        quantity = self.calculate_order_quantity(self._contract, weight)\n        if not self.portfolio.invested:\n            quantity = self.calculate_order_quantity(self._contract, 1)\n        # Place a market order to rebalance.\n        self.market_order(self._contract, quantity)\n",
+  "source_sha256": "81d247a0d6fbcef5047c5e8538e45eb1e4c37ecbfd9dd65b7cdd26e3535739ba",
+  "started_at": "2026-11-14T23:23:08.824532+00:00",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "runtime_statistics": {},
+  "logs": [],
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "project_id": 39413106,
+  "compile_id": "485493534369720be0ac1e46e17af53c-7ee95d1deff34bf0306e7cba3a2e6178",
+  "compile_created": {
+    "compileId": "485493534369720be0ac1e46e17af53c-7ee95d1deff34bf0306e7cba3a2e6178",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413106,
+    "signature": "7ee95d1deff34bf0306e7cba3a2e6178",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "485493534369720be0ac1e46e17af53c-7ee95d1deff34bf0306e7cba3a2e6178",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413106, with CompileID: 485493534369720be0ac1e46e17af53c-7ee95d1deff34bf0306e7cba3a2e6178, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413106, with CompileID: 485493534369720be0ac1e46e17af53c-7ee95d1deff34bf0306e7cba3a2e6178, Lean Version: 2.5.0.0.18263"
+  ],
+  "backtest_id": "5ef963ccee93d8ac4c02622608c6deef",
+  "backtest_created": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-futures_v05",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413106,
+      "completed": false,
+      "optimizationId": null,
+      "backtestId": "5ef963ccee93d8ac4c02622608c6deef",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 20,
+        "backtestCount": 20,
+        "parameters": 9
+      },
+      "backtestStart": "2026-11-14 23:23:14",
+      "backtestEnd": "2026-11-14 23:23:14",
+      "created": "2026-11-14 23:23:14",
+      "snapshotId": 39415790,
+      "status": "In Queue...",
+      "error": null,
+      "stacktrace": null,
+      "progress": 0,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": null,
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null
+    },
+    "debugging": false,
+    "success": true
+  },
+  "raw_backtest": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-futures_v05",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413106,
+      "completed": true,
+      "optimizationId": null,
+      "backtestId": "5ef963ccee93d8ac4c02622608c6deef",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 20,
+        "backtestCount": 20,
+        "parameters": 9
+      },
+      "backtestStart": "2026-11-14 23:23:14",
+      "backtestEnd": "2026-11-14 23:23:14",
+      "created": "2026-11-14 23:23:14",
+      "snapshotId": 39415790,
+      "status": "Runtime Error",
+      "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;BaseIndex&#039; is not defined\n  at FutureOnETFMappingAlgorithm\n    def _get_mapping_target(self, index: BaseIndex) -&gt; Future:\n                                         ^^^^^^^^^\n in main.py: line 19\n  at \n    class FutureOnETFMappingAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;BaseIndex&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;BaseIndex&#039; is not defined\n  at FutureOnETFMappingAlgorithm\n    def _get_mapping_target(self, index: BaseIndex) -&gt; Future:\n                                         ^^^^^^^^^\n in main.py: line 19\n  at \n    class FutureOnETFMappingAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;BaseIndex&#039; is not defined",
+      "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'BaseIndex' is not defined\n  at FutureOnETFMappingAlgorithm\n    def _get_mapping_target(self, index: BaseIndex) -> Future:\n                                         ^^^^^^^^^\n in main.py: line 19\n  at <module>\n    class FutureOnETFMappingAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'BaseIndex' is not defined",
+      "progress": 1,
+      "hasInitializeError": true,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": {
+        "tradeStatistics": {
+          "startDateTime": null,
+          "endDateTime": null,
+          "totalNumberOfTrades": 0,
+          "numberOfWinningTrades": 0,
+          "numberOfLosingTrades": 0,
+          "totalProfitLoss": "0",
+          "totalProfit": "0",
+          "totalLoss": "0",
+          "largestProfit": "0",
+          "largestLoss": "0",
+          "averageProfitLoss": "0",
+          "averageProfit": "0",
+          "averageLoss": "0",
+          "averageTradeDuration": "00:00:00",
+          "averageWinningTradeDuration": "00:00:00",
+          "averageLosingTradeDuration": "00:00:00",
+          "medianTradeDuration": "00:00:00",
+          "medianWinningTradeDuration": "00:00:00",
+          "medianLosingTradeDuration": "00:00:00",
+          "maxConsecutiveWinningTrades": 0,
+          "maxConsecutiveLosingTrades": 0,
+          "profitLossRatio": "0",
+          "winLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "averageMAE": "0",
+          "averageMFE": "0",
+          "largestMAE": "0",
+          "largestMFE": "0",
+          "maximumClosedTradeDrawdown": "0",
+          "maximumIntraTradeDrawdown": "0",
+          "profitLossStandardDeviation": "0",
+          "profitLossDownsideDeviation": "0",
+          "profitFactor": "0",
+          "sharpeRatio": "0",
+          "sortinoRatio": "0",
+          "profitToMaxDrawdownRatio": "0",
+          "maximumEndTradeDrawdown": "0",
+          "averageEndTradeDrawdown": "0",
+          "maximumDrawdownDuration": "00:00:00",
+          "totalFees": "0"
+        },
+        "portfolioStatistics": {
+          "averageWinRate": "0",
+          "averageLossRate": "0",
+          "profitLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "expectancy": "0",
+          "startEquity": "0",
+          "endEquity": "0",
+          "compoundingAnnualReturn": "0",
+          "drawdown": "0",
+          "totalNetProfit": "0",
+          "sharpeRatio": "0",
+          "probabilisticSharpeRatio": "0",
+          "sortinoRatio": "0",
+          "alpha": "0",
+          "beta": "0",
+          "annualStandardDeviation": "0",
+          "annualVariance": "0",
+          "informationRatio": "0",
+          "trackingError": "0",
+          "treynorRatio": "0",
+          "portfolioTurnover": "0",
+          "valueAtRisk99": "0",
+          "valueAtRisk95": "0",
+          "drawdownRecovery": "0"
+        },
+        "closedTrades": []
+      },
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null,
+      "serverStatistics": {
+        "CPU Usage": "3.2%",
+        "Used RAM (MB)": "251",
+        "Total RAM (MB)": "16384",
+        "Hostname": "BACKTESTING-47-5ef963ccee93d8ac4c02622608c6deef",
+        "LEAN Version": "v2.5.0.0.18263",
+        "Up Time": "0d 00:00:11"
+      }
+    },
+    "success": true
+  },
+  "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;BaseIndex&#039; is not defined\n  at FutureOnETFMappingAlgorithm\n    def _get_mapping_target(self, index: BaseIndex) -&gt; Future:\n                                         ^^^^^^^^^\n in main.py: line 19\n  at \n    class FutureOnETFMappingAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;BaseIndex&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;BaseIndex&#039; is not defined\n  at FutureOnETFMappingAlgorithm\n    def _get_mapping_target(self, index: BaseIndex) -&gt; Future:\n                                         ^^^^^^^^^\n in main.py: line 19\n  at \n    class FutureOnETFMappingAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;BaseIndex&#039; is not defined",
+  "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'BaseIndex' is not defined\n  at FutureOnETFMappingAlgorithm\n    def _get_mapping_target(self, index: BaseIndex) -> Future:\n                                         ^^^^^^^^^\n in main.py: line 19\n  at <module>\n    class FutureOnETFMappingAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'BaseIndex' is not defined",
+  "has_initialize_error": true,
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "total_orders": null,
+  "finished_at": "2026-11-14T23:24:02.076336+00:00",
+  "shared_evaluation_project": 39413106
+}

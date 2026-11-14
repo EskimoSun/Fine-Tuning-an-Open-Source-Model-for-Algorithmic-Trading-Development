@@ -106,10 +106,10 @@ class QCClient:
                 "backtest_id": backtest_id, "error": bt.get("error"),
                 "stacktrace": bt.get("stacktrace"),
                 "has_initialize_error": bt.get("hasInitializeError", False),
-                "statistics": bt.get("statistics", {}),
-                "trade_statistics": bt.get("totalPerformance", {}).get("tradeStatistics", {}),
-                "runtime_statistics": bt.get("runtimeStatistics", {}),
-                "total_orders": bt.get("statistics", {}).get("Total Orders"), "raw": bt}
+                "statistics": bt.get("statistics") or {},
+                "trade_statistics": (bt.get("totalPerformance") or {}).get("tradeStatistics") or {},
+                "runtime_statistics": bt.get("runtimeStatistics") or {},
+                "total_orders": (bt.get("statistics") or {}).get("Total Orders"), "raw": bt}
 
     def read_logs(self, project_id, backtest_id, on_progress=None):
         on_progress = on_progress or (lambda update: None)

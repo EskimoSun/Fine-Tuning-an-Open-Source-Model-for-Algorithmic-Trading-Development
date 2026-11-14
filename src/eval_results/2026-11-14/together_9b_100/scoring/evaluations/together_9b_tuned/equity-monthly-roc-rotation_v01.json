@@ -1,0 +1,17 @@
+{
+  "status": "syntax_error",
+  "stage": "syntax",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass PermanentPortfolioRotationAlgorithm(QCAlgorithm):\n    _targets: list[PortfolioTarget] = []\n    _weight: float = 0.2\n    _drift_threshold = 0.03\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        for ticker in [\"SPY\", \"EFA\", \"EEM\", \"AGG\", \"GLD\"]:\n            symbol = self.add_equity(ticker, Resolution.MINUTE).symbol\n            self._targets.append(PortfolioTarget(symbol, self._weight))\n        self.schedule.on(\n            self.date_rules.month_end(\"SPY\", 2),\n            self.time_rules.after_market_open(\"SPY\", 5),\n            self._rebalance,\n        )\n\n    def _rebalance(self) -> None:\n        if not self.portfolio.invested:\n            return\n        securities = list(self.securities.values())\n        if not securities:\n            return\n        returns = []\n        for security in securities:\n            symbol = security.symbol\n            period_return = self.return(symbol, self.time_rules.month)\n            returns.append((symbol, period_return))\n        returns.sort(key=lambda x: x[1], reverse=True)\n        top_2 = returns[:2]\n        bottom_3 = returns[2:]\n        new_weights = [self._weight for _, _ in top_2] + [self._weight * -1 for _, _ in bottom_3]\n        sum_weight = sum([self._weight for _, _ in top_2]) + sum([self._weight * -1 for _, _ in bottom_3])\n        if abs(sum_weight) > self._drift_threshold:\n            self.set_holdings(self._targets, True)\n",
+  "source_sha256": "017fe861bcb41eb5028fa727c03030cc0e2ba6ca3556a9143872a60b54fe1b03",
+  "started_at": "2026-11-14T22:16:32.316676+00:00",
+  "compile_errors": 1,
+  "runtime_errors": null,
+  "statistics": {},
+  "runtime_statistics": {},
+  "logs": [],
+  "qc_note": "syntax: invalid syntax (main.py, line 36)",
+  "error": "invalid syntax (main.py, line 36)",
+  "line": 36,
+  "offset": 34,
+  "finished_at": "2026-11-14T22:16:32.417580+00:00"
+}

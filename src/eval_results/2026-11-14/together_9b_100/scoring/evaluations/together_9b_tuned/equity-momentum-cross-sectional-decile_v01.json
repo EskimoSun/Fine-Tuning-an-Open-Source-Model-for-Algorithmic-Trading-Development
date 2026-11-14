@@ -1,0 +1,17 @@
+{
+  "status": "syntax_error",
+  "stage": "syntax",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass SP500MomentumRotationAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(250_000)\n        self.settings.seed_initial_prices = True\n        self.universe_settings.resolution = Resolution.MINUTE\n        # Refilter the ETF constituents monthly to match the rebalance cadence.\n        self.universe_settings.schedule.on(self.date_rules.month_start('SPY'))\n        # Add a universe of the SPY constituents ranked by 12-month price momentum.\n        self._universe = self.add_universe(self.universe.etf('SPY', universe_filter_func=self._select_assets))\n        # Create a Scheduled Event to rebalance the portfolio monthly.\n        self.schedule.on(self.date_rules.month_start('SPY'), self.time_rules.at(9, 0), self._rebalance)\n\n    def _select_assets(self, constituents: list[ETFConstituentUniverse]) -> list[Symbol]:\n        history = self.history([constituent.symbol for constituent in constituents], timedelta(365), Resolution.DAILY)\n        if history.empty:\n            return []\n        # Select the 10 ETF constituents with the highest 12-month rate of return.\n        return list(history.close.unstack(0).pct_change(12).reset_index(1).sort_values(1, ascending=False)[[:10]].index)\n\n    def _rebalance(self) -> None:\n        selected_symbols = [symbol for symbol in self._universe.selected]\n        if not selected_symbols:\n            return\n        # Equal-weight the selected momentum stocks.\n        weight = 1 / len(selected_symbols)\n        targets = [PortfolioTarget(symbol, weight) for symbol in selected_symbols]\n        self.set_holdings(targets, liquidate_existing_holdings=True)\n",
+  "source_sha256": "b9a3a895f0b2830b5d911592358dbb06fededc2f5c4167df71133c6e999c78fa",
+  "started_at": "2026-11-14T22:17:49.019228+00:00",
+  "compile_errors": 1,
+  "runtime_errors": null,
+  "statistics": {},
+  "runtime_statistics": {},
+  "logs": [],
+  "qc_note": "syntax: invalid syntax (main.py, line 26)",
+  "error": "invalid syntax (main.py, line 26)",
+  "line": 26,
+  "offset": 109,
+  "finished_at": "2026-11-14T22:17:49.022905+00:00"
+}

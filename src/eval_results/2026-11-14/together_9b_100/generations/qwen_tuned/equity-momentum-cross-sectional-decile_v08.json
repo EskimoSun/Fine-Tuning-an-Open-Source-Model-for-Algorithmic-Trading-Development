@@ -1,0 +1,337 @@
+{
+  "prompt_id": "equity-momentum-cross-sectional-decile_v08",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/Qwen-9B-finetune",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass ETFUniverseAlgorithm(QCAlgorithm):\n    _momentum: dict[Symbol, float] = {}\n    _weight: float = 0.1\n    _target: list[PortfolioTarget] = []\n    _count: int = 100\n    _rank: int = 10\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(250000)\n        self.settings.seed_initial_prices = True\n        self.universe_settings.resolution = Resolution.MINUTE\n        # Select the 100 most liquid stocks from the SPY ETF constituents and rank them by dollar volume.\n        self._universe = self.add_universe(self.universe.etf(\"SPY\", self._etf_constituents_filter))\n        # Add a Momentum indicator to rank the selected securities.\n        self._momentum = PortfolioMomentum(252)\n        self.schedule.on(\n            self.date_rules.month_start(),\n            self.time_rules.at(9, 31),\n            self._rebalance\n        )\n\n    def on_warmup_finished(self) -> None:\n        self._momentum.warm_up(self._universe.selected)\n\n    def _etf_constituents_filter(self, constituents: List[ETFConstituentUniverse]) -> List[Symbol]:\n        # Filter for the 100 most liquid stocks by dollar volume.\n        return [c.symbol for c in sorted(\n            constituents if constituents else [],\n            key=lambda c: c.dollar_volume, reverse=True\n        )[:self._count]]\n\n    def on_data(self, data: Slice) -> None:\n        # Update the momentum ranking with the updated dollar volume of the selected securities.\n        self._momentum.update(data, self._universe.selected)\n\n    def _rebalance(self) -> None:\n        if not self._momentum.is_ready:\n            return\n        # Rank the selected securities by their dollar volume and keep the top 10.\n        ranked = sorted(\n            self._momentum,\n            key=lambda x: x.value, reverse=True\n        )[:self._rank]\n        # Form an equal weighted portfolio with the top 10 ranked securities.\n        self._target = [PortfolioTarget(x.symbol, self._weight) for x in ranked]\n        # Place orders to rebalance the portfolio.\n        self.set_holdings(self._target, True)\n```",
+  "generated_at": "2026-11-14T21:53:33.978019+00:00",
+  "has_code": true,
+  "static_findings": [],
+  "note": "",
+  "generation_elapsed_seconds": 5.065079513000001,
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass ETFUniverseAlgorithm(QCAlgorithm):\n    _momentum: dict[Symbol, float] = {}\n    _weight: float = 0.1\n    _target: list[PortfolioTarget] = []\n    _count: int = 100\n    _rank: int = 10\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(250000)\n        self.settings.seed_initial_prices = True\n        self.universe_settings.resolution = Resolution.MINUTE\n        # Select the 100 most liquid stocks from the SPY ETF constituents and rank them by dollar volume.\n        self._universe = self.add_universe(self.universe.etf(\"SPY\", self._etf_constituents_filter))\n        # Add a Momentum indicator to rank the selected securities.\n        self._momentum = PortfolioMomentum(252)\n        self.schedule.on(\n            self.date_rules.month_start(),\n            self.time_rules.at(9, 31),\n            self._rebalance\n        )\n\n    def on_warmup_finished(self) -> None:\n        self._momentum.warm_up(self._universe.selected)\n\n    def _etf_constituents_filter(self, constituents: List[ETFConstituentUniverse]) -> List[Symbol]:\n        # Filter for the 100 most liquid stocks by dollar volume.\n        return [c.symbol for c in sorted(\n            constituents if constituents else [],\n            key=lambda c: c.dollar_volume, reverse=True\n        )[:self._count]]\n\n    def on_data(self, data: Slice) -> None:\n        # Update the momentum ranking with the updated dollar volume of the selected securities.\n        self._momentum.update(data, self._universe.selected)\n\n    def _rebalance(self) -> None:\n        if not self._momentum.is_ready:\n            return\n        # Rank the selected securities by their dollar volume and keep the top 10.\n        ranked = sorted(\n            self._momentum,\n            key=lambda x: x.value, reverse=True\n        )[:self._rank]\n        # Form an equal weighted portfolio with the top 10 ranked securities.\n        self._target = [PortfolioTarget(x.symbol, self._weight) for x in ranked]\n        # Place orders to rebalance the portfolio.\n        self.set_holdings(self._target, True)\n",
+    "source_sha256": "506de95abb5c3e8f4736e2eb3dfb2b2d0240b8879b534bda2efda0db49798109",
+    "started_at": "2026-11-14T22:51:59.357489+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$250,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;PortfolioMomentum&#039; is not defined\n  at initialize\n    self._momentum = PortfolioMomentum(",
+    "project_id": 39414515,
+    "compile_id": "9a314541b8be3103a1be69813395f511-b0fc1585aeae073131f302cf0f4f6612",
+    "compile_created": {
+      "compileId": "9a314541b8be3103a1be69813395f511-b0fc1585aeae073131f302cf0f4f6612",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39414515,
+      "signature": "b0fc1585aeae073131f302cf0f4f6612",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "9a314541b8be3103a1be69813395f511-b0fc1585aeae073131f302cf0f4f6612",
+      "state": "BuildSuccess",
+      "logs": [
+        "Warning main.py Line: 21 Column: 26 - Name \"PortfolioMomentum\" is not defined; maybe \"self._momentum_by_symbol: dict[Symbol, MomentumPercent] = {}\"?",
+        "Warning main.py Line: 29 Column: 9 - \"dict[Symbol, float]\" has no attribute \"warm_up\"; maybe \"if not self._universe.selected:\"?",
+        "Warning main.py Line: 35 Column: 27 - \"ETFConstituentUniverse\" has no attribute \"dollar_volume\"; maybe \"scored.sort(key=lambda x: x[1], reverse=True)\"?",
+        "Warning main.py Line: 40 Column: 9 - No overload variant of \"update\" of \"MutableMapping\" matches argument types \"Slice\", \"HashSet[Symbol]\"; maybe \"if not (data and self._roc.update(data.time, data.value)):\"?",
+        "Warning main.py Line: 43 Column: 16 - \"dict[Symbol, float]\" has no attribute \"is_ready\"; maybe \"if not self._roc.is_ready:\"?",
+        "Warning main.py Line: 51 Column: 41 - \"Symbol\" has no attribute \"symbol\"; maybe \"targets = [PortfolioTarget(symbol, weight) for symbol in self._universe.selected]\"?",
+        "Build Request Successful for Project ID: 39414515, with CompileID: 9a314541b8be3103a1be69813395f511-b0fc1585aeae073131f302cf0f4f6612, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Warning main.py Line: 21 Column: 26 - Name \"PortfolioMomentum\" is not defined; maybe \"self._momentum_by_symbol: dict[Symbol, MomentumPercent] = {}\"?",
+      "Warning main.py Line: 29 Column: 9 - \"dict[Symbol, float]\" has no attribute \"warm_up\"; maybe \"if not self._universe.selected:\"?",
+      "Warning main.py Line: 35 Column: 27 - \"ETFConstituentUniverse\" has no attribute \"dollar_volume\"; maybe \"scored.sort(key=lambda x: x[1], reverse=True)\"?",
+      "Warning main.py Line: 40 Column: 9 - No overload variant of \"update\" of \"MutableMapping\" matches argument types \"Slice\", \"HashSet[Symbol]\"; maybe \"if not (data and self._roc.update(data.time, data.value)):\"?",
+      "Warning main.py Line: 43 Column: 16 - \"dict[Symbol, float]\" has no attribute \"is_ready\"; maybe \"if not self._roc.is_ready:\"?",
+      "Warning main.py Line: 51 Column: 41 - \"Symbol\" has no attribute \"symbol\"; maybe \"targets = [PortfolioTarget(symbol, weight) for symbol in self._universe.selected]\"?",
+      "Build Request Successful for Project ID: 39414515, with CompileID: 9a314541b8be3103a1be69813395f511-b0fc1585aeae073131f302cf0f4f6612, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "af678c7a0d5f1f1d177c8b0c33e466f3",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "together_9b_tuned-equity-momentum-cross-sectional-decile_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39414515,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "af678c7a0d5f1f1d177c8b0c33e466f3",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 11
+        },
+        "backtestStart": "2026-11-14 22:52:35",
+        "backtestEnd": "2026-11-14 22:52:35",
+        "created": "2026-11-14 22:52:35",
+        "snapshotId": 39414533,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "together_9b_tuned-equity-momentum-cross-sectional-decile_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39414515,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "af678c7a0d5f1f1d177c8b0c33e466f3",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 11
+        },
+        "backtestStart": "2026-11-14 22:52:35",
+        "backtestEnd": "2026-11-14 22:52:35",
+        "created": "2026-11-14 22:52:35",
+        "snapshotId": 39414533,
+        "status": "Runtime Error",
+        "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;PortfolioMomentum&#039; is not defined\n  at initialize\n    self._momentum = PortfolioMomentum(252)\n                     ^^^^^^^^^^^^^^^^^\n in main.py: line 21\n name &#039;PortfolioMomentum&#039; is not defined",
+        "stacktrace": "name 'PortfolioMomentum' is not defined\n  at initialize\n    self._momentum = PortfolioMomentum(252)\n                     ^^^^^^^^^^^^^^^^^\n in main.py: line 21\n name 'PortfolioMomentum' is not defined",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$250,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "7.2%",
+          "Used RAM (MB)": "239",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-af678c7a0d5f1f1d177c8b0c33e466f3",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:13"
+        }
+      },
+      "success": true
+    },
+    "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;PortfolioMomentum&#039; is not defined\n  at initialize\n    self._momentum = PortfolioMomentum(252)\n                     ^^^^^^^^^^^^^^^^^\n in main.py: line 21\n name &#039;PortfolioMomentum&#039; is not defined",
+    "stacktrace": "name 'PortfolioMomentum' is not defined\n  at initialize\n    self._momentum = PortfolioMomentum(252)\n                     ^^^^^^^^^^^^^^^^^\n in main.py: line 21\n name 'PortfolioMomentum' is not defined",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:53:26.546394+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "total_orders": null,
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;PortfolioMomentum&#039; is not defined\n  at initialize\n    self._momentum = PortfolioMomentum("
+}

@@ -1,0 +1,308 @@
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass ConsumerBraggPairsTradingAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(200_000)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        self._ko = self.add_equity(\"KO\", Resolution.DAILY)\n        self._pep = self.add_equity(\"PEP\", Resolution.DAILY)\n        self._optimizer = LinearRegressionOptimizer(180)\n        self._zscore = SimpleMovingAverage(10)\n        self._correlation = SimpleMovingAverage(10)\n        self._quantity = 0\n        self._target_zscore = 2.0\n        self._seed_initial_prices = True\n        if self._seed_initial_prices:\n            history = self.history([self._ko, self._pep], timedelta(180), Resolution.DAILY)\n            for data_point in history:\n                self._update_indicators(data_point.end_time, data_point.value)\n\n    def _update_indicators(self, time: datetime, value: float) -> bool:\n        self._optimizer.update(time, value)\n        if not self._optimizer.is_ready:\n            return False\n        # Ratio of log-prices, fed through a Z-score to normalize and rank the spread.\n        ko_log = np.log(value)\n        pep_log = np.log(self._pep.price)\n        self._zscore.update(time, (ko_log - pep_log) / self._correlation.current.value)\n        # Power of 2 spread: when the ratio of prices is 2x or 0.5x, we trade.\n        return self._zscore.is_ready\n\n    def on_data(self, slice: Slice) -> None:\n        if not self._update_indicators(slice.time, slice.bars[self._ko].close):\n            return\n        # Long KO when Z-score < -2 (KO relatively cheaper), short when > 2.\n        z = self._zscore.current.value\n        if self._quantity == 0 and z < -self._target_zscore:\n            self._rebalance(z)\n        elif self._quantity < 0 and z > self._target_zscore:\n            self._rebalance(z)\n\n    def _rebalance(self, z: float) -> None:\n        # Equal weight the two assets after scaling by Z-score.\n        weight = 0.5 * (1 + z / self._zscore.max.value)\n        self.set_holdings(self._ko, weight, True)\n",
+  "source_sha256": "fc12fd4dc7a62863212436446ffc6a4a43f6bdc42930c48303e3aec8b4b148db",
+  "started_at": "2026-11-14T23:05:41.070116+00:00",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "runtime_statistics": {
+    "Equity": "$200,000.00",
+    "Fees": "-$0.00",
+    "Holdings": "$0.00",
+    "Net Profit": "$0.00",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Return": "0.00 %",
+    "Unrealized": "$0.00",
+    "Volume": "$0.00"
+  },
+  "logs": [],
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;LinearRegressionOptimizer&#039; is not defined\n  at initialize\n    self._optimizer = LinearReg",
+  "project_id": 39413106,
+  "compile_id": "1d0f375c1aca76c876eb8080c48c4f32-6d698fb03acb38289b013eff2deaf1e4",
+  "compile_created": {
+    "compileId": "1d0f375c1aca76c876eb8080c48c4f32-6d698fb03acb38289b013eff2deaf1e4",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413106,
+    "signature": "6d698fb03acb38289b013eff2deaf1e4",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "1d0f375c1aca76c876eb8080c48c4f32-6d698fb03acb38289b013eff2deaf1e4",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413106, with CompileID: 1d0f375c1aca76c876eb8080c48c4f32-6d698fb03acb38289b013eff2deaf1e4, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413106, with CompileID: 1d0f375c1aca76c876eb8080c48c4f32-6d698fb03acb38289b013eff2deaf1e4, Lean Version: 2.5.0.0.18263"
+  ],
+  "backtest_id": "c9b218526ddc4fefc3672a209e7eef14",
+  "backtest_created": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-equity-pairs-trading-cointegration_v07",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413106,
+      "completed": false,
+      "optimizationId": null,
+      "backtestId": "c9b218526ddc4fefc3672a209e7eef14",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 5,
+        "backtestCount": 4,
+        "parameters": 14
+      },
+      "backtestStart": "2026-11-14 23:05:54",
+      "backtestEnd": "2026-11-14 23:05:54",
+      "created": "2026-11-14 23:05:54",
+      "snapshotId": 39415096,
+      "status": "In Queue...",
+      "error": null,
+      "stacktrace": null,
+      "progress": 0,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": null,
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null
+    },
+    "debugging": false,
+    "success": true
+  },
+  "raw_backtest": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-equity-pairs-trading-cointegration_v07",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413106,
+      "completed": true,
+      "optimizationId": null,
+      "backtestId": "c9b218526ddc4fefc3672a209e7eef14",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 5,
+        "backtestCount": 4,
+        "parameters": 14
+      },
+      "backtestStart": "2026-11-14 23:05:54",
+      "backtestEnd": "2026-11-14 23:05:54",
+      "created": "2026-11-14 23:05:54",
+      "snapshotId": 39415096,
+      "status": "Runtime Error",
+      "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;LinearRegressionOptimizer&#039; is not defined\n  at initialize\n    self._optimizer = LinearRegressionOptimizer(180)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 16\n name &#039;LinearRegressionOptimizer&#039; is not defined",
+      "stacktrace": "name 'LinearRegressionOptimizer' is not defined\n  at initialize\n    self._optimizer = LinearRegressionOptimizer(180)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 16\n name 'LinearRegressionOptimizer' is not defined",
+      "progress": 1,
+      "hasInitializeError": true,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {
+        "Equity": "$200,000.00",
+        "Fees": "-$0.00",
+        "Holdings": "$0.00",
+        "Net Profit": "$0.00",
+        "Probabilistic Sharpe Ratio": "0%",
+        "Return": "0.00 %",
+        "Unrealized": "$0.00",
+        "Volume": "$0.00"
+      },
+      "statistics": {},
+      "totalPerformance": {
+        "tradeStatistics": {
+          "startDateTime": null,
+          "endDateTime": null,
+          "totalNumberOfTrades": 0,
+          "numberOfWinningTrades": 0,
+          "numberOfLosingTrades": 0,
+          "totalProfitLoss": "0",
+          "totalProfit": "0",
+          "totalLoss": "0",
+          "largestProfit": "0",
+          "largestLoss": "0",
+          "averageProfitLoss": "0",
+          "averageProfit": "0",
+          "averageLoss": "0",
+          "averageTradeDuration": "00:00:00",
+          "averageWinningTradeDuration": "00:00:00",
+          "averageLosingTradeDuration": "00:00:00",
+          "medianTradeDuration": "00:00:00",
+          "medianWinningTradeDuration": "00:00:00",
+          "medianLosingTradeDuration": "00:00:00",
+          "maxConsecutiveWinningTrades": 0,
+          "maxConsecutiveLosingTrades": 0,
+          "profitLossRatio": "0",
+          "winLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "averageMAE": "0",
+          "averageMFE": "0",
+          "largestMAE": "0",
+          "largestMFE": "0",
+          "maximumClosedTradeDrawdown": "0",
+          "maximumIntraTradeDrawdown": "0",
+          "profitLossStandardDeviation": "0",
+          "profitLossDownsideDeviation": "0",
+          "profitFactor": "0",
+          "sharpeRatio": "0",
+          "sortinoRatio": "0",
+          "profitToMaxDrawdownRatio": "0",
+          "maximumEndTradeDrawdown": "0",
+          "averageEndTradeDrawdown": "0",
+          "maximumDrawdownDuration": "00:00:00",
+          "totalFees": "0"
+        },
+        "portfolioStatistics": {
+          "averageWinRate": "0",
+          "averageLossRate": "0",
+          "profitLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "expectancy": "0",
+          "startEquity": "0",
+          "endEquity": "0",
+          "compoundingAnnualReturn": "0",
+          "drawdown": "0",
+          "totalNetProfit": "0",
+          "sharpeRatio": "0",
+          "probabilisticSharpeRatio": "0",
+          "sortinoRatio": "0",
+          "alpha": "0",
+          "beta": "0",
+          "annualStandardDeviation": "0",
+          "annualVariance": "0",
+          "informationRatio": "0",
+          "trackingError": "0",
+          "treynorRatio": "0",
+          "portfolioTurnover": "0",
+          "valueAtRisk99": "0",
+          "valueAtRisk95": "0",
+          "drawdownRecovery": "0"
+        },
+        "closedTrades": []
+      },
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": [
+        {
+          "name": "PortfolioValueIsNotPositiveAnalysis",
+          "issue": "The portfolio equity dropped to zero or below.",
+          "sample": true,
+          "solutions": [
+            "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+            "Reduce position sizes.",
+            "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+            "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+          ]
+        },
+        {
+          "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+          "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+          "sample": {
+            "pValue": 0.5
+          },
+          "solutions": [
+            "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+          ]
+        }
+      ],
+      "serverStatistics": {
+        "CPU Usage": "6.5%",
+        "Used RAM (MB)": "253",
+        "Total RAM (MB)": "16384",
+        "Hostname": "BACKTESTING-com-c9b218526ddc4fefc3672a209e7eef14",
+        "LEAN Version": "v2.5.0.0.18263",
+        "Up Time": "0d 00:00:13"
+      }
+    },
+    "success": true
+  },
+  "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;LinearRegressionOptimizer&#039; is not defined\n  at initialize\n    self._optimizer = LinearRegressionOptimizer(180)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 16\n name &#039;LinearRegressionOptimizer&#039; is not defined",
+  "stacktrace": "name 'LinearRegressionOptimizer' is not defined\n  at initialize\n    self._optimizer = LinearRegressionOptimizer(180)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 16\n name 'LinearRegressionOptimizer' is not defined",
+  "has_initialize_error": true,
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "total_orders": null,
+  "finished_at": "2026-11-14T23:06:45.775533+00:00",
+  "shared_evaluation_project": 39413106
+}

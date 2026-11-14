@@ -1,0 +1,49 @@
+{
+  "status": "infrastructure_error",
+  "stage": "backtest",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass PermanentPortfolioAlgorithm(QCAlgorithm):\n    _targets: list[PortfolioTarget] = []\n    _weight_by_symbol: dict[Symbol, float] = {}\n    _drift_threshold = 0.05\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        for ticker, weight in {\"SPY\": 0.6, \"TLT\": 0.4}.items():\n            symbol = self.add_equity(ticker, Resolution.MINUTE).symbol\n            self._weight_by_symbol[symbol] = weight\n            self._targets.append(PortfolioTarget(symbol, weight))\n        self.schedule.on(\n            self.date_rules.quarter_start(\"SPY\"),\n            self.time_rules.after_market_open(\"SPY\", 1),\n            self._rebalance\n        )\n\n    def on_warmup_finished(self) -> None:\n        self.set_holdings(self._targets, liquidate_existing_holdings=True)\n\n    def _rebalance(self) -> None:\n        for target in self._targets:\n            current_weight = self.portfolio[target.symbol].holdings_value / self.portfolio.total_portfolio_value\n            if abs(current_weight - self._weight_by_symbol[target.symbol]) > self._drift_threshold:\n                self.set_holdings(self._targets, liquidate_existing_holdings=True)\n                return\n",
+  "source_sha256": "9da54268ffd94281d8d3e58cac7962c80f9e29d6ec3a9678ac944a5072273548",
+  "started_at": "2026-11-14T22:17:45.540028+00:00",
+  "compile_errors": 0,
+  "runtime_errors": null,
+  "statistics": {},
+  "runtime_statistics": {},
+  "logs": [],
+  "qc_note": "infrastructure: API request failed: backtests/create",
+  "project_id": 39413103,
+  "compile_id": "a1ee1aecdeb294eef5eb8e75cdeee71c-04fd4a4d96f5827b7174905797e543d5",
+  "compile_created": {
+    "compileId": "a1ee1aecdeb294eef5eb8e75cdeee71c-04fd4a4d96f5827b7174905797e543d5",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413103,
+    "signature": "04fd4a4d96f5827b7174905797e543d5",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "a1ee1aecdeb294eef5eb8e75cdeee71c-04fd4a4d96f5827b7174905797e543d5",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413103, with CompileID: a1ee1aecdeb294eef5eb8e75cdeee71c-04fd4a4d96f5827b7174905797e543d5, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413103, with CompileID: a1ee1aecdeb294eef5eb8e75cdeee71c-04fd4a4d96f5827b7174905797e543d5, Lean Version: 2.5.0.0.18263"
+  ],
+  "error": "API request failed: backtests/create",
+  "error_type": "QCAPIError",
+  "api_error": {
+    "endpoint": "backtests/create",
+    "response": {
+      "errors": [
+        "Too many backtest requests; please slow down. REF #Oi842S9vlj"
+      ],
+      "success": false
+    }
+  },
+  "finished_at": "2026-11-14T22:17:47.683448+00:00"
+}

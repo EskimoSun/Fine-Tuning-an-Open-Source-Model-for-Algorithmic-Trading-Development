@@ -1,0 +1,49 @@
+{
+  "status": "infrastructure_error",
+  "stage": "backtest",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass SP500LowPctUpcomingEarningsUniverseAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(250000)\n        self.settings.seed_initial_prices = True\n        self.universe_settings.resolution = Resolution.MINUTE\n        # Refilter the ETF constituents monthly to match the rebalance cadence.\n        self.universe_settings.schedule.on(self.date_rules.month_start('SPY'))\n        # Add a universe of SPY constituents ranked by dollar volume.\n        self._universe = self.add_universe(self.universe.etf('SPY', universe_filter_func=self._select_assets))\n        # Add a momentum indicator for all securities in the universe.\n        self._momentum = self.momentum(self._universe, 252, Resolution.DAILY)\n        # Create a Scheduled Event to rebalance the portfolio monthly.\n        self.schedule.on(self.date_rules.month_start('SPY'), self.time_rules.at(9, 31, 0), self._rebalance)\n\n    def _select_assets(self, constituents: list[ETFConstituentUniverse]) -> list[Symbol]:\n        # Filter for securities with 10%+ weight in the ETF and 30+ days of daily data.\n        filtered = [c.symbol for c in constituents\n                    if c.weight and c.symbol in self.securities and\n                    self.securities[c.symbol].history.length >= 30]\n        # Sort the filtered symbols by dollar volume, largest first.\n        return [x for x in sorted([self.securities[symbol].dollar_volume\n                                  for symbol in filtered], reverse=True)[:100]]\n\n    def _rebalance(self) -> None:\n        if not self._momentum.is_ready:\n            return\n        # Rank all universe members by raw return and keep the top 10%.\n        ranked = sorted(self._momentum.keys(), key=lambda s: self._momentum[s])[-len(self._universe.selected)[:10]:]\n        # Build target weights for the top performers and liquidate the rest.\n        targets = [PortfolioTarget(symbol, 1.0 / len(ranked)) for symbol in ranked]\n        self.set_holdings(targets, True)\n",
+  "source_sha256": "3536d93c87efa3c92c4a1854bec95d7c687cb3da1415fd47d02d3ab619bbdaaf",
+  "started_at": "2026-11-14T22:17:59.950854+00:00",
+  "compile_errors": 0,
+  "runtime_errors": null,
+  "statistics": {},
+  "runtime_statistics": {},
+  "logs": [],
+  "qc_note": "infrastructure: API request failed: backtests/create",
+  "project_id": 39413126,
+  "compile_id": "28820f2e13c48280a1516612474a0b8f-82307b600be42d223e6325e21d90cce9",
+  "compile_created": {
+    "compileId": "28820f2e13c48280a1516612474a0b8f-82307b600be42d223e6325e21d90cce9",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413126,
+    "signature": "82307b600be42d223e6325e21d90cce9",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "28820f2e13c48280a1516612474a0b8f-82307b600be42d223e6325e21d90cce9",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413126, with CompileID: 28820f2e13c48280a1516612474a0b8f-82307b600be42d223e6325e21d90cce9, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413126, with CompileID: 28820f2e13c48280a1516612474a0b8f-82307b600be42d223e6325e21d90cce9, Lean Version: 2.5.0.0.18263"
+  ],
+  "error": "API request failed: backtests/create",
+  "error_type": "QCAPIError",
+  "api_error": {
+    "endpoint": "backtests/create",
+    "response": {
+      "errors": [
+        "Too many backtest requests; please slow down. REF #Oi842S9vlj"
+      ],
+      "success": false
+    }
+  },
+  "finished_at": "2026-11-14T22:18:02.228414+00:00"
+}

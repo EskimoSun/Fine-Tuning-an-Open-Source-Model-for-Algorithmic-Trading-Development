@@ -1,0 +1,502 @@
+[
+  {
+    "prompt_id": "equity-rsi-overbought-oversold_v01",
+    "source_sha256": "878de9b5267819a532b302d86de9eb09e02ed8398b75289b235ce677282b4836",
+    "output_sha256": "efc1d17e95205a0d7c0615c8c282663b0526fea5072866d8b7712a6cd4796062"
+  },
+  {
+    "prompt_id": "equity-rsi-overbought-oversold_v02",
+    "source_sha256": "713b7abc355a71a21447d98485db62713f9ee11bdb210559985ace78c43f60d6",
+    "output_sha256": "cc31207036f41d1dab64c1bc6329ac376f282d6779460f4d291aee03f2f3b104"
+  },
+  {
+    "prompt_id": "equity-rsi-overbought-oversold_v03",
+    "source_sha256": "b80e119a9c318a8b1482b23f148b75422b35df78455bdcc6326235c765aaf07d",
+    "output_sha256": "7fb4f9b491223b5dc27584bda02174b93e21d74ec663c9a49ec81b70b123dd82"
+  },
+  {
+    "prompt_id": "equity-rsi-overbought-oversold_v04",
+    "source_sha256": "92512f658bdf6a4ec9e7e8bf79cec7913156e70275f93ec26dc1f0ad8e07248c",
+    "output_sha256": "973068b76153dc9dbff52ce34f4ea2de6dc80876ac05f69996c9c5175451fdcc"
+  },
+  {
+    "prompt_id": "equity-rsi-overbought-oversold_v05",
+    "source_sha256": "3b6a8c2f188e6a310441027dc9bad2e1bb0daccedcbb2d4981f5daef13e3a579",
+    "output_sha256": "72e5215ca7b6793323183fef27a0bc0f23a71e6c25249bc0605411f568f77348"
+  },
+  {
+    "prompt_id": "equity-rsi-overbought-oversold_v06",
+    "source_sha256": "14fa88b6f3d058a491c7809543a327a49ff2cf9737261944bd234f1e53a5ccd8",
+    "output_sha256": "b7f7c85d1cb859cde57d03b144e6261d3b030324c928fe7485b676c964778815"
+  },
+  {
+    "prompt_id": "equity-rsi-overbought-oversold_v07",
+    "source_sha256": "70eb78af8fdee6404cc98b0d7258ae8e1710943b327a9e4b278bd0e5da4dae21",
+    "output_sha256": "b6b990b1e42e21cdb8dc80a4682dbba91589fe3dc6f17f6ea11f3d90a32f3fc3"
+  },
+  {
+    "prompt_id": "equity-rsi-overbought-oversold_v08",
+    "source_sha256": "84b2ccd36546ec15369ba4bbdb5a3ffe0ca9d6b47ae1ed20aeddbd7ce8c56ed3",
+    "output_sha256": "8d2830e7b756305805117feaf986e4ec415241a0dc12484766dc8020b3ea81b7"
+  },
+  {
+    "prompt_id": "equity-rsi-overbought-oversold_v09",
+    "source_sha256": "b0971b32fc573e8eb64b3e679a117b8343ac6a9e89508ce60f8791dc98c9f535",
+    "output_sha256": "41025ab5c31c62fcfa7b4664541d4e7e03e321d7291e231a0f884642a2a24466"
+  },
+  {
+    "prompt_id": "equity-rsi-overbought-oversold_v10",
+    "source_sha256": "36a62875ba236ca0b0a630f239759c989d294e51174cd932dd6c76adea3569c7",
+    "output_sha256": "d0d5f411768a7e720a80aa6e94a1ea42e63a2479f9af89cb33b0e9e8254dc253"
+  },
+  {
+    "prompt_id": "equity-bollinger-mean-reversion_v01",
+    "source_sha256": "96449605a286f9f2997cb817de93debb24be004fab7507f15c366d1952d4fb1c",
+    "output_sha256": "4d8e4c72558a3e80524a262c9d72794ca6e3f36013990aa6f74bd577b8ed8442"
+  },
+  {
+    "prompt_id": "equity-bollinger-mean-reversion_v02",
+    "source_sha256": "2298291d2b68402f42be5f29dcd2054241aaa7f857e4fcf17b469c466243c217",
+    "output_sha256": "baf0f0bc5fdb943e8d02b273d577e6375acaf326913b6f23b165bf8a986767f5"
+  },
+  {
+    "prompt_id": "equity-bollinger-mean-reversion_v03",
+    "source_sha256": "5f916011034cf80fe0c206c049b72a57713f4a0abd12bb01d42b520b8f82b329",
+    "output_sha256": "5c75ae87592fc40a3a68949a37c67b6631772c6204c867e1aa0c2b1e2038f0e8"
+  },
+  {
+    "prompt_id": "equity-bollinger-mean-reversion_v04",
+    "source_sha256": "71cb146636258b4e3d5f480510c65673a333abcc55f6ded531c0466797ea7a5b",
+    "output_sha256": "149f86e586c82b98b244d03a85c75fccfd326be48f14a350220061e93dc6e96f"
+  },
+  {
+    "prompt_id": "equity-bollinger-mean-reversion_v05",
+    "source_sha256": "17628547ba6ce870942cdadb5e91181b72002c7ee818239428af49d3b8d4770c",
+    "output_sha256": "4deb8b88bd6dc9d96b7b542f71e73c3eeef86123af8715f81aad73cd4b8832d0"
+  },
+  {
+    "prompt_id": "equity-bollinger-mean-reversion_v06",
+    "source_sha256": "c5e45655a8d40bc76fe82fee39c5594d117c048938f74207b856b74c4d018bc6",
+    "output_sha256": "7c5c71baab4ef538fd27bb62101ec9b67c83a59557feab68223e1c2514dc1600"
+  },
+  {
+    "prompt_id": "equity-bollinger-mean-reversion_v07",
+    "source_sha256": "aeb753b95e90d1fa8b2c4501f683a63d00cfbede276cfce20c56dbe53e5080f6",
+    "output_sha256": "43f7cc503b92fc927da0ef35d969867ce179df857f82f89ed19a16ce6b98be75"
+  },
+  {
+    "prompt_id": "equity-bollinger-mean-reversion_v08",
+    "source_sha256": "9b29633d7e0871b5334fb2cb88265ed0327430917d11245f5294d12c58d8c742",
+    "output_sha256": "ddf5a8ab15163888cbeb5cf189b1684df8555fbbcdc37335d0da6a5b121b80c4"
+  },
+  {
+    "prompt_id": "equity-bollinger-mean-reversion_v09",
+    "source_sha256": "8ebba5bfae71a7394bad1e740aaa9ed2c1de92a1fa188e19a5ef44975cd589ef",
+    "output_sha256": "645765863f84f7877f47311559b504dddaa0ba8ae0807b2f8ab971e4b76de932"
+  },
+  {
+    "prompt_id": "equity-bollinger-mean-reversion_v10",
+    "source_sha256": "d7c2702d14bce6bda196121a37ae27afd8ccd356488281ad597011189ba29d47",
+    "output_sha256": "dd176f787df64081069f01b7642fce8d61eb00980aa6b5b7340848b059932300"
+  },
+  {
+    "prompt_id": "equity-atr-volatility-stop_v01",
+    "source_sha256": "a570196dffe5a877fd8ce30c4cb0ed39fab4e3fcd86a4fbd2e59885874a6884a",
+    "output_sha256": "6412e49fb8d8aa98b720db318ecd0db4dfaf9f15a61dbe90ae9584dca33e1df0"
+  },
+  {
+    "prompt_id": "equity-atr-volatility-stop_v02",
+    "source_sha256": "6bc57516800cc2539029cc100c405af0444e992f0e5ae4048969f9b7089a06aa",
+    "output_sha256": "1c71f855155d30dcb7bc054699b3242b3761d4a5eff0c03a4ad6b886e129380b"
+  },
+  {
+    "prompt_id": "equity-atr-volatility-stop_v03",
+    "source_sha256": "00dfa0d4d7854e41168c1f02fa256c9b440ab83b013fc80660373b018486ae35",
+    "output_sha256": "2da407c66314523873a907967a4fbcd702f56aeac94b89e3c993c149b0aaf5e1"
+  },
+  {
+    "prompt_id": "equity-atr-volatility-stop_v04",
+    "source_sha256": "f37057c1cb638b4dd83515c14221e323434da29661aa64e02d233b388e145c3b",
+    "output_sha256": "89e96690294046165adcb852fcd3fa776b7aec9c980c7a551b47338cd71ee89b"
+  },
+  {
+    "prompt_id": "equity-atr-volatility-stop_v05",
+    "source_sha256": "6779892f83b4557716e5a133805a98ffb8fc052666f08275950245bded2dfb0d",
+    "output_sha256": "cec3d08d0b4c6efe26ee162d4b49237ebbc163aa6f99cb5242522dd3931652af"
+  },
+  {
+    "prompt_id": "equity-atr-volatility-stop_v06",
+    "source_sha256": "57bd3bab96a43ae160e81c6c2043418e661f7a636d634467855137228a4ce26f",
+    "output_sha256": "13931be435078c953ea56261c01f5c0b42b19bae394d004bd2c705f9309a1412"
+  },
+  {
+    "prompt_id": "equity-atr-volatility-stop_v07",
+    "source_sha256": "abb6d40e561ef34732db5a809a0ae70f30278364f16998b305e48f374ea325f7",
+    "output_sha256": "a9207c0242e6541bde62ac9400edcd24875159c9a1c001840e6bc1ccbe358997"
+  },
+  {
+    "prompt_id": "equity-atr-volatility-stop_v08",
+    "source_sha256": "a77df507f38012c56be30bc93765daf45610a63bfa7345a6e26df3241cb8b152",
+    "output_sha256": "4fcd424c274f71d6a002bb7a9b407c3e2be5f97c2e7ed2d68fa250e2b4f64b64"
+  },
+  {
+    "prompt_id": "equity-atr-volatility-stop_v09",
+    "source_sha256": "5e752c4e177fa1de0170228ed27d54a80ae16a2be174842061a6132dec82e717",
+    "output_sha256": "b89cec095ffb66e4451c8542e183e777b89bf6a63ac26343394ef7e208468a8d"
+  },
+  {
+    "prompt_id": "equity-atr-volatility-stop_v10",
+    "source_sha256": "f4e4cf0f8aab0f698d7b2189375de823372145b2fafd1038f1efa64bf9089177",
+    "output_sha256": "c339a9738185728e6281fbb16f40c58e9110fb0cc813903319eadbb677c618ca"
+  },
+  {
+    "prompt_id": "equity-monthly-roc-rotation_v01",
+    "source_sha256": "017fe861bcb41eb5028fa727c03030cc0e2ba6ca3556a9143872a60b54fe1b03",
+    "output_sha256": "ce2c2a6b9c040e123ca361e930fe40caa7781397edc64c78d2232c7529c1fd35"
+  },
+  {
+    "prompt_id": "equity-monthly-roc-rotation_v02",
+    "source_sha256": "430042ad6aefcafaa91ff59b3682b2b08c2e0706ba0cbbeaf8d9704f61f90007",
+    "output_sha256": "38e178cebc7b8c4a6d67eec71cb478d99a527eadb59f372672d458c79e924cbc"
+  },
+  {
+    "prompt_id": "equity-monthly-roc-rotation_v03",
+    "source_sha256": "80a26e163fb1b93bc1607743f83d66d65befb50dc265b5565c685f0a48067227",
+    "output_sha256": "9dfa3ce3a7e93b5374677fd8d6fcd67357e51736d32f71011659960c9165210d"
+  },
+  {
+    "prompt_id": "equity-monthly-roc-rotation_v04",
+    "source_sha256": "d9c461dd18571f8621268855252ba3ebd352e2974b05e43f8c3f6373a480d1da",
+    "output_sha256": "7e1585ef51dc2bb748feeb395ec01b5391978004d15ea077d02c0b0afe5767f8"
+  },
+  {
+    "prompt_id": "equity-monthly-roc-rotation_v05",
+    "source_sha256": "a6ba7baf35d8aa51d048d56a67e25c554f926aaa1255d059efb65cf7968ac41b",
+    "output_sha256": "c0eeb510c75ccda9ba1e566eef3da5884c6b34d5c1f561a715ac7d751fb6f2e7"
+  },
+  {
+    "prompt_id": "equity-monthly-roc-rotation_v06",
+    "source_sha256": "76611bf946c5d0818f3f091427462d60182be86534daf88390672ab5b4beda1b",
+    "output_sha256": "d90c2d8488f5ed5f7c11fadc20d3440a7ada1ce7915663e0803b14e77d67938d"
+  },
+  {
+    "prompt_id": "equity-monthly-roc-rotation_v07",
+    "source_sha256": "3bb8b8360e4da47fdabf1c32f178740f990e23867236fb251c9dfe12d3f73973",
+    "output_sha256": "b5704c1ec71c665dc12a89b46c93bc0de44eae336c9690eebc3474ca310829ad"
+  },
+  {
+    "prompt_id": "equity-monthly-roc-rotation_v08",
+    "source_sha256": "43b8f865c6ef6092110c6691fa0f55ed73044909082e77f52a2cf3a4b74e87a5",
+    "output_sha256": "b1db976cd60566b370c3fdf187640fac3328b1fe0a1f8bb4882584affb0c7323"
+  },
+  {
+    "prompt_id": "equity-monthly-roc-rotation_v09",
+    "source_sha256": "848325e637484f72e945906d95b5d06ecd6c885a7a22fae406e1eab52e21c917",
+    "output_sha256": "715b195bb1b74431c3873d92573d337d902c58a387c0735498e0737014897f7b"
+  },
+  {
+    "prompt_id": "equity-monthly-roc-rotation_v10",
+    "source_sha256": "c50fc433f21fe06c231a47011ddcbfd66b82dd0f4c50a826c856f59c9e617df6",
+    "output_sha256": "76f14bad506e67abff06ae75ae4a882e71a645b9add2b6317a797a64bf91acd5"
+  },
+  {
+    "prompt_id": "equity-sixty-forty-portfolio_v01",
+    "source_sha256": "3a578e9e44caefc526234dfdcd0f70cf44c496e05b9c1c803f9c01e3631cd46e",
+    "output_sha256": "9e3f60a8b2e03e50290bb885bbd57c6e94724b3880f54354e2a0a2eea8b15e56"
+  },
+  {
+    "prompt_id": "equity-sixty-forty-portfolio_v02",
+    "source_sha256": "c84f011c706ddcbbd1b8a5c78dea268e200855710c2a24cf220d08b1f0301bbd",
+    "output_sha256": "03f8c677e4629ab384bffd6b3fa5a012d41bc0ec5252112e8aa6013675ee4f20"
+  },
+  {
+    "prompt_id": "equity-sixty-forty-portfolio_v03",
+    "source_sha256": "f857246c8c06948b5058650313e11a40e3dec69b8819d596d7bf7b9f1c049d1c",
+    "output_sha256": "9602eccf2e1aa0810af525da2539211c6d64d0204c57c8d008a9c8b62ff58627"
+  },
+  {
+    "prompt_id": "equity-sixty-forty-portfolio_v04",
+    "source_sha256": "1b7dd5799b84800e016356fc86a705349e5e387267f7abb791da07b8300c54bb",
+    "output_sha256": "8bca550c51b793b67527a7259aba9039cc3c77c6620221995b09f5e0f81ea47e"
+  },
+  {
+    "prompt_id": "equity-sixty-forty-portfolio_v05",
+    "source_sha256": "7d28bb3f5cfa790763c349be91ec02a65d9bb7a3fab19b0bddaf8cffe54260db",
+    "output_sha256": "85faccdb24aec147726d33d1a821ad2cf32b7c9ffb3b7134c8d7acd181652a0d"
+  },
+  {
+    "prompt_id": "equity-sixty-forty-portfolio_v06",
+    "source_sha256": "14a4b33017fbfd7304b4ab488d387dae35d4e8d2b80dda4841a00e1593d2ae9d",
+    "output_sha256": "70df02dc7de572bcec39796cf5dd9c4f2231e8ff7e7af27bcc13d09dac13497a"
+  },
+  {
+    "prompt_id": "equity-sixty-forty-portfolio_v07",
+    "source_sha256": "de7ad9f1a2161885fcecaca4b96a89e6ce3b9ca361c039cc9b37e7bb6af389c2",
+    "output_sha256": "3499bf8541830c59991a065aaaaaa56d3f71affe79722656a81920b98c8fe77f"
+  },
+  {
+    "prompt_id": "equity-sixty-forty-portfolio_v08",
+    "source_sha256": "eb0c097d1db92693e275c02fe72dc789d8482b029fb0758ae6e3946dd0453817",
+    "output_sha256": "2896f9b79cba0730c8a5c4b04a08f09683f6a2cded73d84514493904089d48ac"
+  },
+  {
+    "prompt_id": "equity-sixty-forty-portfolio_v09",
+    "source_sha256": "f857246c8c06948b5058650313e11a40e3dec69b8819d596d7bf7b9f1c049d1c",
+    "output_sha256": "9602eccf2e1aa0810af525da2539211c6d64d0204c57c8d008a9c8b62ff58627"
+  },
+  {
+    "prompt_id": "equity-sixty-forty-portfolio_v10",
+    "source_sha256": "9da54268ffd94281d8d3e58cac7962c80f9e29d6ec3a9678ac944a5072273548",
+    "output_sha256": "379bab6ff87cf6475333a54ee96c2f68a968c22cb211ffa03c1d83623d03b0e0"
+  },
+  {
+    "prompt_id": "equity-momentum-cross-sectional-decile_v01",
+    "source_sha256": "b9a3a895f0b2830b5d911592358dbb06fededc2f5c4167df71133c6e999c78fa",
+    "output_sha256": "2c3198013048abdcfd3584246175d2e0aec3ea3c3694e6d1d64ce9d4491df407"
+  },
+  {
+    "prompt_id": "equity-momentum-cross-sectional-decile_v02",
+    "source_sha256": "e8a0bc42feb47efd2d92ec7f10ec82f5dc843129f0fcdc6409a0a0c9f65969e4",
+    "output_sha256": "4dbe9885be1ad6fce3c7d177edc8606b1558120b6115069ad91e1d9c0f6a46b4"
+  },
+  {
+    "prompt_id": "equity-momentum-cross-sectional-decile_v03",
+    "source_sha256": "81d2102d9a3123a3d6448b473b7fd5c97f2ce4a90b8f16958fd8302cab241672",
+    "output_sha256": "da6d875fe1b66041dfd7323289b836928e44517d4a6deb1565fd12ad030f78b7"
+  },
+  {
+    "prompt_id": "equity-momentum-cross-sectional-decile_v04",
+    "source_sha256": "04bc692c5084c795e7ccd7bfaa2c94beaa3efc1ecaffd440ba30af56dbddf52f",
+    "output_sha256": "298cdff47099dc0f59e26bdd24aa7dacfca7043801093c3be26ae3a281d3c509"
+  },
+  {
+    "prompt_id": "equity-momentum-cross-sectional-decile_v05",
+    "source_sha256": "253ad9db0c618a1e8a734b6c356d5ccdf07ec68abc2dcf55ddb906c00ea322fc",
+    "output_sha256": "d7a848db44fe3824a8548597126111b3303547a50ec5845a4fb45622940161da"
+  },
+  {
+    "prompt_id": "equity-momentum-cross-sectional-decile_v06",
+    "source_sha256": "6b2ad401429e4bcec380255b517ab511c0c8ca1dd2b14d673f587ce5db0dfd32",
+    "output_sha256": "528f23463f9a1e6abe4918f7367ea148699fff19a50b29baa99ceb243fbe9c32"
+  },
+  {
+    "prompt_id": "equity-momentum-cross-sectional-decile_v07",
+    "source_sha256": "28b69d1ef5d8898eadc2e75075d8abd4e7c059f4e64645c8950ee4d1ae1ffc45",
+    "output_sha256": "94d3279e84fd2dbddf447c1cf3900a15f19eae7fc58ad7ef86bd64dee984ed36"
+  },
+  {
+    "prompt_id": "equity-momentum-cross-sectional-decile_v08",
+    "source_sha256": "506de95abb5c3e8f4736e2eb3dfb2b2d0240b8879b534bda2efda0db49798109",
+    "output_sha256": "32c3a0f2fc05cf869852a56548a1b7d094e120103f059ae85c2dd3ab02d50cd1"
+  },
+  {
+    "prompt_id": "equity-momentum-cross-sectional-decile_v09",
+    "source_sha256": "3536d93c87efa3c92c4a1854bec95d7c687cb3da1415fd47d02d3ab619bbdaaf",
+    "output_sha256": "f0cf6ae974faa43cbf80a35e797eb9b0dc5598cdbc7172d8ee5f9322d535c2c8"
+  },
+  {
+    "prompt_id": "equity-momentum-cross-sectional-decile_v10",
+    "source_sha256": "907ce205052a574232670812d2b02e6f606357f6f462b607f83cdb480a30a7da",
+    "output_sha256": "5931ea43180bcb0d3c9d52c373e1fd737b28cec37e4f3e1efe141f82a515d576"
+  },
+  {
+    "prompt_id": "equity-opening-range-breakout_v01",
+    "source_sha256": "f754b3dcfec015bb5027bebe7cecc9520077d6a7dba979a40f534d124ab5911b",
+    "output_sha256": "1d444628c51424559a9a31b26e08119a8fe0c6181eb4b998e9632c55c544953c"
+  },
+  {
+    "prompt_id": "equity-opening-range-breakout_v02",
+    "source_sha256": "a4f3fceb0d41dfed9037345e3c501b05731382470cafaf6a3c3068a37a4107ce",
+    "output_sha256": "70e00aeab69ae5c20b137c15902dff17e64ef2ec6c695e3481cb7d019c7b00bf"
+  },
+  {
+    "prompt_id": "equity-opening-range-breakout_v03",
+    "source_sha256": "cb2c813abe792251c393ae50105b23da3973a74d1ea04d4d6d93ab184d875e72",
+    "output_sha256": "7a4aad7a9b0bd47b8ac3cf7207149a4c28288f48126f5d646ac219e5557a8085"
+  },
+  {
+    "prompt_id": "equity-opening-range-breakout_v04",
+    "source_sha256": "aeffdbdca565a55c1e169361c11ef49830e0331df1438848dbbfb08f62e4ccd6",
+    "output_sha256": "cbd2cc2d698eb59e82a8813372d02cda9e22473b51d2fbec09e66106dcefc01b"
+  },
+  {
+    "prompt_id": "equity-opening-range-breakout_v05",
+    "source_sha256": "464b9767e700e6eb8bea9c7fbcb8821217002dcdbbd1a115ec1c3dccec06091d",
+    "output_sha256": "30e3c44bb913fa73bb13d05fd18dbcde2f26cf595f9206604dd2fc571258d315"
+  },
+  {
+    "prompt_id": "equity-opening-range-breakout_v06",
+    "source_sha256": "eaf29a8d0955f0ac3ef7654119ede7885744825af3d5154330864ed67cd81c11",
+    "output_sha256": "8a92c1d145d31c057982a5702399dd1a47c257e95db8db276370b466109d2ea3"
+  },
+  {
+    "prompt_id": "equity-opening-range-breakout_v07",
+    "source_sha256": "ff9a143e0eb05046296cdba3fc17a2bbc0764a370fe49f736de3ecb50c722235",
+    "output_sha256": "4795fb7f7c6692c804702a674b6db8d749b8a8f4ec49021e7abfc30bb10e590b"
+  },
+  {
+    "prompt_id": "equity-opening-range-breakout_v08",
+    "source_sha256": "06986cbfe51760c8717315a90a64d210b65fce03dd59a8a524d2cc74c9242661",
+    "output_sha256": "d3bb1ef41b2d12e821492827ea3e01f83440c802411c2bbf79498251b4515385"
+  },
+  {
+    "prompt_id": "equity-opening-range-breakout_v09",
+    "source_sha256": "8ae2deb9b5f84aa14916d13428561eb9db6902d6c88b44109a077a3805a841f3",
+    "output_sha256": "9dfa6bb9b21316aa63d7a94c3c5a2ac0d0f88fed1953e6afe0ba30f9297428ad"
+  },
+  {
+    "prompt_id": "equity-opening-range-breakout_v10",
+    "source_sha256": "6679cafa1a12aaa39fc7163639907aae8129babee8e853fb360ae6c16f73a2b2",
+    "output_sha256": "47b2190cc2b2cd7385094b1c9f0ccfad79a3a88a43d5eec65250a2888f56b079"
+  },
+  {
+    "prompt_id": "equity-pairs-trading-cointegration_v01",
+    "source_sha256": "9252c72c161962bd8f58a3c2fb6072fbfa505c56c559290c4cdc32d8b6951a10",
+    "output_sha256": "3e44fccf964f0bee8321c1478b3df94706d9e26645525322f51f009bef0ff086"
+  },
+  {
+    "prompt_id": "equity-pairs-trading-cointegration_v02",
+    "source_sha256": "aeca5c147ff88dedad2eaed2093975c49ff39a7f5e7985893fb834007f1fc042",
+    "output_sha256": "f12e0a0a0e31e7ee46a0c38eb6db100dffeb8973f6286da7ec3a60b38e39c3b9"
+  },
+  {
+    "prompt_id": "equity-pairs-trading-cointegration_v03",
+    "source_sha256": "af17a817ba6d4c25d2ed1738424d6adbe075db8f0b12b3eff37d365138797416",
+    "output_sha256": "c20b0a5d60cb68d045ae1115d776245e0c251056199ea37f9dac5ce0853ce7ca"
+  },
+  {
+    "prompt_id": "equity-pairs-trading-cointegration_v04",
+    "source_sha256": "8d0030518175f6c2d6a9f4e90b8e45e2bf2497a52774d84dc620135a3f42013a",
+    "output_sha256": "bf67274cfac3feca6cdf47ef07817fa51534f4899c83bcc7f0bb9ea72df08bf9"
+  },
+  {
+    "prompt_id": "equity-pairs-trading-cointegration_v05",
+    "source_sha256": "e661d0bf23134993759b90bc429254ddbbc208794275c7c52a2dc682a4433e82",
+    "output_sha256": "25fe86cf3858ecc4ba49072e835bcf22725f4521321e9c0c0ded28298bb298db"
+  },
+  {
+    "prompt_id": "equity-pairs-trading-cointegration_v06",
+    "source_sha256": "ae7a1e80bdf61a5f32f19d2cc2370c6f01a8308dcf676ad6a5896d543f8be9cc",
+    "output_sha256": "f49c2bb524296cd08fbcc2884740931569f8eace4baba4bf95edd2e7021f244f"
+  },
+  {
+    "prompt_id": "equity-pairs-trading-cointegration_v07",
+    "source_sha256": "fc12fd4dc7a62863212436446ffc6a4a43f6bdc42930c48303e3aec8b4b148db",
+    "output_sha256": "e86f0e68584c7b949d710bf494082dc7a2bcc5546dd5225a2b92e695c9dd1830"
+  },
+  {
+    "prompt_id": "equity-pairs-trading-cointegration_v08",
+    "source_sha256": "8d93d65cbd4ffd3dd545b80502926ca606cf19b57966bfce93ed6b343bcccd7a",
+    "output_sha256": "adc82ce099e8c1c17e956733d777f3cb57aa1e9242f38af4bde94f702c7e4e8c"
+  },
+  {
+    "prompt_id": "equity-pairs-trading-cointegration_v09",
+    "source_sha256": "3c1a01dbd9ed778300f4ed1f14c57cc4da92ae034704317cf90b02f1c713f871",
+    "output_sha256": "a1d6bed3c661a347863b38900089c719c5e4c0bc177550dd5881e38ce22bf1c9"
+  },
+  {
+    "prompt_id": "equity-pairs-trading-cointegration_v10",
+    "source_sha256": "8055016d666ca07b56bc67a0d2b212d8857a9f6bc123c1eb457c7b8ae119bcf9",
+    "output_sha256": "655067cbe3851b5ac0d2256b0ba64633906e6b223a51dfd6c44809d9f026ffa8"
+  },
+  {
+    "prompt_id": "option-iron-condor-spy_v01",
+    "source_sha256": "0703aaff5b337d0b08b222cffb1e27c5a4d70210f2949b442defd4eceb9847c0",
+    "output_sha256": "89fe3b7a72d333b90992249c83d590066533877d4dfe24fa559c9b5bec042e69"
+  },
+  {
+    "prompt_id": "option-iron-condor-spy_v02",
+    "source_sha256": "dee946aaa2074509ba8810f15e4499644f8e9efe7a7c3837e46ee89140334f3a",
+    "output_sha256": "486926e10ded523742939eb45ab7a2a664013dd18237f17e06eb96f807256369"
+  },
+  {
+    "prompt_id": "option-iron-condor-spy_v03",
+    "source_sha256": "5b9a534395250909016dfeea74c0acc4c2cb3856d40a814eefcea1f98709ed21",
+    "output_sha256": "ef69cf0224f52293b52839c914e02aaea25f2b7d0ded319d9421967b0ce8052d"
+  },
+  {
+    "prompt_id": "option-iron-condor-spy_v04",
+    "source_sha256": "7f86a11707f4b9b2b871b4d333ae2ee451e00e4ee250089f759ae3d1dde69c8e",
+    "output_sha256": "4b18d75ccbdd500fca66db05c9b52efd91c75c325164ca4220bcd9e878d88573"
+  },
+  {
+    "prompt_id": "option-iron-condor-spy_v05",
+    "source_sha256": "0f7054164dcf028c0066ac3a8cae32042fc9825c81b1397ba13e53ad70724053",
+    "output_sha256": "2d346fdc1a7bd0170fc995fdf955b2dd4647c50abaa1247e4f7653961181d098"
+  },
+  {
+    "prompt_id": "option-iron-condor-spy_v06",
+    "source_sha256": "25c14fcae0db9efd25067fd1474f8c54795a1ee564f9b4b2e9616d28c264bd9e",
+    "output_sha256": "6b3e46f536210b7b1d7e594f4a3b89854c198192607edb6ca5c14ae3eefe42f5"
+  },
+  {
+    "prompt_id": "option-iron-condor-spy_v07",
+    "source_sha256": "3a38eb850f4e5e2b783cd2b46283f28ce3d6968b2840fdc0e691edfb0edd0159",
+    "output_sha256": "0a72d82647bda18f2268d93428cb2304a8b58f1f3c3f0658095eb3ffb9af9fb1"
+  },
+  {
+    "prompt_id": "option-iron-condor-spy_v08",
+    "source_sha256": "bffa0b8a2009566f6cf2e3c494b5213a9004821f8c25b404ddd523fda47bc91a",
+    "output_sha256": "d83a942d252f7ab95a8d82806985868eeb5a2d81deb0fb8b541198ab945265c3"
+  },
+  {
+    "prompt_id": "option-iron-condor-spy_v09",
+    "source_sha256": "6a4a0df2c0ceb874103549c7ddcbcf6382e5e446482ab5a1af4aed3e44b9dc2c",
+    "output_sha256": "9c8b4deb025828620b1d6a5cbdd9defc1cc64fec2cb146189cd23fb9e5571f85"
+  },
+  {
+    "prompt_id": "option-iron-condor-spy_v10",
+    "source_sha256": "c8cdb2080345774ee1c3a79d4778db79c20975a831b92bf11ce452aa18c08bc7",
+    "output_sha256": "12f40ba459bb4512dbcda945bc1a80cb0f0d2424242b287fb94f7c7fef9ce0c3"
+  },
+  {
+    "prompt_id": "futures_v01",
+    "source_sha256": "9f11f8739d010183bb9baf6c70072708a4bad2e44b765642b7d4de6841d52b73",
+    "output_sha256": "8a10c7f337d9b4da4cb2f56522ddb855f8b066d79a1e0d8693fb60325b0a36c0"
+  },
+  {
+    "prompt_id": "futures_v02",
+    "source_sha256": "82a8bb4b007287f9c3a4ab2e55d3ac789dd4a3dea821e6f9a91688a48d1436b1",
+    "output_sha256": "a7ff4f2840e4e0b2cbe05341d60356cc08bb0a8ec49d10e24e277e5966472d25"
+  },
+  {
+    "prompt_id": "futures_v03",
+    "source_sha256": "582f964264c2ae812c1a986ed5d04ffe455599f804b2670f40dc0a75891d5bb3",
+    "output_sha256": "c40f6af4b2d407cefa19b1761e49620509b795ddd9f5bf5b09ed66b989cfd7be"
+  },
+  {
+    "prompt_id": "futures_v04",
+    "source_sha256": "01192f451d3e7c0d58a288577fe6d41a3e0013a45d7de6d4333335c421083e45",
+    "output_sha256": "11103660c373fc25a50ede1de95fbedcf080328b1eff44efd5b348344806e323"
+  },
+  {
+    "prompt_id": "futures_v05",
+    "source_sha256": "81d247a0d6fbcef5047c5e8538e45eb1e4c37ecbfd9dd65b7cdd26e3535739ba",
+    "output_sha256": "cba64eb90365c1c6e8f36f251a56f14704d6e83a0d17486d501fc2d5dd076daa"
+  },
+  {
+    "prompt_id": "futures_v06",
+    "source_sha256": "1a333afe02ee6067946a6df0aaa89c44f02e886756b1b6a444bb08821364557e",
+    "output_sha256": "df1709a33ff9fd81248c473392afb77d94cf8f34a3499957ed1b80ba4b0a03ac"
+  },
+  {
+    "prompt_id": "futures_v07",
+    "source_sha256": "12fc3753f1c6ac3b11efd5c09f8b065c5502c60572cfe01daeea06480a1712f9",
+    "output_sha256": "19c8c1f21d824c95e299dc63e2de65c823451d632c8a836256fe5037d18add37"
+  },
+  {
+    "prompt_id": "futures_v08",
+    "source_sha256": "b125aeff5980f9fbe3bf75bb8789c162d527985bc109952ffe579d177837b5bf",
+    "output_sha256": "dec24f53098b9dd83144976bf228912591ae2984cbe2ac3aa2411a02c2e69cb4"
+  },
+  {
+    "prompt_id": "futures_v09",
+    "source_sha256": "9a0360dfd2a60c3e9cde108c5fda8b8279314dcba2113fc419a4f20c3b2e0727",
+    "output_sha256": "5a892009d9b46c3a9a80c590bec12fcab07835ec729d4130c1d1c1680fbf1ebd"
+  },
+  {
+    "prompt_id": "futures_v10",
+    "source_sha256": "da1bc1e8a5cedabc49af034714dcf39e2665e1ece584acea5492f290f0c26ce2",
+    "output_sha256": "47166e61fac081e00e140a73561d384d993a64903642c1960fba4d52bf86df73"
+  }
+]

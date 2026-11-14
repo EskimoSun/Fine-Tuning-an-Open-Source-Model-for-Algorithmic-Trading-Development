@@ -1,0 +1,9 @@
+{
+  "status": "deferred",
+  "stage": "not_submitted",
+  "source_sha256": "8d93d65cbd4ffd3dd545b80502926ca606cf19b57966bfce93ed6b343bcccd7a",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "qc_note": "Deferred locally after QC rate limiting; no execution result is available.",
+  "error": "Submission deferred locally to reduce QC request frequency."
+}

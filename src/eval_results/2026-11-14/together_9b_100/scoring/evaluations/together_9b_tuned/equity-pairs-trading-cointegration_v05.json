@@ -1,0 +1,312 @@
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "source": "# region imports\nfrom AlgorithmImports import *\nimport statsmodels.api as sm\nimport math\n# endregion\n\nclass CocaCokePepsiPairTradingAlgorithm(QCAlgorithm):\n    _beta: float = 0\n    _residuals: list[float] = []\n    _mean_residual: float = 0\n    _std_residual: float = 0\n    _count = 0\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        self._ko = self.add_equity(\"KO\", Resolution.MINUTE)\n        self._pep = self.add_equity(\"PEP\", Resolution.MINUTE)\n\n        self._signal = self.signal_registry.add(self._rebalance)\n\n        self.warm_up(self._get_warm_up_period(), Resolution.DAILY)\n\n    def _get_warm_up_period(self) -> int:\n        return 60\n\n    def on_data(self, data: Slice) -> None:\n        if not self._signal.is_ready:\n            return\n\n        bar = data.bars.get(self._ko)\n        if not bar:\n            return\n\n        price = bar.close\n        scaled_price = price / self.portfolio[self._pep].price\n        if scaled_price < 0:\n            return\n\n        self._count += 1\n        if self._count < self._get_warm_up_period():\n            return\n\n        predicted = self._beta * math.log(scaled_price)\n        residual = math.log(scaled_price) - predicted\n        self._residuals.append(residual)\n\n        if len(self._residuals) > self._get_warm_up_period():\n            self._residuals.pop(0)\n\n        self._mean_residual = sum(self._residuals) / len(self._residuals)\n        variance = sum((r - self._mean_residual) ** 2 for r in self._residuals) / len(self._residuals)\n        self._std_residual = math.sqrt(variance)\n\n        if self._std_residual == 0:\n            return\n\n        z_score = (self._mean_residual + residual) / self._std_residual\n\n        if z_score < -2:\n            self._signal.target(self._ko, -1)\n            self._signal.target(self._pep, 1)\n        elif z_score > 2:\n            self._signal.target(self._ko, 1)\n            self._signal.target(self._pep, -1)\n\n    def _rebalance(self) -> Optional[bool]:\n        if self._count < self._get_warm_up_period():\n            return False\n\n        scaled_price = self.portfolio[self._ko].price / self.portfolio[self._pep].price\n        if scaled_price < 0:\n            return False\n\n        predicted = self._beta * math.log(scaled_price)\n        residual = math.log(scaled_price) - predicted\n\n        if self._std_residual == 0:\n            return False\n\n        z_score = (self._mean_residual + residual) / self._std_residual\n\n        if z_score < -2:\n            self.set_holdings(self._ko, -0.5, True)\n            self.set_holdings(self._pep, 0.5, True)\n        elif z_score > 2:\n            self.set_holdings(self._ko, 0.5, True)\n            self.set_holdings(self._pep, -0.5, True)\n\n        return True\n\n    def on_warmup_finished(self) -> None:\n        history = self.history[TradeBar](self._ko, self._get_warm_up_period(), Resolution.DAILY)\n        pep_prices = [bar.close for bar in history]\n        ko_prices = [bar.close for bar in self.history[TradeBar](self._ko, self._get_warm_up_period(), Resolution.DAILY)]\n\n        X = sm.add_constant(pep_prices)\n        Y = [math.log(x / pep_prices[-1]) for x in ko_prices]\n\n        ols = sm.OLS(Y, X)\n        results = ols.fit()\n        self._beta = results.params[1]\n",
+  "source_sha256": "e661d0bf23134993759b90bc429254ddbbc208794275c7c52a2dc682a4433e82",
+  "started_at": "2026-11-14T23:04:35.737501+00:00",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "runtime_statistics": {
+    "Equity": "$100,000.00",
+    "Fees": "-$0.00",
+    "Holdings": "$0.00",
+    "Net Profit": "$0.00",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Return": "0.00 %",
+    "Unrealized": "$0.00",
+    "Volume": "$0.00"
+  },
+  "logs": [],
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;CocaCokePepsiPairTradingAlgorithm&#039; object has no attribute &#039;signal_registry&#039;\n  at in",
+  "project_id": 39413106,
+  "compile_id": "bf55d385137c724bf5a7ae663fe13d55-c5c3ad05ae5795ed960f240363183bd5",
+  "compile_created": {
+    "compileId": "bf55d385137c724bf5a7ae663fe13d55-c5c3ad05ae5795ed960f240363183bd5",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413106,
+    "signature": "c5c3ad05ae5795ed960f240363183bd5",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "bf55d385137c724bf5a7ae663fe13d55-c5c3ad05ae5795ed960f240363183bd5",
+    "state": "BuildSuccess",
+    "logs": [
+      "Warning main.py Line: 25 Column: 24 - \"CocaCokePepsiPairTradingAlgorithm\" has no attribute \"signal_registry\"; maybe \"self._previous_signal = signal\"?",
+      "Warning main.py Line: 27 Column: 9 - \"CocaCokePepsiPairTradingAlgorithm\" has no attribute \"warm_up\"; maybe \"self.set_warm_up(self._supertrend.warm_up_period + 1, Resolution.DAILY)\"?",
+      "Build Request Successful for Project ID: 39413106, with CompileID: bf55d385137c724bf5a7ae663fe13d55-c5c3ad05ae5795ed960f240363183bd5, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Warning main.py Line: 25 Column: 24 - \"CocaCokePepsiPairTradingAlgorithm\" has no attribute \"signal_registry\"; maybe \"self._previous_signal = signal\"?",
+    "Warning main.py Line: 27 Column: 9 - \"CocaCokePepsiPairTradingAlgorithm\" has no attribute \"warm_up\"; maybe \"self.set_warm_up(self._supertrend.warm_up_period + 1, Resolution.DAILY)\"?",
+    "Build Request Successful for Project ID: 39413106, with CompileID: bf55d385137c724bf5a7ae663fe13d55-c5c3ad05ae5795ed960f240363183bd5, Lean Version: 2.5.0.0.18263"
+  ],
+  "backtest_id": "02d1c548b945819128fd6abfe7eea257",
+  "backtest_created": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-equity-pairs-trading-cointegration_v05",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413106,
+      "completed": false,
+      "optimizationId": null,
+      "backtestId": "02d1c548b945819128fd6abfe7eea257",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 4,
+        "backtestCount": 3,
+        "parameters": 26
+      },
+      "backtestStart": "2026-11-14 23:04:49",
+      "backtestEnd": "2026-11-14 23:04:49",
+      "created": "2026-11-14 23:04:49",
+      "snapshotId": 39415049,
+      "status": "In Queue...",
+      "error": null,
+      "stacktrace": null,
+      "progress": 0,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": null,
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null
+    },
+    "debugging": false,
+    "success": true
+  },
+  "raw_backtest": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-equity-pairs-trading-cointegration_v05",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413106,
+      "completed": true,
+      "optimizationId": null,
+      "backtestId": "02d1c548b945819128fd6abfe7eea257",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 4,
+        "backtestCount": 3,
+        "parameters": 26
+      },
+      "backtestStart": "2026-11-14 23:04:49",
+      "backtestEnd": "2026-11-14 23:04:49",
+      "created": "2026-11-14 23:04:49",
+      "snapshotId": 39415049,
+      "status": "Runtime Error",
+      "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;CocaCokePepsiPairTradingAlgorithm&#039; object has no attribute &#039;signal_registry&#039;\n  at initialize\n    self._signal = self.signal_registry.add(self._rebalance)\n                   ^^^^^^^^^^^^^^^^^^^^\n in main.py: line 25\n &#039;CocaCokePepsiPairTradingAlgorithm&#039; object has no attribute &#039;signal_registry&#039;",
+      "stacktrace": "'CocaCokePepsiPairTradingAlgorithm' object has no attribute 'signal_registry'\n  at initialize\n    self._signal = self.signal_registry.add(self._rebalance)\n                   ^^^^^^^^^^^^^^^^^^^^\n in main.py: line 25\n 'CocaCokePepsiPairTradingAlgorithm' object has no attribute 'signal_registry'",
+      "progress": 1,
+      "hasInitializeError": true,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {
+        "Equity": "$100,000.00",
+        "Fees": "-$0.00",
+        "Holdings": "$0.00",
+        "Net Profit": "$0.00",
+        "Probabilistic Sharpe Ratio": "0%",
+        "Return": "0.00 %",
+        "Unrealized": "$0.00",
+        "Volume": "$0.00"
+      },
+      "statistics": {},
+      "totalPerformance": {
+        "tradeStatistics": {
+          "startDateTime": null,
+          "endDateTime": null,
+          "totalNumberOfTrades": 0,
+          "numberOfWinningTrades": 0,
+          "numberOfLosingTrades": 0,
+          "totalProfitLoss": "0",
+          "totalProfit": "0",
+          "totalLoss": "0",
+          "largestProfit": "0",
+          "largestLoss": "0",
+          "averageProfitLoss": "0",
+          "averageProfit": "0",
+          "averageLoss": "0",
+          "averageTradeDuration": "00:00:00",
+          "averageWinningTradeDuration": "00:00:00",
+          "averageLosingTradeDuration": "00:00:00",
+          "medianTradeDuration": "00:00:00",
+          "medianWinningTradeDuration": "00:00:00",
+          "medianLosingTradeDuration": "00:00:00",
+          "maxConsecutiveWinningTrades": 0,
+          "maxConsecutiveLosingTrades": 0,
+          "profitLossRatio": "0",
+          "winLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "averageMAE": "0",
+          "averageMFE": "0",
+          "largestMAE": "0",
+          "largestMFE": "0",
+          "maximumClosedTradeDrawdown": "0",
+          "maximumIntraTradeDrawdown": "0",
+          "profitLossStandardDeviation": "0",
+          "profitLossDownsideDeviation": "0",
+          "profitFactor": "0",
+          "sharpeRatio": "0",
+          "sortinoRatio": "0",
+          "profitToMaxDrawdownRatio": "0",
+          "maximumEndTradeDrawdown": "0",
+          "averageEndTradeDrawdown": "0",
+          "maximumDrawdownDuration": "00:00:00",
+          "totalFees": "0"
+        },
+        "portfolioStatistics": {
+          "averageWinRate": "0",
+          "averageLossRate": "0",
+          "profitLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "expectancy": "0",
+          "startEquity": "0",
+          "endEquity": "0",
+          "compoundingAnnualReturn": "0",
+          "drawdown": "0",
+          "totalNetProfit": "0",
+          "sharpeRatio": "0",
+          "probabilisticSharpeRatio": "0",
+          "sortinoRatio": "0",
+          "alpha": "0",
+          "beta": "0",
+          "annualStandardDeviation": "0",
+          "annualVariance": "0",
+          "informationRatio": "0",
+          "trackingError": "0",
+          "treynorRatio": "0",
+          "portfolioTurnover": "0",
+          "valueAtRisk99": "0",
+          "valueAtRisk95": "0",
+          "drawdownRecovery": "0"
+        },
+        "closedTrades": []
+      },
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": [
+        {
+          "name": "PortfolioValueIsNotPositiveAnalysis",
+          "issue": "The portfolio equity dropped to zero or below.",
+          "sample": true,
+          "solutions": [
+            "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+            "Reduce position sizes.",
+            "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+            "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+          ]
+        },
+        {
+          "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+          "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+          "sample": {
+            "pValue": 0.5
+          },
+          "solutions": [
+            "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+          ]
+        }
+      ],
+      "serverStatistics": {
+        "CPU Usage": "16.5%",
+        "Used RAM (MB)": "216",
+        "Total RAM (MB)": "16384",
+        "Hostname": "BACKTESTING-com-02d1c548b945819128fd6abfe7eea257",
+        "LEAN Version": "v2.5.0.0.18263",
+        "Up Time": "0d 00:00:14"
+      }
+    },
+    "success": true
+  },
+  "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;CocaCokePepsiPairTradingAlgorithm&#039; object has no attribute &#039;signal_registry&#039;\n  at initialize\n    self._signal = self.signal_registry.add(self._rebalance)\n                   ^^^^^^^^^^^^^^^^^^^^\n in main.py: line 25\n &#039;CocaCokePepsiPairTradingAlgorithm&#039; object has no attribute &#039;signal_registry&#039;",
+  "stacktrace": "'CocaCokePepsiPairTradingAlgorithm' object has no attribute 'signal_registry'\n  at initialize\n    self._signal = self.signal_registry.add(self._rebalance)\n                   ^^^^^^^^^^^^^^^^^^^^\n in main.py: line 25\n 'CocaCokePepsiPairTradingAlgorithm' object has no attribute 'signal_registry'",
+  "has_initialize_error": true,
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "total_orders": null,
+  "finished_at": "2026-11-14T23:05:41.061914+00:00",
+  "shared_evaluation_project": 39413106
+}

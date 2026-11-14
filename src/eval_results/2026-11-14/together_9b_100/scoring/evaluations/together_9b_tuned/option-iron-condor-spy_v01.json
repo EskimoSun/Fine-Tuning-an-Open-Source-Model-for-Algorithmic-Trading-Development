@@ -1,0 +1,308 @@
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityOptionAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(500000)\n        # Subscribe to the underlying Equity.\n        self._spy = self.add_equity(\"SPY\")\n        # Create the Option chain for the subscribed Equity.\n        self._chain = self.option_chain(self._spy)\n        # Filter the Option contracts to only select 0DTE contracts.\n        # Then, sort the filtered contracts by their strike prices.\n        self._calls = sorted([x for x in self._chain if x.right == OptionRight.CALL and x.expiry == self._spy.expiry + timedelta(0)], key=lambda x: x.strike)\n        self._puts = sorted([x for x in self._chain if x.right == OptionRight.PUT and x.expiry == self._spy.expiry + timedelta(0)], key=lambda x: x.strike)\n        # Filter the Option contracts that have strike prices within a certain range of the underlying price.\n        # Then, select the contracts with the highest open interest to form a trading strategy.\n        self._long_call = self._calls[0]\n        self._short_call = self._calls[-1]\n        self._long_put = self._puts[0]\n        self._short_put = self._puts[-1]\n        # Use the generate_strategy method to generate the trading strategy.\n        self._strategy = self.generate_strategy(IronCondorStrategy, self._long_call, self._short_call, self._long_put, self._short_put)\n        # Use the generate_reminder method to generate a reminder to rebalance the strategy.\n        self.schedule.on(self.date_rules.every(DayOfWeek.MONDAY), self.time_rules.before_market_close(self._spy, 1), self._strategy.rebalance)\n\n    def on_data(self, slice: Slice) -> None:\n        if not self._strategy.is_ready:\n            return\n        # Filter the Option contracts that have tradeable volumes.\n        expiry = self._spy.expiry + timedelta(0)\n        calls = [x for x in slice.option_contracts if x.right == OptionRight.CALL and x.expiry == expiry and x.volume]\n        puts = [x for x in slice.option_contracts if x.right == OptionRight.PUT and x.expiry == expiry and x.volume]\n        # If there are no new Option contracts with tradeable volumes, the algorithm will hold its current positions.\n        if not calls or not puts:\n            return\n        # Update the Option chain with the new Option contract data.\n        self._chain.update(calls, puts)\n        # Use the generate_strategy method to generate a new trading strategy with the updated Option contract data.\n        self._strategy = self.generate_strategy(IronCondorStrategy, self._chain, self._strategy.long_call, self._strategy.short_call, self._strategy.long_put, self._strategy.short_put)\n",
+  "source_sha256": "0703aaff5b337d0b08b222cffb1e27c5a4d70210f2949b442defd4eceb9847c0",
+  "started_at": "2026-11-14T23:10:00.769364+00:00",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "runtime_statistics": {
+    "Equity": "$500,000.00",
+    "Fees": "-$0.00",
+    "Holdings": "$0.00",
+    "Net Profit": "$0.00",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Return": "0.00 %",
+    "Unrealized": "$0.00",
+    "Volume": "$0.00"
+  },
+  "logs": [],
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;Equity&#039; object has no attribute &#039;expiry&#039;\n  at \n    self._calls = sorted([x for x in ",
+  "project_id": 39413106,
+  "compile_id": "8558e615f35de93c3d6ab0d07f29701c-f0ea63c248b3b5b4c5079fbc17638093",
+  "compile_created": {
+    "compileId": "8558e615f35de93c3d6ab0d07f29701c-f0ea63c248b3b5b4c5079fbc17638093",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413106,
+    "signature": "f0ea63c248b3b5b4c5079fbc17638093",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "8558e615f35de93c3d6ab0d07f29701c-f0ea63c248b3b5b4c5079fbc17638093",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413106, with CompileID: 8558e615f35de93c3d6ab0d07f29701c-f0ea63c248b3b5b4c5079fbc17638093, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413106, with CompileID: 8558e615f35de93c3d6ab0d07f29701c-f0ea63c248b3b5b4c5079fbc17638093, Lean Version: 2.5.0.0.18263"
+  ],
+  "backtest_id": "b15be673e22ae005a57fe90d4765c000",
+  "backtest_created": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-option-iron-condor-spy_v01",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413106,
+      "completed": false,
+      "optimizationId": null,
+      "backtestId": "b15be673e22ae005a57fe90d4765c000",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 9,
+        "backtestCount": 8,
+        "parameters": 9
+      },
+      "backtestStart": "2026-11-14 23:10:14",
+      "backtestEnd": "2026-11-14 23:10:14",
+      "created": "2026-11-14 23:10:14",
+      "snapshotId": 39415250,
+      "status": "In Queue...",
+      "error": null,
+      "stacktrace": null,
+      "progress": 0,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": null,
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null
+    },
+    "debugging": false,
+    "success": true
+  },
+  "raw_backtest": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-option-iron-condor-spy_v01",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413106,
+      "completed": true,
+      "optimizationId": null,
+      "backtestId": "b15be673e22ae005a57fe90d4765c000",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 9,
+        "backtestCount": 8,
+        "parameters": 9
+      },
+      "backtestStart": "2026-11-14 23:10:14",
+      "backtestEnd": "2026-11-14 23:10:14",
+      "created": "2026-11-14 23:10:14",
+      "snapshotId": 39415250,
+      "status": "Runtime Error",
+      "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;Equity&#039; object has no attribute &#039;expiry&#039;\n  at \n    self._calls = sorted([x for x in self._chain if x.right == OptionRight.CALL and x.expiry == self._spy.expiry + timedelta(0)], key=lambda x: x.strike)\n                                                                                                ^^^^^^^^^^^^^^^^\n in main.py: line 17\n  at initialize\n    self._calls = sorted([x for x in self._chain if x.right == OptionRight.CALL and x.expiry == self._spy.expiry + timedelta(0)], key=lambda x: x.strike)\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 17\n &#039;Equity&#039; object has no attribute &#039;expiry&#039;",
+      "stacktrace": "'Equity' object has no attribute 'expiry'\n  at <listcomp>\n    self._calls = sorted([x for x in self._chain if x.right == OptionRight.CALL and x.expiry == self._spy.expiry + timedelta(0)], key=lambda x: x.strike)\n                                                                                                ^^^^^^^^^^^^^^^^\n in main.py: line 17\n  at initialize\n    self._calls = sorted([x for x in self._chain if x.right == OptionRight.CALL and x.expiry == self._spy.expiry + timedelta(0)], key=lambda x: x.strike)\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 17\n 'Equity' object has no attribute 'expiry'",
+      "progress": 1,
+      "hasInitializeError": true,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {
+        "Equity": "$500,000.00",
+        "Fees": "-$0.00",
+        "Holdings": "$0.00",
+        "Net Profit": "$0.00",
+        "Probabilistic Sharpe Ratio": "0%",
+        "Return": "0.00 %",
+        "Unrealized": "$0.00",
+        "Volume": "$0.00"
+      },
+      "statistics": {},
+      "totalPerformance": {
+        "tradeStatistics": {
+          "startDateTime": null,
+          "endDateTime": null,
+          "totalNumberOfTrades": 0,
+          "numberOfWinningTrades": 0,
+          "numberOfLosingTrades": 0,
+          "totalProfitLoss": "0",
+          "totalProfit": "0",
+          "totalLoss": "0",
+          "largestProfit": "0",
+          "largestLoss": "0",
+          "averageProfitLoss": "0",
+          "averageProfit": "0",
+          "averageLoss": "0",
+          "averageTradeDuration": "00:00:00",
+          "averageWinningTradeDuration": "00:00:00",
+          "averageLosingTradeDuration": "00:00:00",
+          "medianTradeDuration": "00:00:00",
+          "medianWinningTradeDuration": "00:00:00",
+          "medianLosingTradeDuration": "00:00:00",
+          "maxConsecutiveWinningTrades": 0,
+          "maxConsecutiveLosingTrades": 0,
+          "profitLossRatio": "0",
+          "winLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "averageMAE": "0",
+          "averageMFE": "0",
+          "largestMAE": "0",
+          "largestMFE": "0",
+          "maximumClosedTradeDrawdown": "0",
+          "maximumIntraTradeDrawdown": "0",
+          "profitLossStandardDeviation": "0",
+          "profitLossDownsideDeviation": "0",
+          "profitFactor": "0",
+          "sharpeRatio": "0",
+          "sortinoRatio": "0",
+          "profitToMaxDrawdownRatio": "0",
+          "maximumEndTradeDrawdown": "0",
+          "averageEndTradeDrawdown": "0",
+          "maximumDrawdownDuration": "00:00:00",
+          "totalFees": "0"
+        },
+        "portfolioStatistics": {
+          "averageWinRate": "0",
+          "averageLossRate": "0",
+          "profitLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "expectancy": "0",
+          "startEquity": "0",
+          "endEquity": "0",
+          "compoundingAnnualReturn": "0",
+          "drawdown": "0",
+          "totalNetProfit": "0",
+          "sharpeRatio": "0",
+          "probabilisticSharpeRatio": "0",
+          "sortinoRatio": "0",
+          "alpha": "0",
+          "beta": "0",
+          "annualStandardDeviation": "0",
+          "annualVariance": "0",
+          "informationRatio": "0",
+          "trackingError": "0",
+          "treynorRatio": "0",
+          "portfolioTurnover": "0",
+          "valueAtRisk99": "0",
+          "valueAtRisk95": "0",
+          "drawdownRecovery": "0"
+        },
+        "closedTrades": []
+      },
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": [
+        {
+          "name": "PortfolioValueIsNotPositiveAnalysis",
+          "issue": "The portfolio equity dropped to zero or below.",
+          "sample": true,
+          "solutions": [
+            "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+            "Reduce position sizes.",
+            "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+            "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+          ]
+        },
+        {
+          "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+          "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+          "sample": {
+            "pValue": 0.5
+          },
+          "solutions": [
+            "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+          ]
+        }
+      ],
+      "serverStatistics": {
+        "CPU Usage": "19.5%",
+        "Used RAM (MB)": "260",
+        "Total RAM (MB)": "16384",
+        "Hostname": "BACKTESTING-com-b15be673e22ae005a57fe90d4765c000",
+        "LEAN Version": "v2.5.0.0.18263",
+        "Up Time": "0d 00:00:14"
+      }
+    },
+    "success": true
+  },
+  "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;Equity&#039; object has no attribute &#039;expiry&#039;\n  at \n    self._calls = sorted([x for x in self._chain if x.right == OptionRight.CALL and x.expiry == self._spy.expiry + timedelta(0)], key=lambda x: x.strike)\n                                                                                                ^^^^^^^^^^^^^^^^\n in main.py: line 17\n  at initialize\n    self._calls = sorted([x for x in self._chain if x.right == OptionRight.CALL and x.expiry == self._spy.expiry + timedelta(0)], key=lambda x: x.strike)\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 17\n &#039;Equity&#039; object has no attribute &#039;expiry&#039;",
+  "stacktrace": "'Equity' object has no attribute 'expiry'\n  at <listcomp>\n    self._calls = sorted([x for x in self._chain if x.right == OptionRight.CALL and x.expiry == self._spy.expiry + timedelta(0)], key=lambda x: x.strike)\n                                                                                                ^^^^^^^^^^^^^^^^\n in main.py: line 17\n  at initialize\n    self._calls = sorted([x for x in self._chain if x.right == OptionRight.CALL and x.expiry == self._spy.expiry + timedelta(0)], key=lambda x: x.strike)\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 17\n 'Equity' object has no attribute 'expiry'",
+  "has_initialize_error": true,
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "total_orders": null,
+  "finished_at": "2026-11-14T23:11:06.283925+00:00",
+  "shared_evaluation_project": 39413106
+}

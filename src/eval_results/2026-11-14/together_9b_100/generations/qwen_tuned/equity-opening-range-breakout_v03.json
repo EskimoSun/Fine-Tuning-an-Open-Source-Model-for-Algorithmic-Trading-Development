@@ -1,0 +1,41 @@
+{
+  "prompt_id": "equity-opening-range-breakout_v03",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/Qwen-9B-finetune",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityOpeningRangeBreakoutAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        self._spy = self.add_equity(\"SPY\")\n        self._orb = self._orb(self._spy, 30)\n        # Alternatively, use a manual indicator.\n        # self._orb = ((Minimum(30), Maximum(30)))\n        # self.warm_up_indicator(self._spy, self._orb, Resolution.DAILY)\n        # self.register_indicator(self._spy, self._orb, Resolution.DAILY)\n        self.plot_indicator(\"ORB\", self._orb)\n\n    def _orb(self, equity: Equity, lookback: int) -> IndicatorExtensions.ConsolidatedIndicator:\n        bar consolidator = self.consolidate(equity, timedelta(minutes=lookback), self._consolidated_callback)\n        min = IndicatorExtensions.of(equity, IndicatorExtensions.MIN, bar consolidator)\n        max = IndicatorExtensions.of(equity, IndicatorExtensions.MAX, bar consolidator)\n        return IndicatorExtensions.consolidated(min, max, bar consolidator)\n\n    def _consolidated_callback(self, consolidated_bar: ConsolidatedBar) -> None:\n        if not self._orb.is_ready:\n            return\n        open = consolidated_bar.open\n        close = consolidated_bar.close\n        high = consolidated_bar.high\n        low = consolidated_bar.low\n        previous_close = self._spy.previous_close\n        if not self.portfolio.invested and previous_close > low and previous_close < high:\n            if close > high:\n                self.set_holdings(self._spy, 1)\n            elif close < low:\n                self.set_holdings(self._spy, -1)\n        self.plot(\"Trades\", \"Close\", close)\n        self.plot(\"Trades\", \"Open\", open)\n\n    def on_data(self, slice: Slice) -> None:\n        self.set_holdings(self._spy, 0)\n        if self.time.hour == 15 and self.time.minute == 55:\n            self.liquidate()\n```",
+  "generated_at": "2026-11-14T21:53:39.585684+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "SYNTAX_ERROR",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "line 22: invalid syntax"
+    }
+  ],
+  "note": "SYNTAX_ERROR: line 22: invalid syntax",
+  "generation_elapsed_seconds": 4.990172643000001,
+  "qc_evaluation": {
+    "status": "syntax_error",
+    "stage": "syntax",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityOpeningRangeBreakoutAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        self._spy = self.add_equity(\"SPY\")\n        self._orb = self._orb(self._spy, 30)\n        # Alternatively, use a manual indicator.\n        # self._orb = ((Minimum(30), Maximum(30)))\n        # self.warm_up_indicator(self._spy, self._orb, Resolution.DAILY)\n        # self.register_indicator(self._spy, self._orb, Resolution.DAILY)\n        self.plot_indicator(\"ORB\", self._orb)\n\n    def _orb(self, equity: Equity, lookback: int) -> IndicatorExtensions.ConsolidatedIndicator:\n        bar consolidator = self.consolidate(equity, timedelta(minutes=lookback), self._consolidated_callback)\n        min = IndicatorExtensions.of(equity, IndicatorExtensions.MIN, bar consolidator)\n        max = IndicatorExtensions.of(equity, IndicatorExtensions.MAX, bar consolidator)\n        return IndicatorExtensions.consolidated(min, max, bar consolidator)\n\n    def _consolidated_callback(self, consolidated_bar: ConsolidatedBar) -> None:\n        if not self._orb.is_ready:\n            return\n        open = consolidated_bar.open\n        close = consolidated_bar.close\n        high = consolidated_bar.high\n        low = consolidated_bar.low\n        previous_close = self._spy.previous_close\n        if not self.portfolio.invested and previous_close > low and previous_close < high:\n            if close > high:\n                self.set_holdings(self._spy, 1)\n            elif close < low:\n                self.set_holdings(self._spy, -1)\n        self.plot(\"Trades\", \"Close\", close)\n        self.plot(\"Trades\", \"Open\", open)\n\n    def on_data(self, slice: Slice) -> None:\n        self.set_holdings(self._spy, 0)\n        if self.time.hour == 15 and self.time.minute == 55:\n            self.liquidate()\n",
+    "source_sha256": "cb2c813abe792251c393ae50105b23da3973a74d1ea04d4d6d93ab184d875e72",
+    "started_at": "2026-11-14T22:18:26.333858+00:00",
+    "compile_errors": 1,
+    "runtime_errors": null,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "syntax: invalid syntax (main.py, line 22)",
+    "error": "invalid syntax (main.py, line 22)",
+    "line": 22,
+    "offset": 13,
+    "finished_at": "2026-11-14T22:18:26.335804+00:00"
+  },
+  "compile_errors": 1,
+  "runtime_errors": null,
+  "statistics": {},
+  "qc_note": "syntax: invalid syntax (main.py, line 22)"
+}

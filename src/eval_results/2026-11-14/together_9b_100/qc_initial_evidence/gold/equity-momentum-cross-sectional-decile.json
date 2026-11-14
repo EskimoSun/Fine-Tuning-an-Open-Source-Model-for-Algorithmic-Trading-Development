@@ -1,0 +1,49 @@
+{
+  "status": "infrastructure_error",
+  "stage": "backtest",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass SP500Momentum(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(250_000)\n\n        self.settings.seed_initial_prices = True\n        self.settings.minimum_order_margin_portfolio_percentage = 0\n\n        self._lookback = 252\n        self._universe_cap = 100\n        self._top_decile_pct = 0.1\n\n        # One momentum indicator per constituent, fed from the universe stream.\n        self._momentum_by_symbol: dict[Symbol, MomentumPercent] = {}\n\n        # Chain SPY ETF constituents into a fundamental universe.\n        self.universe_settings.resolution = Resolution.MINUTE\n        self._universe = self.add_universe(\n            self.universe.etf(\"SPY\"),\n            self._select_assets,\n        )\n        # Warm up the per-symbol momentum indicators with daily bars.\n        self.set_warm_up(self._lookback + 1, Resolution.DAILY)\n\n        # Monthly rebalance shortly after the open\n        self.schedule.on(\n            self.date_rules.month_start(\"SPY\"),\n            self.time_rules.at(9, 31),\n            self._rebalance,\n        )\n\n    def _select_assets(self, fundamentals: list[Fundamental]) -> list[Symbol] | Universe.UnchangedUniverse:\n        # Stream each constituent's adjusted price into its momentum indicator.\n        ready = [\n            f for f in fundamentals\n            if self._momentum_by_symbol.setdefault(\n                f.symbol, MomentumPercent(self._lookback)\n            ).update(f.end_time, f.adjusted_price)\n        ]\n        if self.is_warming_up:\n            return Universe.UNCHANGED\n\n        # Cap the universe at the top 100 constituents by fundamental dollar volume.\n        top_by_volume = sorted(ready, reverse=True,\n            key=lambda f: f.dollar_volume\n        )[:self._universe_cap]\n        if not top_by_volume:\n            return Universe.UNCHANGED\n\n        # Select the top decile by momentum.\n        decile_count = max(1, int(len(top_by_volume) * self._top_decile_pct))\n        ranked = sorted(top_by_volume, reverse=True,\n            key=lambda f: self._momentum_by_symbol[f.symbol].current.value\n        )\n        return [f.symbol for f in ranked[:decile_count]]\n\n    def _rebalance(self) -> None:\n        selected = list(self._universe.selected)\n        if not selected:\n            return\n        weight = 1.0 / len(selected)\n        targets = [PortfolioTarget(symbol, weight) for symbol in selected]\n        self.set_holdings(targets, liquidate_existing_holdings=True)\n",
+  "source_sha256": "d6546994ce0951e8efbb7ad66e7728b00c37f7a254ff2bda66dadc4389b897a2",
+  "started_at": "2026-11-14T22:17:46.873349+00:00",
+  "compile_errors": 0,
+  "runtime_errors": null,
+  "statistics": {},
+  "runtime_statistics": {},
+  "logs": [],
+  "qc_note": "infrastructure: API request failed: backtests/create",
+  "project_id": 39413104,
+  "compile_id": "b7d95839815de5d57563d48422b7965a-15df49aeb68a8faf056e273e1364c739",
+  "compile_created": {
+    "compileId": "b7d95839815de5d57563d48422b7965a-15df49aeb68a8faf056e273e1364c739",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413104,
+    "signature": "15df49aeb68a8faf056e273e1364c739",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "b7d95839815de5d57563d48422b7965a-15df49aeb68a8faf056e273e1364c739",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413104, with CompileID: b7d95839815de5d57563d48422b7965a-15df49aeb68a8faf056e273e1364c739, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413104, with CompileID: b7d95839815de5d57563d48422b7965a-15df49aeb68a8faf056e273e1364c739, Lean Version: 2.5.0.0.18263"
+  ],
+  "error": "API request failed: backtests/create",
+  "error_type": "QCAPIError",
+  "api_error": {
+    "endpoint": "backtests/create",
+    "response": {
+      "errors": [
+        "Too many backtest requests; please slow down. REF #Oi842S9vlj"
+      ],
+      "success": false
+    }
+  },
+  "finished_at": "2026-11-14T22:17:49.016054+00:00"
+}

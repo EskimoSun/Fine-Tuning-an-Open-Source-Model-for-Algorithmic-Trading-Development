@@ -1,0 +1,307 @@
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityOptionAlgorithm(QCAlgorithm):\n    _weight_by_symbol: dict[Symbol, float] = {}\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        for equity in [self.add_equity(\"SPY\"), self.add_equity(\"TLT\")]:\n            equity.weight = 1 / len(self._weight_by_symbol)\n            equity.target_percent = 1 / len(self._weight_by_symbol)\n            self._weight_by_symbol[equity.symbol] = equity.weight\n            equity.set_filter(0, 0)\n        self.schedule.on(self.date_rules.year_start(\"SPY\", 2), self.time_rules.after_market_open(\"SPY\", 5), self._rebalance)\n\n    def _rebalance(self) -> None:\n        for symbol, weight in self._weight_by_symbol.items():\n            self.set_holdings(symbol, weight, True)\n",
+  "source_sha256": "de7ad9f1a2161885fcecaca4b96a89e6ce3b9ca361c039cc9b37e7bb6af389c2",
+  "started_at": "2026-11-14T22:41:59.041959+00:00",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "runtime_statistics": {
+    "Equity": "$100,000.00",
+    "Fees": "-$0.00",
+    "Holdings": "$0.00",
+    "Net Profit": "$0.00",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Return": "0.00 %",
+    "Unrealized": "$0.00",
+    "Volume": "$0.00"
+  },
+  "logs": [],
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: division by zero\n  at initialize\n    equity.weight = 1 / len(self._weight_by_symbol)\n                    ",
+  "project_id": 39414125,
+  "compile_id": "5976fb41b56c7e5513ede6951851e18f-ef2967448ddeb1cc180d7590cdcb672f",
+  "compile_created": {
+    "compileId": "5976fb41b56c7e5513ede6951851e18f-ef2967448ddeb1cc180d7590cdcb672f",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39414125,
+    "signature": "ef2967448ddeb1cc180d7590cdcb672f",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "5976fb41b56c7e5513ede6951851e18f-ef2967448ddeb1cc180d7590cdcb672f",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39414125, with CompileID: 5976fb41b56c7e5513ede6951851e18f-ef2967448ddeb1cc180d7590cdcb672f, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39414125, with CompileID: 5976fb41b56c7e5513ede6951851e18f-ef2967448ddeb1cc180d7590cdcb672f, Lean Version: 2.5.0.0.18263"
+  ],
+  "backtest_id": "2c03c42bd8b573fdf1abb1471e35d868",
+  "backtest_created": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-equity-sixty-forty-portfolio_v07",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39414125,
+      "completed": false,
+      "optimizationId": null,
+      "backtestId": "2c03c42bd8b573fdf1abb1471e35d868",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 1,
+        "backtestCount": 1,
+        "parameters": 10
+      },
+      "backtestStart": "2026-11-14 22:42:50",
+      "backtestEnd": "2026-11-14 22:42:50",
+      "created": "2026-11-14 22:42:50",
+      "snapshotId": 39414157,
+      "status": "In Queue...",
+      "error": null,
+      "stacktrace": null,
+      "progress": 0,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": null,
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null
+    },
+    "debugging": false,
+    "success": true
+  },
+  "raw_backtest": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-equity-sixty-forty-portfolio_v07",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39414125,
+      "completed": true,
+      "optimizationId": null,
+      "backtestId": "2c03c42bd8b573fdf1abb1471e35d868",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 1,
+        "backtestCount": 1,
+        "parameters": 10
+      },
+      "backtestStart": "2026-11-14 22:42:50",
+      "backtestEnd": "2026-11-14 22:42:50",
+      "created": "2026-11-14 22:42:50",
+      "snapshotId": 39414157,
+      "status": "Runtime Error",
+      "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: division by zero\n  at initialize\n    equity.weight = 1 / len(self._weight_by_symbol)\n                    ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n in main.py: line 16\n division by zero",
+      "stacktrace": "division by zero\n  at initialize\n    equity.weight = 1 / len(self._weight_by_symbol)\n                    ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n in main.py: line 16\n division by zero",
+      "progress": 1,
+      "hasInitializeError": true,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {
+        "Equity": "$100,000.00",
+        "Fees": "-$0.00",
+        "Holdings": "$0.00",
+        "Net Profit": "$0.00",
+        "Probabilistic Sharpe Ratio": "0%",
+        "Return": "0.00 %",
+        "Unrealized": "$0.00",
+        "Volume": "$0.00"
+      },
+      "statistics": {},
+      "totalPerformance": {
+        "tradeStatistics": {
+          "startDateTime": null,
+          "endDateTime": null,
+          "totalNumberOfTrades": 0,
+          "numberOfWinningTrades": 0,
+          "numberOfLosingTrades": 0,
+          "totalProfitLoss": "0",
+          "totalProfit": "0",
+          "totalLoss": "0",
+          "largestProfit": "0",
+          "largestLoss": "0",
+          "averageProfitLoss": "0",
+          "averageProfit": "0",
+          "averageLoss": "0",
+          "averageTradeDuration": "00:00:00",
+          "averageWinningTradeDuration": "00:00:00",
+          "averageLosingTradeDuration": "00:00:00",
+          "medianTradeDuration": "00:00:00",
+          "medianWinningTradeDuration": "00:00:00",
+          "medianLosingTradeDuration": "00:00:00",
+          "maxConsecutiveWinningTrades": 0,
+          "maxConsecutiveLosingTrades": 0,
+          "profitLossRatio": "0",
+          "winLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "averageMAE": "0",
+          "averageMFE": "0",
+          "largestMAE": "0",
+          "largestMFE": "0",
+          "maximumClosedTradeDrawdown": "0",
+          "maximumIntraTradeDrawdown": "0",
+          "profitLossStandardDeviation": "0",
+          "profitLossDownsideDeviation": "0",
+          "profitFactor": "0",
+          "sharpeRatio": "0",
+          "sortinoRatio": "0",
+          "profitToMaxDrawdownRatio": "0",
+          "maximumEndTradeDrawdown": "0",
+          "averageEndTradeDrawdown": "0",
+          "maximumDrawdownDuration": "00:00:00",
+          "totalFees": "0"
+        },
+        "portfolioStatistics": {
+          "averageWinRate": "0",
+          "averageLossRate": "0",
+          "profitLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "expectancy": "0",
+          "startEquity": "0",
+          "endEquity": "0",
+          "compoundingAnnualReturn": "0",
+          "drawdown": "0",
+          "totalNetProfit": "0",
+          "sharpeRatio": "0",
+          "probabilisticSharpeRatio": "0",
+          "sortinoRatio": "0",
+          "alpha": "0",
+          "beta": "0",
+          "annualStandardDeviation": "0",
+          "annualVariance": "0",
+          "informationRatio": "0",
+          "trackingError": "0",
+          "treynorRatio": "0",
+          "portfolioTurnover": "0",
+          "valueAtRisk99": "0",
+          "valueAtRisk95": "0",
+          "drawdownRecovery": "0"
+        },
+        "closedTrades": []
+      },
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": [
+        {
+          "name": "PortfolioValueIsNotPositiveAnalysis",
+          "issue": "The portfolio equity dropped to zero or below.",
+          "sample": true,
+          "solutions": [
+            "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+            "Reduce position sizes.",
+            "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+            "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+          ]
+        },
+        {
+          "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+          "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+          "sample": {
+            "pValue": 0.5
+          },
+          "solutions": [
+            "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+          ]
+        }
+      ],
+      "serverStatistics": {
+        "CPU Usage": "7.9%",
+        "Used RAM (MB)": "223",
+        "Total RAM (MB)": "16384",
+        "Hostname": "BACKTESTING-com-2c03c42bd8b573fdf1abb1471e35d868",
+        "LEAN Version": "v2.5.0.0.18263",
+        "Up Time": "0d 00:00:13"
+      }
+    },
+    "success": true
+  },
+  "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: division by zero\n  at initialize\n    equity.weight = 1 / len(self._weight_by_symbol)\n                    ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n in main.py: line 16\n division by zero",
+  "stacktrace": "division by zero\n  at initialize\n    equity.weight = 1 / len(self._weight_by_symbol)\n                    ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n in main.py: line 16\n division by zero",
+  "has_initialize_error": true,
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "total_orders": null,
+  "finished_at": "2026-11-14T22:43:40.660800+00:00"
+}

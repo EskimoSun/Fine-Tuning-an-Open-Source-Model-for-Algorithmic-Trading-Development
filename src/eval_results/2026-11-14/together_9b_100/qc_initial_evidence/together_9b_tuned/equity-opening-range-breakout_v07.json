@@ -1,0 +1,49 @@
+{
+  "status": "infrastructure_error",
+  "stage": "backtest",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityOpeningRangeBreakoutAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        self._spy = self.add_equity(\"SPY\")\n        self._range = self._spy.opening_range(30, Resolution.MINUTE)\n        # Alternatively, use a manual indicator.\n        # self._range = OpeningRangeBar()\n        # self.warm_up_indicator(self._spy, self._range)\n        # self.register_indicator(self._spy, self._range)\n        self.schedule.on(self.date_rules.every_day(self._spy), self.time_rules.after_market_open(self._spy, 30), self._rebalance)\n\n    def _rebalance(self) -> None:\n        if not self._range.is_ready:\n            return\n        low = self._range.low\n        high = self._range.high\n        price = self._spy.price\n        if not self._spy.invested and price > high:\n            self.set_holdings(self._spy, 1)\n        elif not self._spy.invested and price < low:\n            self.set_holdings(self._spy, -1)\n        elif self._spy.invested and price < low:\n            self.liquidate(self._spy)\n        elif self._spy.invested and price > high:\n            self.liquidate(self._spy)\n",
+  "source_sha256": "ff9a143e0eb05046296cdba3fc17a2bbc0764a370fe49f736de3ecb50c722235",
+  "started_at": "2026-11-14T22:18:34.466669+00:00",
+  "compile_errors": 0,
+  "runtime_errors": null,
+  "statistics": {},
+  "runtime_statistics": {},
+  "logs": [],
+  "qc_note": "infrastructure: API request failed: backtests/create",
+  "project_id": 39413159,
+  "compile_id": "d3f944ea22c441b47b4279e3a470307b-460b66286fb6f2123171962b542e0dd2",
+  "compile_created": {
+    "compileId": "d3f944ea22c441b47b4279e3a470307b-460b66286fb6f2123171962b542e0dd2",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413159,
+    "signature": "460b66286fb6f2123171962b542e0dd2",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "d3f944ea22c441b47b4279e3a470307b-460b66286fb6f2123171962b542e0dd2",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413159, with CompileID: d3f944ea22c441b47b4279e3a470307b-460b66286fb6f2123171962b542e0dd2, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413159, with CompileID: d3f944ea22c441b47b4279e3a470307b-460b66286fb6f2123171962b542e0dd2, Lean Version: 2.5.0.0.18263"
+  ],
+  "error": "API request failed: backtests/create",
+  "error_type": "QCAPIError",
+  "api_error": {
+    "endpoint": "backtests/create",
+    "response": {
+      "errors": [
+        "Too many backtest requests; please slow down. REF #Oi842S9vlj"
+      ],
+      "success": false
+    }
+  },
+  "finished_at": "2026-11-14T22:18:36.726787+00:00"
+}

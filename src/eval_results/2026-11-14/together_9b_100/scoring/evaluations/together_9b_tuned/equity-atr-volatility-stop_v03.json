@@ -1,0 +1,307 @@
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass AtrTrailingStopAlgorithm(QCAlgorithm):\n    _risk: float = 0.03\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        self._spy = self.add_equity(\"SPY\", Resolution.MINUTE)\n        self._spy.atr = self.atr(self._spy, 14, MovingAverageType.SIMPLE, Resolution.DAILY)\n        # Alternatively, use a manual indicator.\n        # self._spy.atr = AverageTrueRange(14, MovingAverageType.SIMPLE)\n        # self.warm_up_indicator(self._spy, self._spy.atr, Resolution.DAILY)\n        # self.register_indicator(self._spy, self._spy.atr, Resolution.DAILY)\n        self._spy.high = self.maximum(self._spy, 2000, Resolution.DAILY)\n        # Alternatively, use a manual indicator.\n        # self._spy.high = Maximum(2000)\n        # self.warm_up_indicator(self._spy, self._spy.high, Resolution.DAILY)\n        # self.register_indicator(self._spy, self._spy.high, Resolution.DAILY)\n\n        self.schedule.on(\n            self.date_rules.every_day(self._spy),\n            self.time_rules.at(9, 0),\n            self._rebalance\n        )\n\n    def _rebalance(self) -> None:\n        if not self._spy.atr.is_ready or not self._spy.high.is_ready:\n            return\n\n        price = self.securities[self._spy].price\n        if not self.portfolio.invested:\n            self.set_holdings(self._spy, 1.0)\n            return\n\n        # Stop when price falls 3x ATR below the 2000-day high.\n        atr_stop_price = self._spy.high.current.value - 3.0 * self._spy.atr.current.value\n        if price < atr_stop_price:\n            self.liquidate(self._spy)\n            return\n\n        # Trail the 2000-day high by 3x ATR.\n        trailing_stop = max(self._spy.high.current.value * (1.0 - self._risk),\n            self._spy.high.current.value - 3.0 * self._spy.atr.current.value)\n        self.update_stop_loss(self._spy, trailing_stop)\n",
+  "source_sha256": "00dfa0d4d7854e41168c1f02fa256c9b440ab83b013fc80660373b018486ae35",
+  "started_at": "2026-11-14T22:14:28.127873+00:00",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "runtime_statistics": {
+    "Equity": "$100,000.00",
+    "Fees": "-$0.00",
+    "Holdings": "$0.00",
+    "Net Profit": "$0.00",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Return": "0.00 %",
+    "Unrealized": "$0.00",
+    "Volume": "$0.00"
+  },
+  "logs": [],
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;AtrTrailingStopAlgorithm&#039; object has no attribute &#039;maximum&#039; Did you mean: &#039;set_",
+  "project_id": 39412945,
+  "compile_id": "10828ddaf10384525bb3e8ed2148c762-95a3d5dea9db3abe36dd5bc7f579e3fe",
+  "compile_created": {
+    "compileId": "10828ddaf10384525bb3e8ed2148c762-95a3d5dea9db3abe36dd5bc7f579e3fe",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39412945,
+    "signature": "95a3d5dea9db3abe36dd5bc7f579e3fe",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "10828ddaf10384525bb3e8ed2148c762-95a3d5dea9db3abe36dd5bc7f579e3fe",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39412945, with CompileID: 10828ddaf10384525bb3e8ed2148c762-95a3d5dea9db3abe36dd5bc7f579e3fe, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39412945, with CompileID: 10828ddaf10384525bb3e8ed2148c762-95a3d5dea9db3abe36dd5bc7f579e3fe, Lean Version: 2.5.0.0.18263"
+  ],
+  "backtest_id": "1e590a27c64a172daeb38bd43fb331f0",
+  "backtest_created": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-equity-atr-volatility-stop_v03",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39412945,
+      "completed": false,
+      "optimizationId": null,
+      "backtestId": "1e590a27c64a172daeb38bd43fb331f0",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 1,
+        "backtestCount": 1,
+        "parameters": 15
+      },
+      "backtestStart": "2026-11-14 22:14:31",
+      "backtestEnd": "2026-11-14 22:14:31",
+      "created": "2026-11-14 22:14:31",
+      "snapshotId": 39412951,
+      "status": "In Queue...",
+      "error": null,
+      "stacktrace": null,
+      "progress": 0,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": null,
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null
+    },
+    "debugging": false,
+    "success": true
+  },
+  "raw_backtest": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-equity-atr-volatility-stop_v03",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39412945,
+      "completed": true,
+      "optimizationId": null,
+      "backtestId": "1e590a27c64a172daeb38bd43fb331f0",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 1,
+        "backtestCount": 1,
+        "parameters": 15
+      },
+      "backtestStart": "2026-11-14 22:14:31",
+      "backtestEnd": "2026-11-14 22:14:31",
+      "created": "2026-11-14 22:14:31",
+      "snapshotId": 39412951,
+      "status": "Runtime Error",
+      "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;AtrTrailingStopAlgorithm&#039; object has no attribute &#039;maximum&#039; Did you mean: &#039;set_maximum_orders&#039;?\n  at initialize\n    self._spy.high = self.maximum(self._spy, 2000, Resolution.DAILY)\n                     ^^^^^^^^^^^^\n in main.py: line 22\n &#039;AtrTrailingStopAlgorithm&#039; object has no attribute &#039;maximum&#039; Did you mean: &#039;set_maximum_orders&#039;?",
+      "stacktrace": "'AtrTrailingStopAlgorithm' object has no attribute 'maximum' Did you mean: 'set_maximum_orders'?\n  at initialize\n    self._spy.high = self.maximum(self._spy, 2000, Resolution.DAILY)\n                     ^^^^^^^^^^^^\n in main.py: line 22\n 'AtrTrailingStopAlgorithm' object has no attribute 'maximum' Did you mean: 'set_maximum_orders'?",
+      "progress": 1,
+      "hasInitializeError": true,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {
+        "Equity": "$100,000.00",
+        "Fees": "-$0.00",
+        "Holdings": "$0.00",
+        "Net Profit": "$0.00",
+        "Probabilistic Sharpe Ratio": "0%",
+        "Return": "0.00 %",
+        "Unrealized": "$0.00",
+        "Volume": "$0.00"
+      },
+      "statistics": {},
+      "totalPerformance": {
+        "tradeStatistics": {
+          "startDateTime": null,
+          "endDateTime": null,
+          "totalNumberOfTrades": 0,
+          "numberOfWinningTrades": 0,
+          "numberOfLosingTrades": 0,
+          "totalProfitLoss": "0",
+          "totalProfit": "0",
+          "totalLoss": "0",
+          "largestProfit": "0",
+          "largestLoss": "0",
+          "averageProfitLoss": "0",
+          "averageProfit": "0",
+          "averageLoss": "0",
+          "averageTradeDuration": "00:00:00",
+          "averageWinningTradeDuration": "00:00:00",
+          "averageLosingTradeDuration": "00:00:00",
+          "medianTradeDuration": "00:00:00",
+          "medianWinningTradeDuration": "00:00:00",
+          "medianLosingTradeDuration": "00:00:00",
+          "maxConsecutiveWinningTrades": 0,
+          "maxConsecutiveLosingTrades": 0,
+          "profitLossRatio": "0",
+          "winLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "averageMAE": "0",
+          "averageMFE": "0",
+          "largestMAE": "0",
+          "largestMFE": "0",
+          "maximumClosedTradeDrawdown": "0",
+          "maximumIntraTradeDrawdown": "0",
+          "profitLossStandardDeviation": "0",
+          "profitLossDownsideDeviation": "0",
+          "profitFactor": "0",
+          "sharpeRatio": "0",
+          "sortinoRatio": "0",
+          "profitToMaxDrawdownRatio": "0",
+          "maximumEndTradeDrawdown": "0",
+          "averageEndTradeDrawdown": "0",
+          "maximumDrawdownDuration": "00:00:00",
+          "totalFees": "0"
+        },
+        "portfolioStatistics": {
+          "averageWinRate": "0",
+          "averageLossRate": "0",
+          "profitLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "expectancy": "0",
+          "startEquity": "0",
+          "endEquity": "0",
+          "compoundingAnnualReturn": "0",
+          "drawdown": "0",
+          "totalNetProfit": "0",
+          "sharpeRatio": "0",
+          "probabilisticSharpeRatio": "0",
+          "sortinoRatio": "0",
+          "alpha": "0",
+          "beta": "0",
+          "annualStandardDeviation": "0",
+          "annualVariance": "0",
+          "informationRatio": "0",
+          "trackingError": "0",
+          "treynorRatio": "0",
+          "portfolioTurnover": "0",
+          "valueAtRisk99": "0",
+          "valueAtRisk95": "0",
+          "drawdownRecovery": "0"
+        },
+        "closedTrades": []
+      },
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": [
+        {
+          "name": "PortfolioValueIsNotPositiveAnalysis",
+          "issue": "The portfolio equity dropped to zero or below.",
+          "sample": true,
+          "solutions": [
+            "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+            "Reduce position sizes.",
+            "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+            "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+          ]
+        },
+        {
+          "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+          "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+          "sample": {
+            "pValue": 0.5
+          },
+          "solutions": [
+            "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+          ]
+        }
+      ],
+      "serverStatistics": {
+        "CPU Usage": "12.6%",
+        "Used RAM (MB)": "217",
+        "Total RAM (MB)": "16384",
+        "Hostname": "BACKTESTING-com-1e590a27c64a172daeb38bd43fb331f0",
+        "LEAN Version": "v2.5.0.0.18263",
+        "Up Time": "0d 00:00:14"
+      }
+    },
+    "success": true
+  },
+  "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;AtrTrailingStopAlgorithm&#039; object has no attribute &#039;maximum&#039; Did you mean: &#039;set_maximum_orders&#039;?\n  at initialize\n    self._spy.high = self.maximum(self._spy, 2000, Resolution.DAILY)\n                     ^^^^^^^^^^^^\n in main.py: line 22\n &#039;AtrTrailingStopAlgorithm&#039; object has no attribute &#039;maximum&#039; Did you mean: &#039;set_maximum_orders&#039;?",
+  "stacktrace": "'AtrTrailingStopAlgorithm' object has no attribute 'maximum' Did you mean: 'set_maximum_orders'?\n  at initialize\n    self._spy.high = self.maximum(self._spy, 2000, Resolution.DAILY)\n                     ^^^^^^^^^^^^\n in main.py: line 22\n 'AtrTrailingStopAlgorithm' object has no attribute 'maximum' Did you mean: 'set_maximum_orders'?",
+  "has_initialize_error": true,
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "total_orders": null,
+  "finished_at": "2026-11-14T22:15:22.923661+00:00"
+}

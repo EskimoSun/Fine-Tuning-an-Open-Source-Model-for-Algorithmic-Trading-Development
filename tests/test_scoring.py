@@ -164,6 +164,24 @@ class ClientTests(unittest.TestCase):
     def setUp(self):
         self.client = QCClient("dummy-user", "dummy-token")
 
+    def test_terminal_cloud_result_with_null_statistics_keeps_execution_outcome(self):
+        # Live QC returned completed=True with totalPerformance=null. Missing
+        # performance data must not turn a completed execution into an API error.
+        for error, expected in ((None, "completed"), ("Initialization failed", "runtime_error")):
+            with self.subTest(expected=expected):
+                backtest = {"backtestId": "actual-id", "completed": True,
+                            "status": "Completed.", "error": error,
+                            "totalPerformance": None, "statistics": None,
+                            "runtimeStatistics": None}
+                self.client._post = Mock(side_effect=[
+                    {"backtest": {"backtestId": "actual-id"}}, {"backtest": backtest}])
+                result = self.client.backtest(1, "compiled", "null-statistics")
+                self.assertEqual(result["status"], expected)
+                self.assertEqual(result["backtest_id"], "actual-id")
+                self.assertEqual(result["trade_statistics"], {})
+                self.assertEqual(result["statistics"], {})
+                self.assertIsNone(result["total_orders"])
+
     def test_orders_fetches_all_pages(self):
         rows = [order(i) for i in range(105)]
         self.client._post = Mock(side_effect=[

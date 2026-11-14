@@ -1,0 +1,307 @@
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass OneRuleBreakoutAlgorithm(QCAlgorithm):\n    _stop_loss = 0.01\n    _take_profit = 0.02\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        self._spy = self.add_equity(\"SPY\", Resolution.MINUTE)\n\n        self.universe_settings.resolution = Resolution.MINUTE\n        # Option universe to filter the expiry and strike of the underlying.\n        self.universe_settings.universe_type = UniverseType.OPTIONS\n        # Create a OptionFilter to filter the options.\n        self._option_filter = OptionFilter()\n        # Set the expiry to be the closest ATM call expiry.\n        self._option_filter.expiry = OptionExpiry.CLOSEST_OPEN\n        # Set the strike to be the ATM strike.\n        self._option_filter.strike = OptionStrike.ATM\n        # Attach the option filter to the algorithm.\n        self.add_universe(self._spy, self._option_filter)\n\n        self.schedule.on(\n            self.date_rules.every_day(self._spy.symbol),\n            self.time_rules.before_market_close(self._spy.symbol, 15, 55),\n            self._rebalance\n        )\n\n    def on_securities_changed(self, changes: SecurityChanges) -> None:\n        for security in changes.added_securities:\n            if security.type == SecurityType.OPTION:\n                # Generate trading signals for the option.\n                indicator = IndicatorExtensions.create_indicator(BollingerBands(2, 20, MovingAverageType.SIMPLE), security)\n                security.indicator = indicator\n                # Warm up the indicator and its windows.\n                self.indicator_history(indicator, security, self.warm_up_period)\n\n    def _rebalance(self) -> None:\n        if not self._spy.indicator.is_ready:\n            return\n\n        bb = self._spy.indicator\n        price = self._spy.price\n        in_uptrend = price > bb.upper_band.current.value\n        in_downtrend = price < bb.lower_band.current.value\n\n        if not self.portfolio.invested and (in_uptrend or in_downtrend):\n            stop_loss_percent = self._stop_loss if in_uptrend else -self._stop_loss\n            take_profit_percent = self._take_profit if in_uptrend else -self._take_profit\n\n            self.set_holdings(self._spy, 1, stop_loss_percent, take_profit_percent)\n        elif self.portfolio.invested:\n            self.liquidate(self._spy, tag=f\"Exit {self._spy.symbol}\")\n",
+  "source_sha256": "aeffdbdca565a55c1e169361c11ef49830e0331df1438848dbbfb08f62e4ccd6",
+  "started_at": "2026-11-14T22:18:26.342783+00:00",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "runtime_statistics": {
+    "Equity": "$100,000.00",
+    "Fees": "-$0.00",
+    "Holdings": "$0.00",
+    "Net Profit": "$0.00",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Return": "0.00 %",
+    "Unrealized": "$0.00",
+    "Volume": "$0.00"
+  },
+  "logs": [],
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;UniverseType&#039; is not defined\n  at initialize\n    self.universe_settings.universe_type = U",
+  "project_id": 39413150,
+  "compile_id": "24f03703507ed46578b40bd3b1802980-08b4cde6c67d7ff0723bdbc674abf8f9",
+  "compile_created": {
+    "compileId": "24f03703507ed46578b40bd3b1802980-08b4cde6c67d7ff0723bdbc674abf8f9",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413150,
+    "signature": "08b4cde6c67d7ff0723bdbc674abf8f9",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "24f03703507ed46578b40bd3b1802980-08b4cde6c67d7ff0723bdbc674abf8f9",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413150, with CompileID: 24f03703507ed46578b40bd3b1802980-08b4cde6c67d7ff0723bdbc674abf8f9, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413150, with CompileID: 24f03703507ed46578b40bd3b1802980-08b4cde6c67d7ff0723bdbc674abf8f9, Lean Version: 2.5.0.0.18263"
+  ],
+  "backtest_id": "90645cd172924afa5b348d3c36704eff",
+  "backtest_created": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-equity-opening-range-breakout_v04",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413150,
+      "completed": false,
+      "optimizationId": null,
+      "backtestId": "90645cd172924afa5b348d3c36704eff",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 1,
+        "backtestCount": 1,
+        "parameters": 13
+      },
+      "backtestStart": "2026-11-14 22:18:31",
+      "backtestEnd": "2026-11-14 22:18:31",
+      "created": "2026-11-14 22:18:31",
+      "snapshotId": 39413156,
+      "status": "In Queue...",
+      "error": null,
+      "stacktrace": null,
+      "progress": 0,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": null,
+      "nodeName": "B8-16 node 5591a6cc",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null
+    },
+    "debugging": false,
+    "success": true
+  },
+  "raw_backtest": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-equity-opening-range-breakout_v04",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413150,
+      "completed": true,
+      "optimizationId": null,
+      "backtestId": "90645cd172924afa5b348d3c36704eff",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 1,
+        "backtestCount": 1,
+        "parameters": 13
+      },
+      "backtestStart": "2026-11-14 22:18:31",
+      "backtestEnd": "2026-11-14 22:18:31",
+      "created": "2026-11-14 22:18:31",
+      "snapshotId": 39413156,
+      "status": "Runtime Error",
+      "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;UniverseType&#039; is not defined\n  at initialize\n    self.universe_settings.universe_type = UniverseType.OPTIONS\n                                           ^^^^^^^^^^^^\n in main.py: line 21\n name &#039;UniverseType&#039; is not defined",
+      "stacktrace": "name 'UniverseType' is not defined\n  at initialize\n    self.universe_settings.universe_type = UniverseType.OPTIONS\n                                           ^^^^^^^^^^^^\n in main.py: line 21\n name 'UniverseType' is not defined",
+      "progress": 1,
+      "hasInitializeError": true,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {
+        "Equity": "$100,000.00",
+        "Fees": "-$0.00",
+        "Holdings": "$0.00",
+        "Net Profit": "$0.00",
+        "Probabilistic Sharpe Ratio": "0%",
+        "Return": "0.00 %",
+        "Unrealized": "$0.00",
+        "Volume": "$0.00"
+      },
+      "statistics": {},
+      "totalPerformance": {
+        "tradeStatistics": {
+          "startDateTime": null,
+          "endDateTime": null,
+          "totalNumberOfTrades": 0,
+          "numberOfWinningTrades": 0,
+          "numberOfLosingTrades": 0,
+          "totalProfitLoss": "0",
+          "totalProfit": "0",
+          "totalLoss": "0",
+          "largestProfit": "0",
+          "largestLoss": "0",
+          "averageProfitLoss": "0",
+          "averageProfit": "0",
+          "averageLoss": "0",
+          "averageTradeDuration": "00:00:00",
+          "averageWinningTradeDuration": "00:00:00",
+          "averageLosingTradeDuration": "00:00:00",
+          "medianTradeDuration": "00:00:00",
+          "medianWinningTradeDuration": "00:00:00",
+          "medianLosingTradeDuration": "00:00:00",
+          "maxConsecutiveWinningTrades": 0,
+          "maxConsecutiveLosingTrades": 0,
+          "profitLossRatio": "0",
+          "winLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "averageMAE": "0",
+          "averageMFE": "0",
+          "largestMAE": "0",
+          "largestMFE": "0",
+          "maximumClosedTradeDrawdown": "0",
+          "maximumIntraTradeDrawdown": "0",
+          "profitLossStandardDeviation": "0",
+          "profitLossDownsideDeviation": "0",
+          "profitFactor": "0",
+          "sharpeRatio": "0",
+          "sortinoRatio": "0",
+          "profitToMaxDrawdownRatio": "0",
+          "maximumEndTradeDrawdown": "0",
+          "averageEndTradeDrawdown": "0",
+          "maximumDrawdownDuration": "00:00:00",
+          "totalFees": "0"
+        },
+        "portfolioStatistics": {
+          "averageWinRate": "0",
+          "averageLossRate": "0",
+          "profitLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "expectancy": "0",
+          "startEquity": "0",
+          "endEquity": "0",
+          "compoundingAnnualReturn": "0",
+          "drawdown": "0",
+          "totalNetProfit": "0",
+          "sharpeRatio": "0",
+          "probabilisticSharpeRatio": "0",
+          "sortinoRatio": "0",
+          "alpha": "0",
+          "beta": "0",
+          "annualStandardDeviation": "0",
+          "annualVariance": "0",
+          "informationRatio": "0",
+          "trackingError": "0",
+          "treynorRatio": "0",
+          "portfolioTurnover": "0",
+          "valueAtRisk99": "0",
+          "valueAtRisk95": "0",
+          "drawdownRecovery": "0"
+        },
+        "closedTrades": []
+      },
+      "nodeName": "B8-16 node 5591a6cc",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": [
+        {
+          "name": "PortfolioValueIsNotPositiveAnalysis",
+          "issue": "The portfolio equity dropped to zero or below.",
+          "sample": true,
+          "solutions": [
+            "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+            "Reduce position sizes.",
+            "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+            "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+          ]
+        },
+        {
+          "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+          "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+          "sample": {
+            "pValue": 0.5
+          },
+          "solutions": [
+            "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+          ]
+        }
+      ],
+      "serverStatistics": {
+        "CPU Usage": "7.1%",
+        "Used RAM (MB)": "223",
+        "Total RAM (MB)": "16384",
+        "Hostname": "BACKTESTING-com-90645cd172924afa5b348d3c36704eff",
+        "LEAN Version": "v2.5.0.0.18263",
+        "Up Time": "0d 00:00:13"
+      }
+    },
+    "success": true
+  },
+  "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;UniverseType&#039; is not defined\n  at initialize\n    self.universe_settings.universe_type = UniverseType.OPTIONS\n                                           ^^^^^^^^^^^^\n in main.py: line 21\n name &#039;UniverseType&#039; is not defined",
+  "stacktrace": "name 'UniverseType' is not defined\n  at initialize\n    self.universe_settings.universe_type = UniverseType.OPTIONS\n                                           ^^^^^^^^^^^^\n in main.py: line 21\n name 'UniverseType' is not defined",
+  "has_initialize_error": true,
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "total_orders": null,
+  "finished_at": "2026-11-14T22:19:23.949473+00:00"
+}

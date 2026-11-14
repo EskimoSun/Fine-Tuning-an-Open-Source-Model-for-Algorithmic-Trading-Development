@@ -1,0 +1,2606 @@
+{
+  "status": "completed",
+  "stage": "finished",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityBollingerMeanReversionAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        self._equity = self.add_equity(\"SPY\")\n        self._bb = self.bb(self._equity, 20, 2, resolution=Resolution.DAILY)\n        # Alternatively, use a manual indicator.\n        # self._bb = BollingerBands(20, 2)\n        # self.warm_up_indicator(self._equity, self._bb, Resolution.DAILY)\n        # self.register_indicator(self._equity, self._bb, Resolution.DAILY)\n        self.plot_indicator(\"SPY\", self._bb.upper_band, self._bb.middle_band, self._bb.lower_band)\n        self.schedule.on(self.date_rules.every_day(self._equity), self.time_rules.at(8, 0), self._rebalance)\n\n    def _rebalance(self) -> None:\n        if not self.portfolio.invested and self._equity.price < self._bb.lower_band.current.value:\n            self.set_holdings(self._equity, 1)\n        elif self.portfolio.invested and self._equity.price >= self._bb.middle_band.current.value:\n            self.liquidate()\n",
+  "source_sha256": "03eedc5563e40803acc1a6ad1cb08e3c476774a0621e67a95c7a01c129837f17",
+  "started_at": "2026-10-20T01:47:33.055714+00:00",
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "statistics": {
+    "Total Orders": "4",
+    "Average Win": "2.75%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "17.631%",
+    "Drawdown": "1.400%",
+    "Expectancy": "0",
+    "Start Equity": "100000",
+    "End Equity": "105563.80",
+    "Net Profit": "5.564%",
+    "Sharpe Ratio": "1.449",
+    "Sortino Ratio": "1.208",
+    "Probabilistic Sharpe Ratio": "60.663%",
+    "Loss Rate": "0%",
+    "Win Rate": "100%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0.06",
+    "Beta": "0.201",
+    "Annual Standard Deviation": "0.049",
+    "Annual Variance": "0.002",
+    "Information Ratio": "0.16",
+    "Tracking Error": "0.096",
+    "Treynor Ratio": "0.355",
+    "Total Fees": "$4.00",
+    "Estimated Strategy Capacity": "$100000000.00",
+    "Lowest Capacity Asset": "SPY R735QTJ8XC9X",
+    "Portfolio Turnover": "3.29%",
+    "Drawdown Recovery": "4"
+  },
+  "runtime_statistics": {
+    "Equity": "$105,563.80",
+    "Fees": "-$4.00",
+    "Holdings": "$0.00",
+    "Net Profit": "$5,563.80",
+    "Probabilistic Sharpe Ratio": "60.663%",
+    "Return": "5.56 %",
+    "Unrealized": "$0.00",
+    "Volume": "$413,599.51"
+  },
+  "logs": [
+    "2024-09-01 00:00:00 Launching analysis for c1f6bdc45160fe7ca521ce6ce4c92b01 with LEAN Engine v2.5.0.0.18194",
+    "2024-11-07 08:00:00 Warning: market orders submitted while the market is closed are automatically converted into MarketOnOpen orders to fill at the next market open.",
+    "2024-12-31 16:00:00 Algorithm Id:(c1f6bdc45160fe7ca521ce6ce4c92b01) completed in 0.88 seconds at 74k data points per second. Processing total of 65,422 data points."
+  ],
+  "qc_note": "",
+  "project_id": 38139285,
+  "compile_id": "a58c241c8e1387b877825a19c5011e45-8c14180642125b2cd31697a1f090ae0e",
+  "compile_created": {
+    "compileId": "a58c241c8e1387b877825a19c5011e45-8c14180642125b2cd31697a1f090ae0e",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 38139285,
+    "signature": "8c14180642125b2cd31697a1f090ae0e",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "a58c241c8e1387b877825a19c5011e45-8c14180642125b2cd31697a1f090ae0e",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 38139285, with CompileID: a58c241c8e1387b877825a19c5011e45-8c14180642125b2cd31697a1f090ae0e, Lean Version: 2.5.0.0.18194"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 38139285, with CompileID: a58c241c8e1387b877825a19c5011e45-8c14180642125b2cd31697a1f090ae0e, Lean Version: 2.5.0.0.18194"
+  ],
+  "backtest_id": "c1f6bdc45160fe7ca521ce6ce4c92b01",
+  "backtest_created": {
+    "backtest": {
+      "note": null,
+      "name": "gold-equity-bollinger-mean-reversion",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 38139285,
+      "completed": false,
+      "optimizationId": null,
+      "backtestId": "c1f6bdc45160fe7ca521ce6ce4c92b01",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 1,
+        "backtestCount": 1,
+        "parameters": 9
+      },
+      "backtestStart": "2026-10-20 01:47:39",
+      "backtestEnd": "2026-10-20 01:47:39",
+      "created": "2026-10-20 01:47:39",
+      "snapshotId": 38139290,
+      "status": "In Queue...",
+      "error": null,
+      "stacktrace": null,
+      "progress": 0,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": null,
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-07-22T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null
+    },
+    "debugging": false,
+    "success": true
+  },
+  "raw_backtest": {
+    "backtest": {
+      "note": "",
+      "name": "gold-equity-bollinger-mean-reversion",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 38139285,
+      "completed": true,
+      "optimizationId": null,
+      "backtestId": "c1f6bdc45160fe7ca521ce6ce4c92b01",
+      "tradeableDates": 84,
+      "researchGuide": {
+        "minutes": 1,
+        "backtestCount": 1,
+        "parameters": 9
+      },
+      "backtestStart": "2024-09-01 00:00:00",
+      "backtestEnd": "2024-12-31 23:59:59",
+      "created": "2026-10-20 01:47:39",
+      "snapshotId": 38139290,
+      "status": "Completed.",
+      "error": null,
+      "stacktrace": null,
+      "progress": 1,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        },
+        "Drawdown": {
+          "name": "Drawdown"
+        },
+        "Portfolio Turnover": {
+          "name": "Portfolio Turnover"
+        },
+        "Exposure": {
+          "name": "Exposure"
+        },
+        "SPY": {
+          "name": "SPY"
+        },
+        "Capacity": {
+          "name": "Capacity"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": {
+        "M1_20240930": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "100000",
+            "endEquity": "100000",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "-1.4931",
+            "trackingError": "0.1142",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "M1_20241031": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "100000",
+            "endEquity": "100000",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "-2.5939",
+            "trackingError": "0.0737",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "M1_20241130": {
+          "tradeStatistics": {
+            "startDateTime": "2024-11-01T13:31:00Z",
+            "endDateTime": "2024-11-07T14:31:00Z",
+            "totalNumberOfTrades": 1,
+            "numberOfWinningTrades": 1,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "3808.94",
+            "totalProfit": "3808.94",
+            "totalLoss": "0",
+            "largestProfit": "3808.94",
+            "largestLoss": "0",
+            "averageProfitLoss": "3808.94",
+            "averageProfit": "3808.94",
+            "averageLoss": "0",
+            "averageTradeDuration": "6.01:00:00",
+            "averageWinningTradeDuration": "6.01:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "6.01:00:00",
+            "medianWinningTradeDuration": "6.01:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 1,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "10",
+            "winRate": "1",
+            "lossRate": "0",
+            "averageMAE": "-587.87",
+            "averageMFE": "3856.18",
+            "largestMAE": "-587.87",
+            "largestMFE": "3856.18",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "-4444.05",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "10",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "10",
+            "maximumEndTradeDrawdown": "1312.22",
+            "averageEndTradeDrawdown": "-47.24",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "2"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0381",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "1",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "100000",
+            "endEquity": "103806.9358",
+            "compoundingAnnualReturn": "0.5993",
+            "drawdown": "0.008",
+            "totalNetProfit": "0.0381",
+            "sharpeRatio": "4.3961",
+            "probabilisticSharpeRatio": "0.9409",
+            "sortinoRatio": "0",
+            "alpha": "-0.0142",
+            "beta": "0.6477",
+            "annualStandardDeviation": "0.0824",
+            "annualVariance": "0.0068",
+            "informationRatio": "-3.5891",
+            "trackingError": "0.0610",
+            "treynorRatio": "0.5596",
+            "portfolioTurnover": "0.0667",
+            "valueAtRisk99": "-0.011",
+            "valueAtRisk95": "-0.007",
+            "drawdownRecovery": "4"
+          },
+          "closedTrades": []
+        },
+        "M1_20241231": {
+          "tradeStatistics": {
+            "startDateTime": "2024-12-19T14:31:00Z",
+            "endDateTime": "2024-12-26T14:31:00Z",
+            "totalNumberOfTrades": 1,
+            "numberOfWinningTrades": 1,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "1758.86",
+            "totalProfit": "1758.86",
+            "totalLoss": "0",
+            "largestProfit": "1758.86",
+            "largestLoss": "0",
+            "averageProfitLoss": "1758.86",
+            "averageProfit": "1758.86",
+            "averageLoss": "0",
+            "averageTradeDuration": "7.00:00:00",
+            "averageWinningTradeDuration": "7.00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "7.00:00:00",
+            "medianWinningTradeDuration": "7.00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 1,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "10",
+            "winRate": "1",
+            "lossRate": "0",
+            "averageMAE": "-1450.49",
+            "averageMFE": "2092.51",
+            "largestMAE": "-1450.49",
+            "largestMFE": "2092.51",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "-3543.00",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "10",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "10",
+            "maximumEndTradeDrawdown": "1680.97",
+            "averageEndTradeDrawdown": "-333.65",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "2"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0169",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "1",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "103806.9358",
+            "endEquity": "105563.8001",
+            "compoundingAnnualReturn": "0.2211",
+            "drawdown": "0.014",
+            "totalNetProfit": "0.0169",
+            "sharpeRatio": "1.8394",
+            "probabilisticSharpeRatio": "0.5947",
+            "sortinoRatio": "1.6158",
+            "alpha": "0.1510",
+            "beta": "0.1960",
+            "annualStandardDeviation": "0.0580",
+            "annualVariance": "0.0034",
+            "informationRatio": "3.0366",
+            "trackingError": "0.1095",
+            "treynorRatio": "0.5444",
+            "portfolioTurnover": "0.0629",
+            "valueAtRisk99": "-0.008",
+            "valueAtRisk95": "-0.005",
+            "drawdownRecovery": "3"
+          },
+          "closedTrades": []
+        },
+        "M3_20240930": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "100000",
+            "endEquity": "100000",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "-1.4931",
+            "trackingError": "0.1142",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "M3_20241031": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "100000",
+            "endEquity": "100000",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "-1.5667",
+            "trackingError": "0.0956",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "M3_20241130": {
+          "tradeStatistics": {
+            "startDateTime": "2024-11-01T13:31:00Z",
+            "endDateTime": "2024-11-07T14:31:00Z",
+            "totalNumberOfTrades": 1,
+            "numberOfWinningTrades": 1,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "3808.94",
+            "totalProfit": "3808.94",
+            "totalLoss": "0",
+            "largestProfit": "3808.94",
+            "largestLoss": "0",
+            "averageProfitLoss": "3808.94",
+            "averageProfit": "3808.94",
+            "averageLoss": "0",
+            "averageTradeDuration": "6.01:00:00",
+            "averageWinningTradeDuration": "6.01:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "6.01:00:00",
+            "medianWinningTradeDuration": "6.01:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 1,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "10",
+            "winRate": "1",
+            "lossRate": "0",
+            "averageMAE": "-587.87",
+            "averageMFE": "3856.18",
+            "largestMAE": "-587.87",
+            "largestMFE": "3856.18",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "-4444.05",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "10",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "10",
+            "maximumEndTradeDrawdown": "1312.22",
+            "averageEndTradeDrawdown": "-47.24",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "2"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0381",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "1",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "100000",
+            "endEquity": "103806.9358",
+            "compoundingAnnualReturn": "0.1635",
+            "drawdown": "0.008",
+            "totalNetProfit": "0.0381",
+            "sharpeRatio": "1.3334",
+            "probabilisticSharpeRatio": "0.5673",
+            "sortinoRatio": "3.3626",
+            "alpha": "0.0263",
+            "beta": "0.2071",
+            "annualStandardDeviation": "0.0468",
+            "annualVariance": "0.0022",
+            "informationRatio": "-1.2233",
+            "trackingError": "0.0915",
+            "treynorRatio": "0.3013",
+            "portfolioTurnover": "0.0222",
+            "valueAtRisk99": "-0.006",
+            "valueAtRisk95": "-0.004",
+            "drawdownRecovery": "4"
+          },
+          "closedTrades": []
+        },
+        "M3_20241231": {
+          "tradeStatistics": {
+            "startDateTime": "2024-11-01T13:31:00Z",
+            "endDateTime": "2024-12-26T14:31:00Z",
+            "totalNumberOfTrades": 2,
+            "numberOfWinningTrades": 2,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "5567.80",
+            "totalProfit": "5567.80",
+            "totalLoss": "0",
+            "largestProfit": "3808.94",
+            "largestLoss": "0",
+            "averageProfitLoss": "2783.90",
+            "averageProfit": "2783.90",
+            "averageLoss": "0",
+            "averageTradeDuration": "6.12:30:00",
+            "averageWinningTradeDuration": "6.12:30:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "7.00:00:00",
+            "medianWinningTradeDuration": "7.00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 2,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "10",
+            "winRate": "1",
+            "lossRate": "0",
+            "averageMAE": "-1019.18",
+            "averageMFE": "2974.345",
+            "largestMAE": "-1450.49",
+            "largestMFE": "3856.18",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "-4444.05",
+            "profitLossStandardDeviation": "1449.6255",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "10",
+            "sharpeRatio": "1.9204",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "10",
+            "maximumEndTradeDrawdown": "1680.97",
+            "averageEndTradeDrawdown": "-190.445",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "4"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0275",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "1",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "100000",
+            "endEquity": "105563.8001",
+            "compoundingAnnualReturn": "0.2405",
+            "drawdown": "0.014",
+            "totalNetProfit": "0.0556",
+            "sharpeRatio": "2.0366",
+            "probabilisticSharpeRatio": "0.7417",
+            "sortinoRatio": "1.9534",
+            "alpha": "0.1000",
+            "beta": "0.2783",
+            "annualStandardDeviation": "0.0566",
+            "annualVariance": "0.0032",
+            "informationRatio": "0.6716",
+            "trackingError": "0.0895",
+            "treynorRatio": "0.4143",
+            "portfolioTurnover": "0.0432",
+            "valueAtRisk99": "-0.008",
+            "valueAtRisk95": "-0.005",
+            "drawdownRecovery": "4"
+          },
+          "closedTrades": []
+        },
+        "M6_20240930": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "100000",
+            "endEquity": "100000",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "-1.4931",
+            "trackingError": "0.1142",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "M6_20241031": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "100000",
+            "endEquity": "100000",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "-1.5667",
+            "trackingError": "0.0956",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "M6_20241130": {
+          "tradeStatistics": {
+            "startDateTime": "2024-11-01T13:31:00Z",
+            "endDateTime": "2024-11-07T14:31:00Z",
+            "totalNumberOfTrades": 1,
+            "numberOfWinningTrades": 1,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "3808.94",
+            "totalProfit": "3808.94",
+            "totalLoss": "0",
+            "largestProfit": "3808.94",
+            "largestLoss": "0",
+            "averageProfitLoss": "3808.94",
+            "averageProfit": "3808.94",
+            "averageLoss": "0",
+            "averageTradeDuration": "6.01:00:00",
+            "averageWinningTradeDuration": "6.01:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "6.01:00:00",
+            "medianWinningTradeDuration": "6.01:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 1,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "10",
+            "winRate": "1",
+            "lossRate": "0",
+            "averageMAE": "-587.87",
+            "averageMFE": "3856.18",
+            "largestMAE": "-587.87",
+            "largestMFE": "3856.18",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "-4444.05",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "10",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "10",
+            "maximumEndTradeDrawdown": "1312.22",
+            "averageEndTradeDrawdown": "-47.24",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "2"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0381",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "1",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "100000",
+            "endEquity": "103806.9358",
+            "compoundingAnnualReturn": "0.1635",
+            "drawdown": "0.008",
+            "totalNetProfit": "0.0381",
+            "sharpeRatio": "1.3334",
+            "probabilisticSharpeRatio": "0.5673",
+            "sortinoRatio": "3.3626",
+            "alpha": "0.0263",
+            "beta": "0.2071",
+            "annualStandardDeviation": "0.0468",
+            "annualVariance": "0.0022",
+            "informationRatio": "-1.2233",
+            "trackingError": "0.0915",
+            "treynorRatio": "0.3013",
+            "portfolioTurnover": "0.0222",
+            "valueAtRisk99": "-0.006",
+            "valueAtRisk95": "-0.004",
+            "drawdownRecovery": "4"
+          },
+          "closedTrades": []
+        },
+        "M6_20241231": {
+          "tradeStatistics": {
+            "startDateTime": "2024-11-01T13:31:00Z",
+            "endDateTime": "2024-12-26T14:31:00Z",
+            "totalNumberOfTrades": 2,
+            "numberOfWinningTrades": 2,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "5567.80",
+            "totalProfit": "5567.80",
+            "totalLoss": "0",
+            "largestProfit": "3808.94",
+            "largestLoss": "0",
+            "averageProfitLoss": "2783.90",
+            "averageProfit": "2783.90",
+            "averageLoss": "0",
+            "averageTradeDuration": "6.12:30:00",
+            "averageWinningTradeDuration": "6.12:30:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "7.00:00:00",
+            "medianWinningTradeDuration": "7.00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 2,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "10",
+            "winRate": "1",
+            "lossRate": "0",
+            "averageMAE": "-1019.18",
+            "averageMFE": "2974.345",
+            "largestMAE": "-1450.49",
+            "largestMFE": "3856.18",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "-4444.05",
+            "profitLossStandardDeviation": "1449.6255",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "10",
+            "sharpeRatio": "1.9204",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "10",
+            "maximumEndTradeDrawdown": "1680.97",
+            "averageEndTradeDrawdown": "-190.445",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "4"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0275",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "1",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "100000",
+            "endEquity": "105563.8001",
+            "compoundingAnnualReturn": "0.1763",
+            "drawdown": "0.014",
+            "totalNetProfit": "0.0556",
+            "sharpeRatio": "1.4486",
+            "probabilisticSharpeRatio": "0.6066",
+            "sortinoRatio": "1.2076",
+            "alpha": "0.0601",
+            "beta": "0.2007",
+            "annualStandardDeviation": "0.0492",
+            "annualVariance": "0.0024",
+            "informationRatio": "0.1604",
+            "trackingError": "0.0958",
+            "treynorRatio": "0.3552",
+            "portfolioTurnover": "0.0329",
+            "valueAtRisk99": "-0.007",
+            "valueAtRisk95": "-0.005",
+            "drawdownRecovery": "4"
+          },
+          "closedTrades": []
+        },
+        "M12_20240930": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "100000",
+            "endEquity": "100000",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "-1.4931",
+            "trackingError": "0.1142",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "M12_20241031": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "100000",
+            "endEquity": "100000",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "-1.5667",
+            "trackingError": "0.0956",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "M12_20241130": {
+          "tradeStatistics": {
+            "startDateTime": "2024-11-01T13:31:00Z",
+            "endDateTime": "2024-11-07T14:31:00Z",
+            "totalNumberOfTrades": 1,
+            "numberOfWinningTrades": 1,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "3808.94",
+            "totalProfit": "3808.94",
+            "totalLoss": "0",
+            "largestProfit": "3808.94",
+            "largestLoss": "0",
+            "averageProfitLoss": "3808.94",
+            "averageProfit": "3808.94",
+            "averageLoss": "0",
+            "averageTradeDuration": "6.01:00:00",
+            "averageWinningTradeDuration": "6.01:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "6.01:00:00",
+            "medianWinningTradeDuration": "6.01:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 1,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "10",
+            "winRate": "1",
+            "lossRate": "0",
+            "averageMAE": "-587.87",
+            "averageMFE": "3856.18",
+            "largestMAE": "-587.87",
+            "largestMFE": "3856.18",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "-4444.05",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "10",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "10",
+            "maximumEndTradeDrawdown": "1312.22",
+            "averageEndTradeDrawdown": "-47.24",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "2"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0381",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "1",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "100000",
+            "endEquity": "103806.9358",
+            "compoundingAnnualReturn": "0.1635",
+            "drawdown": "0.008",
+            "totalNetProfit": "0.0381",
+            "sharpeRatio": "1.3334",
+            "probabilisticSharpeRatio": "0.5673",
+            "sortinoRatio": "3.3626",
+            "alpha": "0.0263",
+            "beta": "0.2071",
+            "annualStandardDeviation": "0.0468",
+            "annualVariance": "0.0022",
+            "informationRatio": "-1.2233",
+            "trackingError": "0.0915",
+            "treynorRatio": "0.3013",
+            "portfolioTurnover": "0.0222",
+            "valueAtRisk99": "-0.006",
+            "valueAtRisk95": "-0.004",
+            "drawdownRecovery": "4"
+          },
+          "closedTrades": []
+        },
+        "M12_20241231": {
+          "tradeStatistics": {
+            "startDateTime": "2024-11-01T13:31:00Z",
+            "endDateTime": "2024-12-26T14:31:00Z",
+            "totalNumberOfTrades": 2,
+            "numberOfWinningTrades": 2,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "5567.80",
+            "totalProfit": "5567.80",
+            "totalLoss": "0",
+            "largestProfit": "3808.94",
+            "largestLoss": "0",
+            "averageProfitLoss": "2783.90",
+            "averageProfit": "2783.90",
+            "averageLoss": "0",
+            "averageTradeDuration": "6.12:30:00",
+            "averageWinningTradeDuration": "6.12:30:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "7.00:00:00",
+            "medianWinningTradeDuration": "7.00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 2,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "10",
+            "winRate": "1",
+            "lossRate": "0",
+            "averageMAE": "-1019.18",
+            "averageMFE": "2974.345",
+            "largestMAE": "-1450.49",
+            "largestMFE": "3856.18",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "-4444.05",
+            "profitLossStandardDeviation": "1449.6255",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "10",
+            "sharpeRatio": "1.9204",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "10",
+            "maximumEndTradeDrawdown": "1680.97",
+            "averageEndTradeDrawdown": "-190.445",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "4"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0275",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "1",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "100000",
+            "endEquity": "105563.8001",
+            "compoundingAnnualReturn": "0.1763",
+            "drawdown": "0.014",
+            "totalNetProfit": "0.0556",
+            "sharpeRatio": "1.4486",
+            "probabilisticSharpeRatio": "0.6066",
+            "sortinoRatio": "1.2076",
+            "alpha": "0.0601",
+            "beta": "0.2007",
+            "annualStandardDeviation": "0.0492",
+            "annualVariance": "0.0024",
+            "informationRatio": "0.1604",
+            "trackingError": "0.0958",
+            "treynorRatio": "0.3552",
+            "portfolioTurnover": "0.0329",
+            "valueAtRisk99": "-0.007",
+            "valueAtRisk95": "-0.005",
+            "drawdownRecovery": "4"
+          },
+          "closedTrades": []
+        }
+      },
+      "runtimeStatistics": {
+        "Equity": "$105,563.80",
+        "Fees": "-$4.00",
+        "Holdings": "$0.00",
+        "Net Profit": "$5,563.80",
+        "Probabilistic Sharpe Ratio": "60.663%",
+        "Return": "5.56 %",
+        "Unrealized": "$0.00",
+        "Volume": "$413,599.51"
+      },
+      "statistics": {
+        "Total Orders": "4",
+        "Average Win": "2.75%",
+        "Average Loss": "0%",
+        "Compounding Annual Return": "17.631%",
+        "Drawdown": "1.400%",
+        "Expectancy": "0",
+        "Start Equity": "100000",
+        "End Equity": "105563.80",
+        "Net Profit": "5.564%",
+        "Sharpe Ratio": "1.449",
+        "Sortino Ratio": "1.208",
+        "Probabilistic Sharpe Ratio": "60.663%",
+        "Loss Rate": "0%",
+        "Win Rate": "100%",
+        "Profit-Loss Ratio": "0",
+        "Alpha": "0.06",
+        "Beta": "0.201",
+        "Annual Standard Deviation": "0.049",
+        "Annual Variance": "0.002",
+        "Information Ratio": "0.16",
+        "Tracking Error": "0.096",
+        "Treynor Ratio": "0.355",
+        "Total Fees": "$4.00",
+        "Estimated Strategy Capacity": "$100000000.00",
+        "Lowest Capacity Asset": "SPY R735QTJ8XC9X",
+        "Portfolio Turnover": "3.29%",
+        "Drawdown Recovery": "4"
+      },
+      "totalPerformance": {
+        "tradeStatistics": {
+          "startDateTime": "2024-11-01T13:31:00Z",
+          "endDateTime": "2024-12-26T14:31:00Z",
+          "totalNumberOfTrades": 2,
+          "numberOfWinningTrades": 2,
+          "numberOfLosingTrades": 0,
+          "totalProfitLoss": "5567.80",
+          "totalProfit": "5567.80",
+          "totalLoss": "0",
+          "largestProfit": "3808.94",
+          "largestLoss": "0",
+          "averageProfitLoss": "2783.90",
+          "averageProfit": "2783.90",
+          "averageLoss": "0",
+          "averageTradeDuration": "6.12:30:00",
+          "averageWinningTradeDuration": "6.12:30:00",
+          "averageLosingTradeDuration": "00:00:00",
+          "medianTradeDuration": "7.00:00:00",
+          "medianWinningTradeDuration": "7.00:00:00",
+          "medianLosingTradeDuration": "00:00:00",
+          "maxConsecutiveWinningTrades": 2,
+          "maxConsecutiveLosingTrades": 0,
+          "profitLossRatio": "0",
+          "winLossRatio": "10",
+          "winRate": "1",
+          "lossRate": "0",
+          "averageMAE": "-1019.18",
+          "averageMFE": "2974.345",
+          "largestMAE": "-1450.49",
+          "largestMFE": "3856.18",
+          "maximumClosedTradeDrawdown": "0",
+          "maximumIntraTradeDrawdown": "-4444.05",
+          "profitLossStandardDeviation": "1449.6255",
+          "profitLossDownsideDeviation": "0",
+          "profitFactor": "10",
+          "sharpeRatio": "1.9204",
+          "sortinoRatio": "0",
+          "profitToMaxDrawdownRatio": "10",
+          "maximumEndTradeDrawdown": "1680.97",
+          "averageEndTradeDrawdown": "-190.445",
+          "maximumDrawdownDuration": "00:00:00",
+          "totalFees": "4"
+        },
+        "portfolioStatistics": {
+          "averageWinRate": "0.0275",
+          "averageLossRate": "0",
+          "profitLossRatio": "0",
+          "winRate": "1",
+          "lossRate": "0",
+          "expectancy": "0",
+          "startEquity": "100000",
+          "endEquity": "105563.8001",
+          "compoundingAnnualReturn": "0.1763",
+          "drawdown": "0.014",
+          "totalNetProfit": "0.0556",
+          "sharpeRatio": "1.4486",
+          "probabilisticSharpeRatio": "0.6066",
+          "sortinoRatio": "1.2076",
+          "alpha": "0.0601",
+          "beta": "0.2007",
+          "annualStandardDeviation": "0.0492",
+          "annualVariance": "0.0024",
+          "informationRatio": "0.1604",
+          "trackingError": "0.0958",
+          "treynorRatio": "0.3552",
+          "portfolioTurnover": "0.0329",
+          "valueAtRisk99": "-0.007",
+          "valueAtRisk95": "-0.005",
+          "drawdownRecovery": "4"
+        },
+        "closedTrades": [
+          {
+            "id": "98837973-0190-44e2-b72c-567ed67f97de",
+            "symbols": [
+              {
+                "value": "SPY",
+                "id": "SPY R735QTJ8XC9X",
+                "permtick": "SPY"
+              }
+            ],
+            "entryTime": "2024-11-01T13:31:00Z",
+            "entryPrice": 558.433706004,
+            "direction": 0,
+            "quantity": 179,
+            "exitTime": "2024-11-07T14:31:00Z",
+            "exitPrice": 579.712677123,
+            "profitLoss": 3808.94,
+            "totalFees": 2,
+            "mae": -587.87,
+            "mfe": 3856.18,
+            "duration": "6.01:00:00",
+            "endTradeDrawdown": 1312.22,
+            "isWin": true,
+            "orderIds": [
+              1,
+              2
+            ]
+          },
+          {
+            "id": "bdeccfec-0f22-4309-88a8-2dd5143983f2",
+            "symbols": [
+              {
+                "value": "SPY",
+                "id": "SPY R735QTJ8XC9X",
+                "permtick": "SPY"
+              }
+            ],
+            "entryTime": "2024-12-19T14:31:00Z",
+            "entryPrice": 578.090118921,
+            "direction": 0,
+            "quantity": 180,
+            "exitTime": "2024-12-26T14:31:00Z",
+            "exitPrice": 587.861587117,
+            "profitLoss": 1758.86,
+            "totalFees": 2,
+            "mae": -1450.49,
+            "mfe": 2092.51,
+            "duration": "7.00:00:00",
+            "endTradeDrawdown": 1680.97,
+            "isWin": true,
+            "orderIds": [
+              3,
+              4
+            ]
+          }
+        ]
+      },
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-07-22T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": [
+        {
+          "name": "FlatEquityCurveAnalysis",
+          "issue": "The equity curve is flat for several days in a row.",
+          "sample": [
+            {
+              "start": "2024-09-04T04:00:00",
+              "end": "2024-11-01T04:00:00",
+              "trading_days": 43
+            }
+          ],
+          "solutions": [
+            "Log how often each entry condition passes individually: when several conditions must align (trend, volume, indicator thresholds), it is common that they are never all true at the same time. Relax the single most restrictive condition and re-run, changing one condition per backtest instead of redesigning the strategy.",
+            "Check if you need to warm-up some data structures, including indicators, RollingWindow objects, and training data. Log how many assets pass IsReady or warm-up gates: they can silently exclude most of the universe.",
+            "Check if the algorithm subscribes to any assets. Is the universe selection actually selecting anything? Log the selection count on each rebalance.",
+            "Check custom data sources actually deliver data by logging the first points received: a reader or date-format error can silently produce no data and therefore no signals.",
+            "Check minimum-history or training-window requirements against the history the data source actually provides: if a model requires more history than exists, the trading logic may never activate.",
+            "Check if there is enough cash to satisfy the minimum order sizes."
+          ]
+        },
+        {
+          "name": "PortfolioMarginUsageAnalysis",
+          "issue": "The algorithm sometimes only utilizes a small proportion of the margin available.",
+          "sample": "Number of days when the 3-day SMA of the margin usage drops below 50%: 6",
+          "solutions": [
+            "Adjust the strategy logic or position sizing to utilize more margin.",
+            "If the algorithm logic leads to periods of time when the portfolio sits in cash, consider holding a \"risk-free\" asset during these periods."
+          ]
+        },
+        {
+          "name": "PerformanceRelativeToBenchmarkAnalysis",
+          "issue": "The strategy has a lower Sharpe ratio than the benchmark.",
+          "sample": {
+            "backtestSharpe": -672.4311258230107,
+            "benchmarkSharpe": -7.181009168482598
+          },
+          "solutions": [
+            "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+          ]
+        },
+        {
+          "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+          "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+          "sample": {
+            "pValue": 0.19205109234499967
+          },
+          "solutions": [
+            "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+          ]
+        }
+      ],
+      "serverStatistics": {
+        "CPU Usage": "205.7%",
+        "Used RAM (MB)": "229",
+        "Total RAM (MB)": "16384",
+        "Hostname": "BACKTESTING-com-c1f6bdc45160fe7ca521ce6ce4c92b01",
+        "LEAN Version": "v2.5.0.0.18194",
+        "Up Time": "0d 00:00:05"
+      }
+    },
+    "success": true
+  },
+  "error": null,
+  "stacktrace": null,
+  "has_initialize_error": false,
+  "trade_statistics": {
+    "startDateTime": "2024-11-01T13:31:00Z",
+    "endDateTime": "2024-12-26T14:31:00Z",
+    "totalNumberOfTrades": 2,
+    "numberOfWinningTrades": 2,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "5567.80",
+    "totalProfit": "5567.80",
+    "totalLoss": "0",
+    "largestProfit": "3808.94",
+    "largestLoss": "0",
+    "averageProfitLoss": "2783.90",
+    "averageProfit": "2783.90",
+    "averageLoss": "0",
+    "averageTradeDuration": "6.12:30:00",
+    "averageWinningTradeDuration": "6.12:30:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "7.00:00:00",
+    "medianWinningTradeDuration": "7.00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 2,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "10",
+    "winRate": "1",
+    "lossRate": "0",
+    "averageMAE": "-1019.18",
+    "averageMFE": "2974.345",
+    "largestMAE": "-1450.49",
+    "largestMFE": "3856.18",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "-4444.05",
+    "profitLossStandardDeviation": "1449.6255",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "10",
+    "sharpeRatio": "1.9204",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "10",
+    "maximumEndTradeDrawdown": "1680.97",
+    "averageEndTradeDrawdown": "-190.445",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "4"
+  },
+  "total_orders": "4",
+  "finished_at": "2026-10-20T01:47:52.883926+00:00",
+  "orders": [
+    {
+      "type": 4,
+      "id": 1,
+      "contingentId": 0,
+      "brokerId": [
+        "1"
+      ],
+      "symbol": {
+        "value": "SPY",
+        "id": "SPY R735QTJ8XC9X",
+        "permtick": "SPY"
+      },
+      "price": 558.433706004,
+      "priceCurrency": "USD",
+      "time": "2024-11-01T12:00:00Z",
+      "createdTime": "2024-11-01T12:00:00Z",
+      "lastFillTime": "2024-11-01T13:31:00Z",
+      "quantity": 179.0,
+      "status": 3,
+      "tag": "",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 0,
+      "value": 99959.633374716,
+      "orderSubmissionData": {
+        "bidPrice": 555.687086397,
+        "askPrice": 555.726184185,
+        "lastPrice": 555.814154208
+      },
+      "isMarketable": false,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "c1f6bdc45160fe7ca521ce6ce4c92b01-1-1",
+          "algorithmId": "c1f6bdc45160fe7ca521ce6ce4c92b01",
+          "orderId": 1,
+          "orderEventId": 1,
+          "symbol": "SPY R735QTJ8XC9X",
+          "symbolValue": "SPY",
+          "symbolPermtick": "SPY",
+          "time": 1730462400.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "buy",
+          "message": null,
+          "isAssignment": false,
+          "quantity": 179.0
+        },
+        {
+          "id": "c1f6bdc45160fe7ca521ce6ce4c92b01-1-2",
+          "algorithmId": "c1f6bdc45160fe7ca521ce6ce4c92b01",
+          "orderId": 1,
+          "orderEventId": 2,
+          "symbol": "SPY R735QTJ8XC9X",
+          "symbolValue": "SPY",
+          "symbolPermtick": "SPY",
+          "time": 1730467860.0,
+          "status": "filled",
+          "orderFeeAmount": 1.0,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 558.433706004,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 179.0,
+          "direction": "buy",
+          "message": null,
+          "isAssignment": false,
+          "quantity": 179.0
+        }
+      ]
+    },
+    {
+      "type": 4,
+      "id": 2,
+      "contingentId": 0,
+      "brokerId": [
+        "2"
+      ],
+      "symbol": {
+        "value": "SPY",
+        "id": "SPY R735QTJ8XC9X",
+        "permtick": "SPY"
+      },
+      "price": 579.712677123,
+      "priceCurrency": "USD",
+      "time": "2024-11-07T13:00:00Z",
+      "createdTime": "2024-11-07T13:00:00Z",
+      "lastFillTime": "2024-11-07T14:31:00Z",
+      "quantity": -179.0,
+      "status": 3,
+      "tag": "Liquidated",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 1,
+      "value": -103768.569205017,
+      "orderSubmissionData": {
+        "bidPrice": 577.679592147,
+        "askPrice": 577.708915488,
+        "lastPrice": 577.708915488
+      },
+      "isMarketable": false,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "c1f6bdc45160fe7ca521ce6ce4c92b01-2-1",
+          "algorithmId": "c1f6bdc45160fe7ca521ce6ce4c92b01",
+          "orderId": 2,
+          "orderEventId": 1,
+          "symbol": "SPY R735QTJ8XC9X",
+          "symbolValue": "SPY",
+          "symbolPermtick": "SPY",
+          "time": 1730984400.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "sell",
+          "message": null,
+          "isAssignment": false,
+          "quantity": -179.0
+        },
+        {
+          "id": "c1f6bdc45160fe7ca521ce6ce4c92b01-2-2",
+          "algorithmId": "c1f6bdc45160fe7ca521ce6ce4c92b01",
+          "orderId": 2,
+          "orderEventId": 2,
+          "symbol": "SPY R735QTJ8XC9X",
+          "symbolValue": "SPY",
+          "symbolPermtick": "SPY",
+          "time": 1730989860.0,
+          "status": "filled",
+          "orderFeeAmount": 1.0,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 579.712677123,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": -179.0,
+          "direction": "sell",
+          "message": null,
+          "isAssignment": false,
+          "quantity": -179.0
+        }
+      ]
+    },
+    {
+      "type": 4,
+      "id": 3,
+      "contingentId": 0,
+      "brokerId": [
+        "3"
+      ],
+      "symbol": {
+        "value": "SPY",
+        "id": "SPY R735QTJ8XC9X",
+        "permtick": "SPY"
+      },
+      "price": 578.090118921,
+      "priceCurrency": "USD",
+      "time": "2024-12-19T13:00:00Z",
+      "createdTime": "2024-12-19T13:00:00Z",
+      "lastFillTime": "2024-12-19T14:31:00Z",
+      "quantity": 180.0,
+      "status": 3,
+      "tag": "",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 0,
+      "value": 104056.22140578,
+      "orderSubmissionData": {
+        "bidPrice": 573.07582761,
+        "askPrice": 573.105150951,
+        "lastPrice": 573.056278716
+      },
+      "isMarketable": false,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "c1f6bdc45160fe7ca521ce6ce4c92b01-3-1",
+          "algorithmId": "c1f6bdc45160fe7ca521ce6ce4c92b01",
+          "orderId": 3,
+          "orderEventId": 1,
+          "symbol": "SPY R735QTJ8XC9X",
+          "symbolValue": "SPY",
+          "symbolPermtick": "SPY",
+          "time": 1734613200.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "buy",
+          "message": null,
+          "isAssignment": false,
+          "quantity": 180.0
+        },
+        {
+          "id": "c1f6bdc45160fe7ca521ce6ce4c92b01-3-2",
+          "algorithmId": "c1f6bdc45160fe7ca521ce6ce4c92b01",
+          "orderId": 3,
+          "orderEventId": 2,
+          "symbol": "SPY R735QTJ8XC9X",
+          "symbolValue": "SPY",
+          "symbolPermtick": "SPY",
+          "time": 1734618660.0,
+          "status": "filled",
+          "orderFeeAmount": 1.0,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 578.090118921,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 180.0,
+          "direction": "buy",
+          "message": null,
+          "isAssignment": false,
+          "quantity": 180.0
+        }
+      ]
+    },
+    {
+      "type": 4,
+      "id": 4,
+      "contingentId": 0,
+      "brokerId": [
+        "4"
+      ],
+      "symbol": {
+        "value": "SPY",
+        "id": "SPY R735QTJ8XC9X",
+        "permtick": "SPY"
+      },
+      "price": 587.861587117,
+      "priceCurrency": "USD",
+      "time": "2024-12-26T13:00:00Z",
+      "createdTime": "2024-12-26T13:00:00Z",
+      "lastFillTime": "2024-12-26T14:31:00Z",
+      "quantity": -180.0,
+      "status": 3,
+      "tag": "Liquidated",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 1,
+      "value": -105815.08568106,
+      "orderSubmissionData": {
+        "bidPrice": 589.656329788,
+        "askPrice": 589.685751799,
+        "lastPrice": 589.71517381
+      },
+      "isMarketable": false,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "c1f6bdc45160fe7ca521ce6ce4c92b01-4-1",
+          "algorithmId": "c1f6bdc45160fe7ca521ce6ce4c92b01",
+          "orderId": 4,
+          "orderEventId": 1,
+          "symbol": "SPY R735QTJ8XC9X",
+          "symbolValue": "SPY",
+          "symbolPermtick": "SPY",
+          "time": 1735218000.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "sell",
+          "message": null,
+          "isAssignment": false,
+          "quantity": -180.0
+        },
+        {
+          "id": "c1f6bdc45160fe7ca521ce6ce4c92b01-4-2",
+          "algorithmId": "c1f6bdc45160fe7ca521ce6ce4c92b01",
+          "orderId": 4,
+          "orderEventId": 2,
+          "symbol": "SPY R735QTJ8XC9X",
+          "symbolValue": "SPY",
+          "symbolPermtick": "SPY",
+          "time": 1735223460.0,
+          "status": "filled",
+          "orderFeeAmount": 1.0,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 587.861587117,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": -180.0,
+          "direction": "sell",
+          "message": null,
+          "isAssignment": false,
+          "quantity": -180.0
+        }
+      ]
+    }
+  ],
+  "equity_chart": {
+    "name": "Strategy Equity",
+    "chartType": 0,
+    "series": {
+      "Equity": {
+        "name": "Equity",
+        "unit": "$",
+        "index": 0,
+        "seriesType": 2,
+        "values": [
+          [
+            1725163200,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1725342446,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1725521692,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1725700938,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1725880184,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1726059430,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1726238676,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1726417922,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1726597168,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1726776414,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1726955660,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1727134906,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1727314153,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1727493399,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1727672645,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1727851891,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1728031137,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1728210383,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1728389629,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1728568875,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1728748121,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1728927367,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1729106613,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1729285860,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1729465106,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1729644352,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1729823598,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1730002844,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1730182090,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1730361336,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1730540582,
+            100000.0,
+            100723.3452,
+            99890.5232,
+            99964.6374
+          ],
+          [
+            1730719828,
+            99950.0105,
+            99981.5037,
+            99950.0105,
+            99978.7586
+          ],
+          [
+            1730899074,
+            99946.5112,
+            102910.3777,
+            99411.1257,
+            102835.1626
+          ],
+          [
+            1731078320,
+            102964.6161,
+            103806.9358,
+            102511.463,
+            103804.1553
+          ],
+          [
+            1731257566,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1731436813,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1731616059,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1731795305,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1731974551,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1732153797,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1732333043,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1732512289,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1732691535,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1732870781,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1733050027,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1733229273,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1733408520,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1733587766,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1733767012,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1733946258,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1734125504,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1734304750,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1734483996,
+            103806.9358,
+            103806.9358,
+            103806.9358,
+            103806.9358
+          ],
+          [
+            1734663242,
+            103806.9358,
+            104036.4173,
+            102868.1754,
+            102909.2319
+          ],
+          [
+            1734842488,
+            102380.1616,
+            104897.5089,
+            102355.4471,
+            104095.5421
+          ],
+          [
+            1735021734,
+            104106.6452,
+            104901.0395,
+            103513.4975,
+            104790.0668
+          ],
+          [
+            1735200980,
+            104895.7436,
+            105898.4457,
+            104895.7436,
+            105476.8943
+          ],
+          [
+            1735380226,
+            105563.8001,
+            105563.8001,
+            105563.8001,
+            105563.8001
+          ],
+          [
+            1735559473,
+            105563.8001,
+            105563.8001,
+            105563.8001,
+            105563.8001
+          ]
+        ]
+      },
+      "Return": {
+        "name": "Return",
+        "unit": "%",
+        "index": 1,
+        "seriesType": 3,
+        "values": [
+          [
+            1725163200,
+            0.0
+          ],
+          [
+            1725342446,
+            0.0
+          ],
+          [
+            1725521692,
+            0.0
+          ],
+          [
+            1725700938,
+            0.0
+          ],
+          [
+            1725880184,
+            0.0
+          ],
+          [
+            1726059430,
+            0.0
+          ],
+          [
+            1726238677,
+            0.0
+          ],
+          [
+            1726417923,
+            0.0
+          ],
+          [
+            1726597169,
+            0.0
+          ],
+          [
+            1726776415,
+            0.0
+          ],
+          [
+            1726955661,
+            0.0
+          ],
+          [
+            1727134907,
+            0.0
+          ],
+          [
+            1727314153,
+            0.0
+          ],
+          [
+            1727493399,
+            0.0
+          ],
+          [
+            1727672645,
+            0.0
+          ],
+          [
+            1727851891,
+            0.0
+          ],
+          [
+            1728031137,
+            0.0
+          ],
+          [
+            1728210383,
+            0.0
+          ],
+          [
+            1728389630,
+            0.0
+          ],
+          [
+            1728568876,
+            0.0
+          ],
+          [
+            1728748122,
+            0.0
+          ],
+          [
+            1728927368,
+            0.0
+          ],
+          [
+            1729106614,
+            0.0
+          ],
+          [
+            1729285860,
+            0.0
+          ],
+          [
+            1729465106,
+            0.0
+          ],
+          [
+            1729644352,
+            0.0
+          ],
+          [
+            1729823598,
+            0.0
+          ],
+          [
+            1730002844,
+            0.0
+          ],
+          [
+            1730182090,
+            0.0
+          ],
+          [
+            1730361337,
+            0.0
+          ],
+          [
+            1730540583,
+            -0.03808079
+          ],
+          [
+            1730719829,
+            -0.0583851
+          ],
+          [
+            1730899075,
+            1.650214
+          ],
+          [
+            1731078321,
+            0.200402
+          ],
+          [
+            1731257567,
+            0.0
+          ],
+          [
+            1731436813,
+            0.0
+          ],
+          [
+            1731616059,
+            0.0
+          ],
+          [
+            1731795305,
+            0.0
+          ],
+          [
+            1731974551,
+            0.0
+          ],
+          [
+            1732153797,
+            0.0
+          ],
+          [
+            1732333043,
+            0.0
+          ],
+          [
+            1732512290,
+            0.0
+          ],
+          [
+            1732691536,
+            0.0
+          ],
+          [
+            1732870782,
+            0.0
+          ],
+          [
+            1733050028,
+            0.0
+          ],
+          [
+            1733229274,
+            0.0
+          ],
+          [
+            1733408520,
+            0.0
+          ],
+          [
+            1733587766,
+            0.0
+          ],
+          [
+            1733767012,
+            0.0
+          ],
+          [
+            1733946258,
+            0.0
+          ],
+          [
+            1734125504,
+            0.0
+          ],
+          [
+            1734304750,
+            0.0
+          ],
+          [
+            1734483997,
+            0.0
+          ],
+          [
+            1734663243,
+            -0.8252314
+          ],
+          [
+            1734842489,
+            0.01548519
+          ],
+          [
+            1735021735,
+            0.6320027
+          ],
+          [
+            1735200981,
+            -0.04308836
+          ],
+          [
+            1735380227,
+            0.0
+          ],
+          [
+            1735559473,
+            0.0
+          ]
+        ],
+        "color": "",
+        "scatterMarkerSymbol": "none"
+      }
+    }
+  },
+  "evidence_note": "Equity chart requests up to 10000 observations; daily diagnostics are not intraday rule proofs."
+}

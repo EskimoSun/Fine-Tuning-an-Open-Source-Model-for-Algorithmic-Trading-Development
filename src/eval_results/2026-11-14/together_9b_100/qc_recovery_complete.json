@@ -1,0 +1,31 @@
+{
+  "completed_at": "2026-11-14T23:30:05.592957+00:00",
+  "refreshed": [
+    "equity-opening-range-breakout_v07",
+    "equity-pairs-trading-cointegration_v04",
+    "equity-pairs-trading-cointegration_v05",
+    "equity-pairs-trading-cointegration_v07",
+    "equity-pairs-trading-cointegration_v08",
+    "equity-pairs-trading-cointegration_v09",
+    "equity-pairs-trading-cointegration_v10",
+    "option-iron-condor-spy_v01",
+    "option-iron-condor-spy_v02",
+    "option-iron-condor-spy_v03",
+    "option-iron-condor-spy_v05",
+    "option-iron-condor-spy_v06",
+    "option-iron-condor-spy_v07",
+    "option-iron-condor-spy_v08",
+    "option-iron-condor-spy_v10",
+    "futures_v01",
+    "futures_v02",
+    "futures_v03",
+    "futures_v04",
+    "futures_v05",
+    "futures_v06",
+    "futures_v07",
+    "futures_v08",
+    "futures_v09",
+    "futures_v10"
+  ],
+  "unresolved": []
+}

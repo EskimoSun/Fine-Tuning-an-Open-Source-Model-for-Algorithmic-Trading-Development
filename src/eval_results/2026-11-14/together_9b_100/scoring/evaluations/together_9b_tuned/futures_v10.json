@@ -1,0 +1,308 @@
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass FutureRollingAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        # Trade SP500E-mini Futures daily.\n        self._future = self.add_future(Indices.SP_500_E_MINI, self._select_assets)\n        # Roll the SP500E-mini Futures daily to trade the front month continuously.\n        self.schedule.on(self.date_rules.every_day(\"SP500E-mini\"), self.time_rules.at(9, 0, 0), self._rebalance)\n\n    def _select_assets(self, data: List[Future]) -> List[Symbol]:\n        # Select the front month contract of SP500E-mini Futures.\n        front_month = min(data, key=lambda x: x.end_time).symbol\n        # Create a MappingSymbol for the selected future contract.\n        return [MappingSymbol.create_future_mapping_symbol(Indices.SP_500_E_MINI, front_month)]\n\n    def _rebalance(self) -> None:\n        if not self._future.mapped.symbol in self.securities:\n            return\n        # Ensure we are trading the front month contract.\n        front_month = self.securities[self._future.mapped.symbol].underlying\n        if not front_month.is_trading_day:\n            return\n        # Check if we need to roll the future.\n        if self.portfolio[front_month].liquidate_time < self.time:\n            # Liquidate the old future and trade the new front month.\n            self.liquidate(front_month, tag=f\"Roll {front_month.symbol}\")\n",
+  "source_sha256": "da1bc1e8a5cedabc49af034714dcf39e2665e1ece584acea5492f290f0c26ce2",
+  "started_at": "2026-11-14T23:28:24.335750+00:00",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "runtime_statistics": {
+    "Equity": "$100,000.00",
+    "Fees": "-$0.00",
+    "Holdings": "$0.00",
+    "Net Profit": "$0.00",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Return": "0.00 %",
+    "Unrealized": "$0.00",
+    "Volume": "$0.00"
+  },
+  "logs": [],
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;Indices&#039; is not defined\n  at initialize\n    self._future = self.add_future(Indices.SP_500",
+  "project_id": 39413106,
+  "compile_id": "27070fb0b31c18a4f7da0f91b4cde145-602b1861b93ed7d170bce3695465102b",
+  "compile_created": {
+    "compileId": "27070fb0b31c18a4f7da0f91b4cde145-602b1861b93ed7d170bce3695465102b",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413106,
+    "signature": "602b1861b93ed7d170bce3695465102b",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "27070fb0b31c18a4f7da0f91b4cde145-602b1861b93ed7d170bce3695465102b",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413106, with CompileID: 27070fb0b31c18a4f7da0f91b4cde145-602b1861b93ed7d170bce3695465102b, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413106, with CompileID: 27070fb0b31c18a4f7da0f91b4cde145-602b1861b93ed7d170bce3695465102b, Lean Version: 2.5.0.0.18263"
+  ],
+  "backtest_id": "105abb05e08a45f06845d7a8f2e510a8",
+  "backtest_created": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-futures_v10",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413106,
+      "completed": false,
+      "optimizationId": null,
+      "backtestId": "105abb05e08a45f06845d7a8f2e510a8",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 25,
+        "backtestCount": 25,
+        "parameters": 6
+      },
+      "backtestStart": "2026-11-14 23:28:40",
+      "backtestEnd": "2026-11-14 23:28:40",
+      "created": "2026-11-14 23:28:40",
+      "snapshotId": 39416021,
+      "status": "In Queue...",
+      "error": null,
+      "stacktrace": null,
+      "progress": 0,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": null,
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null
+    },
+    "debugging": false,
+    "success": true
+  },
+  "raw_backtest": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-futures_v10",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413106,
+      "completed": true,
+      "optimizationId": null,
+      "backtestId": "105abb05e08a45f06845d7a8f2e510a8",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 25,
+        "backtestCount": 25,
+        "parameters": 6
+      },
+      "backtestStart": "2026-11-14 23:28:40",
+      "backtestEnd": "2026-11-14 23:28:40",
+      "created": "2026-11-14 23:28:40",
+      "snapshotId": 39416021,
+      "status": "Runtime Error",
+      "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;Indices&#039; is not defined\n  at initialize\n    self._future = self.add_future(Indices.SP_500_E_MINI, self._select_assets)\n                                   ^^^^^^^\n in main.py: line 13\n name &#039;Indices&#039; is not defined",
+      "stacktrace": "name 'Indices' is not defined\n  at initialize\n    self._future = self.add_future(Indices.SP_500_E_MINI, self._select_assets)\n                                   ^^^^^^^\n in main.py: line 13\n name 'Indices' is not defined",
+      "progress": 1,
+      "hasInitializeError": true,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {
+        "Equity": "$100,000.00",
+        "Fees": "-$0.00",
+        "Holdings": "$0.00",
+        "Net Profit": "$0.00",
+        "Probabilistic Sharpe Ratio": "0%",
+        "Return": "0.00 %",
+        "Unrealized": "$0.00",
+        "Volume": "$0.00"
+      },
+      "statistics": {},
+      "totalPerformance": {
+        "tradeStatistics": {
+          "startDateTime": null,
+          "endDateTime": null,
+          "totalNumberOfTrades": 0,
+          "numberOfWinningTrades": 0,
+          "numberOfLosingTrades": 0,
+          "totalProfitLoss": "0",
+          "totalProfit": "0",
+          "totalLoss": "0",
+          "largestProfit": "0",
+          "largestLoss": "0",
+          "averageProfitLoss": "0",
+          "averageProfit": "0",
+          "averageLoss": "0",
+          "averageTradeDuration": "00:00:00",
+          "averageWinningTradeDuration": "00:00:00",
+          "averageLosingTradeDuration": "00:00:00",
+          "medianTradeDuration": "00:00:00",
+          "medianWinningTradeDuration": "00:00:00",
+          "medianLosingTradeDuration": "00:00:00",
+          "maxConsecutiveWinningTrades": 0,
+          "maxConsecutiveLosingTrades": 0,
+          "profitLossRatio": "0",
+          "winLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "averageMAE": "0",
+          "averageMFE": "0",
+          "largestMAE": "0",
+          "largestMFE": "0",
+          "maximumClosedTradeDrawdown": "0",
+          "maximumIntraTradeDrawdown": "0",
+          "profitLossStandardDeviation": "0",
+          "profitLossDownsideDeviation": "0",
+          "profitFactor": "0",
+          "sharpeRatio": "0",
+          "sortinoRatio": "0",
+          "profitToMaxDrawdownRatio": "0",
+          "maximumEndTradeDrawdown": "0",
+          "averageEndTradeDrawdown": "0",
+          "maximumDrawdownDuration": "00:00:00",
+          "totalFees": "0"
+        },
+        "portfolioStatistics": {
+          "averageWinRate": "0",
+          "averageLossRate": "0",
+          "profitLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "expectancy": "0",
+          "startEquity": "0",
+          "endEquity": "0",
+          "compoundingAnnualReturn": "0",
+          "drawdown": "0",
+          "totalNetProfit": "0",
+          "sharpeRatio": "0",
+          "probabilisticSharpeRatio": "0",
+          "sortinoRatio": "0",
+          "alpha": "0",
+          "beta": "0",
+          "annualStandardDeviation": "0",
+          "annualVariance": "0",
+          "informationRatio": "0",
+          "trackingError": "0",
+          "treynorRatio": "0",
+          "portfolioTurnover": "0",
+          "valueAtRisk99": "0",
+          "valueAtRisk95": "0",
+          "drawdownRecovery": "0"
+        },
+        "closedTrades": []
+      },
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": [
+        {
+          "name": "PortfolioValueIsNotPositiveAnalysis",
+          "issue": "The portfolio equity dropped to zero or below.",
+          "sample": true,
+          "solutions": [
+            "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+            "Reduce position sizes.",
+            "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+            "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+          ]
+        },
+        {
+          "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+          "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+          "sample": {
+            "pValue": 0.5
+          },
+          "solutions": [
+            "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+          ]
+        }
+      ],
+      "serverStatistics": {
+        "CPU Usage": "7.6%",
+        "Used RAM (MB)": "250",
+        "Total RAM (MB)": "16384",
+        "Hostname": "BACKTESTING-com-105abb05e08a45f06845d7a8f2e510a8",
+        "LEAN Version": "v2.5.0.0.18263",
+        "Up Time": "0d 00:00:13"
+      }
+    },
+    "success": true
+  },
+  "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;Indices&#039; is not defined\n  at initialize\n    self._future = self.add_future(Indices.SP_500_E_MINI, self._select_assets)\n                                   ^^^^^^^\n in main.py: line 13\n name &#039;Indices&#039; is not defined",
+  "stacktrace": "name 'Indices' is not defined\n  at initialize\n    self._future = self.add_future(Indices.SP_500_E_MINI, self._select_assets)\n                                   ^^^^^^^\n in main.py: line 13\n name 'Indices' is not defined",
+  "has_initialize_error": true,
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "total_orders": null,
+  "finished_at": "2026-11-14T23:29:30.494435+00:00",
+  "shared_evaluation_project": 39413106
+}

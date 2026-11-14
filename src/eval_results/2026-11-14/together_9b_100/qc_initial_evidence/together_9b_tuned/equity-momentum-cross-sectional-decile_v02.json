@@ -1,0 +1,49 @@
+{
+  "status": "infrastructure_error",
+  "stage": "backtest",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass SP500HighVolumeTotalReturnUniverseAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(250000)\n        self.settings.seed_initial_prices = True\n        self.universe_settings.resolution = Resolution.MINUTE\n        # Refilter the ETF constituents monthly to match the rebalance cadence.\n        self.universe_settings.schedule.on(self.date_rules.month_start('SPY'))\n        # Add a TotalReturn universe filtered by dollar volume for the classic smart-beta pipeline.\n        self._universe = self.add_universe(self.universe.etf('SPY', universe_filter_func=self._select_assets))\n        # Create a Scheduled Event to rebalance the portfolio monthly.\n        self.schedule.on(self.date_rules.month_start('SPY'), self.time_rules.at(9, 0), self._rebalance)\n\n    def _select_assets(self, constituents: list[ETFConstituentUniverse]) -> list[Symbol]:\n        # Filter for assets with above $100M dollar volume for liquidity.\n        filtered = [c.symbol for c in constituents if c.dollar_volume > 100000000]\n        if len(filtered) < 10:\n            return []\n        # Rank the filtered assets by total return over the past year.\n        return [s for s in sorted(\n            filtered,\n            key=lambda s: self.total_return(s, 252),\n            reverse=True\n        )[:10]]\n\n    def _rebalance(self) -> None:\n        selected = self._universe.selected\n        if not selected:\n            return\n        # Calculate equal weights for the selected securities.\n        weight = 1 / len(selected)\n        targets = [PortfolioTarget(symbol, weight) for symbol in selected]\n        self.set_holdings(targets, liquidate_existing_holdings=True)\n",
+  "source_sha256": "e8a0bc42feb47efd2d92ec7f10ec82f5dc843129f0fcdc6409a0a0c9f65969e4",
+  "started_at": "2026-11-14T22:17:49.021155+00:00",
+  "compile_errors": 0,
+  "runtime_errors": null,
+  "statistics": {},
+  "runtime_statistics": {},
+  "logs": [],
+  "qc_note": "infrastructure: API request failed: backtests/create",
+  "project_id": 39413106,
+  "compile_id": "8383c0a021d729ce3ac36e474da2bd87-083ee3c379fbce5095546772c7f0bf94",
+  "compile_created": {
+    "compileId": "8383c0a021d729ce3ac36e474da2bd87-083ee3c379fbce5095546772c7f0bf94",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413106,
+    "signature": "083ee3c379fbce5095546772c7f0bf94",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "8383c0a021d729ce3ac36e474da2bd87-083ee3c379fbce5095546772c7f0bf94",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413106, with CompileID: 8383c0a021d729ce3ac36e474da2bd87-083ee3c379fbce5095546772c7f0bf94, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413106, with CompileID: 8383c0a021d729ce3ac36e474da2bd87-083ee3c379fbce5095546772c7f0bf94, Lean Version: 2.5.0.0.18263"
+  ],
+  "error": "API request failed: backtests/create",
+  "error_type": "QCAPIError",
+  "api_error": {
+    "endpoint": "backtests/create",
+    "response": {
+      "errors": [
+        "Too many backtest requests; please slow down. REF #Oi842S9vlj"
+      ],
+      "success": false
+    }
+  },
+  "finished_at": "2026-11-14T22:17:51.181283+00:00"
+}

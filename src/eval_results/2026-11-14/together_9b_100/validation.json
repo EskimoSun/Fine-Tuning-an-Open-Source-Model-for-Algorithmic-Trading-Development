@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "prompt_rows": 100,
+  "source_hashes_verified": 100,
+  "judge_dimensions": 800,
+  "formula_errors": 0,
+  "credential_files_checked": 586,
+  "workbook_language": "English",
+  "workbook_sha256": "4fc0b42126c57e23beb8902113b6eee7d21efcb5ce2b5ce633581c85e2f19e75",
+  "workbook_data_sha256": "e88ef0feb7d43511da28d6a4c2ed05e2d03cafd9afb5b24a1461e037da48bdb4"
+}

@@ -1,0 +1,49 @@
+{
+  "status": "infrastructure_error",
+  "stage": "backtest",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass SP500HighVolumeMomentumUniverseAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(250_000)\n        self.settings.seed_initial_prices = True\n        self.universe_settings.resolution = Resolution.MINUTE\n        # Refilter the ETF constituents monthly to match the rebalance cadence.\n        self.universe_settings.schedule.on(self.date_rules.month_start('SPY'))\n        # Add a universe of the SPY constituents ranked by dollar volume and 12-month momentum.\n        self._universe = self.add_universe(self.universe.etf('SPY', universe_filter_func=self._select_assets))\n        # Create a Scheduled Event to rebalance the portfolio monthly.\n        self.schedule.on(self.date_rules.month_start('SPY'), self.time_rules.at(9, 0), self._rebalance)\n\n    def _select_assets(self, constituents: list[ETFConstituentUniverse]) -> list[Symbol]:\n        history = self.history([constituent.symbol for constituent in constituents], timedelta(12), Resolution.DAILY)\n        if history.empty:\n            return []\n        # Select the 100 SPY constituents with the highest dollar volume and 12-month momentum.\n        return list(history.sort(\n            Series.sort_keys([\n                lambda x: x.dollar_volume,\n                lambda x: x.end_time - x.start_time\n            ])\n        ).index[:100])\n\n    def _rebalance(self) -> None:\n        selected_symbols = [symbol for symbol in self._universe.selected]\n        if not selected_symbols:\n            return\n        # Equal-weight the selected constituents and place orders to rebalance the portfolio.\n        weight = 1 / len(selected_symbols)\n        targets = [PortfolioTarget(symbol, weight) for symbol in selected_symbols]\n        self.set_holdings(targets, liquidate_existing_holdings=True)\n",
+  "source_sha256": "04bc692c5084c795e7ccd7bfaa2c94beaa3efc1ecaffd440ba30af56dbddf52f",
+  "started_at": "2026-11-14T22:17:51.184283+00:00",
+  "compile_errors": 0,
+  "runtime_errors": null,
+  "statistics": {},
+  "runtime_statistics": {},
+  "logs": [],
+  "qc_note": "infrastructure: API request failed: backtests/create",
+  "project_id": 39413109,
+  "compile_id": "f71760324c22f9fe9f463f9d7ee645c2-a703316ad3e78165fac7119f24ef1452",
+  "compile_created": {
+    "compileId": "f71760324c22f9fe9f463f9d7ee645c2-a703316ad3e78165fac7119f24ef1452",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413109,
+    "signature": "a703316ad3e78165fac7119f24ef1452",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "f71760324c22f9fe9f463f9d7ee645c2-a703316ad3e78165fac7119f24ef1452",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413109, with CompileID: f71760324c22f9fe9f463f9d7ee645c2-a703316ad3e78165fac7119f24ef1452, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413109, with CompileID: f71760324c22f9fe9f463f9d7ee645c2-a703316ad3e78165fac7119f24ef1452, Lean Version: 2.5.0.0.18263"
+  ],
+  "error": "API request failed: backtests/create",
+  "error_type": "QCAPIError",
+  "api_error": {
+    "endpoint": "backtests/create",
+    "response": {
+      "errors": [
+        "Too many backtest requests; please slow down. REF #Oi842S9vlj"
+      ],
+      "success": false
+    }
+  },
+  "finished_at": "2026-11-14T22:17:53.392444+00:00"
+}

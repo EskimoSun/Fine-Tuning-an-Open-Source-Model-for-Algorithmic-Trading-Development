@@ -1,0 +1,2987 @@
+[2026-11-14T22:28:00.562872+00:00] Waiting five minutes before resuming QC at one submission per 65 seconds.
+[2026-11-14T22:33:01.472084+00:00] QC recovery: together_9b_tuned-equity-monthly-roc-rotation_v08
+[QC together_9b_tuned-equity-monthly-roc-rotation_v08] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-monthly-roc-rotation_v08] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-monthly-roc-rotation_v08] stage=upload status=running compile=None cloud=None progress=pending project=39413767 backtest=None
+[QC together_9b_tuned-equity-monthly-roc-rotation_v08] stage=compile status=running compile=None cloud=None progress=pending project=39413767 backtest=None
+[QC together_9b_tuned-equity-monthly-roc-rotation_v08] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39413767 backtest=None
+[QC together_9b_tuned-equity-monthly-roc-rotation_v08] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39413767 backtest=None
+[2026-11-14T22:33:05.422987+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-monthly-roc-rotation_v08] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39413767 backtest=5c025eb1f5b26dd29836aebff2211aa2
+[QC together_9b_tuned-equity-monthly-roc-rotation_v08] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=39413767 backtest=5c025eb1f5b26dd29836aebff2211aa2
+[QC together_9b_tuned-equity-monthly-roc-rotation_v08] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39413767 backtest=5c025eb1f5b26dd29836aebff2211aa2
+[QC together_9b_tuned-equity-monthly-roc-rotation_v08] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39413767 backtest=5c025eb1f5b26dd29836aebff2211aa2
+[QC together_9b_tuned-equity-monthly-roc-rotation_v08] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39413767 backtest=5c025eb1f5b26dd29836aebff2211aa2
+[QC together_9b_tuned-equity-monthly-roc-rotation_v08] downloading orders
+[QC together_9b_tuned-equity-monthly-roc-rotation_v08] downloading equity_chart
+
+=== QC RESULT together_9b_tuned-equity-monthly-roc-rotation_v08 ===
+{
+  "status": "completed",
+  "stage": "finished",
+  "project_id": 39413767,
+  "compile_id": "5c2175d4487202c245267d3b684c532d-ae0b71ec3bedb6aa3b81f1a93b793778",
+  "backtest_id": "5c025eb1f5b26dd29836aebff2211aa2",
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "total_orders": "109",
+  "statistics": {
+    "Total Orders": "109",
+    "Average Win": "0.45%",
+    "Average Loss": "-0.88%",
+    "Compounding Annual Return": "0.352%",
+    "Drawdown": "16.100%",
+    "Expectancy": "-0.004",
+    "Start Equity": "100000",
+    "End Equity": "101059.32",
+    "Net Profit": "1.059%",
+    "Sharpe Ratio": "-0.64",
+    "Sortino Ratio": "-0.775",
+    "Probabilistic Sharpe Ratio": "0.030%",
+    "Loss Rate": "34%",
+    "Win Rate": "66%",
+    "Profit-Loss Ratio": "0.51",
+    "Alpha": "-0.047",
+    "Beta": "0.311",
+    "Annual Standard Deviation": "0.058",
+    "Annual Variance": "0.003",
+    "Information Ratio": "-0.633",
+    "Tracking Error": "0.106",
+    "Treynor Ratio": "-0.119",
+    "Total Fees": "$138.58",
+    "Estimated Strategy Capacity": "$32000000.00",
+    "Lowest Capacity Asset": "EEM SNQLASP67O85",
+    "Portfolio Turnover": "1.16%",
+    "Drawdown Recovery": "917"
+  },
+  "trade_statistics": {
+    "startDateTime": "2022-01-03T14:31:00Z",
+    "endDateTime": "2024-12-02T14:31:00Z",
+    "totalNumberOfTrades": 72,
+    "numberOfWinningTrades": 44,
+    "numberOfLosingTrades": 28,
+    "totalProfitLoss": "-392.79",
+    "totalProfit": "15468.59",
+    "totalLoss": "-15861.38",
+    "largestProfit": "3444.24",
+    "largestLoss": "-3801.09",
+    "averageProfitLoss": "-5.4554",
+    "averageProfit": "351.5589",
+    "averageLoss": "-566.4779",
+    "averageTradeDuration": "101.03:39:09.9999999",
+    "averageWinningTradeDuration": "124.04:55:54.5454547",
+    "averageLosingTradeDuration": "64.22:12:51.4285717",
+    "medianTradeDuration": "62.00:00:00",
+    "medianWinningTradeDuration": "92.01:00:00",
+    "medianLosingTradeDuration": "32.00:00:00",
+    "maxConsecutiveWinningTrades": 12,
+    "maxConsecutiveLosingTrades": 10,
+    "profitLossRatio": "0.6206",
+    "winLossRatio": "1.5714",
+    "winRate": "0.6111",
+    "lossRate": "0.3889",
+    "averageMAE": "-420.2100",
+    "averageMFE": "428.5843",
+    "largestMAE": "-4391.63",
+    "largestMFE": "4247.10",
+    "maximumClosedTradeDrawdown": "-12974.83",
+    "maximumIntraTradeDrawdown": "-16175.99",
+    "profitLossStandardDeviation": "886.2229",
+    "profitLossDownsideDeviation": "869.7086",
+    "profitFactor": "0.9752",
+    "sharpeRatio": "-0.0062",
+    "sortinoRatio": "-0.0063",
+    "profitToMaxDrawdownRatio": "-0.0303",
+    "maximumEndTradeDrawdown": "4526.45",
+    "averageEndTradeDrawdown": "-434.0397",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "132.255"
+  },
+  "error": null,
+  "qc_note": ""
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 39413767, with CompileID: 5c2175d4487202c245267d3b684c532d-ae0b71ec3bedb6aa3b81f1a93b793778, Lean Version: 2.5.0.0.18263
+logs (last 20 of 3):
+2022-01-01 00:00:00 Launching analysis for 5c025eb1f5b26dd29836aebff2211aa2 with LEAN Engine v2.5.0.0.18263
+2022-05-02 09:31:00 Warning: Portfolio rebalance result ignored as it resulted in a single share trade recommendation which can generate high fees. To disable minimum order size checks please set self.settings.minimum_order_margin_portfolio_percentage = 0.
+2024-12-31 16:00:00 Algorithm Id:(5c025eb1f5b26dd29836aebff2211aa2) completed in 8.58 seconds at 342k data points per second. Processing total of 2,931,526 data points.
+=== END QC RESULT ===
+
+[2026-11-14T22:33:22.008467+00:00] QC recovery: together_9b_tuned-equity-monthly-roc-rotation_v09
+[QC together_9b_tuned-equity-monthly-roc-rotation_v09] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-monthly-roc-rotation_v09] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-monthly-roc-rotation_v09] stage=upload status=running compile=None cloud=None progress=pending project=39413787 backtest=None
+[QC together_9b_tuned-equity-monthly-roc-rotation_v09] stage=compile status=running compile=None cloud=None progress=pending project=39413787 backtest=None
+[QC together_9b_tuned-equity-monthly-roc-rotation_v09] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39413787 backtest=None
+[QC together_9b_tuned-equity-monthly-roc-rotation_v09] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39413787 backtest=None
+[2026-11-14T22:34:10.239250+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-monthly-roc-rotation_v09] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39413787 backtest=ae01d2dcb32d5ebb0a6739fee172b768
+[QC together_9b_tuned-equity-monthly-roc-rotation_v09] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39413787 backtest=ae01d2dcb32d5ebb0a6739fee172b768
+[QC together_9b_tuned-equity-monthly-roc-rotation_v09] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=39413787 backtest=ae01d2dcb32d5ebb0a6739fee172b768
+[QC together_9b_tuned-equity-monthly-roc-rotation_v09] stage=backtest status=infrastructure_error compile=BuildSuccess cloud=Completed. progress=100.0% project=39413787 backtest=ae01d2dcb32d5ebb0a6739fee172b768
+
+=== QC RESULT together_9b_tuned-equity-monthly-roc-rotation_v09 ===
+{
+  "status": "infrastructure_error",
+  "stage": "backtest",
+  "project_id": 39413787,
+  "compile_id": "1a111a5ee5e6817f6f92a7f464594bf3-394cfa73a85314bdabf432d59248598a",
+  "backtest_id": "ae01d2dcb32d5ebb0a6739fee172b768",
+  "compile_errors": 0,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "'NoneType' object has no attribute 'get'",
+  "qc_note": "infrastructure: 'NoneType' object has no attribute 'get'"
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 39413787, with CompileID: 1a111a5ee5e6817f6f92a7f464594bf3-394cfa73a85314bdabf432d59248598a, Lean Version: 2.5.0.0.18263
+=== END QC RESULT ===
+
+[2026-11-14T22:34:25.046486+00:00] QC recovery: together_9b_tuned-equity-monthly-roc-rotation_v10
+[QC together_9b_tuned-equity-monthly-roc-rotation_v10] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-monthly-roc-rotation_v10] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-monthly-roc-rotation_v10] stage=upload status=running compile=None cloud=None progress=pending project=39413828 backtest=None
+[QC together_9b_tuned-equity-monthly-roc-rotation_v10] stage=compile status=running compile=None cloud=None progress=pending project=39413828 backtest=None
+[QC together_9b_tuned-equity-monthly-roc-rotation_v10] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39413828 backtest=None
+[QC together_9b_tuned-equity-monthly-roc-rotation_v10] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39413828 backtest=None
+[2026-11-14T22:35:15.757649+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-monthly-roc-rotation_v10] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39413828 backtest=6aeeaacd3d672579f104757dcf0a4218
+[QC together_9b_tuned-equity-monthly-roc-rotation_v10] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39413828 backtest=6aeeaacd3d672579f104757dcf0a4218
+[QC together_9b_tuned-equity-monthly-roc-rotation_v10] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39413828 backtest=6aeeaacd3d672579f104757dcf0a4218
+[QC together_9b_tuned-equity-monthly-roc-rotation_v10] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39413828 backtest=6aeeaacd3d672579f104757dcf0a4218
+[QC together_9b_tuned-equity-monthly-roc-rotation_v10] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39413828 backtest=6aeeaacd3d672579f104757dcf0a4218
+[QC together_9b_tuned-equity-monthly-roc-rotation_v10] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39413828 backtest=6aeeaacd3d672579f104757dcf0a4218
+
+=== QC RESULT together_9b_tuned-equity-monthly-roc-rotation_v10 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 39413828,
+  "compile_id": "3dad8f0e7aa53fd1363510c4b5139726-874b66c25e55fbd8f776758662380e93",
+  "backtest_id": "6aeeaacd3d672579f104757dcf0a4218",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "0",
+  "statistics": {
+    "Total Orders": "0",
+    "Average Win": "0%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "0%",
+    "Expectancy": "0",
+    "Start Equity": "100000",
+    "End Equity": "100000",
+    "Net Profit": "0%",
+    "Sharpe Ratio": "0",
+    "Sortino Ratio": "0",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "0%",
+    "Win Rate": "0%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0",
+    "Annual Variance": "0",
+    "Information Ratio": "0",
+    "Tracking Error": "0",
+    "Treynor Ratio": "0",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$0",
+    "Lowest Capacity Asset": "",
+    "Portfolio Turnover": "0%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2022-01-03 09:31:00 Runtime Error: float division by zero\n  at _rebalance\n    current_weight = self.portfolio[target.symbol].holdings_value / self.portfolio.total_holdings_value\n                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n in main.py: line 33\n",
+  "qc_note": "runtime: 2022-01-03 09:31:00 Runtime Error: float division by zero\n  at _rebalance\n    current_weight = self.portfolio[target.symbol].holdings_value / self.portfolio.total_holdings_value\n                     ~"
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 39413828, with CompileID: 3dad8f0e7aa53fd1363510c4b5139726-874b66c25e55fbd8f776758662380e93, Lean Version: 2.5.0.0.18263
+logs (last 20 of 3):
+2022-01-01 00:00:00 Launching analysis for 6aeeaacd3d672579f104757dcf0a4218 with LEAN Engine v2.5.0.0.18263
+2022-01-03 09:31:00 Runtime Error: float division by zero
+  at _rebalance
+    current_weight = self.portfolio[target.symbol].holdings_value / self.portfolio.total_holdings_value
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ in main.py: line 33
+
+2022-01-03 09:31:00 Algorithm Id:(6aeeaacd3d672579f104757dcf0a4218) completed in 3.31 seconds at 0k data points per second. Processing total of 323 data points.
+=== END QC RESULT ===
+
+[2026-11-14T22:35:30.253859+00:00] QC recovery: gold-equity-sixty-forty-portfolio
+[QC gold-equity-sixty-forty-portfolio] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC gold-equity-sixty-forty-portfolio] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC gold-equity-sixty-forty-portfolio] stage=upload status=running compile=None cloud=None progress=pending project=39413870 backtest=None
+[QC gold-equity-sixty-forty-portfolio] stage=compile status=running compile=None cloud=None progress=pending project=39413870 backtest=None
+[QC gold-equity-sixty-forty-portfolio] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39413870 backtest=None
+[QC gold-equity-sixty-forty-portfolio] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39413870 backtest=None
+[2026-11-14T22:36:20.508603+00:00] QC accepted backtest submission
+[QC gold-equity-sixty-forty-portfolio] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39413870 backtest=d72c7e3bdc899528a0b1132a9cc5475f
+[QC gold-equity-sixty-forty-portfolio] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39413870 backtest=d72c7e3bdc899528a0b1132a9cc5475f
+[QC gold-equity-sixty-forty-portfolio] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=39413870 backtest=d72c7e3bdc899528a0b1132a9cc5475f
+[QC gold-equity-sixty-forty-portfolio] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39413870 backtest=d72c7e3bdc899528a0b1132a9cc5475f
+[QC gold-equity-sixty-forty-portfolio] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39413870 backtest=d72c7e3bdc899528a0b1132a9cc5475f
+[QC gold-equity-sixty-forty-portfolio] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39413870 backtest=d72c7e3bdc899528a0b1132a9cc5475f
+[QC gold-equity-sixty-forty-portfolio] downloading orders
+[QC gold-equity-sixty-forty-portfolio] downloading equity_chart
+
+=== QC RESULT gold-equity-sixty-forty-portfolio ===
+{
+  "status": "completed",
+  "stage": "finished",
+  "project_id": 39413870,
+  "compile_id": "2cc5a42704fe6be2f73278343fe09766-f270d1706191a561389aa839812ea50e",
+  "backtest_id": "d72c7e3bdc899528a0b1132a9cc5475f",
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "total_orders": "6",
+  "statistics": {
+    "Total Orders": "6",
+    "Average Win": "0.67%",
+    "Average Loss": "-0.26%",
+    "Compounding Annual Return": "0.024%",
+    "Drawdown": "28.000%",
+    "Expectancy": "0.783",
+    "Start Equity": "100000",
+    "End Equity": "100072.19",
+    "Net Profit": "0.072%",
+    "Sharpe Ratio": "-0.321",
+    "Sortino Ratio": "-0.403",
+    "Probabilistic Sharpe Ratio": "0.295%",
+    "Loss Rate": "50%",
+    "Win Rate": "50%",
+    "Profit-Loss Ratio": "2.57",
+    "Alpha": "-0.055",
+    "Beta": "0.648",
+    "Annual Standard Deviation": "0.109",
+    "Annual Variance": "0.012",
+    "Information Ratio": "-0.865",
+    "Tracking Error": "0.076",
+    "Treynor Ratio": "-0.054",
+    "Total Fees": "$6.63",
+    "Estimated Strategy Capacity": "$23000000.00",
+    "Lowest Capacity Asset": "TLT SGNKIKYGE9NP",
+    "Portfolio Turnover": "0.11%",
+    "Drawdown Recovery": "959"
+  },
+  "trade_statistics": {
+    "startDateTime": "2022-01-03T14:31:00Z",
+    "endDateTime": "2024-04-01T13:31:00Z",
+    "totalNumberOfTrades": 2,
+    "numberOfWinningTrades": 1,
+    "numberOfLosingTrades": 1,
+    "totalProfitLoss": "414.03",
+    "totalProfit": "675.13",
+    "totalLoss": "-261.10",
+    "largestProfit": "675.13",
+    "largestLoss": "-261.10",
+    "averageProfitLoss": "207.015",
+    "averageProfit": "675.13",
+    "averageLoss": "-261.10",
+    "averageTradeDuration": "682.11:00:00",
+    "averageWinningTradeDuration": "818.23:00:00",
+    "averageLosingTradeDuration": "545.23:00:00",
+    "medianTradeDuration": "818.23:00:00",
+    "medianWinningTradeDuration": "818.23:00:00",
+    "medianLosingTradeDuration": "545.23:00:00",
+    "maxConsecutiveWinningTrades": 1,
+    "maxConsecutiveLosingTrades": 1,
+    "profitLossRatio": "2.5857",
+    "winLossRatio": "1",
+    "winRate": "0.5",
+    "lossRate": "0.5",
+    "averageMAE": "-1340.45",
+    "averageMFE": "362.115",
+    "largestMAE": "-1398.73",
+    "largestMFE": "685.71",
+    "maximumClosedTradeDrawdown": "-261.10",
+    "maximumIntraTradeDrawdown": "-1967.88",
+    "profitLossStandardDeviation": "662.0146",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "2.5857",
+    "sharpeRatio": "0.3127",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "1.5857",
+    "maximumEndTradeDrawdown": "1437.25",
+    "averageEndTradeDrawdown": "-155.100",
+    "maximumDrawdownDuration": "818.23:00:00",
+    "totalFees": "3"
+  },
+  "error": null,
+  "qc_note": ""
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 39413870, with CompileID: 2cc5a42704fe6be2f73278343fe09766-f270d1706191a561389aa839812ea50e, Lean Version: 2.5.0.0.18263
+logs (last 20 of 4):
+2022-01-01 00:00:00 Launching analysis for d72c7e3bdc899528a0b1132a9cc5475f with LEAN Engine v2.5.0.0.18263
+2022-01-01 00:00:00 SPY: The security does not have an accurate price as it has not yet received a bar of data. Before placing a trade (or using set_holdings) warm up your algorithm with set_warmup, or use slice.contains(symbol) to confirm the Slice object has price before using the data. Data does not necessarily all arrive at the same time so your algorithm should confirm the data is ready before using it. In live trading this can mean you do not have an active subscription to the asset class you're trying to trade. If using custom data make sure you've set the 'Value' property.
+2022-01-01 00:00:00 TLT: The security does not have an accurate price as it has not yet received a bar of data. Before placing a trade (or using set_holdings) warm up your algorithm with set_warmup, or use slice.contains(symbol) to confirm the Slice object has price before using the data. Data does not necessarily all arrive at the same time so your algorithm should confirm the data is ready before using it. In live trading this can mean you do not have an active subscription to the asset class you're trying to trade. If using custom data make sure you've set the 'Value' property.
+2024-12-31 16:00:00 Algorithm Id:(d72c7e3bdc899528a0b1132a9cc5475f) completed in 5.62 seconds at 209k data points per second. Processing total of 1,175,669 data points.
+=== END QC RESULT ===
+
+[2026-11-14T22:36:35.756717+00:00] QC recovery: together_9b_tuned-equity-sixty-forty-portfolio_v01
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v01] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v01] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v01] stage=upload status=running compile=None cloud=None progress=pending project=39413915 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v01] stage=compile status=running compile=None cloud=None progress=pending project=39413915 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v01] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39413915 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v01] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39413915 backtest=None
+[2026-11-14T22:37:25.307472+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v01] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39413915 backtest=ace48dd73943a3e2bd4ffaa56f2ec392
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v01] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39413915 backtest=ace48dd73943a3e2bd4ffaa56f2ec392
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v01] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=39413915 backtest=ace48dd73943a3e2bd4ffaa56f2ec392
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v01] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39413915 backtest=ace48dd73943a3e2bd4ffaa56f2ec392
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v01] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39413915 backtest=ace48dd73943a3e2bd4ffaa56f2ec392
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v01] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39413915 backtest=ace48dd73943a3e2bd4ffaa56f2ec392
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v01] downloading orders
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v01] downloading equity_chart
+
+=== QC RESULT together_9b_tuned-equity-sixty-forty-portfolio_v01 ===
+{
+  "status": "completed",
+  "stage": "finished",
+  "project_id": 39413915,
+  "compile_id": "6f6f17900927900c5fb4478d7a515547-5ee4cfad2dca3fc0b17c89db419f8b60",
+  "backtest_id": "ace48dd73943a3e2bd4ffaa56f2ec392",
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "total_orders": "64",
+  "statistics": {
+    "Total Orders": "64",
+    "Average Win": "0.15%",
+    "Average Loss": "-0.19%",
+    "Compounding Annual Return": "-3.181%",
+    "Drawdown": "33.800%",
+    "Expectancy": "-0.514",
+    "Start Equity": "100000",
+    "End Equity": "90753.10",
+    "Net Profit": "-9.247%",
+    "Sharpe Ratio": "-0.426",
+    "Sortino Ratio": "-0.545",
+    "Probabilistic Sharpe Ratio": "0.149%",
+    "Loss Rate": "72%",
+    "Win Rate": "28%",
+    "Profit-Loss Ratio": "0.76",
+    "Alpha": "-0.075",
+    "Beta": "0.655",
+    "Annual Standard Deviation": "0.13",
+    "Annual Variance": "0.017",
+    "Information Ratio": "-0.844",
+    "Tracking Error": "0.101",
+    "Treynor Ratio": "-0.084",
+    "Total Fees": "$65.42",
+    "Estimated Strategy Capacity": "$16000000.00",
+    "Lowest Capacity Asset": "TLT SGNKIKYGE9NP",
+    "Portfolio Turnover": "0.19%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": "2022-01-03T14:31:00Z",
+    "endDateTime": "2024-12-02T14:31:00Z",
+    "totalNumberOfTrades": 29,
+    "numberOfWinningTrades": 8,
+    "numberOfLosingTrades": 21,
+    "totalProfitLoss": "-3310.01",
+    "totalProfit": "1069.99",
+    "totalLoss": "-4380.00",
+    "largestProfit": "445.29",
+    "largestLoss": "-615.52",
+    "averageProfitLoss": "-114.1383",
+    "averageProfit": "133.7488",
+    "averageLoss": "-208.5714",
+    "averageTradeDuration": "536.22:26:53.7931030",
+    "averageWinningTradeDuration": "887.23:22:29.9999999",
+    "averageLosingTradeDuration": "403.04:57:08.5714281",
+    "medianTradeDuration": "574.23:00:00",
+    "medianWinningTradeDuration": "881.23:00:00",
+    "medianLosingTradeDuration": "365.00:00:00",
+    "maxConsecutiveWinningTrades": 4,
+    "maxConsecutiveLosingTrades": 19,
+    "profitLossRatio": "0.6413",
+    "winLossRatio": "0.3810",
+    "winRate": "0.2759",
+    "lossRate": "0.7241",
+    "averageMAE": "-313.2393",
+    "averageMFE": "46.3555",
+    "largestMAE": "-932.49",
+    "largestMFE": "500.22",
+    "maximumClosedTradeDrawdown": "-3897.91",
+    "maximumIntraTradeDrawdown": "-4368.66",
+    "profitLossStandardDeviation": "229.1359",
+    "profitLossDownsideDeviation": "182.0352",
+    "profitFactor": "0.2443",
+    "sharpeRatio": "-0.4981",
+    "sortinoRatio": "-0.6270",
+    "profitToMaxDrawdownRatio": "-0.8492",
+    "maximumEndTradeDrawdown": "958.17",
+    "averageEndTradeDrawdown": "-160.4938",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "32.415"
+  },
+  "error": null,
+  "qc_note": ""
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 39413915, with CompileID: 6f6f17900927900c5fb4478d7a515547-5ee4cfad2dca3fc0b17c89db419f8b60, Lean Version: 2.5.0.0.18263
+logs (last 20 of 3):
+2022-01-01 00:00:00 Launching analysis for ace48dd73943a3e2bd4ffaa56f2ec392 with LEAN Engine v2.5.0.0.18263
+2022-01-03 09:31:00 Warning: Portfolio rebalance result ignored as it resulted in a single share trade recommendation which can generate high fees. To disable minimum order size checks please set self.settings.minimum_order_margin_portfolio_percentage = 0.
+2024-12-31 16:00:00 Algorithm Id:(ace48dd73943a3e2bd4ffaa56f2ec392) completed in 6.58 seconds at 179k data points per second. Processing total of 1,175,689 data points.
+=== END QC RESULT ===
+
+[2026-11-14T22:37:41.740776+00:00] QC recovery: together_9b_tuned-equity-sixty-forty-portfolio_v02
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v02] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v02] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v02] stage=upload status=running compile=None cloud=None progress=pending project=39413960 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v02] stage=compile status=running compile=None cloud=None progress=pending project=39413960 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v02] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39413960 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v02] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39413960 backtest=None
+[2026-11-14T22:38:30.352708+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v02] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39413960 backtest=a0215cc92a616718214acad68a45d683
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v02] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39413960 backtest=a0215cc92a616718214acad68a45d683
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v02] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=39413960 backtest=a0215cc92a616718214acad68a45d683
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v02] stage=backtest status=infrastructure_error compile=BuildSuccess cloud=Completed. progress=100.0% project=39413960 backtest=a0215cc92a616718214acad68a45d683
+
+=== QC RESULT together_9b_tuned-equity-sixty-forty-portfolio_v02 ===
+{
+  "status": "infrastructure_error",
+  "stage": "backtest",
+  "project_id": 39413960,
+  "compile_id": "26299aeb35302cab1488b47092d22752-d1fbd9f2cc57ba581e4b3d500600155e",
+  "backtest_id": "a0215cc92a616718214acad68a45d683",
+  "compile_errors": 0,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "'NoneType' object has no attribute 'get'",
+  "qc_note": "infrastructure: 'NoneType' object has no attribute 'get'"
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 39413960, with CompileID: 26299aeb35302cab1488b47092d22752-d1fbd9f2cc57ba581e4b3d500600155e, Lean Version: 2.5.0.0.18263
+=== END QC RESULT ===
+
+[2026-11-14T22:38:45.230396+00:00] QC recovery: together_9b_tuned-equity-sixty-forty-portfolio_v04
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v04] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v04] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v04] stage=upload status=running compile=None cloud=None progress=pending project=39414002 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v04] stage=compile status=running compile=None cloud=None progress=pending project=39414002 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v04] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414002 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v04] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414002 backtest=None
+[2026-11-14T22:39:35.915440+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v04] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414002 backtest=27ded5ce495b3a4cb387f960c66e9a0e
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v04] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414002 backtest=27ded5ce495b3a4cb387f960c66e9a0e
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v04] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414002 backtest=27ded5ce495b3a4cb387f960c66e9a0e
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v04] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414002 backtest=27ded5ce495b3a4cb387f960c66e9a0e
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v04] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414002 backtest=27ded5ce495b3a4cb387f960c66e9a0e
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v04] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414002 backtest=27ded5ce495b3a4cb387f960c66e9a0e
+
+=== QC RESULT together_9b_tuned-equity-sixty-forty-portfolio_v04 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 39414002,
+  "compile_id": "9f1a5bf08846dc2c26722a9f97590080-d37378a84b236c71bb1d65edca5389be",
+  "backtest_id": "27ded5ce495b3a4cb387f960c66e9a0e",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": null,
+  "statistics": {},
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2022-01-01 00:00:00 Runtime Error: The ticker SPY was not found in the SymbolCache. Use the Symbol object as key instead. Accessing the securities collection/slice object by string ticker is only available for securities added with the add_security-family methods. For more details, please check out the documentation.\n  at on_warmup_finished\n    self.set_holdings(self._targets, liquidate_existing_holdings=True)\n in main.py: line 29\n",
+  "qc_note": "runtime: 2022-01-01 00:00:00 Runtime Error: The ticker SPY was not found in the SymbolCache. Use the Symbol object as key instead. Accessing the securities collection/slice object by string ticker is only avai"
+}
+compile_logs (last 20 of 2):
+Warning main.py Line: 34 Column: 37 - "PortfolioTarget" has no attribute "weight"; maybe "if abs(current_weight - target_weight) > self._drift_threshold:"?
+Build Request Successful for Project ID: 39414002, with CompileID: 9f1a5bf08846dc2c26722a9f97590080-d37378a84b236c71bb1d65edca5389be, Lean Version: 2.5.0.0.18263
+logs (last 20 of 3):
+2022-01-01 00:00:00 Launching analysis for 27ded5ce495b3a4cb387f960c66e9a0e with LEAN Engine v2.5.0.0.18263
+2022-01-01 00:00:00 Runtime Error: The ticker SPY was not found in the SymbolCache. Use the Symbol object as key instead. Accessing the securities collection/slice object by string ticker is only available for securities added with the add_security-family methods. For more details, please check out the documentation.
+  at on_warmup_finished
+    self.set_holdings(self._targets, liquidate_existing_holdings=True)
+ in main.py: line 29
+
+2022-01-01 00:00:00 Algorithm Id:(27ded5ce495b3a4cb387f960c66e9a0e) completed in 10.20 seconds at 0k data points per second. Processing total of 0 data points.
+=== END QC RESULT ===
+
+[2026-11-14T22:39:59.927098+00:00] QC recovery: together_9b_tuned-equity-sixty-forty-portfolio_v05
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v05] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v05] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v05] stage=upload status=running compile=None cloud=None progress=pending project=39414044 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v05] stage=compile status=running compile=None cloud=None progress=pending project=39414044 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v05] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414044 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v05] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414044 backtest=None
+[2026-11-14T22:40:41.410989+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v05] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414044 backtest=a744cb50895189f30032714ffde14cfd
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v05] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414044 backtest=a744cb50895189f30032714ffde14cfd
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v05] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=39414044 backtest=a744cb50895189f30032714ffde14cfd
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v05] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414044 backtest=a744cb50895189f30032714ffde14cfd
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v05] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414044 backtest=a744cb50895189f30032714ffde14cfd
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v05] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414044 backtest=a744cb50895189f30032714ffde14cfd
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v05] downloading orders
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v05] downloading equity_chart
+
+=== QC RESULT together_9b_tuned-equity-sixty-forty-portfolio_v05 ===
+{
+  "status": "completed",
+  "stage": "finished",
+  "project_id": 39414044,
+  "compile_id": "e911c3787f1992a90b7377f4769ca68c-84948a1c2e4123362d1be90ce33a06cf",
+  "backtest_id": "a744cb50895189f30032714ffde14cfd",
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "total_orders": "7",
+  "statistics": {
+    "Total Orders": "7",
+    "Average Win": "0.06%",
+    "Average Loss": "-0.62%",
+    "Compounding Annual Return": "-2.948%",
+    "Drawdown": "34.800%",
+    "Expectancy": "-0.633",
+    "Start Equity": "100000",
+    "End Equity": "91409.81",
+    "Net Profit": "-8.590%",
+    "Sharpe Ratio": "-0.405",
+    "Sortino Ratio": "-0.511",
+    "Probabilistic Sharpe Ratio": "0.172%",
+    "Loss Rate": "67%",
+    "Win Rate": "33%",
+    "Profit-Loss Ratio": "0.10",
+    "Alpha": "-0.074",
+    "Beta": "0.688",
+    "Annual Standard Deviation": "0.131",
+    "Annual Variance": "0.017",
+    "Information Ratio": "-0.864",
+    "Tracking Error": "0.097",
+    "Treynor Ratio": "-0.077",
+    "Total Fees": "$8.42",
+    "Estimated Strategy Capacity": "$24000000.00",
+    "Lowest Capacity Asset": "TLT SGNKIKYGE9NP",
+    "Portfolio Turnover": "0.13%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": "2022-01-03T14:31:00Z",
+    "endDateTime": "2024-01-04T14:31:00Z",
+    "totalNumberOfTrades": 3,
+    "numberOfWinningTrades": 2,
+    "numberOfLosingTrades": 1,
+    "totalProfitLoss": "-1181.38",
+    "totalProfit": "65.82",
+    "totalLoss": "-1247.20",
+    "largestProfit": "64.07",
+    "largestLoss": "-1247.20",
+    "averageProfitLoss": "-393.7933",
+    "averageProfit": "32.91",
+    "averageLoss": "-1247.20",
+    "averageTradeDuration": "366.16:00:00",
+    "averageWinningTradeDuration": "366.12:00:00",
+    "averageLosingTradeDuration": "367.00:00:00",
+    "medianTradeDuration": "367.00:00:00",
+    "medianWinningTradeDuration": "731.00:00:00",
+    "medianLosingTradeDuration": "367.00:00:00",
+    "maxConsecutiveWinningTrades": 1,
+    "maxConsecutiveLosingTrades": 1,
+    "profitLossRatio": "0.0264",
+    "winLossRatio": "2",
+    "winRate": "0.6667",
+    "lossRate": "0.3333",
+    "averageMAE": "-972.67",
+    "averageMFE": "68.6933",
+    "largestMAE": "-1748.42",
+    "largestMFE": "151.51",
+    "maximumClosedTradeDrawdown": "-1247.20",
+    "maximumIntraTradeDrawdown": "-2460.96",
+    "profitLossStandardDeviation": "739.7284",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0.0528",
+    "sharpeRatio": "-0.5323",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "-0.9472",
+    "maximumEndTradeDrawdown": "1796.57",
+    "averageEndTradeDrawdown": "-462.4867",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "4"
+  },
+  "error": null,
+  "qc_note": ""
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 39414044, with CompileID: e911c3787f1992a90b7377f4769ca68c-84948a1c2e4123362d1be90ce33a06cf, Lean Version: 2.5.0.0.18263
+logs (last 20 of 3):
+2022-01-01 00:00:00 Launching analysis for a744cb50895189f30032714ffde14cfd with LEAN Engine v2.5.0.0.18263
+2023-01-05 09:31:00 Warning: Portfolio rebalance result ignored as it resulted in a single share trade recommendation which can generate high fees. To disable minimum order size checks please set self.settings.minimum_order_margin_portfolio_percentage = 0.
+2024-12-31 16:00:00 Algorithm Id:(a744cb50895189f30032714ffde14cfd) completed in 6.41 seconds at 183k data points per second. Processing total of 1,175,689 data points.
+=== END QC RESULT ===
+
+[2026-11-14T22:40:58.042635+00:00] QC recovery: together_9b_tuned-equity-sixty-forty-portfolio_v06
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v06] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v06] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v06] stage=upload status=running compile=None cloud=None progress=pending project=39414079 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v06] stage=compile status=running compile=None cloud=None progress=pending project=39414079 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v06] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414079 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v06] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414079 backtest=None
+[2026-11-14T22:41:45.509421+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v06] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414079 backtest=fe4920eab63cd941570e43fdd07a1e80
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v06] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414079 backtest=fe4920eab63cd941570e43fdd07a1e80
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v06] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414079 backtest=fe4920eab63cd941570e43fdd07a1e80
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v06] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414079 backtest=fe4920eab63cd941570e43fdd07a1e80
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v06] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414079 backtest=fe4920eab63cd941570e43fdd07a1e80
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v06] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414079 backtest=fe4920eab63cd941570e43fdd07a1e80
+
+=== QC RESULT together_9b_tuned-equity-sixty-forty-portfolio_v06 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 39414079,
+  "compile_id": "062ba452e7ebb86222b7f58b9d8acb1d-137ebf5d4f00b5039967d25e935998c0",
+  "backtest_id": "fe4920eab63cd941570e43fdd07a1e80",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "0",
+  "statistics": {
+    "Total Orders": "0",
+    "Average Win": "0%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "0%",
+    "Expectancy": "0",
+    "Start Equity": "100000",
+    "End Equity": "100000",
+    "Net Profit": "0%",
+    "Sharpe Ratio": "0",
+    "Sortino Ratio": "0",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "0%",
+    "Win Rate": "0%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0",
+    "Annual Variance": "0",
+    "Information Ratio": "0",
+    "Tracking Error": "0",
+    "Treynor Ratio": "0",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$0",
+    "Lowest Capacity Asset": "",
+    "Portfolio Turnover": "0%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2022-01-03 09:31:00 Runtime Error: 'SecurityPortfolioManager' object has no attribute 'holdings_value' Did you mean: 'total_holdings_value'?\n  at _rebalance\n    holdings_value = self.portfolio.holdings_value(security)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 30\n",
+  "qc_note": "runtime: 2022-01-03 09:31:00 Runtime Error: 'SecurityPortfolioManager' object has no attribute 'holdings_value' Did you mean: 'total_holdings_value'?\n  at _rebalance\n    holdings_"
+}
+compile_logs (last 20 of 11):
+Warning main.py Line: 30 Column: 30 - "SecurityPortfolioManager" has no attribute "holdings_value"; maybe "total_holdings_value"?
+Warning main.py Line: 32 Column: 53 - Argument 1 to "_get_target_weight" of "DynamicPortfolioRebalancingAlgorithm" has incompatible type "Symbol"; expected "Security"
+Warning main.py Line: 35 Column: 36 - List item 0 has incompatible type "Symbol"; expected "PortfolioTarget"; maybe "self.set_holdings(self._spy, 1)"?
+Warning main.py Line: 35 Column: 47 - List item 1 has incompatible type "Symbol"; expected "PortfolioTarget"
+Warning main.py Line: 38 Column: 26 - "IRiskFreeInterestRateModel" has no attribute "get"
+Warning main.py Line: 38 Column: 65 - Name "risk_free_interest_rate_type" is not defined
+Warning main.py Line: 45 Column: 22 - "SecurityPortfolioManager" has no attribute "covariance"
+Warning main.py Line: 50 Column: 23 - "SecurityPortfolioManager" has no attribute "correlation"
+Warning main.py Line: 56 Column: 13 - "SecurityPortfolioManager" has no attribute "covariance"
+Warning main.py Line: 57 Column: 15 - "SecurityPortfolioManager" has no attribute "correlation"
+Build Request Successful for Project ID: 39414079, with CompileID: 062ba452e7ebb86222b7f58b9d8acb1d-137ebf5d4f00b5039967d25e935998c0, Lean Version: 2.5.0.0.18263
+logs (last 20 of 3):
+2022-01-01 00:00:00 Launching analysis for fe4920eab63cd941570e43fdd07a1e80 with LEAN Engine v2.5.0.0.18263
+2022-01-03 09:31:00 Runtime Error: 'SecurityPortfolioManager' object has no attribute 'holdings_value' Did you mean: 'total_holdings_value'?
+  at _rebalance
+    holdings_value = self.portfolio.holdings_value(security)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ in main.py: line 30
+
+2022-01-03 09:31:00 Algorithm Id:(fe4920eab63cd941570e43fdd07a1e80) completed in 0.32 seconds at 0k data points per second. Processing total of 12 data points.
+=== END QC RESULT ===
+
+[2026-11-14T22:41:59.041187+00:00] QC recovery: together_9b_tuned-equity-sixty-forty-portfolio_v07
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v07] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v07] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v07] stage=upload status=running compile=None cloud=None progress=pending project=39414125 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v07] stage=compile status=running compile=None cloud=None progress=pending project=39414125 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v07] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414125 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v07] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414125 backtest=None
+[2026-11-14T22:42:50.323723+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v07] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414125 backtest=2c03c42bd8b573fdf1abb1471e35d868
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v07] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414125 backtest=2c03c42bd8b573fdf1abb1471e35d868
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v07] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414125 backtest=2c03c42bd8b573fdf1abb1471e35d868
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v07] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414125 backtest=2c03c42bd8b573fdf1abb1471e35d868
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v07] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414125 backtest=2c03c42bd8b573fdf1abb1471e35d868
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v07] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414125 backtest=2c03c42bd8b573fdf1abb1471e35d868
+
+=== QC RESULT together_9b_tuned-equity-sixty-forty-portfolio_v07 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 39414125,
+  "compile_id": "5976fb41b56c7e5513ede6951851e18f-ef2967448ddeb1cc180d7590cdcb672f",
+  "backtest_id": "2c03c42bd8b573fdf1abb1471e35d868",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": null,
+  "statistics": {},
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: division by zero\n  at initialize\n    equity.weight = 1 / len(self._weight_by_symbol)\n                    ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n in main.py: line 16\n division by zero",
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: division by zero\n  at initialize\n    equity.weight = 1 / len(self._weight_by_symbol)\n                    "
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 39414125, with CompileID: 5976fb41b56c7e5513ede6951851e18f-ef2967448ddeb1cc180d7590cdcb672f, Lean Version: 2.5.0.0.18263
+=== END QC RESULT ===
+
+[2026-11-14T22:43:40.665637+00:00] QC recovery: together_9b_tuned-equity-sixty-forty-portfolio_v08
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v08] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v08] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v08] stage=upload status=running compile=None cloud=None progress=pending project=39414200 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v08] stage=compile status=running compile=None cloud=None progress=pending project=39414200 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v08] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414200 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v08] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414200 backtest=None
+[2026-11-14T22:43:55.370479+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v08] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414200 backtest=3556beadf66ed668e3a165f9ee2d6074
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v08] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=39414200 backtest=3556beadf66ed668e3a165f9ee2d6074
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v08] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414200 backtest=3556beadf66ed668e3a165f9ee2d6074
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v08] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414200 backtest=3556beadf66ed668e3a165f9ee2d6074
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v08] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414200 backtest=3556beadf66ed668e3a165f9ee2d6074
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v08] downloading orders
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v08] downloading equity_chart
+
+=== QC RESULT together_9b_tuned-equity-sixty-forty-portfolio_v08 ===
+{
+  "status": "completed",
+  "stage": "finished",
+  "project_id": 39414200,
+  "compile_id": "2d1ab1857b5783835afe29246a16f068-1a52a3a36df6336b8b233865aa48e7cb",
+  "backtest_id": "3556beadf66ed668e3a165f9ee2d6074",
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "total_orders": "23",
+  "statistics": {
+    "Total Orders": "23",
+    "Average Win": "0.34%",
+    "Average Loss": "-0.33%",
+    "Compounding Annual Return": "-3.109%",
+    "Drawdown": "34.000%",
+    "Expectancy": "-0.545",
+    "Start Equity": "100000",
+    "End Equity": "90953.83",
+    "Net Profit": "-9.046%",
+    "Sharpe Ratio": "-0.421",
+    "Sortino Ratio": "-0.536",
+    "Probabilistic Sharpe Ratio": "0.154%",
+    "Loss Rate": "78%",
+    "Win Rate": "22%",
+    "Profit-Loss Ratio": "1.05",
+    "Alpha": "-0.075",
+    "Beta": "0.663",
+    "Annual Standard Deviation": "0.13",
+    "Annual Variance": "0.017",
+    "Information Ratio": "-0.849",
+    "Tracking Error": "0.1",
+    "Treynor Ratio": "-0.082",
+    "Total Fees": "$24.42",
+    "Estimated Strategy Capacity": "$14000000.00",
+    "Lowest Capacity Asset": "TLT SGNKIKYGE9NP",
+    "Portfolio Turnover": "0.15%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": "2022-01-03T14:31:00Z",
+    "endDateTime": "2024-10-01T13:31:00Z",
+    "totalNumberOfTrades": 9,
+    "numberOfWinningTrades": 2,
+    "numberOfLosingTrades": 7,
+    "totalProfitLoss": "-1656.32",
+    "totalProfit": "682.76",
+    "totalLoss": "-2339.08",
+    "largestProfit": "429.63",
+    "largestLoss": "-760.19",
+    "averageProfitLoss": "-184.0356",
+    "averageProfit": "341.38",
+    "averageLoss": "-334.1543",
+    "averageTradeDuration": "535.09:46:40",
+    "averageWinningTradeDuration": "864.11:00:00",
+    "averageLosingTradeDuration": "441.09:25:42.8571428",
+    "medianTradeDuration": "545.23:00:00",
+    "medianWinningTradeDuration": "909.23:00:00",
+    "medianLosingTradeDuration": "365.00:00:00",
+    "maxConsecutiveWinningTrades": 2,
+    "maxConsecutiveLosingTrades": 6,
+    "profitLossRatio": "1.0216",
+    "winLossRatio": "0.2857",
+    "winRate": "0.2222",
+    "lossRate": "0.7778",
+    "averageMAE": "-598.4567",
+    "averageMFE": "90.0400",
+    "largestMAE": "-969.26",
+    "largestMFE": "436.36",
+    "maximumClosedTradeDrawdown": "-2145.35",
+    "maximumIntraTradeDrawdown": "-2983.75",
+    "profitLossStandardDeviation": "362.4270",
+    "profitLossDownsideDeviation": "232.8727",
+    "profitFactor": "0.2919",
+    "sharpeRatio": "-0.5078",
+    "sortinoRatio": "-0.7903",
+    "profitToMaxDrawdownRatio": "-0.7721",
+    "maximumEndTradeDrawdown": "980.91",
+    "averageEndTradeDrawdown": "-274.0756",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "12.415"
+  },
+  "error": null,
+  "qc_note": ""
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 39414200, with CompileID: 2d1ab1857b5783835afe29246a16f068-1a52a3a36df6336b8b233865aa48e7cb, Lean Version: 2.5.0.0.18263
+logs (last 20 of 3):
+2022-01-01 00:00:00 Launching analysis for 3556beadf66ed668e3a165f9ee2d6074 with LEAN Engine v2.5.0.0.18263
+2022-01-03 09:31:00 Warning: Portfolio rebalance result ignored as it resulted in a single share trade recommendation which can generate high fees. To disable minimum order size checks please set self.settings.minimum_order_margin_portfolio_percentage = 0.
+2024-12-31 16:00:00 Algorithm Id:(3556beadf66ed668e3a165f9ee2d6074) completed in 2.11 seconds at 558k data points per second. Processing total of 1,175,689 data points.
+=== END QC RESULT ===
+
+[2026-11-14T22:44:06.898358+00:00] QC recovery: together_9b_tuned-equity-sixty-forty-portfolio_v09
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v09] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v09] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v09] stage=upload status=running compile=None cloud=None progress=pending project=39414218 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v09] stage=compile status=running compile=None cloud=None progress=pending project=39414218 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v09] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414218 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v09] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414218 backtest=None
+[2026-11-14T22:45:00.544821+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v09] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414218 backtest=fe2863261add6b5c80590eb14874207e
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v09] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414218 backtest=fe2863261add6b5c80590eb14874207e
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v09] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=39414218 backtest=fe2863261add6b5c80590eb14874207e
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v09] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414218 backtest=fe2863261add6b5c80590eb14874207e
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v09] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414218 backtest=fe2863261add6b5c80590eb14874207e
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v09] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414218 backtest=fe2863261add6b5c80590eb14874207e
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v09] downloading orders
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v09] downloading equity_chart
+
+=== QC RESULT together_9b_tuned-equity-sixty-forty-portfolio_v09 ===
+{
+  "status": "completed",
+  "stage": "finished",
+  "project_id": 39414218,
+  "compile_id": "5bcdde57eeecbbe72c6b5b21d9041b0e-c3444b82127817e7f0b829edc71f1fc4",
+  "backtest_id": "fe2863261add6b5c80590eb14874207e",
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "total_orders": "7",
+  "statistics": {
+    "Total Orders": "7",
+    "Average Win": "0.06%",
+    "Average Loss": "-0.62%",
+    "Compounding Annual Return": "-2.948%",
+    "Drawdown": "34.800%",
+    "Expectancy": "-0.633",
+    "Start Equity": "100000",
+    "End Equity": "91409.81",
+    "Net Profit": "-8.590%",
+    "Sharpe Ratio": "-0.405",
+    "Sortino Ratio": "-0.511",
+    "Probabilistic Sharpe Ratio": "0.172%",
+    "Loss Rate": "67%",
+    "Win Rate": "33%",
+    "Profit-Loss Ratio": "0.10",
+    "Alpha": "-0.074",
+    "Beta": "0.688",
+    "Annual Standard Deviation": "0.131",
+    "Annual Variance": "0.017",
+    "Information Ratio": "-0.864",
+    "Tracking Error": "0.097",
+    "Treynor Ratio": "-0.077",
+    "Total Fees": "$8.42",
+    "Estimated Strategy Capacity": "$24000000.00",
+    "Lowest Capacity Asset": "TLT SGNKIKYGE9NP",
+    "Portfolio Turnover": "0.13%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": "2022-01-03T14:31:00Z",
+    "endDateTime": "2024-01-04T14:31:00Z",
+    "totalNumberOfTrades": 3,
+    "numberOfWinningTrades": 2,
+    "numberOfLosingTrades": 1,
+    "totalProfitLoss": "-1181.38",
+    "totalProfit": "65.82",
+    "totalLoss": "-1247.20",
+    "largestProfit": "64.07",
+    "largestLoss": "-1247.20",
+    "averageProfitLoss": "-393.7933",
+    "averageProfit": "32.91",
+    "averageLoss": "-1247.20",
+    "averageTradeDuration": "366.16:00:00",
+    "averageWinningTradeDuration": "366.12:00:00",
+    "averageLosingTradeDuration": "367.00:00:00",
+    "medianTradeDuration": "367.00:00:00",
+    "medianWinningTradeDuration": "731.00:00:00",
+    "medianLosingTradeDuration": "367.00:00:00",
+    "maxConsecutiveWinningTrades": 1,
+    "maxConsecutiveLosingTrades": 1,
+    "profitLossRatio": "0.0264",
+    "winLossRatio": "2",
+    "winRate": "0.6667",
+    "lossRate": "0.3333",
+    "averageMAE": "-972.67",
+    "averageMFE": "68.6933",
+    "largestMAE": "-1748.42",
+    "largestMFE": "151.51",
+    "maximumClosedTradeDrawdown": "-1247.20",
+    "maximumIntraTradeDrawdown": "-2460.96",
+    "profitLossStandardDeviation": "739.7284",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0.0528",
+    "sharpeRatio": "-0.5323",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "-0.9472",
+    "maximumEndTradeDrawdown": "1796.57",
+    "averageEndTradeDrawdown": "-462.4867",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "4"
+  },
+  "error": null,
+  "qc_note": ""
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 39414218, with CompileID: 5bcdde57eeecbbe72c6b5b21d9041b0e-c3444b82127817e7f0b829edc71f1fc4, Lean Version: 2.5.0.0.18263
+logs (last 20 of 3):
+2022-01-01 00:00:00 Launching analysis for fe2863261add6b5c80590eb14874207e with LEAN Engine v2.5.0.0.18263
+2023-01-05 09:31:00 Warning: Portfolio rebalance result ignored as it resulted in a single share trade recommendation which can generate high fees. To disable minimum order size checks please set self.settings.minimum_order_margin_portfolio_percentage = 0.
+2024-12-31 16:00:00 Algorithm Id:(fe2863261add6b5c80590eb14874207e) completed in 4.86 seconds at 242k data points per second. Processing total of 1,175,689 data points.
+=== END QC RESULT ===
+
+[2026-11-14T22:45:17.311406+00:00] QC recovery: together_9b_tuned-equity-sixty-forty-portfolio_v10
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v10] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v10] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v10] stage=upload status=running compile=None cloud=None progress=pending project=39414261 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v10] stage=compile status=running compile=None cloud=None progress=pending project=39414261 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v10] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414261 backtest=None
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v10] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414261 backtest=None
+[2026-11-14T22:46:05.781801+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v10] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414261 backtest=ada3162b24753e0c2e5e83ec2a1491e9
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v10] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414261 backtest=ada3162b24753e0c2e5e83ec2a1491e9
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v10] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=39414261 backtest=ada3162b24753e0c2e5e83ec2a1491e9
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v10] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414261 backtest=ada3162b24753e0c2e5e83ec2a1491e9
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v10] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414261 backtest=ada3162b24753e0c2e5e83ec2a1491e9
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v10] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414261 backtest=ada3162b24753e0c2e5e83ec2a1491e9
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v10] downloading orders
+[QC together_9b_tuned-equity-sixty-forty-portfolio_v10] downloading equity_chart
+
+=== QC RESULT together_9b_tuned-equity-sixty-forty-portfolio_v10 ===
+{
+  "status": "completed",
+  "stage": "finished",
+  "project_id": 39414261,
+  "compile_id": "1ea26d0bdd66f8d24cf5c9921e947314-04fd4a4d96f5827b7174905797e543d5",
+  "backtest_id": "ada3162b24753e0c2e5e83ec2a1491e9",
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "total_orders": "6",
+  "statistics": {
+    "Total Orders": "6",
+    "Average Win": "0.68%",
+    "Average Loss": "-0.28%",
+    "Compounding Annual Return": "0.060%",
+    "Drawdown": "28.000%",
+    "Expectancy": "0.685",
+    "Start Equity": "100000",
+    "End Equity": "100181.59",
+    "Net Profit": "0.182%",
+    "Sharpe Ratio": "-0.318",
+    "Sortino Ratio": "-0.399",
+    "Probabilistic Sharpe Ratio": "0.301%",
+    "Loss Rate": "50%",
+    "Win Rate": "50%",
+    "Profit-Loss Ratio": "2.37",
+    "Alpha": "-0.054",
+    "Beta": "0.651",
+    "Annual Standard Deviation": "0.109",
+    "Annual Variance": "0.012",
+    "Information Ratio": "-0.868",
+    "Tracking Error": "0.075",
+    "Treynor Ratio": "-0.053",
+    "Total Fees": "$6.61",
+    "Estimated Strategy Capacity": "$23000000.00",
+    "Lowest Capacity Asset": "TLT SGNKIKYGE9NP",
+    "Portfolio Turnover": "0.11%",
+    "Drawdown Recovery": "959"
+  },
+  "trade_statistics": {
+    "startDateTime": "2022-01-03T14:31:00Z",
+    "endDateTime": "2024-04-01T13:31:00Z",
+    "totalNumberOfTrades": 2,
+    "numberOfWinningTrades": 1,
+    "numberOfLosingTrades": 1,
+    "totalProfitLoss": "392.27",
+    "totalProfit": "675.13",
+    "totalLoss": "-282.86",
+    "largestProfit": "675.13",
+    "largestLoss": "-282.86",
+    "averageProfitLoss": "196.135",
+    "averageProfit": "675.13",
+    "averageLoss": "-282.86",
+    "averageTradeDuration": "682.11:00:00",
+    "averageWinningTradeDuration": "818.23:00:00",
+    "averageLosingTradeDuration": "545.23:00:00",
+    "medianTradeDuration": "818.23:00:00",
+    "medianWinningTradeDuration": "818.23:00:00",
+    "medianLosingTradeDuration": "545.23:00:00",
+    "maxConsecutiveWinningTrades": 1,
+    "maxConsecutiveLosingTrades": 1,
+    "profitLossRatio": "2.3868",
+    "winLossRatio": "1",
+    "winRate": "0.5",
+    "lossRate": "0.5",
+    "averageMAE": "-1398.735",
+    "averageMFE": "363.72",
+    "largestMAE": "-1515.30",
+    "largestMFE": "685.71",
+    "maximumClosedTradeDrawdown": "-282.86",
+    "maximumIntraTradeDrawdown": "-1967.88",
+    "profitLossStandardDeviation": "677.4012",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "2.3868",
+    "sharpeRatio": "0.2895",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "1.3868",
+    "maximumEndTradeDrawdown": "1557.02",
+    "averageEndTradeDrawdown": "-167.585",
+    "maximumDrawdownDuration": "818.23:00:00",
+    "totalFees": "3"
+  },
+  "error": null,
+  "qc_note": ""
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 39414261, with CompileID: 1ea26d0bdd66f8d24cf5c9921e947314-04fd4a4d96f5827b7174905797e543d5, Lean Version: 2.5.0.0.18263
+logs (last 20 of 2):
+2022-01-01 00:00:00 Launching analysis for ada3162b24753e0c2e5e83ec2a1491e9 with LEAN Engine v2.5.0.0.18263
+2024-12-31 16:00:00 Algorithm Id:(ada3162b24753e0c2e5e83ec2a1491e9) completed in 5.51 seconds at 214k data points per second. Processing total of 1,175,689 data points.
+=== END QC RESULT ===
+
+[2026-11-14T22:46:22.151807+00:00] QC recovery: gold-equity-momentum-cross-sectional-decile
+[QC gold-equity-momentum-cross-sectional-decile] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC gold-equity-momentum-cross-sectional-decile] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC gold-equity-momentum-cross-sectional-decile] stage=upload status=running compile=None cloud=None progress=pending project=39414298 backtest=None
+[QC gold-equity-momentum-cross-sectional-decile] stage=compile status=running compile=None cloud=None progress=pending project=39414298 backtest=None
+[QC gold-equity-momentum-cross-sectional-decile] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414298 backtest=None
+[QC gold-equity-momentum-cross-sectional-decile] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414298 backtest=None
+[2026-11-14T22:47:10.444200+00:00] QC accepted backtest submission
+[QC gold-equity-momentum-cross-sectional-decile] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414298 backtest=a55829b269c732c574a1b624b6785aae
+[QC gold-equity-momentum-cross-sectional-decile] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414298 backtest=a55829b269c732c574a1b624b6785aae
+[QC gold-equity-momentum-cross-sectional-decile] stage=backtest status=running compile=BuildSuccess cloud=In Progress... progress=27.8% project=39414298 backtest=a55829b269c732c574a1b624b6785aae
+[QC gold-equity-momentum-cross-sectional-decile] stage=backtest status=running compile=BuildSuccess cloud=In Progress... progress=45.0% project=39414298 backtest=a55829b269c732c574a1b624b6785aae
+[QC gold-equity-momentum-cross-sectional-decile] stage=backtest status=running compile=BuildSuccess cloud=In Progress... progress=70.0% project=39414298 backtest=a55829b269c732c574a1b624b6785aae
+[QC gold-equity-momentum-cross-sectional-decile] stage=backtest status=running compile=BuildSuccess cloud=In Progress... progress=84.2% project=39414298 backtest=a55829b269c732c574a1b624b6785aae
+[QC gold-equity-momentum-cross-sectional-decile] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=39414298 backtest=a55829b269c732c574a1b624b6785aae
+[QC gold-equity-momentum-cross-sectional-decile] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414298 backtest=a55829b269c732c574a1b624b6785aae
+[QC gold-equity-momentum-cross-sectional-decile] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414298 backtest=a55829b269c732c574a1b624b6785aae
+[QC gold-equity-momentum-cross-sectional-decile] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414298 backtest=a55829b269c732c574a1b624b6785aae
+[QC gold-equity-momentum-cross-sectional-decile] downloading orders
+[QC gold-equity-momentum-cross-sectional-decile] downloading equity_chart
+
+=== QC RESULT gold-equity-momentum-cross-sectional-decile ===
+{
+  "status": "completed",
+  "stage": "finished",
+  "project_id": 39414298,
+  "compile_id": "ba659458318e895a98641cb5fe6fb8df-15df49aeb68a8faf056e273e1364c739",
+  "backtest_id": "a55829b269c732c574a1b624b6785aae",
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "total_orders": "478",
+  "statistics": {
+    "Total Orders": "478",
+    "Average Win": "0.55%",
+    "Average Loss": "-0.94%",
+    "Compounding Annual Return": "12.727%",
+    "Drawdown": "27.700%",
+    "Expectancy": "0.114",
+    "Start Equity": "250000",
+    "End Equity": "358231.73",
+    "Net Profit": "43.293%",
+    "Sharpe Ratio": "0.326",
+    "Sortino Ratio": "0.384",
+    "Probabilistic Sharpe Ratio": "7.274%",
+    "Loss Rate": "30%",
+    "Win Rate": "70%",
+    "Profit-Loss Ratio": "0.59",
+    "Alpha": "0.042",
+    "Beta": "0.977",
+    "Annual Standard Deviation": "0.22",
+    "Annual Variance": "0.048",
+    "Information Ratio": "0.247",
+    "Tracking Error": "0.168",
+    "Treynor Ratio": "0.073",
+    "Total Fees": "$681.64",
+    "Estimated Strategy Capacity": "$12000000.00",
+    "Lowest Capacity Asset": "ANET VR60JOYTXC2T",
+    "Portfolio Turnover": "2.60%",
+    "Drawdown Recovery": "630"
+  },
+  "trade_statistics": {
+    "startDateTime": "2022-02-01T14:31:00Z",
+    "endDateTime": "2024-12-02T14:31:00Z",
+    "totalNumberOfTrades": 324,
+    "numberOfWinningTrades": 222,
+    "numberOfLosingTrades": 102,
+    "totalProfitLoss": "77850.03",
+    "totalProfit": "254075.41",
+    "totalLoss": "-176225.38",
+    "largestProfit": "14900.00",
+    "largestLoss": "-7911.44",
+    "averageProfitLoss": "240.2779",
+    "averageProfit": "1144.4838",
+    "averageLoss": "-1727.6998",
+    "averageTradeDuration": "103.06:07:24.4444465",
+    "averageWinningTradeDuration": "127.18:30:00.0000012",
+    "averageLosingTradeDuration": "49.21:32:21.1764714",
+    "medianTradeDuration": "60.23:00:00",
+    "medianWinningTradeDuration": "63.01:00:00",
+    "medianLosingTradeDuration": "31.00:00:00",
+    "maxConsecutiveWinningTrades": 17,
+    "maxConsecutiveLosingTrades": 9,
+    "profitLossRatio": "0.6624",
+    "winLossRatio": "2.1765",
+    "winRate": "0.6852",
+    "lossRate": "0.3148",
+    "averageMAE": "-1088.9612",
+    "averageMFE": "1475.9201",
+    "largestMAE": "-9596.53",
+    "largestMFE": "20460.60",
+    "maximumClosedTradeDrawdown": "-44823.20",
+    "maximumIntraTradeDrawdown": "-50301.77",
+    "profitLossStandardDeviation": "2461.8889",
+    "profitLossDownsideDeviation": "2099.8035",
+    "profitFactor": "1.4418",
+    "sharpeRatio": "0.0976",
+    "sortinoRatio": "0.1144",
+    "profitToMaxDrawdownRatio": "1.7368",
+    "maximumEndTradeDrawdown": "18849.32",
+    "averageEndTradeDrawdown": "-1235.6423",
+    "maximumDrawdownDuration": "789.23:00:00",
+    "totalFees": "661.565"
+  },
+  "error": null,
+  "qc_note": ""
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 39414298, with CompileID: ba659458318e895a98641cb5fe6fb8df-15df49aeb68a8faf056e273e1364c739, Lean Version: 2.5.0.0.18263
+logs (last 20 of 6):
+2020-12-31 00:00:00 Launching analysis for a55829b269c732c574a1b624b6785aae with LEAN Engine v2.5.0.0.18263
+2022-01-01 00:00:00 Warning: no existing symbol found for ticker SPY, it will be created with Equity type.
+2020-12-31 00:00:00 Algorithm starting warm up...
+2021-06-30 00:00:00 Processing algorithm warm-up request 49%...
+2022-01-01 00:00:00 Algorithm finished warming up.
+2025-01-01 00:00:00 Algorithm Id:(a55829b269c732c574a1b624b6785aae) completed in 26.07 seconds at 313k data points per second. Processing total of 8,153,841 data points.
+=== END QC RESULT ===
+
+[2026-11-14T22:47:47.691937+00:00] QC recovery: together_9b_tuned-equity-momentum-cross-sectional-decile_v02
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v02] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v02] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v02] stage=upload status=running compile=None cloud=None progress=pending project=39414355 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v02] stage=compile status=running compile=None cloud=None progress=pending project=39414355 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v02] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414355 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v02] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414355 backtest=None
+[2026-11-14T22:48:15.554626+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v02] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414355 backtest=f9c7e423d5441aac1a4087de7f941333
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v02] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414355 backtest=f9c7e423d5441aac1a4087de7f941333
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v02] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414355 backtest=f9c7e423d5441aac1a4087de7f941333
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v02] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414355 backtest=f9c7e423d5441aac1a4087de7f941333
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v02] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414355 backtest=f9c7e423d5441aac1a4087de7f941333
+
+=== QC RESULT together_9b_tuned-equity-momentum-cross-sectional-decile_v02 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 39414355,
+  "compile_id": "76ffbf181be8924824adb4a4d2d11d6d-083ee3c379fbce5095546772c7f0bf94",
+  "backtest_id": "f9c7e423d5441aac1a4087de7f941333",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "0",
+  "statistics": {
+    "Total Orders": "0",
+    "Average Win": "0%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "0%",
+    "Expectancy": "0",
+    "Start Equity": "250000",
+    "End Equity": "250000",
+    "Net Profit": "0%",
+    "Sharpe Ratio": "0",
+    "Sortino Ratio": "0",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "0%",
+    "Win Rate": "0%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0",
+    "Annual Variance": "0",
+    "Information Ratio": "0",
+    "Tracking Error": "0",
+    "Treynor Ratio": "0",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$0",
+    "Lowest Capacity Asset": "",
+    "Portfolio Turnover": "0%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2022-01-01 00:00:00 Runtime Error: 'ETFConstituentUniverse' object has no attribute 'dollar_volume'\n  at \n    filtered = [c.symbol for c in constituents if c.dollar_volume > 100000000]\n                                                  ^^^^^^^^^^^^^^^\n in main.py: line 22\n  at _select_assets\n    filtered = [c.symbol for c in constituents if c.dollar_volume > 100000000]\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 22\n",
+  "qc_note": "runtime: 2022-01-01 00:00:00 Runtime Error: 'ETFConstituentUniverse' object has no attribute 'dollar_volume'\n  at \n    filtered = [c.symbol for c in constituents if c.dollar_volume > 100"
+}
+compile_logs (last 20 of 3):
+Warning main.py Line: 22 Column: 55 - "ETFConstituentUniverse" has no attribute "dollar_volume"
+Warning main.py Line: 28 Column: 27 - "SP500HighVolumeTotalReturnUniverseAlgorithm" has no attribute "total_return"
+Build Request Successful for Project ID: 39414355, with CompileID: 76ffbf181be8924824adb4a4d2d11d6d-083ee3c379fbce5095546772c7f0bf94, Lean Version: 2.5.0.0.18263
+logs (last 20 of 4):
+2022-01-01 00:00:00 Launching analysis for f9c7e423d5441aac1a4087de7f941333 with LEAN Engine v2.5.0.0.18263
+2022-01-01 00:00:00 Warning: no existing symbol found for ticker SPY, it will be created with Equity type.
+2022-01-01 00:00:00 Runtime Error: 'ETFConstituentUniverse' object has no attribute 'dollar_volume'
+  at <listcomp>
+    filtered = [c.symbol for c in constituents if c.dollar_volume > 100000000]
+                                                  ^^^^^^^^^^^^^^^
+ in main.py: line 22
+  at _select_assets
+    filtered = [c.symbol for c in constituents if c.dollar_volume > 100000000]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ in main.py: line 22
+
+2022-01-01 00:00:00 Algorithm Id:(f9c7e423d5441aac1a4087de7f941333) completed in 10.22 seconds at 0k data points per second. Processing total of 0 data points.
+=== END QC RESULT ===
+
+[2026-11-14T22:48:39.420222+00:00] QC recovery: together_9b_tuned-equity-momentum-cross-sectional-decile_v03
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v03] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v03] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v03] stage=upload status=running compile=None cloud=None progress=pending project=39414388 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v03] stage=compile status=running compile=None cloud=None progress=pending project=39414388 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v03] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414388 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v03] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414388 backtest=None
+[2026-11-14T22:49:20.475069+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v03] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414388 backtest=79badfbfa97c58c81b396f16a6b8f15e
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v03] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414388 backtest=79badfbfa97c58c81b396f16a6b8f15e
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v03] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=39414388 backtest=79badfbfa97c58c81b396f16a6b8f15e
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v03] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414388 backtest=79badfbfa97c58c81b396f16a6b8f15e
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v03] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414388 backtest=79badfbfa97c58c81b396f16a6b8f15e
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v03] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414388 backtest=79badfbfa97c58c81b396f16a6b8f15e
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v03] downloading orders
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v03] downloading equity_chart
+
+=== QC RESULT together_9b_tuned-equity-momentum-cross-sectional-decile_v03 ===
+{
+  "status": "completed",
+  "stage": "finished",
+  "project_id": 39414388,
+  "compile_id": "557466d497a10bb34392dce0132d4b4c-de2cb2b8fa95f9e7a8d636ba1b735853",
+  "backtest_id": "79badfbfa97c58c81b396f16a6b8f15e",
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "total_orders": "0",
+  "statistics": {
+    "Total Orders": "0",
+    "Average Win": "0%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "0%",
+    "Expectancy": "0",
+    "Start Equity": "250000",
+    "End Equity": "250000",
+    "Net Profit": "0%",
+    "Sharpe Ratio": "0",
+    "Sortino Ratio": "0",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "0%",
+    "Win Rate": "0%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0",
+    "Annual Variance": "0",
+    "Information Ratio": "-0.492",
+    "Tracking Error": "0.145",
+    "Treynor Ratio": "0",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$0",
+    "Lowest Capacity Asset": "",
+    "Portfolio Turnover": "0%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": null,
+  "qc_note": ""
+}
+compile_logs (last 20 of 2):
+Warning main.py Line: 32 Column: 24 - "SecurityPortfolioManager" has no attribute "momentum"
+Build Request Successful for Project ID: 39414388, with CompileID: 557466d497a10bb34392dce0132d4b4c-de2cb2b8fa95f9e7a8d636ba1b735853, Lean Version: 2.5.0.0.18263
+logs (last 20 of 3):
+2022-01-01 00:00:00 Launching analysis for 79badfbfa97c58c81b396f16a6b8f15e with LEAN Engine v2.5.0.0.18263
+2022-01-01 00:00:00 Warning: no existing symbol found for ticker SPY, it will be created with Equity type.
+2024-12-31 16:00:00 Algorithm Id:(79badfbfa97c58c81b396f16a6b8f15e) completed in 0.92 seconds at 26k data points per second. Processing total of 23,847 data points.
+=== END QC RESULT ===
+
+[2026-11-14T22:49:30.817896+00:00] QC recovery: together_9b_tuned-equity-momentum-cross-sectional-decile_v04
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v04] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v04] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v04] stage=upload status=running compile=None cloud=None progress=pending project=39414419 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v04] stage=compile status=running compile=None cloud=None progress=pending project=39414419 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v04] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414419 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v04] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414419 backtest=None
+[2026-11-14T22:50:25.261108+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v04] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414419 backtest=98fb39c6d3562100760d407fca93b302
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v04] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414419 backtest=98fb39c6d3562100760d407fca93b302
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v04] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414419 backtest=98fb39c6d3562100760d407fca93b302
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v04] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414419 backtest=98fb39c6d3562100760d407fca93b302
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v04] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414419 backtest=98fb39c6d3562100760d407fca93b302
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v04] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414419 backtest=98fb39c6d3562100760d407fca93b302
+
+=== QC RESULT together_9b_tuned-equity-momentum-cross-sectional-decile_v04 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 39414419,
+  "compile_id": "1144a82b3e3fc9855355d39c00693af0-a703316ad3e78165fac7119f24ef1452",
+  "backtest_id": "98fb39c6d3562100760d407fca93b302",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "0",
+  "statistics": {
+    "Total Orders": "0",
+    "Average Win": "0%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "0%",
+    "Expectancy": "0",
+    "Start Equity": "250000",
+    "End Equity": "250000",
+    "Net Profit": "0%",
+    "Sharpe Ratio": "0",
+    "Sortino Ratio": "0",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "0%",
+    "Win Rate": "0%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0",
+    "Annual Variance": "0",
+    "Information Ratio": "0",
+    "Tracking Error": "0",
+    "Treynor Ratio": "0",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$0",
+    "Lowest Capacity Asset": "",
+    "Portfolio Turnover": "0%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2022-01-01 00:00:00 Runtime Error: 'DataFrame' object has no attribute 'sort'\n  at __getattr__\n    return object.__getattribute__(self, name)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in generic.py: line 6321\n  at _select_assets\n    return list(history.sort(\n                ^^^^^^^^^^^^\n in main.py: line 26\n",
+  "qc_note": "runtime: 2022-01-01 00:00:00 Runtime Error: 'DataFrame' object has no attribute 'sort'\n  at __getattr__\n    return object.__getattribute__(self, name)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+}
+compile_logs (last 20 of 2):
+Warning main.py Line: 27 Column: 13 - "Series" has no attribute "sort_keys"
+Build Request Successful for Project ID: 39414419, with CompileID: 1144a82b3e3fc9855355d39c00693af0-a703316ad3e78165fac7119f24ef1452, Lean Version: 2.5.0.0.18263
+logs (last 20 of 4):
+2022-01-01 00:00:00 Launching analysis for 98fb39c6d3562100760d407fca93b302 with LEAN Engine v2.5.0.0.18263
+2022-01-01 00:00:00 Warning: no existing symbol found for ticker SPY, it will be created with Equity type.
+2022-01-01 00:00:00 Runtime Error: 'DataFrame' object has no attribute 'sort'
+  at __getattr__
+    return object.__getattribute__(self, name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ in generic.py: line 6321
+  at _select_assets
+    return list(history.sort(
+                ^^^^^^^^^^^^
+ in main.py: line 26
+
+2022-01-01 00:00:00 Algorithm Id:(98fb39c6d3562100760d407fca93b302) completed in 14.04 seconds at 0k data points per second. Processing total of 4,536 data points.
+=== END QC RESULT ===
+
+[2026-11-14T22:50:50.839560+00:00] QC recovery: together_9b_tuned-equity-momentum-cross-sectional-decile_v05
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v05] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v05] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v05] stage=upload status=running compile=None cloud=None progress=pending project=39414464 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v05] stage=compile status=running compile=None cloud=None progress=pending project=39414464 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v05] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414464 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v05] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414464 backtest=None
+[2026-11-14T22:51:30.410845+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v05] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414464 backtest=58d0b426c52ecde14daaa78de5c8b850
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v05] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414464 backtest=58d0b426c52ecde14daaa78de5c8b850
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v05] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414464 backtest=58d0b426c52ecde14daaa78de5c8b850
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v05] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414464 backtest=58d0b426c52ecde14daaa78de5c8b850
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v05] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414464 backtest=58d0b426c52ecde14daaa78de5c8b850
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v05] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414464 backtest=58d0b426c52ecde14daaa78de5c8b850
+
+=== QC RESULT together_9b_tuned-equity-momentum-cross-sectional-decile_v05 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 39414464,
+  "compile_id": "6a8b2f46922f597b61593408363c09ce-7e6aa8756d4971b556843175894af08e",
+  "backtest_id": "58d0b426c52ecde14daaa78de5c8b850",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "0",
+  "statistics": {
+    "Total Orders": "0",
+    "Average Win": "0%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "0%",
+    "Expectancy": "0",
+    "Start Equity": "250000",
+    "End Equity": "250000",
+    "Net Profit": "0%",
+    "Sharpe Ratio": "0",
+    "Sortino Ratio": "0",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "0%",
+    "Win Rate": "0%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0",
+    "Annual Variance": "0",
+    "Information Ratio": "0",
+    "Tracking Error": "0",
+    "Treynor Ratio": "0",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$0",
+    "Lowest Capacity Asset": "",
+    "Portfolio Turnover": "0%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2022-01-01 00:00:00 Runtime Error: 'DataFrame' object has no attribute 'dollar_volume'\n  at __getattr__\n    return object.__getattribute__(self, name)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in generic.py: line 6321\n  at _select_assets\n    .multiply(history.dollar_volume, axis=0).rank(pct=True)\n              ^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 27\n",
+  "qc_note": "runtime: 2022-01-01 00:00:00 Runtime Error: 'DataFrame' object has no attribute 'dollar_volume'\n  at __getattr__\n    return object.__getattribute__(self, name)\n           ^^^^^^^^^^^^^^^^^^"
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 39414464, with CompileID: 6a8b2f46922f597b61593408363c09ce-7e6aa8756d4971b556843175894af08e, Lean Version: 2.5.0.0.18263
+logs (last 20 of 6):
+2022-01-01 00:00:00 Launching analysis for 58d0b426c52ecde14daaa78de5c8b850 with LEAN Engine v2.5.0.0.18263
+2022-01-01 00:00:00 Warning: when performing history requests, the start date will be adjusted if there are numerical precision errors in the factor files.
+2022-01-01 00:00:00 Warning: when performing history requests, the start date will be adjusted if it is before the first known date for the symbol.
+2022-01-01 00:00:00 Warning: no existing symbol found for ticker SPY, it will be created with Equity type.
+2022-01-01 00:00:00 Runtime Error: 'DataFrame' object has no attribute 'dollar_volume'
+  at __getattr__
+    return object.__getattribute__(self, name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ in generic.py: line 6321
+  at _select_assets
+    .multiply(history.dollar_volume, axis=0).rank(pct=True)
+              ^^^^^^^^^^^^^^^^^^^^^
+ in main.py: line 27
+
+2022-01-01 00:00:00 Algorithm Id:(58d0b426c52ecde14daaa78de5c8b850) completed in 15.47 seconds at 6k data points per second. Processing total of 88,217 data points.
+=== END QC RESULT ===
+
+[2026-11-14T22:51:59.356799+00:00] QC recovery: together_9b_tuned-equity-momentum-cross-sectional-decile_v08
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v08] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v08] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v08] stage=upload status=running compile=None cloud=None progress=pending project=39414515 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v08] stage=compile status=running compile=None cloud=None progress=pending project=39414515 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v08] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414515 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v08] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414515 backtest=None
+[2026-11-14T22:52:35.353783+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v08] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414515 backtest=af678c7a0d5f1f1d177c8b0c33e466f3
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v08] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414515 backtest=af678c7a0d5f1f1d177c8b0c33e466f3
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v08] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414515 backtest=af678c7a0d5f1f1d177c8b0c33e466f3
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v08] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414515 backtest=af678c7a0d5f1f1d177c8b0c33e466f3
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v08] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414515 backtest=af678c7a0d5f1f1d177c8b0c33e466f3
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v08] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414515 backtest=af678c7a0d5f1f1d177c8b0c33e466f3
+
+=== QC RESULT together_9b_tuned-equity-momentum-cross-sectional-decile_v08 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 39414515,
+  "compile_id": "9a314541b8be3103a1be69813395f511-b0fc1585aeae073131f302cf0f4f6612",
+  "backtest_id": "af678c7a0d5f1f1d177c8b0c33e466f3",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": null,
+  "statistics": {},
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name 'PortfolioMomentum' is not defined\n  at initialize\n    self._momentum = PortfolioMomentum(252)\n                     ^^^^^^^^^^^^^^^^^\n in main.py: line 21\n name 'PortfolioMomentum' is not defined",
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name 'PortfolioMomentum' is not defined\n  at initialize\n    self._momentum = PortfolioMomentum("
+}
+compile_logs (last 20 of 7):
+Warning main.py Line: 21 Column: 26 - Name "PortfolioMomentum" is not defined; maybe "self._momentum_by_symbol: dict[Symbol, MomentumPercent] = {}"?
+Warning main.py Line: 29 Column: 9 - "dict[Symbol, float]" has no attribute "warm_up"; maybe "if not self._universe.selected:"?
+Warning main.py Line: 35 Column: 27 - "ETFConstituentUniverse" has no attribute "dollar_volume"; maybe "scored.sort(key=lambda x: x[1], reverse=True)"?
+Warning main.py Line: 40 Column: 9 - No overload variant of "update" of "MutableMapping" matches argument types "Slice", "HashSet[Symbol]"; maybe "if not (data and self._roc.update(data.time, data.value)):"?
+Warning main.py Line: 43 Column: 16 - "dict[Symbol, float]" has no attribute "is_ready"; maybe "if not self._roc.is_ready:"?
+Warning main.py Line: 51 Column: 41 - "Symbol" has no attribute "symbol"; maybe "targets = [PortfolioTarget(symbol, weight) for symbol in self._universe.selected]"?
+Build Request Successful for Project ID: 39414515, with CompileID: 9a314541b8be3103a1be69813395f511-b0fc1585aeae073131f302cf0f4f6612, Lean Version: 2.5.0.0.18263
+=== END QC RESULT ===
+
+[2026-11-14T22:53:26.552264+00:00] QC recovery: together_9b_tuned-equity-momentum-cross-sectional-decile_v09
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v09] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v09] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v09] stage=upload status=running compile=None cloud=None progress=pending project=39414565 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v09] stage=compile status=running compile=None cloud=None progress=pending project=39414565 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v09] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414565 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v09] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414565 backtest=None
+[2026-11-14T22:53:40.424862+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v09] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414565 backtest=ee7e11a6bd8c6c0595d5076ad9c8c7b2
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v09] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414565 backtest=ee7e11a6bd8c6c0595d5076ad9c8c7b2
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v09] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414565 backtest=ee7e11a6bd8c6c0595d5076ad9c8c7b2
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v09] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414565 backtest=ee7e11a6bd8c6c0595d5076ad9c8c7b2
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v09] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414565 backtest=ee7e11a6bd8c6c0595d5076ad9c8c7b2
+
+=== QC RESULT together_9b_tuned-equity-momentum-cross-sectional-decile_v09 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 39414565,
+  "compile_id": "8c00a2ad8d06e8d979a7374c22690384-82307b600be42d223e6325e21d90cce9",
+  "backtest_id": "ee7e11a6bd8c6c0595d5076ad9c8c7b2",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": null,
+  "statistics": {},
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: 'SP500LowPctUpcomingEarningsUniverseAlgorithm' object has no attribute 'momentum'\n  at initialize\n    self._momentum = self.momentum(self._universe, 252, Resolution.DAILY)\n                     ^^^^^^^^^^^^^\n in main.py: line 18\n 'SP500LowPctUpcomingEarningsUniverseAlgorithm' object has no attribute 'momentum'",
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: 'SP500LowPctUpcomingEarningsUniverseAlgorithm' object has no attribute 'momentum'\n  a"
+}
+compile_logs (last 20 of 3):
+Warning main.py Line: 18 Column: 26 - "SP500LowPctUpcomingEarningsUniverseAlgorithm" has no attribute "momentum"; maybe "_momentum"?
+Warning main.py Line: 35 Column: 82 - Value of type "int" is not indexable
+Build Request Successful for Project ID: 39414565, with CompileID: 8c00a2ad8d06e8d979a7374c22690384-82307b600be42d223e6325e21d90cce9, Lean Version: 2.5.0.0.18263
+=== END QC RESULT ===
+
+[2026-11-14T22:54:30.039664+00:00] QC recovery: together_9b_tuned-equity-momentum-cross-sectional-decile_v10
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v10] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v10] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v10] stage=upload status=running compile=None cloud=None progress=pending project=39414599 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v10] stage=compile status=running compile=None cloud=None progress=pending project=39414599 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v10] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414599 backtest=None
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v10] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414599 backtest=None
+[2026-11-14T22:54:45.698088+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v10] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414599 backtest=8d0a3ee758b3b2757ac0e8245005625c
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v10] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414599 backtest=8d0a3ee758b3b2757ac0e8245005625c
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v10] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414599 backtest=8d0a3ee758b3b2757ac0e8245005625c
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v10] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414599 backtest=8d0a3ee758b3b2757ac0e8245005625c
+[QC together_9b_tuned-equity-momentum-cross-sectional-decile_v10] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414599 backtest=8d0a3ee758b3b2757ac0e8245005625c
+
+=== QC RESULT together_9b_tuned-equity-momentum-cross-sectional-decile_v10 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 39414599,
+  "compile_id": "0b0495a48bfe7f1eef981850190cc93a-3ba04fb49fcae297120f4aa4afd47d30",
+  "backtest_id": "8d0a3ee758b3b2757ac0e8245005625c",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": null,
+  "statistics": {},
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'ETF' is not defined\n  at ETFUniverseAlgorithm\n    def _select_assets(self, data: List[ETF]) -> List[Symbol]:\n                                        ^^^\n in main.py: line 26\n  at \n    class ETFUniverseAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'ETF' is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'ETF' is not defined\n  at ETFUniverseAlgorithm\n    def _select_assets(self, data: List[ETF]) -> List[Symbol]:\n                                        ^^^\n in main.py: line 26\n  at \n    class ETFUniverseAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'ETF' is not defined",
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai"
+}
+compile_logs (last 20 of 6):
+Warning main.py Line: 18 Column: 44 - No overload variant of "etf" of "UniverseDefinitions" matches argument types "str", "int"; maybe "self._universe = self.add_universe(self.universe.etf("SPY"), self._select_assets)"?
+Warning main.py Line: 26 Column: 41 - Name "ETF" is not defined
+Warning main.py Line: 37 Column: 42 - "ETFUniverseAlgorithm" has no attribute "indicator"; maybe "self._momentum_by_symbol: dict[Symbol, MomentumPercent] = {}"?
+Warning main.py Line: 38 Column: 13 - "float" has no attribute "update"
+Warning main.py Line: 41 Column: 18 - "float" has no attribute "current"
+Build Request Successful for Project ID: 39414599, with CompileID: 0b0495a48bfe7f1eef981850190cc93a-3ba04fb49fcae297120f4aa4afd47d30, Lean Version: 2.5.0.0.18263
+=== END QC RESULT ===
+
+[2026-11-14T22:55:35.140852+00:00] QC recovery: gold-equity-opening-range-breakout
+[QC gold-equity-opening-range-breakout] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC gold-equity-opening-range-breakout] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC gold-equity-opening-range-breakout] stage=upload status=running compile=None cloud=None progress=pending project=39414640 backtest=None
+[QC gold-equity-opening-range-breakout] stage=compile status=running compile=None cloud=None progress=pending project=39414640 backtest=None
+[QC gold-equity-opening-range-breakout] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414640 backtest=None
+[QC gold-equity-opening-range-breakout] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414640 backtest=None
+[2026-11-14T22:55:50.553815+00:00] QC accepted backtest submission
+[QC gold-equity-opening-range-breakout] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414640 backtest=f98117d9ae1b03c2c181ba3a01bc5edc
+[QC gold-equity-opening-range-breakout] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=39414640 backtest=f98117d9ae1b03c2c181ba3a01bc5edc
+[QC gold-equity-opening-range-breakout] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414640 backtest=f98117d9ae1b03c2c181ba3a01bc5edc
+[QC gold-equity-opening-range-breakout] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414640 backtest=f98117d9ae1b03c2c181ba3a01bc5edc
+[QC gold-equity-opening-range-breakout] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=39414640 backtest=f98117d9ae1b03c2c181ba3a01bc5edc
+[QC gold-equity-opening-range-breakout] downloading orders
+[QC gold-equity-opening-range-breakout] downloading equity_chart
+
+=== QC RESULT gold-equity-opening-range-breakout ===
+{
+  "status": "completed",
+  "stage": "finished",
+  "project_id": 39414640,
+  "compile_id": "0f320abd4ac1a8f7065f86b991d47125-96526028ad82eee948f1b73277c9ea7c",
+  "backtest_id": "f98117d9ae1b03c2c181ba3a01bc5edc",
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "total_orders": "168",
+  "statistics": {
+    "Total Orders": "168",
+    "Average Win": "0.34%",
+    "Average Loss": "-0.46%",
+    "Compounding Annual Return": "-5.374%",
+    "Drawdown": "5.200%",
+    "Expectancy": "-0.044",
+    "Start Equity": "100000",
+    "End Equity": "98175.08",
+    "Net Profit": "-1.825%",
+    "Sharpe Ratio": "-1.147",
+    "Sortino Ratio": "-1.13",
+    "Probabilistic Sharpe Ratio": "5.987%",
+    "Loss Rate": "45%",
+    "Win Rate": "55%",
+    "Profit-Loss Ratio": "0.75",
+    "Alpha": "-0.086",
+    "Beta": "0.033",
+    "Annual Standard Deviation": "0.074",
+    "Annual Variance": "0.005",
+    "Information Ratio": "-1.111",
+    "Tracking Error": "0.126",
+    "Treynor Ratio": "-2.555",
+    "Total Fees": "$168.00",
+    "Estimated Strategy Capacity": "$69000000.00",
+    "Lowest Capacity Asset": "SPY R735QTJ8XC9X",
+    "Portfolio Turnover": "137.02%",
+    "Drawdown Recovery": "2"
+  },
+  "trade_statistics": {
+    "startDateTime": "2024-09-03T14:04:00Z",
+    "endDateTime": "2024-12-31T20:55:00Z",
+    "totalNumberOfTrades": 84,
+    "numberOfWinningTrades": 46,
+    "numberOfLosingTrades": 38,
+    "totalProfitLoss": "-1656.98",
+    "totalProfit": "15745.51",
+    "totalLoss": "-17402.49",
+    "largestProfit": "1379.43",
+    "largestLoss": "-2337.50",
+    "averageProfitLoss": "-19.7260",
+    "averageProfit": "342.2937",
+    "averageLoss": "-457.9603",
+    "averageTradeDuration": "06:55:24.2857144",
+    "averageWinningTradeDuration": "07:59:33.9130434",
+    "averageLosingTradeDuration": "05:37:44.2105258",
+    "medianTradeDuration": "05:48:00",
+    "medianWinningTradeDuration": "05:49:00",
+    "medianLosingTradeDuration": "05:47:00",
+    "maxConsecutiveWinningTrades": 6,
+    "maxConsecutiveLosingTrades": 5,
+    "profitLossRatio": "0.7474",
+    "winLossRatio": "1.2105",
+    "winRate": "0.5476",
+    "lossRate": "0.4524",
+    "averageMAE": "-339.6805",
+    "averageMFE": "379.7198",
+    "largestMAE": "-2913.71",
+    "largestMFE": "1874.56",
+    "maximumClosedTradeDrawdown": "-4624.67",
+    "maximumIntraTradeDrawdown": "-5573.25",
+    "profitLossStandardDeviation": "553.5657",
+    "profitLossDownsideDeviation": "472.3539",
+    "profitFactor": "0.9048",
+    "sharpeRatio": "-0.0356",
+    "sortinoRatio": "-0.0418",
+    "profitToMaxDrawdownRatio": "-0.3583",
+    "maximumEndTradeDrawdown": "3181.42",
+    "averageEndTradeDrawdown": "-399.4457",
+    "maximumDrawdownDuration": "71.01:00:00",
+    "totalFees": "168"
+  },
+  "error": null,
+  "qc_note": ""
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 39414640, with CompileID: 0f320abd4ac1a8f7065f86b991d47125-96526028ad82eee948f1b73277c9ea7c, Lean Version: 2.5.0.0.18263
+logs (last 20 of 3):
+2024-09-01 00:00:00 Launching analysis for f98117d9ae1b03c2c181ba3a01bc5edc with LEAN Engine v2.5.0.0.18263
+2024-11-29 15:55:00 Warning: market orders submitted while the market is closed are automatically converted into MarketOnOpen orders to fill at the next market open.
+2024-12-31 16:00:00 Algorithm Id:(f98117d9ae1b03c2c181ba3a01bc5edc) completed in 1.59 seconds at 41k data points per second. Processing total of 65,402 data points.
+=== END QC RESULT ===
+
+[2026-11-14T22:56:05.723174+00:00] QC recovery: together_9b_tuned-equity-opening-range-breakout_v05
+[QC together_9b_tuned-equity-opening-range-breakout_v05] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-opening-range-breakout_v05] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-opening-range-breakout_v05] stage=upload status=running compile=None cloud=None progress=pending project=39414660 backtest=None
+[QC together_9b_tuned-equity-opening-range-breakout_v05] stage=compile status=running compile=None cloud=None progress=pending project=39414660 backtest=None
+[QC together_9b_tuned-equity-opening-range-breakout_v05] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414660 backtest=None
+[QC together_9b_tuned-equity-opening-range-breakout_v05] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414660 backtest=None
+[2026-11-14T22:56:55.413609+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-opening-range-breakout_v05] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414660 backtest=69ebc4923bcead8294e1e44a87d09603
+[QC together_9b_tuned-equity-opening-range-breakout_v05] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414660 backtest=69ebc4923bcead8294e1e44a87d09603
+[QC together_9b_tuned-equity-opening-range-breakout_v05] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414660 backtest=69ebc4923bcead8294e1e44a87d09603
+[QC together_9b_tuned-equity-opening-range-breakout_v05] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414660 backtest=69ebc4923bcead8294e1e44a87d09603
+[QC together_9b_tuned-equity-opening-range-breakout_v05] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414660 backtest=69ebc4923bcead8294e1e44a87d09603
+[QC together_9b_tuned-equity-opening-range-breakout_v05] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414660 backtest=69ebc4923bcead8294e1e44a87d09603
+
+=== QC RESULT together_9b_tuned-equity-opening-range-breakout_v05 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 39414660,
+  "compile_id": "f0a5d45fe4c3659dfd23d5cfb0867654-00e32c01ce8970077eb1011bfad10884",
+  "backtest_id": "69ebc4923bcead8294e1e44a87d09603",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": null,
+  "statistics": {},
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object 'IndicatorExtensions' has no attribute 'create_range'\n  at initialize\n    self._range = IndicatorExtensions.create_range(self, self._spy, 2*24*60)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 14\n type object 'IndicatorExtensions' has no attribute 'create_range'",
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object 'IndicatorExtensions' has no attribute 'create_range'\n  at initialize\n   "
+}
+compile_logs (last 20 of 2):
+Warning main.py Line: 14 Column: 23 - "IndicatorExtensions" has no attribute "create_range"
+Build Request Successful for Project ID: 39414660, with CompileID: f0a5d45fe4c3659dfd23d5cfb0867654-00e32c01ce8970077eb1011bfad10884, Lean Version: 2.5.0.0.18263
+=== END QC RESULT ===
+
+[2026-11-14T22:57:45.816080+00:00] QC recovery: together_9b_tuned-equity-opening-range-breakout_v06
+[QC together_9b_tuned-equity-opening-range-breakout_v06] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-opening-range-breakout_v06] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-opening-range-breakout_v06] stage=upload status=running compile=None cloud=None progress=pending project=39414736 backtest=None
+[QC together_9b_tuned-equity-opening-range-breakout_v06] stage=compile status=running compile=None cloud=None progress=pending project=39414736 backtest=None
+[QC together_9b_tuned-equity-opening-range-breakout_v06] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=39414736 backtest=None
+[QC together_9b_tuned-equity-opening-range-breakout_v06] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=39414736 backtest=None
+[2026-11-14T22:58:00.366600+00:00] QC accepted backtest submission
+[QC together_9b_tuned-equity-opening-range-breakout_v06] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=39414736 backtest=dff174d9118214cb58fe3dca8d37f7eb
+[QC together_9b_tuned-equity-opening-range-breakout_v06] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414736 backtest=dff174d9118214cb58fe3dca8d37f7eb
+[QC together_9b_tuned-equity-opening-range-breakout_v06] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414736 backtest=dff174d9118214cb58fe3dca8d37f7eb
+[QC together_9b_tuned-equity-opening-range-breakout_v06] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414736 backtest=dff174d9118214cb58fe3dca8d37f7eb
+[QC together_9b_tuned-equity-opening-range-breakout_v06] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=39414736 backtest=dff174d9118214cb58fe3dca8d37f7eb
+
+=== QC RESULT together_9b_tuned-equity-opening-range-breakout_v06 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 39414736,
+  "compile_id": "1fbf01f4619bf3844f0615892e68a016-c69f9fc326f1ad211ed50d65ac96f4ca",
+  "backtest_id": "dff174d9118214cb58fe3dca8d37f7eb",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": null,
+  "statistics": {},
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: property is read-only\n  at initialize\n    self._spy.low = None\n    ^^^^^^^^^^^^^\n in main.py: line 14\n property is read-only",
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: property is read-only\n  at initialize\n    self._spy.low = None\n    ^^^^^^^^^^^^^\n in main.py: line 14\n pr"
+}
+compile_logs (last 20 of 7):
+Warning main.py Line: 14 Column: 9 - Property "low" defined in "Security" is read-only; maybe "self._orb_low = None"?
+Warning main.py Line: 15 Column: 9 - Property "high" defined in "Security" is read-only; maybe "self._orb_high = None"?
+Warning main.py Line: 25 Column: 13 - Property "low" defined in "Security" is read-only; maybe "self._orb_low = bar.low"?
+Warning main.py Line: 26 Column: 13 - Property "high" defined in "Security" is read-only; maybe "self._orb_high = bar.high"?
+Warning main.py Line: 29 Column: 13 - Property "low" defined in "Security" is read-only; maybe "self._orb_low = min(self._orb_low, bar.low)"?
+Warning main.py Line: 30 Column: 13 - Property "high" defined in "Security" is read-only; maybe "self._orb_high = max(self._orb_high, bar.high)"?
+Build Request Successful for Project ID: 39414736, with CompileID: 1fbf01f4619bf3844f0615892e68a016-c69f9fc326f1ad211ed50d65ac96f4ca, Lean Version: 2.5.0.0.18263
+=== END QC RESULT ===
+
+[2026-11-14T22:58:52.390414+00:00] QC recovery: together_9b_tuned-equity-opening-range-breakout_v07
+[QC together_9b_tuned-equity-opening-range-breakout_v07] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-opening-range-breakout_v07] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-opening-range-breakout_v07] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-equity-opening-range-breakout_v07 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:52.534582+00:00] QC recovery: together_9b_tuned-equity-pairs-trading-cointegration_v04
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v04] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v04] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v04] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-equity-pairs-trading-cointegration_v04 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:52.679935+00:00] QC recovery: together_9b_tuned-equity-pairs-trading-cointegration_v05
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v05] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v05] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v05] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-equity-pairs-trading-cointegration_v05 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:52.801137+00:00] QC recovery: together_9b_tuned-equity-pairs-trading-cointegration_v07
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v07] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v07] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v07] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-equity-pairs-trading-cointegration_v07 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:52.920991+00:00] QC recovery: together_9b_tuned-equity-pairs-trading-cointegration_v08
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v08] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v08] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v08] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-equity-pairs-trading-cointegration_v08 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:53.053764+00:00] QC recovery: together_9b_tuned-equity-pairs-trading-cointegration_v09
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v09] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v09] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v09] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-equity-pairs-trading-cointegration_v09 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:53.181923+00:00] QC recovery: together_9b_tuned-equity-pairs-trading-cointegration_v10
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v10] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v10] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-equity-pairs-trading-cointegration_v10] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-equity-pairs-trading-cointegration_v10 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:53.318267+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v01
+[QC together_9b_tuned-option-iron-condor-spy_v01] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v01] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v01] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-option-iron-condor-spy_v01 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:53.437706+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v02
+[QC together_9b_tuned-option-iron-condor-spy_v02] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v02] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v02] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-option-iron-condor-spy_v02 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:53.560094+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v03
+[QC together_9b_tuned-option-iron-condor-spy_v03] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v03] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v03] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-option-iron-condor-spy_v03 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:53.676805+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v04
+[QC together_9b_tuned-option-iron-condor-spy_v04] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v04] stage=syntax status=syntax_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-option-iron-condor-spy_v04 ===
+{
+  "status": "syntax_error",
+  "stage": "syntax",
+  "compile_errors": 1,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "invalid syntax (main.py, line 29)",
+  "qc_note": "syntax: invalid syntax (main.py, line 29)"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:53.685428+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v05
+[QC together_9b_tuned-option-iron-condor-spy_v05] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v05] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v05] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-option-iron-condor-spy_v05 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:53.806361+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v06
+[QC together_9b_tuned-option-iron-condor-spy_v06] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v06] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v06] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-option-iron-condor-spy_v06 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:53.951175+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v07
+[QC together_9b_tuned-option-iron-condor-spy_v07] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v07] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v07] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-option-iron-condor-spy_v07 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:54.083831+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v08
+[QC together_9b_tuned-option-iron-condor-spy_v08] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v08] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v08] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-option-iron-condor-spy_v08 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:54.209526+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v09
+[QC together_9b_tuned-option-iron-condor-spy_v09] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v09] stage=syntax status=syntax_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-option-iron-condor-spy_v09 ===
+{
+  "status": "syntax_error",
+  "stage": "syntax",
+  "compile_errors": 1,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "invalid syntax (main.py, line 47)",
+  "qc_note": "syntax: invalid syntax (main.py, line 47)"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:54.219001+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v10
+[QC together_9b_tuned-option-iron-condor-spy_v10] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v10] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-option-iron-condor-spy_v10] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-option-iron-condor-spy_v10 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:54.352220+00:00] QC recovery: together_9b_tuned-futures_v01
+[QC together_9b_tuned-futures_v01] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v01] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v01] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-futures_v01 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:54.475392+00:00] QC recovery: together_9b_tuned-futures_v02
+[QC together_9b_tuned-futures_v02] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v02] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v02] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-futures_v02 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:54.606017+00:00] QC recovery: together_9b_tuned-futures_v03
+[QC together_9b_tuned-futures_v03] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v03] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v03] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-futures_v03 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:54.738294+00:00] QC recovery: together_9b_tuned-futures_v04
+[QC together_9b_tuned-futures_v04] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v04] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v04] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-futures_v04 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:54.861472+00:00] QC recovery: together_9b_tuned-futures_v05
+[QC together_9b_tuned-futures_v05] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v05] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v05] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-futures_v05 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:54.993658+00:00] QC recovery: together_9b_tuned-futures_v06
+[QC together_9b_tuned-futures_v06] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v06] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v06] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-futures_v06 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:55.126172+00:00] QC recovery: together_9b_tuned-futures_v07
+[QC together_9b_tuned-futures_v07] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v07] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v07] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-futures_v07 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:55.256525+00:00] QC recovery: together_9b_tuned-futures_v08
+[QC together_9b_tuned-futures_v08] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v08] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v08] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-futures_v08 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:55.382541+00:00] QC recovery: together_9b_tuned-futures_v09
+[QC together_9b_tuned-futures_v09] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v09] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v09] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-futures_v09 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:58:55.517380+00:00] QC recovery: together_9b_tuned-futures_v10
+[QC together_9b_tuned-futures_v10] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v10] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC together_9b_tuned-futures_v10] stage=create_project status=infrastructure_error compile=None cloud=None progress=pending project=None backtest=None
+
+=== QC RESULT together_9b_tuned-futures_v10 ===
+{
+  "status": "infrastructure_error",
+  "stage": "create_project",
+  "compile_errors": null,
+  "runtime_errors": null,
+  "statistics": {},
+  "error": "API request failed: projects/create",
+  "qc_note": "infrastructure: API request failed: projects/create"
+}
+=== END QC RESULT ===
+
+[2026-11-14T22:59:27.199251+00:00] QC recovery finished
+{
+  "requested_rows": 100,
+  "rows_with_fidelity": 100,
+  "fidelity_mean": 1.9,
+  "fidelity_distribution": {
+    "2": 68,
+    "1": 22,
+    "3": 8,
+    "4": 2
+  },
+  "statuses": {
+    "scored": 100
+  },
+  "judge_statuses": {
+    "judged": 100
+  },
+  "reference_execution_statuses": {
+    "completed": 100
+  },
+  "candidate_execution_statuses": {
+    "runtime_error": 55,
+    "completed": 15,
+    "syntax_error": 5,
+    "infrastructure_error": 25
+  },
+  "behavior_statuses": {
+    "unavailable": 85,
+    "partial": 7,
+    "available": 8
+  },
+  "behavior_available": 8,
+  "human_review_rows": [
+    "equity-rsi-overbought-oversold_v01",
+    "equity-rsi-overbought-oversold_v02",
+    "equity-rsi-overbought-oversold_v04",
+    "equity-rsi-overbought-oversold_v05",
+    "equity-rsi-overbought-oversold_v07",
+    "equity-rsi-overbought-oversold_v08",
+    "equity-bollinger-mean-reversion_v01",
+    "equity-bollinger-mean-reversion_v04",
+    "equity-bollinger-mean-reversion_v05",
+    "equity-bollinger-mean-reversion_v06",
+    "equity-bollinger-mean-reversion_v07",
+    "equity-bollinger-mean-reversion_v09",
+    "equity-atr-volatility-stop_v01",
+    "equity-atr-volatility-stop_v02",
+    "equity-atr-volatility-stop_v03",
+    "equity-atr-volatility-stop_v07",
+    "equity-monthly-roc-rotation_v01",
+    "equity-monthly-roc-rotation_v03",
+    "equity-monthly-roc-rotation_v04",
+    "equity-monthly-roc-rotation_v07",
+    "equity-monthly-roc-rotation_v10",
+    "equity-sixty-forty-portfolio_v01",
+    "equity-sixty-forty-portfolio_v03",
+    "equity-sixty-forty-portfolio_v07",
+    "equity-sixty-forty-portfolio_v10",
+    "equity-momentum-cross-sectional-decile_v01",
+    "equity-momentum-cross-sectional-decile_v02",
+    "equity-momentum-cross-sectional-decile_v03",
+    "equity-momentum-cross-sectional-decile_v04",
+    "equity-momentum-cross-sectional-decile_v07",
+    "equity-opening-range-breakout_v01",
+    "equity-opening-range-breakout_v03",
+    "equity-opening-range-breakout_v04",
+    "equity-opening-range-breakout_v07",
+    "equity-opening-range-breakout_v09",
+    "equity-pairs-trading-cointegration_v03",
+    "equity-pairs-trading-cointegration_v04",
+    "equity-pairs-trading-cointegration_v07",
+    "option-iron-condor-spy_v01",
+    "option-iron-condor-spy_v04",
+    "option-iron-condor-spy_v07",
+    "option-iron-condor-spy_v10",
+    "futures_v01",
+    "futures_v02",
+    "futures_v04",
+    "futures_v07"
+  ]
+}
+[2026-11-14T23:01:33.576417+00:00] Reusing existing evaluation project 39413106; submissions remain spaced by 65 seconds.
+[2026-11-14T23:01:34.847045+00:00] QC recovery: together_9b_tuned-equity-opening-range-breakout_v07
+[2026-11-14T23:02:40.221275+00:00] QC accepted backtest submission
+[2026-11-14T23:03:32.385242+00:00] QC recovery: together_9b_tuned-equity-pairs-trading-cointegration_v04
+[2026-11-14T23:03:45.140187+00:00] QC accepted backtest submission
+[2026-11-14T23:04:35.736827+00:00] QC recovery: together_9b_tuned-equity-pairs-trading-cointegration_v05
+[2026-11-14T23:04:50.184137+00:00] QC accepted backtest submission
+[2026-11-14T23:05:41.069443+00:00] QC recovery: together_9b_tuned-equity-pairs-trading-cointegration_v07
+[2026-11-14T23:05:55.197282+00:00] QC accepted backtest submission
+[2026-11-14T23:06:45.779548+00:00] QC recovery: together_9b_tuned-equity-pairs-trading-cointegration_v08
+[2026-11-14T23:07:00.200945+00:00] QC accepted backtest submission
+[2026-11-14T23:07:14.702972+00:00] QC recovery: together_9b_tuned-equity-pairs-trading-cointegration_v09
+[2026-11-14T23:08:05.307257+00:00] QC accepted backtest submission
+[2026-11-14T23:08:55.997007+00:00] QC recovery: together_9b_tuned-equity-pairs-trading-cointegration_v10
+[2026-11-14T23:09:10.137586+00:00] QC accepted backtest submission
+[2026-11-14T23:10:00.768637+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v01
+[2026-11-14T23:10:15.123691+00:00] QC accepted backtest submission
+[2026-11-14T23:11:06.291258+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v02
+[2026-11-14T23:11:20.115930+00:00] QC accepted backtest submission
+[2026-11-14T23:11:34.701315+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v03
+[2026-11-14T23:12:25.136138+00:00] QC accepted backtest submission
+[2026-11-14T23:12:48.350542+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v05
+[2026-11-14T23:13:30.234172+00:00] QC accepted backtest submission
+[2026-11-14T23:13:52.901999+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v06
+[2026-11-14T23:14:35.183205+00:00] QC accepted backtest submission
+[2026-11-14T23:14:58.054367+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v07
+[2026-11-14T23:15:40.381341+00:00] QC accepted backtest submission
+[2026-11-14T23:16:02.595535+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v08
+[2026-11-14T23:16:45.288842+00:00] QC accepted backtest submission
+[2026-11-14T23:17:07.891835+00:00] QC recovery: together_9b_tuned-option-iron-condor-spy_v10
+[2026-11-14T23:17:50.178286+00:00] QC accepted backtest submission
+[2026-11-14T23:18:05.322990+00:00] QC recovery: together_9b_tuned-futures_v01
+[2026-11-14T23:18:55.106428+00:00] QC accepted backtest submission
+[2026-11-14T23:19:47.588896+00:00] QC recovery: together_9b_tuned-futures_v02
+[2026-11-14T23:20:00.190165+00:00] QC accepted backtest submission
+[2026-11-14T23:20:50.841081+00:00] QC recovery: together_9b_tuned-futures_v03
+[2026-11-14T23:21:05.289211+00:00] QC accepted backtest submission
+[2026-11-14T23:21:57.464079+00:00] QC recovery: together_9b_tuned-futures_v04
+[2026-11-14T23:22:10.323439+00:00] QC accepted backtest submission
+[2026-11-14T23:23:08.823316+00:00] QC recovery: together_9b_tuned-futures_v05
+[2026-11-14T23:23:15.165551+00:00] QC accepted backtest submission
+[2026-11-14T23:24:02.081649+00:00] QC recovery: together_9b_tuned-futures_v06
+[2026-11-14T23:24:20.289206+00:00] QC accepted backtest submission
+[2026-11-14T23:25:07.607646+00:00] QC recovery: together_9b_tuned-futures_v07
+[2026-11-14T23:25:25.223543+00:00] QC accepted backtest submission
+[2026-11-14T23:26:15.909292+00:00] QC recovery: together_9b_tuned-futures_v08
+[2026-11-14T23:26:30.427540+00:00] QC accepted backtest submission
+[2026-11-14T23:27:21.644680+00:00] QC recovery: together_9b_tuned-futures_v09
+[2026-11-14T23:27:35.417250+00:00] QC accepted backtest submission
+[2026-11-14T23:28:24.334492+00:00] QC recovery: together_9b_tuned-futures_v10
+[2026-11-14T23:28:40.256719+00:00] QC accepted backtest submission
+[2026-11-14T23:30:05.594974+00:00] QC recovery finished
+{
+  "requested_rows": 100,
+  "rows_with_fidelity": 100,
+  "fidelity_mean": 1.9,
+  "fidelity_distribution": {
+    "2": 68,
+    "1": 22,
+    "3": 8,
+    "4": 2
+  },
+  "statuses": {
+    "scored": 100
+  },
+  "judge_statuses": {
+    "judged": 100
+  },
+  "reference_execution_statuses": {
+    "completed": 100
+  },
+  "candidate_execution_statuses": {
+    "runtime_error": 80,
+    "completed": 15,
+    "syntax_error": 5
+  },
+  "behavior_statuses": {
+    "unavailable": 85,
+    "partial": 7,
+    "available": 8
+  },
+  "behavior_available": 8,
+  "human_review_rows": [
+    "equity-rsi-overbought-oversold_v01",
+    "equity-rsi-overbought-oversold_v02",
+    "equity-rsi-overbought-oversold_v04",
+    "equity-rsi-overbought-oversold_v05",
+    "equity-rsi-overbought-oversold_v07",
+    "equity-rsi-overbought-oversold_v08",
+    "equity-bollinger-mean-reversion_v01",
+    "equity-bollinger-mean-reversion_v04",
+    "equity-bollinger-mean-reversion_v05",
+    "equity-bollinger-mean-reversion_v06",
+    "equity-bollinger-mean-reversion_v07",
+    "equity-bollinger-mean-reversion_v09",
+    "equity-atr-volatility-stop_v01",
+    "equity-atr-volatility-stop_v02",
+    "equity-atr-volatility-stop_v03",
+    "equity-atr-volatility-stop_v07",
+    "equity-monthly-roc-rotation_v01",
+    "equity-monthly-roc-rotation_v03",
+    "equity-monthly-roc-rotation_v04",
+    "equity-monthly-roc-rotation_v07",
+    "equity-monthly-roc-rotation_v10",
+    "equity-sixty-forty-portfolio_v01",
+    "equity-sixty-forty-portfolio_v03",
+    "equity-sixty-forty-portfolio_v07",
+    "equity-sixty-forty-portfolio_v10",
+    "equity-momentum-cross-sectional-decile_v01",
+    "equity-momentum-cross-sectional-decile_v02",
+    "equity-momentum-cross-sectional-decile_v03",
+    "equity-momentum-cross-sectional-decile_v04",
+    "equity-momentum-cross-sectional-decile_v07",
+    "equity-opening-range-breakout_v01",
+    "equity-opening-range-breakout_v03",
+    "equity-opening-range-breakout_v04",
+    "equity-opening-range-breakout_v07",
+    "equity-opening-range-breakout_v09",
+    "equity-pairs-trading-cointegration_v03",
+    "equity-pairs-trading-cointegration_v04",
+    "equity-pairs-trading-cointegration_v07",
+    "option-iron-condor-spy_v01",
+    "option-iron-condor-spy_v04",
+    "option-iron-condor-spy_v07",
+    "option-iron-condor-spy_v10",
+    "futures_v01",
+    "futures_v02",
+    "futures_v04",
+    "futures_v07"
+  ]
+}

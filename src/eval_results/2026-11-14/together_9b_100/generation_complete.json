@@ -1,0 +1,9 @@
+{
+  "completed_at": "2026-11-14T21:54:27.810470+00:00",
+  "total": 100,
+  "model_id": "jared-309b/Qwen-9B-finetune",
+  "original_generations_saved": 100,
+  "together_required": false,
+  "elapsed_seconds": 110.27975253400001,
+  "median_new_request_seconds": 4.105093896
+}

@@ -1,0 +1,49 @@
+{
+  "status": "infrastructure_error",
+  "stage": "backtest",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass MonthlyRocRotationAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        tickers = [\"SPY\", \"EFA\", \"EEM\", \"AGG\", \"GLD\"]\n        self._weight = 1.0 / len(tickers)\n\n        for ticker in tickers:\n            # Minute-resolution data, but rank on a daily ROC indicator.\n            equity = self.add_equity(ticker)\n            equity.roc = self.roc(equity, 60, Resolution.DAILY)\n            # Alternatively, use a manual indicator.\n            # equity.roc = RateOfChange(60)\n            # self.warm_up_indicator(equity, equity.roc, Resolution.DAILY)\n            # self.register_indicator(equity, equity.roc, Resolution.DAILY)\n\n        self.schedule.on(\n            self.date_rules.month_start(\"SPY\"),\n            self.time_rules.after_market_open(\"SPY\", 1),\n            self._rebalance,\n        )\n\n    def _rebalance(self) -> None:\n        securities = list(self.securities.values())\n        if not all(security.roc.is_ready for security in securities):\n            return\n\n        ranked = sorted(\n            securities,\n            key=lambda security: security.roc.current.value,\n            reverse=True,\n        )\n\n        top_3 = ranked[:3]\n        targets = [PortfolioTarget(security.symbol, self._weight) for security in top_3]\n        self.set_holdings(targets, liquidate_existing_holdings=True)\n",
+  "source_sha256": "43b8f865c6ef6092110c6691fa0f55ed73044909082e77f52a2cf3a4b74e87a5",
+  "started_at": "2026-11-14T22:17:29.789732+00:00",
+  "compile_errors": 0,
+  "runtime_errors": null,
+  "statistics": {},
+  "runtime_statistics": {},
+  "logs": [],
+  "qc_note": "infrastructure: API request failed: backtests/create",
+  "project_id": 39413077,
+  "compile_id": "50e3998807c39f6a367f0ae341bb4c65-ae0b71ec3bedb6aa3b81f1a93b793778",
+  "compile_created": {
+    "compileId": "50e3998807c39f6a367f0ae341bb4c65-ae0b71ec3bedb6aa3b81f1a93b793778",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413077,
+    "signature": "ae0b71ec3bedb6aa3b81f1a93b793778",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "50e3998807c39f6a367f0ae341bb4c65-ae0b71ec3bedb6aa3b81f1a93b793778",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413077, with CompileID: 50e3998807c39f6a367f0ae341bb4c65-ae0b71ec3bedb6aa3b81f1a93b793778, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413077, with CompileID: 50e3998807c39f6a367f0ae341bb4c65-ae0b71ec3bedb6aa3b81f1a93b793778, Lean Version: 2.5.0.0.18263"
+  ],
+  "error": "API request failed: backtests/create",
+  "error_type": "QCAPIError",
+  "api_error": {
+    "endpoint": "backtests/create",
+    "response": {
+      "errors": [
+        "Too many backtest requests; please slow down. REF #Oi842S9vlj"
+      ],
+      "success": false
+    }
+  },
+  "finished_at": "2026-11-14T22:17:31.880795+00:00"
+}

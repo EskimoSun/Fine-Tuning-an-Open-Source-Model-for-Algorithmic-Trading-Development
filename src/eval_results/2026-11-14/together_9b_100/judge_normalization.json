@@ -1,0 +1,14 @@
+{
+  "normalized": [
+    {
+      "prompt_id": "equity-bollinger-mean-reversion_v09",
+      "score": 2,
+      "method": "Extracted the first complete JSON object from Markdown; schema-validated without changing any judgment fields.",
+      "original_status": "invalid_judge_response",
+      "original_error": "Extra data: line 13 column 1 (char 3124)",
+      "extra_text": "**Compliance items outside the eight dimensions:**\n- **Plotting:** Line 19 plots the composite BB indicator, which shows only its main (middle) value. The request asked for upper, middle and lower bands for audit, so this is a mismatch.\n- **API and annotations:** The snake_case API and method type annotations are satisfied.",
+      "original_record": "judge_original_responses/equity-bollinger-mean-reversion_v09.json"
+    }
+  ],
+  "unresolved": []
+}

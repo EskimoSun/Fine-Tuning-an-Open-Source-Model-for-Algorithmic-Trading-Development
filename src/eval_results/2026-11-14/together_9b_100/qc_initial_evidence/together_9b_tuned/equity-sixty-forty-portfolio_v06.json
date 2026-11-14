@@ -1,0 +1,49 @@
+{
+  "status": "infrastructure_error",
+  "stage": "backtest",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass DynamicPortfolioRebalancingAlgorithm(QCAlgorithm):\n    _drift_threshold = 0.05\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        self._spy = self.add_equity(\"SPY\", Resolution.MINUTE).symbol\n        self._tlt = self.add_equity(\"TLT\", Resolution.MINUTE).symbol\n\n        self.schedule.on(\n            self.date_rules.quarter_start(self._spy),\n            self.time_rules.after_market_open(self._spy, 1),\n            self._rebalance\n        )\n\n    def on_warm_up_finished(self) -> None:\n        self._rebalance()\n\n    def _rebalance(self) -> None:\n        for security in [self._spy, self._tlt]:\n            holdings_value = self.portfolio.holdings_value(security)\n            weight = holdings_value / self.portfolio.total_portfolio_value\n            target_weight = self._get_target_weight(security)\n\n            if abs(weight - target_weight) > self._drift_threshold:\n                self.set_holdings([self._spy, self._tlt])\n\n    def _get_target_weight(self, security: Security) -> float:\n        risk_free_rate = self.risk_free_interest_rate_model.get(risk_free_interest_rate_type.TREASURY_BILL_3MONTH)\n        duration = security.duration\n\n        if not risk_free_rate or duration == 0:\n            return 0.5\n\n        beta = duration * (1 + risk_free_rate)\n        covariance = self.portfolio.covariance(security, self._spy) / beta\n\n        if covariance == 0:\n            return 0.5\n\n        correlation = self.portfolio.correlation(security, self._spy)\n        if correlation == 0:\n            return 0.5\n\n        security_contribution = covariance / correlation\n        total_contribution = sum([\n            self.portfolio.covariance(other_security, self._spy)\n            / self.portfolio.correlation(other_security, self._spy)\n            for other_security in [self._spy, self._tlt]\n        ])\n\n        if total_contribution == 0:\n            return 0.5\n\n        return max(0, min(1, 0.5 - (security_contribution / total_contribution)))\n",
+  "source_sha256": "14a4b33017fbfd7304b4ab488d387dae35d4e8d2b80dda4841a00e1593d2ae9d",
+  "started_at": "2026-11-14T22:17:41.285570+00:00",
+  "compile_errors": 0,
+  "runtime_errors": null,
+  "statistics": {},
+  "runtime_statistics": {},
+  "logs": [],
+  "qc_note": "infrastructure: API request failed: backtests/create",
+  "project_id": 39413095,
+  "compile_id": "e34f6e99eaa96ff4c4632aa38a4d3542-137ebf5d4f00b5039967d25e935998c0",
+  "compile_created": {
+    "compileId": "e34f6e99eaa96ff4c4632aa38a4d3542-137ebf5d4f00b5039967d25e935998c0",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413095,
+    "signature": "137ebf5d4f00b5039967d25e935998c0",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "e34f6e99eaa96ff4c4632aa38a4d3542-137ebf5d4f00b5039967d25e935998c0",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413095, with CompileID: e34f6e99eaa96ff4c4632aa38a4d3542-137ebf5d4f00b5039967d25e935998c0, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413095, with CompileID: e34f6e99eaa96ff4c4632aa38a4d3542-137ebf5d4f00b5039967d25e935998c0, Lean Version: 2.5.0.0.18263"
+  ],
+  "error": "API request failed: backtests/create",
+  "error_type": "QCAPIError",
+  "api_error": {
+    "endpoint": "backtests/create",
+    "response": {
+      "errors": [
+        "Too many backtest requests; please slow down. REF #Oi842S9vlj"
+      ],
+      "success": false
+    }
+  },
+  "finished_at": "2026-11-14T22:17:43.402915+00:00"
+}

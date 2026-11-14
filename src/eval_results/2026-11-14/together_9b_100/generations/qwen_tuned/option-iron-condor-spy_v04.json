@@ -1,0 +1,41 @@
+{
+  "prompt_id": "option-iron-condor-spy_v04",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/Qwen-9B-finetune",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityOptionAlgorithm(QCAlgorithm):\n    _chain: OptionChain = None\n    _min_strike = -1\n    _max_strike = 1\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        self._option = self.add_option(\"SPY\")\n        # Filter the option universe to only select 0DTE options.\n        self._option.set_filter(lambda u: u.expiry(0, 0).strikes(-1, 1))\n\n    def on_data(self, data: Slice) -> None:\n        if not self._option.chain.is_ready:\n            return\n        # Filter for the closest ATM call and put.\n        expiry = min([x.expiry for x in self._option.chain])\n        atm = sorted([x for x in self._option.chain if x.expiry == expiry],\n            key=lambda x: abs(self._option.symbol.price - x.strike))[0]\n\n        # We will buy ATM call and put to form a straddle to trade volatility.\n        if not self.portfolio[atm.call].invested and atm.call in data.bars:\n            self.buy ATM call to form a straddle to trade volatility.\n            self.buy(atm.put, 1)\n        # We will remove the closed position to free up the capital.\n        elif not atm.call.inactive and not self.portfolio[atm.call].invested:\n            self.cancel(atm.call)\n```",
+  "generated_at": "2026-11-14T21:54:07.156283+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "SYNTAX_ERROR",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "line 29: invalid syntax"
+    }
+  ],
+  "note": "SYNTAX_ERROR: line 29: invalid syntax",
+  "generation_elapsed_seconds": 3.177750199000002,
+  "qc_evaluation": {
+    "status": "syntax_error",
+    "stage": "syntax",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityOptionAlgorithm(QCAlgorithm):\n    _chain: OptionChain = None\n    _min_strike = -1\n    _max_strike = 1\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        self._option = self.add_option(\"SPY\")\n        # Filter the option universe to only select 0DTE options.\n        self._option.set_filter(lambda u: u.expiry(0, 0).strikes(-1, 1))\n\n    def on_data(self, data: Slice) -> None:\n        if not self._option.chain.is_ready:\n            return\n        # Filter for the closest ATM call and put.\n        expiry = min([x.expiry for x in self._option.chain])\n        atm = sorted([x for x in self._option.chain if x.expiry == expiry],\n            key=lambda x: abs(self._option.symbol.price - x.strike))[0]\n\n        # We will buy ATM call and put to form a straddle to trade volatility.\n        if not self.portfolio[atm.call].invested and atm.call in data.bars:\n            self.buy ATM call to form a straddle to trade volatility.\n            self.buy(atm.put, 1)\n        # We will remove the closed position to free up the capital.\n        elif not atm.call.inactive and not self.portfolio[atm.call].invested:\n            self.cancel(atm.call)\n",
+    "source_sha256": "7f86a11707f4b9b2b871b4d333ae2ee451e00e4ee250089f759ae3d1dde69c8e",
+    "started_at": "2026-11-14T22:58:53.677896+00:00",
+    "compile_errors": 1,
+    "runtime_errors": null,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "syntax: invalid syntax (main.py, line 29)",
+    "error": "invalid syntax (main.py, line 29)",
+    "line": 29,
+    "offset": 22,
+    "finished_at": "2026-11-14T22:58:53.680435+00:00"
+  },
+  "compile_errors": 1,
+  "runtime_errors": null,
+  "statistics": {},
+  "qc_note": "syntax: invalid syntax (main.py, line 29)"
+}

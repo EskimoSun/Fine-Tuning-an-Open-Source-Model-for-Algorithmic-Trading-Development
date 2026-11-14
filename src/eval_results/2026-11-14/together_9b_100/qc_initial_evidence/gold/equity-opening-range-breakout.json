@@ -1,0 +1,49 @@
+{
+  "status": "infrastructure_error",
+  "stage": "backtest",
+  "source": "# region imports\nfrom AlgorithmImports import *\nfrom datetime import time\n# endregion\n\nclass OpeningRangeBreakoutAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n\n        self._spy = self.add_equity(\"SPY\", resolution=Resolution.MINUTE).symbol\n\n        self._orb_high = None\n        self._orb_low = None\n\n        self.schedule.on(\n            self.date_rules.every_day(self._spy),\n            self.time_rules.at(15, 55),\n            self._liquidate_eod\n        )\n\n    def _liquidate_eod(self) -> None:\n        self.liquidate(self._spy)\n        # Clearing the range stops further entries and resets it for tomorrow.\n        self._orb_high = None\n        self._orb_low = None\n\n    def on_data(self, data: Slice) -> None:\n        bar = data.bars.get(self._spy)\n        if not bar:\n            return\n\n        current_time = self.time.time()\n\n        # Build opening range from 9:30 up to (but not including) 10:00\n        if time(9, 30) <= current_time < time(10, 0):\n            if self._orb_high is None:\n                self._orb_high = bar.high\n                self._orb_low = bar.low\n            else:\n                self._orb_high = max(self._orb_high, bar.high)\n                self._orb_low = min(self._orb_low, bar.low)\n            self.plot(\"ORB\", \"High\", self._orb_high)\n            self.plot(\"ORB\", \"Low\", self._orb_low)\n\n        # Trade breakouts after 10:00, only one trade per day\n        elif current_time >= time(10, 0):\n            if self._orb_high and bar.close > self._orb_high:\n                self.set_holdings(self._spy, 1.0)\n                self.plot(\"Trades\", \"Direction\", 1)\n                self._orb_high = self._orb_low = None\n            if self._orb_low and bar.close < self._orb_low:\n                self.set_holdings(self._spy, -1.0)\n                self.plot(\"Trades\", \"Direction\", -1)\n                self._orb_high = self._orb_low = None\n",
+  "source_sha256": "3f148f834be2f99884e8bf4d0591682def818150e326d1ce22c72dc2fb2eebb7",
+  "started_at": "2026-11-14T22:18:04.470123+00:00",
+  "compile_errors": 0,
+  "runtime_errors": null,
+  "statistics": {},
+  "runtime_statistics": {},
+  "logs": [],
+  "qc_note": "infrastructure: API request failed: backtests/create",
+  "project_id": 39413132,
+  "compile_id": "35507fbcf5d5cf66d5b59dd3e5f07bf8-96526028ad82eee948f1b73277c9ea7c",
+  "compile_created": {
+    "compileId": "35507fbcf5d5cf66d5b59dd3e5f07bf8-96526028ad82eee948f1b73277c9ea7c",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413132,
+    "signature": "96526028ad82eee948f1b73277c9ea7c",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "35507fbcf5d5cf66d5b59dd3e5f07bf8-96526028ad82eee948f1b73277c9ea7c",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413132, with CompileID: 35507fbcf5d5cf66d5b59dd3e5f07bf8-96526028ad82eee948f1b73277c9ea7c, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413132, with CompileID: 35507fbcf5d5cf66d5b59dd3e5f07bf8-96526028ad82eee948f1b73277c9ea7c, Lean Version: 2.5.0.0.18263"
+  ],
+  "error": "API request failed: backtests/create",
+  "error_type": "QCAPIError",
+  "api_error": {
+    "endpoint": "backtests/create",
+    "response": {
+      "errors": [
+        "Too many backtest requests; please slow down. REF #Oi842S9vlj"
+      ],
+      "success": false
+    }
+  },
+  "finished_at": "2026-11-14T22:18:06.634543+00:00"
+}

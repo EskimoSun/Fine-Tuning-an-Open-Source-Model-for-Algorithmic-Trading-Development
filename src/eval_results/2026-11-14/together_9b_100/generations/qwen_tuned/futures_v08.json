@@ -1,0 +1,299 @@
+{
+  "prompt_id": "futures_v08",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/Qwen-9B-finetune",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass FutureAlgorithmQcbs(EmaCrossAlgorithm):\n    _size = 1\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        # Roll the E-mini SP 500 Futures continuously.\n        self._future = self.add_future(\n            Futures.Indices.SP_500_E_MINI,\n            data_mapping_mode=DataMappingMode.OPEN_INTEREST,\n            data_normalization_mode=DataNormalizationMode.BACKWARDS_RATIO,\n            contract_depth_offset=0\n        )\n        # Roll the mapped futures contract automatically.\n        self._future.set_property(FutureProperty.ROLLOVER_TARGET, self._get_rollover_target)\n        # Update the indicators when the mapped futures contract updates.\n        self.register_indicator(self._future, self._ema_fast)\n        self.register_indicator(self._future, self._ema_slow)\n        # Warm up the indicators and subscriptions.\n        self.set_warm_up(200, Resolution.DAILY)\n        # Schedule daily trading at 8 AM to trade today's mapped futures contract.\n        self.schedule.on(\n            self.date_rules.every_day(self._future.symbol),\n            self.time_rules.at(8, 0),\n            self._rebalance\n        )\n\n    def _get_rollover_target(self, current: Future) -> Future:\n        next = self.futures_chain.get_next_contract(current, 30)\n        if not next:\n            return current\n        # Prefer front-month contracts with valid price data.\n        return next if next.has_data else current\n\n    def _rebalance(self) -> None:\n        if not self._ema_fast.is_ready or not self._ema_slow.is_ready:\n            return\n        fast = self._ema_fast.current.value\n        slow = self._ema_slow.current.value\n        # EMA cross trend-following strategy.\n        if fast > slow and not self._future.invested:\n            self.set_holdings(self._future, self._size)\n        elif fast < slow and self._future.invested:\n            self.liquidate()\n```",
+  "generated_at": "2026-11-14T21:54:26.916778+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "symbol_changed / symbolchanged"
+    }
+  ],
+  "note": "NO_ALGORITHM_CLASS; PROMPT_MISS: symbol_changed / symbolchanged",
+  "generation_elapsed_seconds": 5.220087372999998,
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass FutureAlgorithmQcbs(EmaCrossAlgorithm):\n    _size = 1\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        # Roll the E-mini SP 500 Futures continuously.\n        self._future = self.add_future(\n            Futures.Indices.SP_500_E_MINI,\n            data_mapping_mode=DataMappingMode.OPEN_INTEREST,\n            data_normalization_mode=DataNormalizationMode.BACKWARDS_RATIO,\n            contract_depth_offset=0\n        )\n        # Roll the mapped futures contract automatically.\n        self._future.set_property(FutureProperty.ROLLOVER_TARGET, self._get_rollover_target)\n        # Update the indicators when the mapped futures contract updates.\n        self.register_indicator(self._future, self._ema_fast)\n        self.register_indicator(self._future, self._ema_slow)\n        # Warm up the indicators and subscriptions.\n        self.set_warm_up(200, Resolution.DAILY)\n        # Schedule daily trading at 8 AM to trade today's mapped futures contract.\n        self.schedule.on(\n            self.date_rules.every_day(self._future.symbol),\n            self.time_rules.at(8, 0),\n            self._rebalance\n        )\n\n    def _get_rollover_target(self, current: Future) -> Future:\n        next = self.futures_chain.get_next_contract(current, 30)\n        if not next:\n            return current\n        # Prefer front-month contracts with valid price data.\n        return next if next.has_data else current\n\n    def _rebalance(self) -> None:\n        if not self._ema_fast.is_ready or not self._ema_slow.is_ready:\n            return\n        fast = self._ema_fast.current.value\n        slow = self._ema_slow.current.value\n        # EMA cross trend-following strategy.\n        if fast > slow and not self._future.invested:\n            self.set_holdings(self._future, self._size)\n        elif fast < slow and self._future.invested:\n            self.liquidate()\n",
+    "source_sha256": "b125aeff5980f9fbe3bf75bb8789c162d527985bc109952ffe579d177837b5bf",
+    "started_at": "2026-11-14T23:26:15.910682+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39413106,
+    "compile_id": "cf66e7a5c2471c0ada153853dc653e10-4560bae7e11bc3c26e36f23cca5ee913",
+    "compile_created": {
+      "compileId": "cf66e7a5c2471c0ada153853dc653e10-4560bae7e11bc3c26e36f23cca5ee913",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39413106,
+      "signature": "4560bae7e11bc3c26e36f23cca5ee913",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "cf66e7a5c2471c0ada153853dc653e10-4560bae7e11bc3c26e36f23cca5ee913",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39413106, with CompileID: cf66e7a5c2471c0ada153853dc653e10-4560bae7e11bc3c26e36f23cca5ee913, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39413106, with CompileID: cf66e7a5c2471c0ada153853dc653e10-4560bae7e11bc3c26e36f23cca5ee913, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "2340099dcca6a09c87581693b7b615aa",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "together_9b_tuned-futures_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413106,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "2340099dcca6a09c87581693b7b615aa",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 23,
+          "backtestCount": 23,
+          "parameters": 12
+        },
+        "backtestStart": "2026-11-14 23:26:30",
+        "backtestEnd": "2026-11-14 23:26:30",
+        "created": "2026-11-14 23:26:30",
+        "snapshotId": 39415895,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "together_9b_tuned-futures_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413106,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "2340099dcca6a09c87581693b7b615aa",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 23,
+          "backtestCount": 23,
+          "parameters": 12
+        },
+        "backtestStart": "2026-11-14 23:26:30",
+        "backtestEnd": "2026-11-14 23:26:30",
+        "created": "2026-11-14 23:26:30",
+        "snapshotId": 39415895,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;EmaCrossAlgorithm&#039; is not defined\n  at \n    class FutureAlgorithmQcbs(EmaCrossAlgorithm):\n                              ^^^^^^^^^^^^^^^^^\n in main.py: line 5\n name &#039;EmaCrossAlgorithm&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;EmaCrossAlgorithm&#039; is not defined\n  at \n    class FutureAlgorithmQcbs(EmaCrossAlgorithm):\n                              ^^^^^^^^^^^^^^^^^\n in main.py: line 5\n name &#039;EmaCrossAlgorithm&#039; is not defined",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'EmaCrossAlgorithm' is not defined\n  at <module>\n    class FutureAlgorithmQcbs(EmaCrossAlgorithm):\n                              ^^^^^^^^^^^^^^^^^\n in main.py: line 5\n name 'EmaCrossAlgorithm' is not defined",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "6.0%",
+          "Used RAM (MB)": "194",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-2340099dcca6a09c87581693b7b615aa",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:14"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;EmaCrossAlgorithm&#039; is not defined\n  at \n    class FutureAlgorithmQcbs(EmaCrossAlgorithm):\n                              ^^^^^^^^^^^^^^^^^\n in main.py: line 5\n name &#039;EmaCrossAlgorithm&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;EmaCrossAlgorithm&#039; is not defined\n  at \n    class FutureAlgorithmQcbs(EmaCrossAlgorithm):\n                              ^^^^^^^^^^^^^^^^^\n in main.py: line 5\n name &#039;EmaCrossAlgorithm&#039; is not defined",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'EmaCrossAlgorithm' is not defined\n  at <module>\n    class FutureAlgorithmQcbs(EmaCrossAlgorithm):\n                              ^^^^^^^^^^^^^^^^^\n in main.py: line 5\n name 'EmaCrossAlgorithm' is not defined",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T23:27:21.639580+00:00",
+    "shared_evaluation_project": 39413106
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "total_orders": null,
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai"
+}

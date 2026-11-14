@@ -1,0 +1,308 @@
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass FutureAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        # Request SPX futures for portfolio filtering and trading.\n        self._spx = self.add_future(\"SPX\", \"SP\")\n        # Filter for the continuous Futures contract.\n        self._spx.filter(self._spx.CONTRACTS[self._spx.ESPX].symbol, 0, 0, int(self._spx.ESPX.time_span))\n        # Filter for the next 3 expiry contracts to trade.\n        expiry_symbols = [x.symbol for x in self._spx.get_expiries(3)]\n        self._spx.set_filter(expiry_symbols)\n        # Create a Scheduled Event to rebalance the portfolio.\n        self.schedule.on(self.date_rules.every_day(self._spx.symbol), self.time_rules.after_market_open(self._spx.symbol, 1), self._rebalance)\n\n    def _rebalance(self) -> None:\n        if not self.portfolio.invested:\n            self.set_holdings(self._spx.symbol, 1)\n",
+  "source_sha256": "12fc3753f1c6ac3b11efd5c09f8b065c5502c60572cfe01daeea06480a1712f9",
+  "started_at": "2026-11-14T23:25:07.608529+00:00",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "runtime_statistics": {
+    "Equity": "$100,000.00",
+    "Fees": "-$0.00",
+    "Holdings": "$0.00",
+    "Net Profit": "$0.00",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Return": "0.00 %",
+    "Unrealized": "$0.00",
+    "Volume": "$0.00"
+  },
+  "logs": [],
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the ex",
+  "project_id": 39413106,
+  "compile_id": "e3852f93a64cc21ba786b47f6b47bcc9-933e41ab7f52bb104a5514af82a72be9",
+  "compile_created": {
+    "compileId": "e3852f93a64cc21ba786b47f6b47bcc9-933e41ab7f52bb104a5514af82a72be9",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413106,
+    "signature": "933e41ab7f52bb104a5514af82a72be9",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "e3852f93a64cc21ba786b47f6b47bcc9-933e41ab7f52bb104a5514af82a72be9",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413106, with CompileID: e3852f93a64cc21ba786b47f6b47bcc9-933e41ab7f52bb104a5514af82a72be9, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413106, with CompileID: e3852f93a64cc21ba786b47f6b47bcc9-933e41ab7f52bb104a5514af82a72be9, Lean Version: 2.5.0.0.18263"
+  ],
+  "backtest_id": "3401d3861f6731a754350e658baae848",
+  "backtest_created": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-futures_v07",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413106,
+      "completed": false,
+      "optimizationId": null,
+      "backtestId": "3401d3861f6731a754350e658baae848",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 22,
+        "backtestCount": 22,
+        "parameters": 9
+      },
+      "backtestStart": "2026-11-14 23:25:24",
+      "backtestEnd": "2026-11-14 23:25:24",
+      "created": "2026-11-14 23:25:24",
+      "snapshotId": 39415858,
+      "status": "In Queue...",
+      "error": null,
+      "stacktrace": null,
+      "progress": 0,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": null,
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null
+    },
+    "debugging": false,
+    "success": true
+  },
+  "raw_backtest": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-futures_v07",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413106,
+      "completed": true,
+      "optimizationId": null,
+      "backtestId": "3401d3861f6731a754350e658baae848",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 22,
+        "backtestCount": 22,
+        "parameters": 9
+      },
+      "backtestStart": "2026-11-14 23:25:24",
+      "backtestEnd": "2026-11-14 23:25:24",
+      "created": "2026-11-14 23:25:24",
+      "snapshotId": 39415858,
+      "status": "Runtime Error",
+      "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the add_future method. Please checkout the API documentation. The expected signature is:\n  add_future(ticker: str, resolution: Optional[Resolution] = None, market: str = None, fill_forward: Optional[bool] = None, leverage: float = 0, extended_market_hours: Optional[bool] = None, data_mapping_mode: Optional[DataMappingMode] = None, data_normalization_mode: Optional[DataNormalizationMode] = None, contract_depth_offset: int = 0)\nArgument mismatch: argument 2 (&#039;resolution&#039;) expected Optional[Resolution], got str.\n  at initialize\n    self._spx = self.add_future(&quot;SPX&quot;, &quot;SP&quot;)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 13\n No method matches given arguments for add_future: (, ). The expected signature is:\n  add_future(ticker: str, resolution: Optional[Resolution] = None, market: str = None, fill_forward: Optional[bool] = None, leverage: float = 0, extended_market_hours: Optional[bool] = None, data_mapping_mode: Optional[DataMappingMode] = None, data_normalization_mode: Optional[DataNormalizationMode] = None, contract_depth_offset: int = 0)\nArgument mismatch: argument 2 (&#039;resolution&#039;) expected Optional[Resolution], got str.",
+      "stacktrace": "Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the add_future method. Please checkout the API documentation. The expected signature is:\n  add_future(ticker: str, resolution: Optional[Resolution] = None, market: str = None, fill_forward: Optional[bool] = None, leverage: float = 0, extended_market_hours: Optional[bool] = None, data_mapping_mode: Optional[DataMappingMode] = None, data_normalization_mode: Optional[DataNormalizationMode] = None, contract_depth_offset: int = 0)\nArgument mismatch: argument 2 ('resolution') expected Optional[Resolution], got str.\n  at initialize\n    self._spx = self.add_future(\"SPX\", \"SP\")\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 13\n No method matches given arguments for add_future: (<class 'str'>, <class 'str'>). The expected signature is:\n  add_future(ticker: str, resolution: Optional[Resolution] = None, market: str = None, fill_forward: Optional[bool] = None, leverage: float = 0, extended_market_hours: Optional[bool] = None, data_mapping_mode: Optional[DataMappingMode] = None, data_normalization_mode: Optional[DataNormalizationMode] = None, contract_depth_offset: int = 0)\nArgument mismatch: argument 2 ('resolution') expected Optional[Resolution], got str.",
+      "progress": 1,
+      "hasInitializeError": true,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {
+        "Equity": "$100,000.00",
+        "Fees": "-$0.00",
+        "Holdings": "$0.00",
+        "Net Profit": "$0.00",
+        "Probabilistic Sharpe Ratio": "0%",
+        "Return": "0.00 %",
+        "Unrealized": "$0.00",
+        "Volume": "$0.00"
+      },
+      "statistics": {},
+      "totalPerformance": {
+        "tradeStatistics": {
+          "startDateTime": null,
+          "endDateTime": null,
+          "totalNumberOfTrades": 0,
+          "numberOfWinningTrades": 0,
+          "numberOfLosingTrades": 0,
+          "totalProfitLoss": "0",
+          "totalProfit": "0",
+          "totalLoss": "0",
+          "largestProfit": "0",
+          "largestLoss": "0",
+          "averageProfitLoss": "0",
+          "averageProfit": "0",
+          "averageLoss": "0",
+          "averageTradeDuration": "00:00:00",
+          "averageWinningTradeDuration": "00:00:00",
+          "averageLosingTradeDuration": "00:00:00",
+          "medianTradeDuration": "00:00:00",
+          "medianWinningTradeDuration": "00:00:00",
+          "medianLosingTradeDuration": "00:00:00",
+          "maxConsecutiveWinningTrades": 0,
+          "maxConsecutiveLosingTrades": 0,
+          "profitLossRatio": "0",
+          "winLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "averageMAE": "0",
+          "averageMFE": "0",
+          "largestMAE": "0",
+          "largestMFE": "0",
+          "maximumClosedTradeDrawdown": "0",
+          "maximumIntraTradeDrawdown": "0",
+          "profitLossStandardDeviation": "0",
+          "profitLossDownsideDeviation": "0",
+          "profitFactor": "0",
+          "sharpeRatio": "0",
+          "sortinoRatio": "0",
+          "profitToMaxDrawdownRatio": "0",
+          "maximumEndTradeDrawdown": "0",
+          "averageEndTradeDrawdown": "0",
+          "maximumDrawdownDuration": "00:00:00",
+          "totalFees": "0"
+        },
+        "portfolioStatistics": {
+          "averageWinRate": "0",
+          "averageLossRate": "0",
+          "profitLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "expectancy": "0",
+          "startEquity": "0",
+          "endEquity": "0",
+          "compoundingAnnualReturn": "0",
+          "drawdown": "0",
+          "totalNetProfit": "0",
+          "sharpeRatio": "0",
+          "probabilisticSharpeRatio": "0",
+          "sortinoRatio": "0",
+          "alpha": "0",
+          "beta": "0",
+          "annualStandardDeviation": "0",
+          "annualVariance": "0",
+          "informationRatio": "0",
+          "trackingError": "0",
+          "treynorRatio": "0",
+          "portfolioTurnover": "0",
+          "valueAtRisk99": "0",
+          "valueAtRisk95": "0",
+          "drawdownRecovery": "0"
+        },
+        "closedTrades": []
+      },
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": [
+        {
+          "name": "PortfolioValueIsNotPositiveAnalysis",
+          "issue": "The portfolio equity dropped to zero or below.",
+          "sample": true,
+          "solutions": [
+            "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+            "Reduce position sizes.",
+            "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+            "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+          ]
+        },
+        {
+          "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+          "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+          "sample": {
+            "pValue": 0.5
+          },
+          "solutions": [
+            "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+          ]
+        }
+      ],
+      "serverStatistics": {
+        "CPU Usage": "16.7%",
+        "Used RAM (MB)": "259",
+        "Total RAM (MB)": "16384",
+        "Hostname": "BACKTESTING-com-3401d3861f6731a754350e658baae848",
+        "LEAN Version": "v2.5.0.0.18263",
+        "Up Time": "0d 00:00:14"
+      }
+    },
+    "success": true
+  },
+  "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the add_future method. Please checkout the API documentation. The expected signature is:\n  add_future(ticker: str, resolution: Optional[Resolution] = None, market: str = None, fill_forward: Optional[bool] = None, leverage: float = 0, extended_market_hours: Optional[bool] = None, data_mapping_mode: Optional[DataMappingMode] = None, data_normalization_mode: Optional[DataNormalizationMode] = None, contract_depth_offset: int = 0)\nArgument mismatch: argument 2 (&#039;resolution&#039;) expected Optional[Resolution], got str.\n  at initialize\n    self._spx = self.add_future(&quot;SPX&quot;, &quot;SP&quot;)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 13\n No method matches given arguments for add_future: (, ). The expected signature is:\n  add_future(ticker: str, resolution: Optional[Resolution] = None, market: str = None, fill_forward: Optional[bool] = None, leverage: float = 0, extended_market_hours: Optional[bool] = None, data_mapping_mode: Optional[DataMappingMode] = None, data_normalization_mode: Optional[DataNormalizationMode] = None, contract_depth_offset: int = 0)\nArgument mismatch: argument 2 (&#039;resolution&#039;) expected Optional[Resolution], got str.",
+  "stacktrace": "Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the add_future method. Please checkout the API documentation. The expected signature is:\n  add_future(ticker: str, resolution: Optional[Resolution] = None, market: str = None, fill_forward: Optional[bool] = None, leverage: float = 0, extended_market_hours: Optional[bool] = None, data_mapping_mode: Optional[DataMappingMode] = None, data_normalization_mode: Optional[DataNormalizationMode] = None, contract_depth_offset: int = 0)\nArgument mismatch: argument 2 ('resolution') expected Optional[Resolution], got str.\n  at initialize\n    self._spx = self.add_future(\"SPX\", \"SP\")\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 13\n No method matches given arguments for add_future: (<class 'str'>, <class 'str'>). The expected signature is:\n  add_future(ticker: str, resolution: Optional[Resolution] = None, market: str = None, fill_forward: Optional[bool] = None, leverage: float = 0, extended_market_hours: Optional[bool] = None, data_mapping_mode: Optional[DataMappingMode] = None, data_normalization_mode: Optional[DataNormalizationMode] = None, contract_depth_offset: int = 0)\nArgument mismatch: argument 2 ('resolution') expected Optional[Resolution], got str.",
+  "has_initialize_error": true,
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "total_orders": null,
+  "finished_at": "2026-11-14T23:26:15.902825+00:00",
+  "shared_evaluation_project": 39413106
+}

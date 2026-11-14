@@ -1,0 +1,268 @@
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass FutureRollExampleAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # Map the US Index to its continuous Futures contract.\n        self._index = self.add_index(\"SPX\")\n        self._future = self.add_future(self._index, self._roll)\n        # Schedule daily rebalancing at 5 PM to lock today's open interest.\n        self.schedule.on(self.date_rules.every_day(self._index), self.time_rules.at(18, 0), self._rebalance)\n\n    def _roll(self, mapping: List[FuturesMapping]) -> Optional[Future]:\n        # Select the best-matched contract with open interest in the last 3 days.\n        return next((c for c in mapping if c.symbol.value.endswith(str(self.time.date - timedelta(1, 0, 0)))) or mapping[0])\n\n    def _rebalance(self) -> None:\n        if not self.portfolio.invested:\n            return\n        # Create a new continuous Futures contract based on the updated open interest.\n        index = self._index\n        # Get the updated mapping with the latest open interest.\n        mapping = self.future_market.index_mapping[index]\n        # Select the best-matched contract with open interest in the last 3 days.\n        contract = next((c for c in mapping if c.symbol.value.endswith(str(self.time.date - timedelta(1, 0, 0)))) or mapping[0])\n        # Create a new continuous Futures contract based on the updated open interest.\n        new_future = self.add_future(index, contract)\n        # Cancel the old subscription to avoid duplicate subscriptions.\n        self.remove_future(self._future)\n        # Update the reference to the future for the next rebalance.\n        self._future = new_future\n",
+  "source_sha256": "1a333afe02ee6067946a6df0aaa89c44f02e886756b1b6a444bb08821364557e",
+  "started_at": "2026-11-14T23:24:02.082485+00:00",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "runtime_statistics": {},
+  "logs": [],
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "project_id": 39413106,
+  "compile_id": "fb9afe25facfe50935e8959271c5da67-8f5efbf7d3fe6e874debf9a7a566ac4e",
+  "compile_created": {
+    "compileId": "fb9afe25facfe50935e8959271c5da67-8f5efbf7d3fe6e874debf9a7a566ac4e",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 39413106,
+    "signature": "8f5efbf7d3fe6e874debf9a7a566ac4e",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "fb9afe25facfe50935e8959271c5da67-8f5efbf7d3fe6e874debf9a7a566ac4e",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 39413106, with CompileID: fb9afe25facfe50935e8959271c5da67-8f5efbf7d3fe6e874debf9a7a566ac4e, Lean Version: 2.5.0.0.18263"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 39413106, with CompileID: fb9afe25facfe50935e8959271c5da67-8f5efbf7d3fe6e874debf9a7a566ac4e, Lean Version: 2.5.0.0.18263"
+  ],
+  "backtest_id": "7fe91e81bbf7d0c3f1b10d8810069021",
+  "backtest_created": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-futures_v06",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413106,
+      "completed": false,
+      "optimizationId": null,
+      "backtestId": "7fe91e81bbf7d0c3f1b10d8810069021",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 21,
+        "backtestCount": 21,
+        "parameters": 12
+      },
+      "backtestStart": "2026-11-14 23:24:19",
+      "backtestEnd": "2026-11-14 23:24:19",
+      "created": "2026-11-14 23:24:19",
+      "snapshotId": 39415825,
+      "status": "In Queue...",
+      "error": null,
+      "stacktrace": null,
+      "progress": 0,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": null,
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null
+    },
+    "debugging": false,
+    "success": true
+  },
+  "raw_backtest": {
+    "backtest": {
+      "note": null,
+      "name": "together_9b_tuned-futures_v06",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 39413106,
+      "completed": true,
+      "optimizationId": null,
+      "backtestId": "7fe91e81bbf7d0c3f1b10d8810069021",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 21,
+        "backtestCount": 21,
+        "parameters": 12
+      },
+      "backtestStart": "2026-11-14 23:24:19",
+      "backtestEnd": "2026-11-14 23:24:19",
+      "created": "2026-11-14 23:24:19",
+      "snapshotId": 39415825,
+      "status": "Runtime Error",
+      "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;FuturesMapping&#039; is not defined\n  at FutureRollExampleAlgorithm\n    def _roll(self, mapping: List[FuturesMapping]) -&gt; Optional[Future]:\n                                  ^^^^^^^^^^^^^^\n in main.py: line 16\n  at \n    class FutureRollExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;FuturesMapping&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;FuturesMapping&#039; is not defined\n  at FutureRollExampleAlgorithm\n    def _roll(self, mapping: List[FuturesMapping]) -&gt; Optional[Future]:\n                                  ^^^^^^^^^^^^^^\n in main.py: line 16\n  at \n    class FutureRollExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;FuturesMapping&#039; is not defined",
+      "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'FuturesMapping' is not defined\n  at FutureRollExampleAlgorithm\n    def _roll(self, mapping: List[FuturesMapping]) -> Optional[Future]:\n                                  ^^^^^^^^^^^^^^\n in main.py: line 16\n  at <module>\n    class FutureRollExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'FuturesMapping' is not defined",
+      "progress": 1,
+      "hasInitializeError": true,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": {
+        "tradeStatistics": {
+          "startDateTime": null,
+          "endDateTime": null,
+          "totalNumberOfTrades": 0,
+          "numberOfWinningTrades": 0,
+          "numberOfLosingTrades": 0,
+          "totalProfitLoss": "0",
+          "totalProfit": "0",
+          "totalLoss": "0",
+          "largestProfit": "0",
+          "largestLoss": "0",
+          "averageProfitLoss": "0",
+          "averageProfit": "0",
+          "averageLoss": "0",
+          "averageTradeDuration": "00:00:00",
+          "averageWinningTradeDuration": "00:00:00",
+          "averageLosingTradeDuration": "00:00:00",
+          "medianTradeDuration": "00:00:00",
+          "medianWinningTradeDuration": "00:00:00",
+          "medianLosingTradeDuration": "00:00:00",
+          "maxConsecutiveWinningTrades": 0,
+          "maxConsecutiveLosingTrades": 0,
+          "profitLossRatio": "0",
+          "winLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "averageMAE": "0",
+          "averageMFE": "0",
+          "largestMAE": "0",
+          "largestMFE": "0",
+          "maximumClosedTradeDrawdown": "0",
+          "maximumIntraTradeDrawdown": "0",
+          "profitLossStandardDeviation": "0",
+          "profitLossDownsideDeviation": "0",
+          "profitFactor": "0",
+          "sharpeRatio": "0",
+          "sortinoRatio": "0",
+          "profitToMaxDrawdownRatio": "0",
+          "maximumEndTradeDrawdown": "0",
+          "averageEndTradeDrawdown": "0",
+          "maximumDrawdownDuration": "00:00:00",
+          "totalFees": "0"
+        },
+        "portfolioStatistics": {
+          "averageWinRate": "0",
+          "averageLossRate": "0",
+          "profitLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "expectancy": "0",
+          "startEquity": "0",
+          "endEquity": "0",
+          "compoundingAnnualReturn": "0",
+          "drawdown": "0",
+          "totalNetProfit": "0",
+          "sharpeRatio": "0",
+          "probabilisticSharpeRatio": "0",
+          "sortinoRatio": "0",
+          "alpha": "0",
+          "beta": "0",
+          "annualStandardDeviation": "0",
+          "annualVariance": "0",
+          "informationRatio": "0",
+          "trackingError": "0",
+          "treynorRatio": "0",
+          "portfolioTurnover": "0",
+          "valueAtRisk99": "0",
+          "valueAtRisk95": "0",
+          "drawdownRecovery": "0"
+        },
+        "closedTrades": []
+      },
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null,
+      "serverStatistics": {
+        "CPU Usage": "0.7%",
+        "Used RAM (MB)": "218",
+        "Total RAM (MB)": "16384",
+        "Hostname": "BACKTESTING-47-7fe91e81bbf7d0c3f1b10d8810069021",
+        "LEAN Version": "v2.5.0.0.18263",
+        "Up Time": "0d 00:00:11"
+      }
+    },
+    "success": true
+  },
+  "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;FuturesMapping&#039; is not defined\n  at FutureRollExampleAlgorithm\n    def _roll(self, mapping: List[FuturesMapping]) -&gt; Optional[Future]:\n                                  ^^^^^^^^^^^^^^\n in main.py: line 16\n  at \n    class FutureRollExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;FuturesMapping&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;FuturesMapping&#039; is not defined\n  at FutureRollExampleAlgorithm\n    def _roll(self, mapping: List[FuturesMapping]) -&gt; Optional[Future]:\n                                  ^^^^^^^^^^^^^^\n in main.py: line 16\n  at \n    class FutureRollExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;FuturesMapping&#039; is not defined",
+  "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'FuturesMapping' is not defined\n  at FutureRollExampleAlgorithm\n    def _roll(self, mapping: List[FuturesMapping]) -> Optional[Future]:\n                                  ^^^^^^^^^^^^^^\n in main.py: line 16\n  at <module>\n    class FutureRollExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'FuturesMapping' is not defined",
+  "has_initialize_error": true,
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "total_orders": null,
+  "finished_at": "2026-11-14T23:25:07.600436+00:00",
+  "shared_evaluation_project": 39413106
+}

@@ -153,6 +153,8 @@ activemq-data/
 .env
 .envrc
 *.xlsx.inspect.ndjson
+# Local artifact exports; versioned evaluation reports live in src/eval_results/.
+src/outputs/
 .venv
 env/
 venv/
