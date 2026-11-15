@@ -13,6 +13,7 @@ Environment variables:
     QWEN_API_KEY
     QWEN_BASE_MODEL              e.g. Qwen/Qwen3-4B-Instruct-2507 (the untuned model)
     QWEN_TUNED_MODEL             the fine-tuned model id on the same endpoint
+    QWEN_DISABLE_THINKING        set to 1 to send reasoning={"enabled": false} (default off)
     QC_USER_ID, QC_API_TOKEN     QuantConnect (QC_ORG_ID optional)
 
 Every generation and score is cached under runs/<model>/<prompt_id>.json.
@@ -132,14 +133,19 @@ def call_fable(prompt, system=SYSTEM, max_tokens=4096):
     return "".join(b.get("text", "") for b in response["content"] if b.get("type") == "text")
 
 
-def call_openai_compatible(prompt, model, max_tokens=4096, system=SYSTEM):
+def call_openai_compatible(prompt, model, max_tokens=8192, system=SYSTEM):
+    payload = {"model": model, "max_tokens": max_tokens, "temperature": 0,
+               "messages": [{"role": "system", "content": system},
+                            {"role": "user", "content": prompt}]}
+    if os.environ.get("QWEN_DISABLE_THINKING") == "1":
+        # Together hybrid reasoning models (e.g. Qwen3.5) think by default and
+        # reasoning shares max_tokens with the answer.
+        payload["reasoning"] = {"enabled": False}
     for attempt in range(3):
         r = requests.post(
             f"{os.environ['QWEN_BASE_URL'].rstrip('/')}/chat/completions",
             headers={"Authorization": f"Bearer {os.environ['QWEN_API_KEY']}"},
-            json={"model": model, "max_tokens": max_tokens, "temperature": 0,
-                  "messages": [{"role": "system", "content": system},
-                               {"role": "user", "content": prompt}]},
+            json=payload,
             timeout=300)
         if r.status_code not in (429, 503) or attempt == 2:
             break
