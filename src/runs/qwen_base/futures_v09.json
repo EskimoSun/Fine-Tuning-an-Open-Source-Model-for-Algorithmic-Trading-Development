@@ -1,0 +1,309 @@
+{
+  "prompt_id": "futures_v09",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\n# ==============================================================================\n# QuantConnect LEAN Algorithm: E-mini S&P 500 Continuous Futures Rollover\n# ==============================================================================\n# Description:\n#   This algorithm implements a continuous futures reference for the E-mini S&P 500.\n#   It handles contract rollovers automatically based on the continuous series\n#   settings (last-trading-day mapping, backwards-ratio normalization).\n#   When the symbol changes (rollover event), it liquidates the old contract\n#   and opens a new position on the new contract with matching quantity and tags.\n#\n# Settings:\n#   - Contract: E-mini S&P 500 (Futures.Indices.SP_500_E_MINI)\n#   - Continuous Series: Enabled (last-trading-day mapping, backwards-ratio)\n#   - Depth Offset: 0\n#   - Extended Market Hours: Enabled\n#   - Contract Filter: 0 to 92 days\n#   - Universe Settings: Asynchronous\n#   - Window: 2024-09-01 to 2024-12-31\n#\n# Rules:\n#   - When flat (no position), place a market order for 1 contract of the mapped contract.\n#   - Rollover Logic:\n#       1. Listen to on_symbol_changed_events.\n#       2. For each event, read the old contract's quantity.\n#       3. Liquidate the old contract with a rollover tag naming both symbols and time.\n#       4. Place a market order for the same quantity on the new contract with the same tag.\n#   - Compliance: Max 1 contract, all rollover orders tagged for audit.\n# ==============================================================================\n\nfrom datetime import datetime\nfrom typing import Optional\n\nimport QuantConnect as QC\nfrom QuantConnect.Algorithm import QC_Algorithm\nfrom QuantConnect.Data.UniverseSelection import UniverseSettings\nfrom QuantConnect.Orders import OrderType\nfrom QuantConnect.Orders.Side import Side\nfrom QuantConnect.Securities.Future import FutureSecurity\n\n# Define the algorithm class\nclass SP500ContinuousRollover(QC_Algorithm):\n    \"\"\"\n    Algorithm to trade the continuous E-mini S&P 500 futures contract.\n    Handles automatic rollover by liquidating the old contract and entering the new one.\n    \"\"\"\n\n    # Initialize the algorithm\n    def Initialize(self) -> None:\n        \"\"\"\n        Initialize the algorithm with the specified universe settings and parameters.\n        \"\"\"\n        # Set the start and end dates for the trading window\n        self.start_date = datetime(2024, 9, 1)\n        self.end_date = datetime(2024, 12, 31)\n\n        # Define the continuous futures reference settings\n        # Contract: E-mini S&P 500\n        # Continuous: True (enables last-trading-day mapping and backwards-ratio normalization)\n        # DepthOffset: 0\n        # ExtendedMarketHours: True\n        # ContractFilter: 0 to 92 days\n        self.continuous_settings = QC.ContinuousFuturesReference(\n            symbol=\"Futures.Indices.SP_500_E_MINI\",\n            continuous=True,\n            depth_offset=0,\n            extended_market_hours=True,\n            contract_filter=(0, 92)\n        )\n\n        # Set asynchronous universe settings\n        self.universe_settings = UniverseSettings(\n            asynchronous=True,\n            start_date=self.start_date,\n            end_date=self.end_date,\n            continuous_futures_reference=self.continuous_settings\n        )\n\n        # Initialize the portfolio\n        self.SetUniverseSettings(self.universe_settings)\n\n        # Initialize variables to track the current position and rollover state\n        self.current_symbol: Optional[str] = None\n        self.current_quantity: int = 0\n        self.is_flat: bool = True\n\n        # Log initialization details\n        self.Log(f\"Initialized SP500 Continuous Rollover Algorithm\")\n        self.Log(f\"Trading Window: {self.start_date} to {self.end_date}\")\n        self.Log(f\"Contract: {self.continuous_settings.symbol}\")\n        self.Log(f\"Continuous Settings: Last-Trading-Day Mapping, Backwards-Ratio Normalization\")\n\n    # ==============================================================================\n    # Event Handlers\n    # ==============================================================================\n\n    def OnData(self, data: QC.Data.Slice) -> None:\n        \"\"\"\n        Process incoming data.\n        Checks if we are flat and place a market order if necessary.\n        \"\"\"\n        # Check if we have data for the current symbol\n        if self.current_symbol is None:\n            return\n\n        # Check if we are flat (no position)\n        if self.is_flat:\n            # Place a market order for 1 contract of the current mapped contract\n            self.PlaceMarketOrder(self.current_symbol, 1)\n            self.is_flat = False\n            self.Log(f\"Placed market order for 1 contract of {self.current_symbol}\")\n\n    def OnSymbolChanged(self, event: QC.SymbolChangedEvent) -> None:\n        \"\"\"\n        Handle symbol change events (rollover).\n        \n        This method is triggered when the continuous futures reference rolls over\n        from one contract to another. It performs the following steps:\n        1. Reads the old contract's quantity.\n        2. Liquidates the old contract with a rollover tag.\n        3. Places a market order for the same quantity on the new contract with the same tag.\n        \n        Args:\n            event: The symbol changed event containing old and new symbols.\n        \"\"\"\n        old_symbol = event.OldSymbol\n        new_symbol = event.NewSymbol\n        current_time = self.GetTime()\n\n        # Ensure we have a current symbol to track\n        if self.current_symbol != old_symbol:\n            self.Log(f\"Unexpected symbol change: Expected {old_symbol}, got {self.current_symbol}\")\n            return\n\n        # Determine the quantity to trade (default to 1 if not tracked)\n        quantity = self.current_quantity if self.current_quantity > 0 else 1\n\n        # Create a unique rollover tag for audit purposes\n        # Tag format: \"Rollover_{old_symbol}_{new_symbol}_{timestamp}\"\n        rollover_tag = f\"Rollover_{old_symbol}_{new_symbol}_{current_time.strftime('%Y%m%d_%H%M%S')}\"\n\n        # Step 1: Liquidate the old contract\n        # We use a market order to close the position\n        self.Log(f\"Rollover Event: Liquidating {quantity} contracts of {old_symbol} to {new_symbol}\")\n        self.PlaceMarketOrder(old_symbol, -quantity, tag=rollover_tag)\n\n        # Step 2: Open a new position on the new contract\n        # We use a market order to open the position with the same quantity\n        self.Log(f\"Rollover Event: Opening {quantity} contracts of {new_symbol} to {old_symbol}\")\n        self.PlaceMarketOrder(new_symbol, quantity, tag=rollover_tag)\n\n        # Update the current symbol and quantity\n        self.current_symbol = new_symbol\n        self.current_quantity = quantity\n        self.is_flat = False\n\n        self.Log(f\"Rollover completed. New symbol: {new_symbol}, Quantity: {quantity}, Tag: {rollover_tag}\")\n\n    # ==============================================================================\n    # Helper Methods\n    # ==============================================================================\n\n    def PlaceMarketOrder(self, symbol: str, quantity: int, tag: Optional[str] = None) -> None:\n        \"\"\"\n        Place a market order for the specified symbol and quantity.\n        \n        Args:\n            symbol: The symbol to trade.\n            quantity: The quantity to trade (positive for buy, negative for sell).\n            tag: Optional tag for the order for audit purposes.\n        \"\"\"\n        # Ensure quantity is within compliance limits (max 1 contract)\n        if abs(quantity) > 1:\n            self.Log(f\"Compliance Error: Quantity {quantity} exceeds maximum of 1 contract. Adjusting to 1.\")\n            quantity = 1 if quantity > 0 else -1\n\n        # Create the order\n        order = QC.Order(\n            symbol=symbol,\n            quantity=quantity,\n            order_type=OrderType.Market,\n            tag=tag\n        )\n\n        # Submit the order\n        self.SubmitOrder(order)\n\n# ==============================================================================\n# Entry Point\n# ==============================================================================\nif __name__ == \"__main__\":\n    # This block is for local testing if needed, but typically the algorithm\n    # is run via the QuantConnect platform.\n    print(\"SP500 Continuous Rollover Algorithm ready for deployment.\")\n    print(\"Run this algorithm on the QuantConnect platform with the specified settings.\")\n```",
+  "generated_at": "2026-11-14T23:44:35.968309+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "GetTime, Log, PlaceMarketOrder, SetUniverseSettings, SubmitOrder"
+    },
+    {
+      "code": "NO_ORDERS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "add_future"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# ==============================================================================\n# QuantConnect LEAN Algorithm: E-mini S&P 500 Continuous Futures Rollover\n# ==============================================================================\n# Description:\n#   This algorithm implements a continuous futures reference for the E-mini S&P 500.\n#   It handles contract rollovers automatically based on the continuous series\n#   settings (last-trading-day mapping, backwards-ratio normalization).\n#   When the symbol changes (rollover event), it liquidates the old contract\n#   and opens a new position on the new contract with matching quantity and tags.\n#\n# Settings:\n#   - Contract: E-mini S&P 500 (Futures.Indices.SP_500_E_MINI)\n#   - Continuous Series: Enabled (last-trading-day mapping, backwards-ratio)\n#   - Depth Offset: 0\n#   - Extended Market Hours: Enabled\n#   - Contract Filter: 0 to 92 days\n#   - Universe Settings: Asynchronous\n#   - Window: 2024-09-01 to 2024-12-31\n#\n# Rules:\n#   - When flat (no position), place a market order for 1 contract of the mapped contract.\n#   - Rollover Logic:\n#       1. Listen to on_symbol_changed_events.\n#       2. For each event, read the old contract's quantity.\n#       3. Liquidate the old contract with a rollover tag naming both symbols and time.\n#       4. Place a market order for the same quantity on the new contract with the same tag.\n#   - Compliance: Max 1 contract, all rollover orders tagged for audit.\n# ==============================================================================\n\nfrom datetime import datetime\nfrom typing import Optional\n\nimport QuantConnect as QC\nfrom QuantConnect.Algorithm import QC_Algorithm\nfrom QuantConnect.Data.UniverseSelection import UniverseSettings\nfrom QuantConnect.Orders import OrderType\nfrom QuantConnect.Orders.Side import Side\nfrom QuantConnect.Securities.Future import FutureSecurity\n\n# Define the algorithm class\nclass SP500ContinuousRollover(QC_Algorithm):\n    \"\"\"\n    Algorithm to trade the continuous E-mini S&P 500 futures contract.\n    Handles automatic rollover by liquidating the old contract and entering the new one.\n    \"\"\"\n\n    # Initialize the algorithm\n    def Initialize(self) -> None:\n        \"\"\"\n        Initialize the algorithm with the specified universe settings and parameters.\n        \"\"\"\n        # Set the start and end dates for the trading window\n        self.start_date = datetime(2024, 9, 1)\n        self.end_date = datetime(2024, 12, 31)\n\n        # Define the continuous futures reference settings\n        # Contract: E-mini S&P 500\n        # Continuous: True (enables last-trading-day mapping and backwards-ratio normalization)\n        # DepthOffset: 0\n        # ExtendedMarketHours: True\n        # ContractFilter: 0 to 92 days\n        self.continuous_settings = QC.ContinuousFuturesReference(\n            symbol=\"Futures.Indices.SP_500_E_MINI\",\n            continuous=True,\n            depth_offset=0,\n            extended_market_hours=True,\n            contract_filter=(0, 92)\n        )\n\n        # Set asynchronous universe settings\n        self.universe_settings = UniverseSettings(\n            asynchronous=True,\n            start_date=self.start_date,\n            end_date=self.end_date,\n            continuous_futures_reference=self.continuous_settings\n        )\n\n        # Initialize the portfolio\n        self.SetUniverseSettings(self.universe_settings)\n\n        # Initialize variables to track the current position and rollover state\n        self.current_symbol: Optional[str] = None\n        self.current_quantity: int = 0\n        self.is_flat: bool = True\n\n        # Log initialization details\n        self.Log(f\"Initialized SP500 Continuous Rollover Algorithm\")\n        self.Log(f\"Trading Window: {self.start_date} to {self.end_date}\")\n        self.Log(f\"Contract: {self.continuous_settings.symbol}\")\n        self.Log(f\"Continuous Settings: Last-Trading-Day Mapping, Backwards-Ratio Normalization\")\n\n    # ==============================================================================\n    # Event Handlers\n    # ==============================================================================\n\n    def OnData(self, data: QC.Data.Slice) -> None:\n        \"\"\"\n        Process incoming data.\n        Checks if we are flat and place a market order if necessary.\n        \"\"\"\n        # Check if we have data for the current symbol\n        if self.current_symbol is None:\n            return\n\n        # Check if we are flat (no position)\n        if self.is_flat:\n            # Place a market order for 1 contract of the current mapped contract\n            self.PlaceMarketOrder(self.current_symbol, 1)\n            self.is_flat = False\n            self.Log(f\"Placed market order for 1 contract of {self.current_symbol}\")\n\n    def OnSymbolChanged(self, event: QC.SymbolChangedEvent) -> None:\n        \"\"\"\n        Handle symbol change events (rollover).\n        \n        This method is triggered when the continuous futures reference rolls over\n        from one contract to another. It performs the following steps:\n        1. Reads the old contract's quantity.\n        2. Liquidates the old contract with a rollover tag.\n        3. Places a market order for the same quantity on the new contract with the same tag.\n        \n        Args:\n            event: The symbol changed event containing old and new symbols.\n        \"\"\"\n        old_symbol = event.OldSymbol\n        new_symbol = event.NewSymbol\n        current_time = self.GetTime()\n\n        # Ensure we have a current symbol to track\n        if self.current_symbol != old_symbol:\n            self.Log(f\"Unexpected symbol change: Expected {old_symbol}, got {self.current_symbol}\")\n            return\n\n        # Determine the quantity to trade (default to 1 if not tracked)\n        quantity = self.current_quantity if self.current_quantity > 0 else 1\n\n        # Create a unique rollover tag for audit purposes\n        # Tag format: \"Rollover_{old_symbol}_{new_symbol}_{timestamp}\"\n        rollover_tag = f\"Rollover_{old_symbol}_{new_symbol}_{current_time.strftime('%Y%m%d_%H%M%S')}\"\n\n        # Step 1: Liquidate the old contract\n        # We use a market order to close the position\n        self.Log(f\"Rollover Event: Liquidating {quantity} contracts of {old_symbol} to {new_symbol}\")\n        self.PlaceMarketOrder(old_symbol, -quantity, tag=rollover_tag)\n\n        # Step 2: Open a new position on the new contract\n        # We use a market order to open the position with the same quantity\n        self.Log(f\"Rollover Event: Opening {quantity} contracts of {new_symbol} to {old_symbol}\")\n        self.PlaceMarketOrder(new_symbol, quantity, tag=rollover_tag)\n\n        # Update the current symbol and quantity\n        self.current_symbol = new_symbol\n        self.current_quantity = quantity\n        self.is_flat = False\n\n        self.Log(f\"Rollover completed. New symbol: {new_symbol}, Quantity: {quantity}, Tag: {rollover_tag}\")\n\n    # ==============================================================================\n    # Helper Methods\n    # ==============================================================================\n\n    def PlaceMarketOrder(self, symbol: str, quantity: int, tag: Optional[str] = None) -> None:\n        \"\"\"\n        Place a market order for the specified symbol and quantity.\n        \n        Args:\n            symbol: The symbol to trade.\n            quantity: The quantity to trade (positive for buy, negative for sell).\n            tag: Optional tag for the order for audit purposes.\n        \"\"\"\n        # Ensure quantity is within compliance limits (max 1 contract)\n        if abs(quantity) > 1:\n            self.Log(f\"Compliance Error: Quantity {quantity} exceeds maximum of 1 contract. Adjusting to 1.\")\n            quantity = 1 if quantity > 0 else -1\n\n        # Create the order\n        order = QC.Order(\n            symbol=symbol,\n            quantity=quantity,\n            order_type=OrderType.Market,\n            tag=tag\n        )\n\n        # Submit the order\n        self.SubmitOrder(order)\n\n# ==============================================================================\n# Entry Point\n# ==============================================================================\nif __name__ == \"__main__\":\n    # This block is for local testing if needed, but typically the algorithm\n    # is run via the QuantConnect platform.\n    print(\"SP500 Continuous Rollover Algorithm ready for deployment.\")\n    print(\"Run this algorithm on the QuantConnect platform with the specified settings.\")\n",
+    "source_sha256": "c819c56f17008b897ee356575d531ba79dc3d3c685cf0623fe8b3bae3913a0a7",
+    "started_at": "2026-11-14T23:44:35.971294+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39416761,
+    "compile_id": "c462968ed3df2671214ff71e30b430e1-b0c17417db509169318fecb58906a621",
+    "compile_created": {
+      "compileId": "c462968ed3df2671214ff71e30b430e1-b0c17417db509169318fecb58906a621",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39416761,
+      "signature": "b0c17417db509169318fecb58906a621",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "c462968ed3df2671214ff71e30b430e1-b0c17417db509169318fecb58906a621",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39416761, with CompileID: c462968ed3df2671214ff71e30b430e1-b0c17417db509169318fecb58906a621, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39416761, with CompileID: c462968ed3df2671214ff71e30b430e1-b0c17417db509169318fecb58906a621, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "904a8a08e50cb5d3093682ce75118a75",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v09",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39416761,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "904a8a08e50cb5d3093682ce75118a75",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 18
+        },
+        "backtestStart": "2026-11-14 23:44:39",
+        "backtestEnd": "2026-11-14 23:44:39",
+        "created": "2026-11-14 23:44:39",
+        "snapshotId": 39416763,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v09",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39416761,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "904a8a08e50cb5d3093682ce75118a75",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 18
+        },
+        "backtestStart": "2026-11-14 23:44:39",
+        "backtestEnd": "2026-11-14 23:44:39",
+        "created": "2026-11-14 23:44:39",
+        "snapshotId": 39416763,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 34\n cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 34\n cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 34\n cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.6%",
+          "Used RAM (MB)": "118",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-904a8a08e50cb5d3093682ce75118a75",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 34\n cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 34\n cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 34\n cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T23:45:26.523875+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS; LEGACY_API: GetTime, Log, PlaceMarketOrder, SetUniverseSettings, SubmitOrder; NO_ORDERS; PROMPT_MISS: add_future",
+  "total_orders": null
+}

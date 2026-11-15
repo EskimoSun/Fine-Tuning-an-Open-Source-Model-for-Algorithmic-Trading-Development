@@ -1,0 +1,297 @@
+{
+  "prompt_id": "equity-sixty-forty-portfolio_v02",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport QuantConnect as QC\n\n# Initialize the algorithm\nclass QCAIRebalance(QC.Algorithm.Framework.Algorithms.Algorithm):\n    def __init__(self):\n        super().__init__()\n        self.initial_capital = 100000\n        self.target_weights = {\n            \"SPY\": 0.60,\n            \"TLT\": 0.40\n        }\n        self.rebalance_threshold = 0.05  # 5 percentage points\n        \n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        Sets up the data feed, cash, and initial positions.\n        \"\"\"\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Add minute data for SPY and TLT\n        self.AddEquity(\"SPY\", QC.DataResolution.Minute)\n        self.AddEquity(\"TLT\", QC.DataResolution.Minute)\n        \n        # Set initial cash\n        self.SetCash(self.initial_capital)\n        \n        # Log initialization\n        self.Log(\"Algorithm initialized. Starting capital: ${0:C}\".format(self.initial_capital))\n        self.Log(\"Target weights: SPY 60%, TLT 40%. Rebalance threshold: 5%\")\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        This is a simple buy-and-hold strategy that rebalances quarterly.\n        Since we are using minute data but only rebalancing quarterly,\n        we can check the condition on the first bar of each quarter.\n        \"\"\"\n        # Determine if we are at the start of a quarter\n        # We check the current date. If it's the first minute of Jan, Apr, Jul, Oct\n        if data.Current.DateTime.Month in [1, 4, 7, 10] and data.Current.DateTime.Day == 1 and data.Current.DateTime.Hour == 0 and data.Current.DateTime.Minute == 0:\n            self.Rebalance()\n        else:\n            # If not at the start of a quarter, do nothing (Buy on first bar is handled by Initialize or first OnData call if we wanted immediate entry, \n            # but the prompt says \"Buy on the first bar\", which usually implies the very first bar of the dataset).\n            # Since Initialize runs before the first bar, we assume the first bar triggers a buy if we don't have positions yet.\n            # However, the prompt specifically asks to check weights at the start of every quarter.\n            # To strictly follow \"Buy on the first bar\", we can check if we have no positions at the very first bar.\n            # But typically, Initialize sets up the environment. Let's assume the first OnData call triggers the initial buy if not already done.\n            # Actually, the prompt says \"Buy on the first bar\". \n            # If we don't have any positions, we should buy the initial allocation on the first bar.\n            if self.Portfolio[\"SPY\"].InvestedAmount == 0 and self.Portfolio[\"TLT\"].InvestedAmount == 0:\n                self.Rebalance()\n\n    def Rebalance(self):\n        \"\"\"\n        Rebalance the portfolio to target weights (60% SPY, 40% TLT).\n        Only rebalance if the current weight of either asset is more than 5 percentage points off target.\n        \"\"\"\n        # Get current portfolio values\n        total_value = self.Portfolio.TotalPortfolioValue\n        \n        # Calculate current weights\n        spy_value = self.Portfolio[\"SPY\"].InvestedAmount\n        tlt_value = self.Portfolio[\"TLT\"].InvestedAmount\n        \n        # Handle case where portfolio value is 0 (e.g., very first bar before any buys)\n        if total_value == 0:\n            # Buy initial allocation on the first bar\n            spy_target_value = self.initial_capital * self.target_weights[\"SPY\"]\n            tlt_target_value = self.initial_capital * self.target_weights[\"TLT\"]\n            \n            self.SetHoldings(\"SPY\", spy_target_value)\n            self.SetHoldings(\"TLT\", tlt_target_value)\n            self.Log(\"Initial buy executed on first bar.\")\n            return\n\n        spy_weight = spy_value / total_value\n        tlt_weight = tlt_value / total_value\n        \n        # Check deviation from target\n        spy_deviation = abs(spy_weight - self.target_weights[\"SPY\"])\n        tlt_deviation = abs(tlt_weight - self.target_weights[\"TLT\"])\n        \n        needs_rebalance = spy_deviation > self.rebalance_threshold or tlt_deviation > self.rebalance_threshold\n        \n        if needs_rebalance:\n            # Calculate target values\n            spy_target_value = total_value * self.target_weights[\"SPY\"]\n            tlt_target_value = total_value * self.target_weights[\"TLT\"]\n            \n            # Execute trades to reach target values\n            # SetHoldings will sell excess and buy deficit automatically\n            self.SetHoldings(\"SPY\", spy_target_value)\n            self.SetHoldings(\"TLT\", tlt_target_value)\n            \n            self.Log(\"Rebalance triggered at {0}. SPY Weight: {1:P2}, TLT Weight: {2:P2}. \"\n                    \"Target: SPY {3:P2}, TLT {4:P2}. \"\n                    \"Deviation: SPY {5:P2}, TLT {6:P2}.\"\n                    .format(data.Current.DateTime, spy_weight, tlt_weight, \n                            self.target_weights[\"SPY\"], self.target_weights[\"TLT\"],\n                            spy_deviation, tlt_deviation))\n        else:\n            self.Log(\"No rebalance needed. SPY Weight: {0:P2}, TLT Weight: {1:P2}. \"\n                    \"Deviation: SPY {2:P2}, TLT {3:P2}.\"\n                    .format(spy_weight, tlt_weight, spy_deviation, tlt_deviation))\n\n# Create and run the algorithm\nif __name__ == \"__main__\":\n    algo = QCAIRebalance()\n    # Note: In QuantConnect LEAN, you typically run this via the CLI or IDE, \n    # not by instantiating and running directly in a script unless using a local runner.\n    # This block is for demonstration of the class structure.\n    pass\n```",
+  "generated_at": "2026-11-14T22:14:00.058715+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddEquity, Log, Rebalance, SetCash, SetEndDate, SetHoldings, SetStartDate"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import QuantConnect as QC\n\n# Initialize the algorithm\nclass QCAIRebalance(QC.Algorithm.Framework.Algorithms.Algorithm):\n    def __init__(self):\n        super().__init__()\n        self.initial_capital = 100000\n        self.target_weights = {\n            \"SPY\": 0.60,\n            \"TLT\": 0.40\n        }\n        self.rebalance_threshold = 0.05  # 5 percentage points\n        \n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        Sets up the data feed, cash, and initial positions.\n        \"\"\"\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Add minute data for SPY and TLT\n        self.AddEquity(\"SPY\", QC.DataResolution.Minute)\n        self.AddEquity(\"TLT\", QC.DataResolution.Minute)\n        \n        # Set initial cash\n        self.SetCash(self.initial_capital)\n        \n        # Log initialization\n        self.Log(\"Algorithm initialized. Starting capital: ${0:C}\".format(self.initial_capital))\n        self.Log(\"Target weights: SPY 60%, TLT 40%. Rebalance threshold: 5%\")\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        This is a simple buy-and-hold strategy that rebalances quarterly.\n        Since we are using minute data but only rebalancing quarterly,\n        we can check the condition on the first bar of each quarter.\n        \"\"\"\n        # Determine if we are at the start of a quarter\n        # We check the current date. If it's the first minute of Jan, Apr, Jul, Oct\n        if data.Current.DateTime.Month in [1, 4, 7, 10] and data.Current.DateTime.Day == 1 and data.Current.DateTime.Hour == 0 and data.Current.DateTime.Minute == 0:\n            self.Rebalance()\n        else:\n            # If not at the start of a quarter, do nothing (Buy on first bar is handled by Initialize or first OnData call if we wanted immediate entry, \n            # but the prompt says \"Buy on the first bar\", which usually implies the very first bar of the dataset).\n            # Since Initialize runs before the first bar, we assume the first bar triggers a buy if we don't have positions yet.\n            # However, the prompt specifically asks to check weights at the start of every quarter.\n            # To strictly follow \"Buy on the first bar\", we can check if we have no positions at the very first bar.\n            # But typically, Initialize sets up the environment. Let's assume the first OnData call triggers the initial buy if not already done.\n            # Actually, the prompt says \"Buy on the first bar\". \n            # If we don't have any positions, we should buy the initial allocation on the first bar.\n            if self.Portfolio[\"SPY\"].InvestedAmount == 0 and self.Portfolio[\"TLT\"].InvestedAmount == 0:\n                self.Rebalance()\n\n    def Rebalance(self):\n        \"\"\"\n        Rebalance the portfolio to target weights (60% SPY, 40% TLT).\n        Only rebalance if the current weight of either asset is more than 5 percentage points off target.\n        \"\"\"\n        # Get current portfolio values\n        total_value = self.Portfolio.TotalPortfolioValue\n        \n        # Calculate current weights\n        spy_value = self.Portfolio[\"SPY\"].InvestedAmount\n        tlt_value = self.Portfolio[\"TLT\"].InvestedAmount\n        \n        # Handle case where portfolio value is 0 (e.g., very first bar before any buys)\n        if total_value == 0:\n            # Buy initial allocation on the first bar\n            spy_target_value = self.initial_capital * self.target_weights[\"SPY\"]\n            tlt_target_value = self.initial_capital * self.target_weights[\"TLT\"]\n            \n            self.SetHoldings(\"SPY\", spy_target_value)\n            self.SetHoldings(\"TLT\", tlt_target_value)\n            self.Log(\"Initial buy executed on first bar.\")\n            return\n\n        spy_weight = spy_value / total_value\n        tlt_weight = tlt_value / total_value\n        \n        # Check deviation from target\n        spy_deviation = abs(spy_weight - self.target_weights[\"SPY\"])\n        tlt_deviation = abs(tlt_weight - self.target_weights[\"TLT\"])\n        \n        needs_rebalance = spy_deviation > self.rebalance_threshold or tlt_deviation > self.rebalance_threshold\n        \n        if needs_rebalance:\n            # Calculate target values\n            spy_target_value = total_value * self.target_weights[\"SPY\"]\n            tlt_target_value = total_value * self.target_weights[\"TLT\"]\n            \n            # Execute trades to reach target values\n            # SetHoldings will sell excess and buy deficit automatically\n            self.SetHoldings(\"SPY\", spy_target_value)\n            self.SetHoldings(\"TLT\", tlt_target_value)\n            \n            self.Log(\"Rebalance triggered at {0}. SPY Weight: {1:P2}, TLT Weight: {2:P2}. \"\n                    \"Target: SPY {3:P2}, TLT {4:P2}. \"\n                    \"Deviation: SPY {5:P2}, TLT {6:P2}.\"\n                    .format(data.Current.DateTime, spy_weight, tlt_weight, \n                            self.target_weights[\"SPY\"], self.target_weights[\"TLT\"],\n                            spy_deviation, tlt_deviation))\n        else:\n            self.Log(\"No rebalance needed. SPY Weight: {0:P2}, TLT Weight: {1:P2}. \"\n                    \"Deviation: SPY {2:P2}, TLT {3:P2}.\"\n                    .format(spy_weight, tlt_weight, spy_deviation, tlt_deviation))\n\n# Create and run the algorithm\nif __name__ == \"__main__\":\n    algo = QCAIRebalance()\n    # Note: In QuantConnect LEAN, you typically run this via the CLI or IDE, \n    # not by instantiating and running directly in a script unless using a local runner.\n    # This block is for demonstration of the class structure.\n    pass\n",
+    "source_sha256": "17937b449ba53d57e4fa71aeee871970ed63c46f56eb9507d980a1ab8f7dc845",
+    "started_at": "2026-11-14T22:14:00.059542+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39412926,
+    "compile_id": "27579aeeccb214855ae88f8cc4135110-78601abfeadb355e13bc1a443b663f70",
+    "compile_created": {
+      "compileId": "27579aeeccb214855ae88f8cc4135110-78601abfeadb355e13bc1a443b663f70",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39412926,
+      "signature": "78601abfeadb355e13bc1a443b663f70",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "27579aeeccb214855ae88f8cc4135110-78601abfeadb355e13bc1a443b663f70",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39412926, with CompileID: 27579aeeccb214855ae88f8cc4135110-78601abfeadb355e13bc1a443b663f70, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39412926, with CompileID: 27579aeeccb214855ae88f8cc4135110-78601abfeadb355e13bc1a443b663f70, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "36f4dc69bfba006afb5636c33c08383b",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-sixty-forty-portfolio_v02",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39412926,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "36f4dc69bfba006afb5636c33c08383b",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 13
+        },
+        "backtestStart": "2026-11-14 22:14:03",
+        "backtestEnd": "2026-11-14 22:14:03",
+        "created": "2026-11-14 22:14:03",
+        "snapshotId": 39412930,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-sixty-forty-portfolio_v02",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39412926,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "36f4dc69bfba006afb5636c33c08383b",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 13
+        },
+        "backtestStart": "2026-11-14 22:14:03",
+        "backtestEnd": "2026-11-14 22:14:03",
+        "created": "2026-11-14 22:14:03",
+        "snapshotId": 39412930,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithms\n  at \n    class QCAIRebalance(QC.Algorithm.Framework.Algorithms.Algorithm):\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n Algorithms Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithms\n  at \n    class QCAIRebalance(QC.Algorithm.Framework.Algorithms.Algorithm):\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n Algorithms",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithms\n  at <module>\n    class QCAIRebalance(QC.Algorithm.Framework.Algorithms.Algorithm):\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n Algorithms",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.5%",
+          "Used RAM (MB)": "125",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-36f4dc69bfba006afb5636c33c08383b",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithms\n  at \n    class QCAIRebalance(QC.Algorithm.Framework.Algorithms.Algorithm):\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n Algorithms Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithms\n  at \n    class QCAIRebalance(QC.Algorithm.Framework.Algorithms.Algorithm):\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n Algorithms",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithms\n  at <module>\n    class QCAIRebalance(QC.Algorithm.Framework.Algorithms.Algorithm):\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n Algorithms",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:14:51.061743+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS; LEGACY_API: AddEquity, Log, Rebalance, SetCash, SetEndDate, SetHoldings, SetStartDate",
+  "total_orders": null
+}

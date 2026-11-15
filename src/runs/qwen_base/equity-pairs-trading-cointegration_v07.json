@@ -1,0 +1,309 @@
+{
+  "prompt_id": "equity-pairs-trading-cointegration_v07",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport QuantConnect as QC\nfrom QuantConnect.Algorithm import QCAlgo\nfrom QuantConnect.Data.Market import EquityPriceHistory\nfrom QuantConnect.Lean.Engine.DataFeeds import DataFeed\nfrom QuantConnect.Util import Utilities\nimport numpy as np\nimport pandas as pd\nfrom datetime import datetime, timedelta\n\n# Configuration\nSTART_DATE = datetime(2022, 1, 1)\nEND_DATE = datetime(2024, 12, 31)\nLOOKBACK_DAYS = 20  # Days of data for rolling OLS\nZSCORE_ENTRY = 2.0  # Enter when z-score exceeds this\nZSCORE_EXIT = 0.5   # Exit when z-score drops below this\nINITIAL_CAPITAL = 100000.0  # Paper account starting cash\nLEG_SIZE = 1000.0  # Dollar amount per leg (long/short)\n\nclass KOPEP_PairsTrading(QCAlgo):\n    \"\"\"\n    Market-neutral pairs trading strategy for KO and PEP.\n    Uses rolling OLS to calculate hedge ratio, z-score for entry/exit signals,\n    and maintains dollar-neutral legs.\n    \"\"\"\n    \n    def Initialize(self):\n        \"\"\"Initialize the algorithm.\"\"\"\n        self.SetStartDate(START_DATE)\n        self.SetEndDate(END_DATE)\n        self.SetCash(INITIAL_CAPITAL)\n        \n        # Add data feeds\n        self.AddEquity(\"KO\", Resolution.Daily)\n        self.AddEquity(\"PEP\", Resolution.Daily)\n        \n        # Strategy state\n        self.hedge_ratio = 1.0\n        self.z_score = 0.0\n        self.long_position = 0.0  # Shares of KO\n        self.short_position = 0.0  # Shares of PEP\n        self.last_entry_date = None\n        self.is_in_trade = False\n        \n        # Logging\n        self.Log(\"Pairs Trading Strategy Initialized: KO vs PEP\")\n        self.Log(f\"Period: {START_DATE} to {END_DATE}\")\n        self.Log(f\"Lookback: {LOOKBACK_DAYS} days\")\n        self.Log(f\"Z-Score Entry: {ZSCORE_ENTRY}, Exit: {ZSCORE_EXIT}\")\n        \n    def OnData(self, data):\n        \"\"\"Process incoming data.\"\"\"\n        # Skip if we don't have enough data for lookback\n        if self.Time < START_DATE + timedelta(days=LOOKBACK_DAYS):\n            return\n            \n        # Get prices\n        ko_price = data.KO.Close\n        pep_price = data.PEP.Close\n        \n        if ko_price is None or pep_price is None:\n            return\n            \n        # Calculate returns for the lookback period\n        returns = self._calculate_returns(ko_price, pep_price, LOOKBACK_DAYS)\n        \n        if returns is None or len(returns) < 2:\n            return\n            \n        # Calculate rolling hedge ratio using OLS\n        self.hedge_ratio = self._calculate_ols_hedge_ratio(returns)\n        \n        # Calculate spread and z-score\n        spread = ko_price - self.hedge_ratio * pep_price\n        self.z_score = self._calculate_zscore(spread, returns)\n        \n        # Check for entry signals\n        if not self.is_in_trade:\n            if abs(self.z_score) > ZSCORE_ENTRY:\n                self._enter_trade(ko_price, pep_price)\n                \n        # Check for exit signals\n        else:\n            if abs(self.z_score) < ZSCORE_EXIT:\n                self._exit_trade(ko_price, pep_price)\n                \n    def _calculate_returns(self, current_price, previous_prices, lookback_days):\n        \"\"\"Calculate daily returns for the lookback period.\"\"\"\n        # We need historical prices to calculate returns\n        # Since we only have current price in OnData, we rely on the data feed's history\n        # However, for a robust implementation, we should store history or use the data feed's lookback\n        \n        # In this simplified version, we assume the data feed provides enough history\n        # to calculate returns. We'll use a simplified approach:\n        # Calculate return based on the difference between current and previous close\n        # stored in the data feed's history.\n        \n        # Note: In a real production environment, we would maintain a rolling window of prices\n        # or use the DataFeed's built-in lookback capabilities more explicitly.\n        # Here, we simulate the return calculation based on available data.\n        \n        # Get the last N prices from the data feed\n        ko_history = self.History(\"KO\", lookback_days, Resolution.Daily)\n        pep_history = self.History(\"PEP\", lookback_days, Resolution.Daily)\n        \n        if len(ko_history) < lookback_days or len(pep_history) < lookback_days:\n            return None\n            \n        ko_returns = []\n        pep_returns = []\n        \n        for i in range(1, len(ko_history)):\n            ko_ret = (ko_history[i].Close - ko_history[i-1].Close) / ko_history[i-1].Close\n            pep_ret = (pep_history[i].Close - pep_history[i-1].Close) / pep_history[i-1].Close\n            ko_returns.append(ko_ret)\n            pep_returns.append(pep_ret)\n            \n        return ko_returns, pep_returns\n    \n    def _calculate_ols_hedge_ratio(self, returns):\n        \"\"\"Calculate OLS hedge ratio: Cov(KO, PEP) / Var(PEP)\"\"\"\n        if returns is None or len(returns) < 2:\n            return 1.0\n            \n        ko_rets = returns[0]\n        pep_rets = returns[1]\n        \n        # Calculate covariance and variance\n        cov = np.cov(ko_rets, pep_rets)[0, 1]\n        var_pep = np.var(pep_rets)\n        \n        if var_pep == 0:\n            return 1.0\n            \n        return cov / var_pep\n    \n    def _calculate_zscore(self, spread, returns):\n        \"\"\"Calculate z-score of the spread.\"\"\"\n        if returns is None or len(returns) < 2:\n            return 0.0\n            \n        ko_rets = returns[0]\n        pep_rets = returns[1]\n        \n        # Calculate spread returns\n        spread_rets = ko_rets - self.hedge_ratio * pep_rets\n        \n        # Calculate mean and std of spread returns\n        mean_spread = np.mean(spread_rets)\n        std_spread = np.std(spread_rets)\n        \n        if std_spread == 0:\n            return 0.0\n            \n        # Z-score based on spread returns (not price spread)\n        # This is a common approach in pairs trading\n        z_score = (spread - mean_spread) / std_spread\n        \n        return z_score\n    \n    def _enter_trade(self, ko_price, pep_price):\n        \"\"\"Enter a new trade based on z-score signal.\"\"\"\n        self.is_in_trade = True\n        self.last_entry_date = self.Time\n        \n        # Determine direction based on z-score\n        if self.z_score > ZSCORE_ENTRY:\n            # KO is expensive relative to PEP -> Short KO, Long PEP\n            # Sell KO, Buy PEP\n            self._sell_leg(ko_price, LEG_SIZE)\n            self._buy_leg(pep_price, LEG_SIZE)\n            self.Log(f\"Entry: Short KO, Long PEP. Z-Score: {self.z_score:.2f}\")\n            \n        elif self.z_score < -ZSCORE_ENTRY:\n            # KO is cheap relative to PEP -> Long KO, Short PEP\n            # Buy KO, Sell PEP\n            self._buy_leg(ko_price, LEG_SIZE)\n            self._sell_leg(pep_price, LEG_SIZE)\n            self.Log(f\"Entry: Long KO, Short PEP. Z-Score: {self.z_score:.2f}\")\n            \n    def _exit_trade(self, ko_price, pep_price):\n        \"\"\"Exit the current trade based on z-score signal.\"\"\"\n        self.is_in_trade = False\n        \n        # Close both legs\n        self._close_leg(ko_price, self.long_position)\n        self._close_leg(pep_price, self.short_position)\n        \n        self.Log(f\"Exit: Z-Score: {self.z_score:.2f}\")\n        \n    def _buy_leg(self, price, amount):\n        \"\"\"Buy a leg of the trade.\"\"\"\n        shares = amount / price\n        self._buy(price, shares)\n        \n    def _sell_leg(self, price, amount):\n        \"\"\"Sell a leg of the trade.\"\"\"\n        shares = amount / price\n        self._sell(price, shares)\n        \n    def _close_leg(self, price, shares):\n        \"\"\"Close a leg of the trade.\"\"\"\n        if shares > 0:\n            self._sell(price, shares)\n        elif shares < 0:\n            self._buy(price, abs(shares))\n            \n    def OnEndOfAlgorithm(self):\n        \"\"\"Called when the algorithm ends.\"\"\"\n        self.Log(\"Algorithm Ended\")\n        self.Log(f\"Final Cash: ${self.Cash:,.2f}\")\n        self.Log(f\"Final KO Position: {self.long_position:.2f} shares\")\n        self.Log(f\"Final PEP Position: {self.short_position:.2f} shares\")\n```",
+  "generated_at": "2026-11-14T22:51:32.247397+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddEquity, History, Log, SetCash, SetEndDate, SetStartDate"
+    },
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "_buy, _sell"
+    },
+    {
+      "code": "NO_ORDERS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import QuantConnect as QC\nfrom QuantConnect.Algorithm import QCAlgo\nfrom QuantConnect.Data.Market import EquityPriceHistory\nfrom QuantConnect.Lean.Engine.DataFeeds import DataFeed\nfrom QuantConnect.Util import Utilities\nimport numpy as np\nimport pandas as pd\nfrom datetime import datetime, timedelta\n\n# Configuration\nSTART_DATE = datetime(2022, 1, 1)\nEND_DATE = datetime(2024, 12, 31)\nLOOKBACK_DAYS = 20  # Days of data for rolling OLS\nZSCORE_ENTRY = 2.0  # Enter when z-score exceeds this\nZSCORE_EXIT = 0.5   # Exit when z-score drops below this\nINITIAL_CAPITAL = 100000.0  # Paper account starting cash\nLEG_SIZE = 1000.0  # Dollar amount per leg (long/short)\n\nclass KOPEP_PairsTrading(QCAlgo):\n    \"\"\"\n    Market-neutral pairs trading strategy for KO and PEP.\n    Uses rolling OLS to calculate hedge ratio, z-score for entry/exit signals,\n    and maintains dollar-neutral legs.\n    \"\"\"\n    \n    def Initialize(self):\n        \"\"\"Initialize the algorithm.\"\"\"\n        self.SetStartDate(START_DATE)\n        self.SetEndDate(END_DATE)\n        self.SetCash(INITIAL_CAPITAL)\n        \n        # Add data feeds\n        self.AddEquity(\"KO\", Resolution.Daily)\n        self.AddEquity(\"PEP\", Resolution.Daily)\n        \n        # Strategy state\n        self.hedge_ratio = 1.0\n        self.z_score = 0.0\n        self.long_position = 0.0  # Shares of KO\n        self.short_position = 0.0  # Shares of PEP\n        self.last_entry_date = None\n        self.is_in_trade = False\n        \n        # Logging\n        self.Log(\"Pairs Trading Strategy Initialized: KO vs PEP\")\n        self.Log(f\"Period: {START_DATE} to {END_DATE}\")\n        self.Log(f\"Lookback: {LOOKBACK_DAYS} days\")\n        self.Log(f\"Z-Score Entry: {ZSCORE_ENTRY}, Exit: {ZSCORE_EXIT}\")\n        \n    def OnData(self, data):\n        \"\"\"Process incoming data.\"\"\"\n        # Skip if we don't have enough data for lookback\n        if self.Time < START_DATE + timedelta(days=LOOKBACK_DAYS):\n            return\n            \n        # Get prices\n        ko_price = data.KO.Close\n        pep_price = data.PEP.Close\n        \n        if ko_price is None or pep_price is None:\n            return\n            \n        # Calculate returns for the lookback period\n        returns = self._calculate_returns(ko_price, pep_price, LOOKBACK_DAYS)\n        \n        if returns is None or len(returns) < 2:\n            return\n            \n        # Calculate rolling hedge ratio using OLS\n        self.hedge_ratio = self._calculate_ols_hedge_ratio(returns)\n        \n        # Calculate spread and z-score\n        spread = ko_price - self.hedge_ratio * pep_price\n        self.z_score = self._calculate_zscore(spread, returns)\n        \n        # Check for entry signals\n        if not self.is_in_trade:\n            if abs(self.z_score) > ZSCORE_ENTRY:\n                self._enter_trade(ko_price, pep_price)\n                \n        # Check for exit signals\n        else:\n            if abs(self.z_score) < ZSCORE_EXIT:\n                self._exit_trade(ko_price, pep_price)\n                \n    def _calculate_returns(self, current_price, previous_prices, lookback_days):\n        \"\"\"Calculate daily returns for the lookback period.\"\"\"\n        # We need historical prices to calculate returns\n        # Since we only have current price in OnData, we rely on the data feed's history\n        # However, for a robust implementation, we should store history or use the data feed's lookback\n        \n        # In this simplified version, we assume the data feed provides enough history\n        # to calculate returns. We'll use a simplified approach:\n        # Calculate return based on the difference between current and previous close\n        # stored in the data feed's history.\n        \n        # Note: In a real production environment, we would maintain a rolling window of prices\n        # or use the DataFeed's built-in lookback capabilities more explicitly.\n        # Here, we simulate the return calculation based on available data.\n        \n        # Get the last N prices from the data feed\n        ko_history = self.History(\"KO\", lookback_days, Resolution.Daily)\n        pep_history = self.History(\"PEP\", lookback_days, Resolution.Daily)\n        \n        if len(ko_history) < lookback_days or len(pep_history) < lookback_days:\n            return None\n            \n        ko_returns = []\n        pep_returns = []\n        \n        for i in range(1, len(ko_history)):\n            ko_ret = (ko_history[i].Close - ko_history[i-1].Close) / ko_history[i-1].Close\n            pep_ret = (pep_history[i].Close - pep_history[i-1].Close) / pep_history[i-1].Close\n            ko_returns.append(ko_ret)\n            pep_returns.append(pep_ret)\n            \n        return ko_returns, pep_returns\n    \n    def _calculate_ols_hedge_ratio(self, returns):\n        \"\"\"Calculate OLS hedge ratio: Cov(KO, PEP) / Var(PEP)\"\"\"\n        if returns is None or len(returns) < 2:\n            return 1.0\n            \n        ko_rets = returns[0]\n        pep_rets = returns[1]\n        \n        # Calculate covariance and variance\n        cov = np.cov(ko_rets, pep_rets)[0, 1]\n        var_pep = np.var(pep_rets)\n        \n        if var_pep == 0:\n            return 1.0\n            \n        return cov / var_pep\n    \n    def _calculate_zscore(self, spread, returns):\n        \"\"\"Calculate z-score of the spread.\"\"\"\n        if returns is None or len(returns) < 2:\n            return 0.0\n            \n        ko_rets = returns[0]\n        pep_rets = returns[1]\n        \n        # Calculate spread returns\n        spread_rets = ko_rets - self.hedge_ratio * pep_rets\n        \n        # Calculate mean and std of spread returns\n        mean_spread = np.mean(spread_rets)\n        std_spread = np.std(spread_rets)\n        \n        if std_spread == 0:\n            return 0.0\n            \n        # Z-score based on spread returns (not price spread)\n        # This is a common approach in pairs trading\n        z_score = (spread - mean_spread) / std_spread\n        \n        return z_score\n    \n    def _enter_trade(self, ko_price, pep_price):\n        \"\"\"Enter a new trade based on z-score signal.\"\"\"\n        self.is_in_trade = True\n        self.last_entry_date = self.Time\n        \n        # Determine direction based on z-score\n        if self.z_score > ZSCORE_ENTRY:\n            # KO is expensive relative to PEP -> Short KO, Long PEP\n            # Sell KO, Buy PEP\n            self._sell_leg(ko_price, LEG_SIZE)\n            self._buy_leg(pep_price, LEG_SIZE)\n            self.Log(f\"Entry: Short KO, Long PEP. Z-Score: {self.z_score:.2f}\")\n            \n        elif self.z_score < -ZSCORE_ENTRY:\n            # KO is cheap relative to PEP -> Long KO, Short PEP\n            # Buy KO, Sell PEP\n            self._buy_leg(ko_price, LEG_SIZE)\n            self._sell_leg(pep_price, LEG_SIZE)\n            self.Log(f\"Entry: Long KO, Short PEP. Z-Score: {self.z_score:.2f}\")\n            \n    def _exit_trade(self, ko_price, pep_price):\n        \"\"\"Exit the current trade based on z-score signal.\"\"\"\n        self.is_in_trade = False\n        \n        # Close both legs\n        self._close_leg(ko_price, self.long_position)\n        self._close_leg(pep_price, self.short_position)\n        \n        self.Log(f\"Exit: Z-Score: {self.z_score:.2f}\")\n        \n    def _buy_leg(self, price, amount):\n        \"\"\"Buy a leg of the trade.\"\"\"\n        shares = amount / price\n        self._buy(price, shares)\n        \n    def _sell_leg(self, price, amount):\n        \"\"\"Sell a leg of the trade.\"\"\"\n        shares = amount / price\n        self._sell(price, shares)\n        \n    def _close_leg(self, price, shares):\n        \"\"\"Close a leg of the trade.\"\"\"\n        if shares > 0:\n            self._sell(price, shares)\n        elif shares < 0:\n            self._buy(price, abs(shares))\n            \n    def OnEndOfAlgorithm(self):\n        \"\"\"Called when the algorithm ends.\"\"\"\n        self.Log(\"Algorithm Ended\")\n        self.Log(f\"Final Cash: ${self.Cash:,.2f}\")\n        self.Log(f\"Final KO Position: {self.long_position:.2f} shares\")\n        self.Log(f\"Final PEP Position: {self.short_position:.2f} shares\")\n",
+    "source_sha256": "8faa8114f55c522ce168101792801b5856c56e0ed282b1d9c82488961babb9d4",
+    "started_at": "2026-11-14T22:51:32.252536+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39414491,
+    "compile_id": "d1703e2f28f4dd19171c6c4053226265-a111e0288179dfb2dc8fd36c9fe69220",
+    "compile_created": {
+      "compileId": "d1703e2f28f4dd19171c6c4053226265-a111e0288179dfb2dc8fd36c9fe69220",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39414491,
+      "signature": "a111e0288179dfb2dc8fd36c9fe69220",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "d1703e2f28f4dd19171c6c4053226265-a111e0288179dfb2dc8fd36c9fe69220",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39414491, with CompileID: d1703e2f28f4dd19171c6c4053226265-a111e0288179dfb2dc8fd36c9fe69220, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39414491, with CompileID: d1703e2f28f4dd19171c6c4053226265-a111e0288179dfb2dc8fd36c9fe69220, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "967f76598ed36e29d7aeaa9d28e8130e",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v07",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39414491,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "967f76598ed36e29d7aeaa9d28e8130e",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 27
+        },
+        "backtestStart": "2026-11-14 22:51:35",
+        "backtestEnd": "2026-11-14 22:51:35",
+        "created": "2026-11-14 22:51:35",
+        "snapshotId": 39414494,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 5591a6cc",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v07",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39414491,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "967f76598ed36e29d7aeaa9d28e8130e",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 27
+        },
+        "backtestStart": "2026-11-14 22:51:35",
+        "backtestEnd": "2026-11-14 22:51:35",
+        "created": "2026-11-14 22:51:35",
+        "snapshotId": 39414494,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 5591a6cc",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.5%",
+          "Used RAM (MB)": "152",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-967f76598ed36e29d7aeaa9d28e8130e",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:52:22.910272+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS; LEGACY_API: AddEquity, History, Log, SetCash, SetEndDate, SetStartDate; UNKNOWN_API: _buy, _sell; NO_ORDERS",
+  "total_orders": null
+}

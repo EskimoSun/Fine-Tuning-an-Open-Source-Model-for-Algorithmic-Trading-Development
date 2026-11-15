@@ -1,0 +1,297 @@
+{
+  "prompt_id": "equity-opening-range-breakout_v03",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport QuantConnect as QC\nfrom QuantConnect.Algorithm import QCAlgo\nfrom QuantConnect.Data.Market import MinuteBar\nfrom QuantConnect.Lean.Engine.Results import EquityResult\nfrom QuantConnect.Lean.Engine.DataFeeds import Resolution\nfrom QuantConnect.Python import PlotData\nfrom datetime import datetime, timedelta\nimport pandas as pd\n\nclass OpeningRangeBreakout(QCAlgo):\n    \"\"\"\n    Opening Range Breakout (ORB) Strategy for SPY.\n    \n    Logic:\n    1. Track High and Low from 9:30 to 10:00 AM.\n    2. At 10:00 AM, if the bar closes above the 9:30-10:00 High, go Long (Buy).\n    3. At 10:00 AM, if the bar closes below the 9:30-10:00 Low, go Short.\n    4. Only one trade per day.\n    5. Close all positions at 3:55 PM.\n    6. Reset indicators and state for the next day.\n    \"\"\"\n    \n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Set cash to $100,000.\n        - Add SPY data on minute bars.\n        - Set start and end dates.\n        - Initialize variables for tracking ORB.\n        \"\"\"\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        self.SetCash(100000)\n        \n        # Add SPY data\n        self.Add(Equity.Symbol(\"SPY\"), Resolution.Minute)\n        \n        # State variables\n        self.ORB_High = 0.0\n        self.ORB_Low = 0.0\n        self.ORB_Tracking = True  # True means we are still collecting the 9:30-10:00 range\n        self.Position = None\n        self.TradeDirection = None  # 'Long', 'Short', or None\n        self.DayReset = True\n        \n        # Plotting data storage\n        self._plot_data = []\n        self._trade_data = []\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        - Identify the 9:30-10:00 AM window.\n        - Update ORB High/Low.\n        - Execute trades based on 10:00 AM close.\n        - Close positions at 3:55 PM.\n        - Reset for the next day.\n        \"\"\"\n        if not self.ORB_Tracking:\n            return\n\n        # Get the current bar\n        bar = data.SPY\n        \n        # Determine if we are in the 9:30 - 10:00 window\n        # We assume the first bar of the day is 9:30.\n        # We need to track the first 30 minutes (30 bars).\n        \n        # Check if this is the first bar of the day\n        if self.DayReset:\n            self.ORB_High = bar.High\n            self.ORB_Low = bar.Low\n            self.ORB_Tracking = True\n            self.DayReset = False\n        else:\n            # If we have already established the range (after 10:00), we stop tracking\n            # But we need to know if we are currently in the 9:30-10:00 window.\n            # Since we don't have a direct \"minute of day\" property easily accessible without parsing,\n            # we will rely on the logic: \n            # We track for 30 bars. Once 30 bars pass, we stop tracking and look for the break.\n            # However, the requirement says \"After 10:00\". \n            # Let's assume the first bar is 9:30. The 30th bar closes at 10:00.\n            # So we track for the first 30 bars.\n            \n            # Count bars passed since start of day\n            # We can use a counter or check if we have processed 30 bars.\n            # A simpler approach: We set a flag after 30 bars.\n            \n            # Let's refine: \n            # We need to know if the current bar is the 30th bar (closing at 10:00).\n            # We can count bars since the last reset.\n            \n            # Since we don't have a built-in bar counter per day easily, \n            # we will use a simple counter variable.\n            if not hasattr(self, '_bar_count'):\n                self._bar_count = 0\n            \n            self._bar_count += 1\n            \n            # If we are within the first 30 bars (9:30 to 10:00 inclusive)\n            if self._bar_count <= 30:\n                # Update ORB High/Low\n                if bar.High > self.ORB_High:\n                    self.ORB_High = bar.High\n                if bar.Low < self.ORB_Low:\n                    self.ORB_Low = bar.Low\n                \n                # Check if this is the 30th bar (10:00 AM close)\n                if self._bar_count == 30:\n                    # Decision time\n                    self.ExecuteORBDecision(bar.Close)\n            else:\n                # We are past 10:00 AM. \n                # If we haven't executed a trade yet today, we should have done it at 10:00.\n                # But since we are in the OnData loop, if we missed the 10:00 bar logic above,\n                # it means we are in the next bar (10:01).\n                # The requirement says \"if a bar closes above that high...\". \n                # This implies the decision is made on the 10:00 bar close.\n                # So if we are past 30 bars and no trade was made, we do nothing for this bar\n                # regarding the ORB entry, unless we missed the 10:00 bar logic.\n                # To be safe, we only execute the entry logic exactly at bar 30.\n                pass\n\n        # Close positions at 3:55 PM\n        # 3:55 PM is 355 minutes from 9:30 AM.\n        # 9:30 is minute 0. 10:00 is minute 30. 3:55 is minute 355.\n        # We need to track the minute of the day.\n        if not hasattr(self, '_minute_of_day'):\n            self._minute_of_day = 0\n        \n        self._minute_of_day += 1\n        \n        # If we are at the 355th minute (3:55 PM)\n        if self._minute_of_day == 355:\n            self.CloseAllPositions()\n            # Reset for next day\n            self.DayReset = True\n            self._bar_count = 0\n            self._minute_of_day = 0\n            self.ORB_High = 0\n            self.ORB_Low = 0\n            self.TradeDirection = None\n\n    def ExecuteORBDecision(self, close_price):\n        \"\"\"\n        Execute the trade decision based on the 10:00 AM close.\n        \"\"\"\n        if self.Position is not None:\n            return  # Already have a position for today\n\n        if close_price > self.ORB_High:\n            # Buy with everything\n            self.SetHoldings(\"SPY\", 1.0)\n            self.TradeDirection = \"Long\"\n            self._plot_data.append((self.Time, close_price, self.ORB_High, self.ORB_Low, \"Long\"))\n        elif close_price < self.ORB_Low:\n            # Short with everything\n            # Note: In LEAN, Shorting an equity usually requires a margin account or specific settings.\n            # Assuming standard equity shorting is allowed.\n            self.SetHoldings(\"SPY\", -1.0)\n            self.TradeDirection = \"Short\"\n            self._plot_data.append((self.Time, close_price, self.ORB_High, self.ORB_Low, \"Short\"))\n        else:\n            # No trade\n            self.TradeDirection = None\n            self._plot_data.append((self.Time, close_price, self.ORB_High, self.ORB_Low, \"Flat\"))\n\n    def CloseAllPositions(self):\n        \"\"\"\n        Close all open positions.\n        \"\"\"\n        if self.Position is not None:\n            self.Liquidate()\n            self.TradeDirection = None\n\n    def OnEndOfAlgorithm(self):\n        \"\"\"\n        Finalize the algorithm and prepare plots.\n        \"\"\"\n        # Prepare Plot Data for ORB\n        # We need to store the ORB High and Low for every bar to plot them.\n        # Since we only updated them during the first 30 minutes, we need to reconstruct or store them.\n        # For simplicity in this demo, we will store the ORB values in a list during the tracking phase.\n        # However, the OnData method above doesn't store the history of ORB High/Low for plotting.\n        # Let's fix this by storing the ORB values in a list.\n        \n        # Re-implementing the storage logic slightly to ensure we have data for plotting\n        # We will use a separate list to store the ORB values for each bar.\n        if not hasattr(self, '_orb_history'):\n            self._orb_history = []\n        \n        # Since we can't easily retroactively fix the OnData logic without rewriting the whole class,\n        # we will assume the user understands that the plotting data needs to be captured.\n        # For the sake of this single file solution, I will modify the OnData logic to store ORB values.\n        # But since I cannot change the OnData logic inside OnEndOfAlgorithm, I will rely on the _plot_data \n        # which captures the state at the decision point. \n        # To plot the ORB lines continuously, we need to store the ORB High/Low for every bar.\n        \n        # Let's add a helper to store ORB values in OnData if we haven't done it yet.\n        # Actually, the cleanest way is to store the ORB values in a list in OnData.\n        # I will add this logic to the OnData method in the final output.\n        \n        # For now, let's just plot the trade direction and the final ORB levels if we stored them.\n        # To make the chart useful, I will modify the OnData logic in the final code block to store ORB_High/Low history.\n        \n        # Plot ORB\n        self.AddChart(\"ORB\", self._plot_data) # This won't work directly as _plot_data is a list of tuples.\n        # We need to use PlotData class properly.\n        \n        # Let's restructure the plotting data collection in the final code.\n        pass\n\n    def OnData(self, data):\n        \"\"\"\n        Overridden OnData to include ORB history storage for plotting.\n        \"\"\"\n        if not self.ORB_Tracking:\n            return\n\n        bar = data.SPY\n        \n        if self.DayReset:\n            self.ORB_High = bar.High\n            self.ORB_Low = bar.Low\n            self.ORB_Tracking = True\n            self.DayReset = False\n        else:\n            if not hasattr(self, '_bar_count'):\n                self._bar_count = 0\n            \n            self._bar_count += 1\n            \n            # Store ORB High/Low for plotting\n            self._orb_history.append({\n                'Time': self.Time,\n                'High': self.ORB_High,\n                'Low': self.ORB_Low\n            })\n            \n            if self._bar_count <= 30:\n                if bar.High > self.ORB_High:\n                    self.ORB_High = bar.High\n                if bar.Low < self.ORB_Low:\n                    self.ORB_Low = bar.Low\n                \n                if self._bar_count == 30:\n                    self.ExecuteORBDecision(bar.Close)\n            else:\n                # Continue storing history even after 10:00\n                self._orb_history.append({\n                    'Time': self.Time,\n                    'High': self.ORB_High,\n                    'Low': self.ORB_Low\n                })\n                # No further updates to ORB High/Low after 10:00\n\n        # Close positions at 3:55 PM\n        if not hasattr(self, '_minute_of_day'):\n            self._minute_of_day = 0\n        \n        self._minute_of_day += 1\n        \n        if self._minute_of_day == 355:\n            self.CloseAllPositions()\n            self.DayReset = True\n            self._bar_count = 0\n            self._minute_of_day = 0\n            self.ORB_High = 0\n            self.ORB_Low = 0\n            self.TradeDirection = None\n\n    def ExecuteORBDecision(self, close_price):\n        \"\"\"\n        Execute the trade decision based on the 10:00 AM close.\n        \"\"\"\n        if self.Position is not None:\n            return\n\n        if close_price > self.ORB_High:\n            self.SetHoldings(\"SPY\", 1.0)\n            self.TradeDirection = \"Long\"\n            self._trade_data.append({\n                'Time': self.Time,\n                'Price': close_price,\n                'Direction': 'Long',\n                'ORB_High': self.ORB_High,\n                'ORB_Low': self.ORB_Low\n            })\n        elif close_price < self.ORB_Low:\n            self.SetHoldings(\"SPY\", -1.0)\n            self.TradeDirection = \"Short\"\n            self._trade_data.append({\n                'Time': self.Time,\n                'Price': close_price,\n                'Direction': 'Short',\n                'ORB_High': self.ORB_High,\n                'ORB_Low': self.ORB_Low\n            })\n        else:\n            self.TradeDirection = None\n            self._trade_data.append({\n                'Time': self.Time,\n                'Price': close_price,\n                'Direction': 'Flat',\n                'ORB_High': self.ORB_High,\n                'ORB_Low': self.ORB_Low\n            })\n\n    def CloseAllPositions(self):\n        if self.Position is not None:\n            self.Liquidate()\n            self.TradeDirection = None\n\n    def OnEndOfAlgorithm(self):\n        # Prepare ORB plot data\n        orb_df = pd.DataFrame(self._orb_history)\n        if not orb_df.empty:\n            self.AddChart(\"ORB\", orb_df[['Time', 'High', 'Low']])\n        \n        # Prepare Trades plot data\n        # We want to plot the direction. We can use a dummy value or just plot the entry/exit.\n        # Let's plot the entry price and direction.\n        trade_df = pd.DataFrame(self._trade_data)\n        if not trade_df.empty:\n            # Create a column for direction indicator (1 for Long, -1 for Short, 0 for Flat)\n            trade_df['DirectionVal'] = trade_df['Direction'].apply(lambda x: 1 if x == 'Long' else (-1 if x == 'Short' else 0))\n            self.AddChart(\"Trades\", trade_df[['Time', 'Price', 'DirectionVal']])\n```",
+  "generated_at": "2026-11-14T22:39:50.008111+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "Add, AddChart, CloseAllPositions, ExecuteORBDecision, Liquidate, SetCash, SetEndDate, SetHoldings, SetStartDate"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import QuantConnect as QC\nfrom QuantConnect.Algorithm import QCAlgo\nfrom QuantConnect.Data.Market import MinuteBar\nfrom QuantConnect.Lean.Engine.Results import EquityResult\nfrom QuantConnect.Lean.Engine.DataFeeds import Resolution\nfrom QuantConnect.Python import PlotData\nfrom datetime import datetime, timedelta\nimport pandas as pd\n\nclass OpeningRangeBreakout(QCAlgo):\n    \"\"\"\n    Opening Range Breakout (ORB) Strategy for SPY.\n    \n    Logic:\n    1. Track High and Low from 9:30 to 10:00 AM.\n    2. At 10:00 AM, if the bar closes above the 9:30-10:00 High, go Long (Buy).\n    3. At 10:00 AM, if the bar closes below the 9:30-10:00 Low, go Short.\n    4. Only one trade per day.\n    5. Close all positions at 3:55 PM.\n    6. Reset indicators and state for the next day.\n    \"\"\"\n    \n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Set cash to $100,000.\n        - Add SPY data on minute bars.\n        - Set start and end dates.\n        - Initialize variables for tracking ORB.\n        \"\"\"\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        self.SetCash(100000)\n        \n        # Add SPY data\n        self.Add(Equity.Symbol(\"SPY\"), Resolution.Minute)\n        \n        # State variables\n        self.ORB_High = 0.0\n        self.ORB_Low = 0.0\n        self.ORB_Tracking = True  # True means we are still collecting the 9:30-10:00 range\n        self.Position = None\n        self.TradeDirection = None  # 'Long', 'Short', or None\n        self.DayReset = True\n        \n        # Plotting data storage\n        self._plot_data = []\n        self._trade_data = []\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        - Identify the 9:30-10:00 AM window.\n        - Update ORB High/Low.\n        - Execute trades based on 10:00 AM close.\n        - Close positions at 3:55 PM.\n        - Reset for the next day.\n        \"\"\"\n        if not self.ORB_Tracking:\n            return\n\n        # Get the current bar\n        bar = data.SPY\n        \n        # Determine if we are in the 9:30 - 10:00 window\n        # We assume the first bar of the day is 9:30.\n        # We need to track the first 30 minutes (30 bars).\n        \n        # Check if this is the first bar of the day\n        if self.DayReset:\n            self.ORB_High = bar.High\n            self.ORB_Low = bar.Low\n            self.ORB_Tracking = True\n            self.DayReset = False\n        else:\n            # If we have already established the range (after 10:00), we stop tracking\n            # But we need to know if we are currently in the 9:30-10:00 window.\n            # Since we don't have a direct \"minute of day\" property easily accessible without parsing,\n            # we will rely on the logic: \n            # We track for 30 bars. Once 30 bars pass, we stop tracking and look for the break.\n            # However, the requirement says \"After 10:00\". \n            # Let's assume the first bar is 9:30. The 30th bar closes at 10:00.\n            # So we track for the first 30 bars.\n            \n            # Count bars passed since start of day\n            # We can use a counter or check if we have processed 30 bars.\n            # A simpler approach: We set a flag after 30 bars.\n            \n            # Let's refine: \n            # We need to know if the current bar is the 30th bar (closing at 10:00).\n            # We can count bars since the last reset.\n            \n            # Since we don't have a built-in bar counter per day easily, \n            # we will use a simple counter variable.\n            if not hasattr(self, '_bar_count'):\n                self._bar_count = 0\n            \n            self._bar_count += 1\n            \n            # If we are within the first 30 bars (9:30 to 10:00 inclusive)\n            if self._bar_count <= 30:\n                # Update ORB High/Low\n                if bar.High > self.ORB_High:\n                    self.ORB_High = bar.High\n                if bar.Low < self.ORB_Low:\n                    self.ORB_Low = bar.Low\n                \n                # Check if this is the 30th bar (10:00 AM close)\n                if self._bar_count == 30:\n                    # Decision time\n                    self.ExecuteORBDecision(bar.Close)\n            else:\n                # We are past 10:00 AM. \n                # If we haven't executed a trade yet today, we should have done it at 10:00.\n                # But since we are in the OnData loop, if we missed the 10:00 bar logic above,\n                # it means we are in the next bar (10:01).\n                # The requirement says \"if a bar closes above that high...\". \n                # This implies the decision is made on the 10:00 bar close.\n                # So if we are past 30 bars and no trade was made, we do nothing for this bar\n                # regarding the ORB entry, unless we missed the 10:00 bar logic.\n                # To be safe, we only execute the entry logic exactly at bar 30.\n                pass\n\n        # Close positions at 3:55 PM\n        # 3:55 PM is 355 minutes from 9:30 AM.\n        # 9:30 is minute 0. 10:00 is minute 30. 3:55 is minute 355.\n        # We need to track the minute of the day.\n        if not hasattr(self, '_minute_of_day'):\n            self._minute_of_day = 0\n        \n        self._minute_of_day += 1\n        \n        # If we are at the 355th minute (3:55 PM)\n        if self._minute_of_day == 355:\n            self.CloseAllPositions()\n            # Reset for next day\n            self.DayReset = True\n            self._bar_count = 0\n            self._minute_of_day = 0\n            self.ORB_High = 0\n            self.ORB_Low = 0\n            self.TradeDirection = None\n\n    def ExecuteORBDecision(self, close_price):\n        \"\"\"\n        Execute the trade decision based on the 10:00 AM close.\n        \"\"\"\n        if self.Position is not None:\n            return  # Already have a position for today\n\n        if close_price > self.ORB_High:\n            # Buy with everything\n            self.SetHoldings(\"SPY\", 1.0)\n            self.TradeDirection = \"Long\"\n            self._plot_data.append((self.Time, close_price, self.ORB_High, self.ORB_Low, \"Long\"))\n        elif close_price < self.ORB_Low:\n            # Short with everything\n            # Note: In LEAN, Shorting an equity usually requires a margin account or specific settings.\n            # Assuming standard equity shorting is allowed.\n            self.SetHoldings(\"SPY\", -1.0)\n            self.TradeDirection = \"Short\"\n            self._plot_data.append((self.Time, close_price, self.ORB_High, self.ORB_Low, \"Short\"))\n        else:\n            # No trade\n            self.TradeDirection = None\n            self._plot_data.append((self.Time, close_price, self.ORB_High, self.ORB_Low, \"Flat\"))\n\n    def CloseAllPositions(self):\n        \"\"\"\n        Close all open positions.\n        \"\"\"\n        if self.Position is not None:\n            self.Liquidate()\n            self.TradeDirection = None\n\n    def OnEndOfAlgorithm(self):\n        \"\"\"\n        Finalize the algorithm and prepare plots.\n        \"\"\"\n        # Prepare Plot Data for ORB\n        # We need to store the ORB High and Low for every bar to plot them.\n        # Since we only updated them during the first 30 minutes, we need to reconstruct or store them.\n        # For simplicity in this demo, we will store the ORB values in a list during the tracking phase.\n        # However, the OnData method above doesn't store the history of ORB High/Low for plotting.\n        # Let's fix this by storing the ORB values in a list.\n        \n        # Re-implementing the storage logic slightly to ensure we have data for plotting\n        # We will use a separate list to store the ORB values for each bar.\n        if not hasattr(self, '_orb_history'):\n            self._orb_history = []\n        \n        # Since we can't easily retroactively fix the OnData logic without rewriting the whole class,\n        # we will assume the user understands that the plotting data needs to be captured.\n        # For the sake of this single file solution, I will modify the OnData logic to store ORB values.\n        # But since I cannot change the OnData logic inside OnEndOfAlgorithm, I will rely on the _plot_data \n        # which captures the state at the decision point. \n        # To plot the ORB lines continuously, we need to store the ORB High/Low for every bar.\n        \n        # Let's add a helper to store ORB values in OnData if we haven't done it yet.\n        # Actually, the cleanest way is to store the ORB values in a list in OnData.\n        # I will add this logic to the OnData method in the final output.\n        \n        # For now, let's just plot the trade direction and the final ORB levels if we stored them.\n        # To make the chart useful, I will modify the OnData logic in the final code block to store ORB_High/Low history.\n        \n        # Plot ORB\n        self.AddChart(\"ORB\", self._plot_data) # This won't work directly as _plot_data is a list of tuples.\n        # We need to use PlotData class properly.\n        \n        # Let's restructure the plotting data collection in the final code.\n        pass\n\n    def OnData(self, data):\n        \"\"\"\n        Overridden OnData to include ORB history storage for plotting.\n        \"\"\"\n        if not self.ORB_Tracking:\n            return\n\n        bar = data.SPY\n        \n        if self.DayReset:\n            self.ORB_High = bar.High\n            self.ORB_Low = bar.Low\n            self.ORB_Tracking = True\n            self.DayReset = False\n        else:\n            if not hasattr(self, '_bar_count'):\n                self._bar_count = 0\n            \n            self._bar_count += 1\n            \n            # Store ORB High/Low for plotting\n            self._orb_history.append({\n                'Time': self.Time,\n                'High': self.ORB_High,\n                'Low': self.ORB_Low\n            })\n            \n            if self._bar_count <= 30:\n                if bar.High > self.ORB_High:\n                    self.ORB_High = bar.High\n                if bar.Low < self.ORB_Low:\n                    self.ORB_Low = bar.Low\n                \n                if self._bar_count == 30:\n                    self.ExecuteORBDecision(bar.Close)\n            else:\n                # Continue storing history even after 10:00\n                self._orb_history.append({\n                    'Time': self.Time,\n                    'High': self.ORB_High,\n                    'Low': self.ORB_Low\n                })\n                # No further updates to ORB High/Low after 10:00\n\n        # Close positions at 3:55 PM\n        if not hasattr(self, '_minute_of_day'):\n            self._minute_of_day = 0\n        \n        self._minute_of_day += 1\n        \n        if self._minute_of_day == 355:\n            self.CloseAllPositions()\n            self.DayReset = True\n            self._bar_count = 0\n            self._minute_of_day = 0\n            self.ORB_High = 0\n            self.ORB_Low = 0\n            self.TradeDirection = None\n\n    def ExecuteORBDecision(self, close_price):\n        \"\"\"\n        Execute the trade decision based on the 10:00 AM close.\n        \"\"\"\n        if self.Position is not None:\n            return\n\n        if close_price > self.ORB_High:\n            self.SetHoldings(\"SPY\", 1.0)\n            self.TradeDirection = \"Long\"\n            self._trade_data.append({\n                'Time': self.Time,\n                'Price': close_price,\n                'Direction': 'Long',\n                'ORB_High': self.ORB_High,\n                'ORB_Low': self.ORB_Low\n            })\n        elif close_price < self.ORB_Low:\n            self.SetHoldings(\"SPY\", -1.0)\n            self.TradeDirection = \"Short\"\n            self._trade_data.append({\n                'Time': self.Time,\n                'Price': close_price,\n                'Direction': 'Short',\n                'ORB_High': self.ORB_High,\n                'ORB_Low': self.ORB_Low\n            })\n        else:\n            self.TradeDirection = None\n            self._trade_data.append({\n                'Time': self.Time,\n                'Price': close_price,\n                'Direction': 'Flat',\n                'ORB_High': self.ORB_High,\n                'ORB_Low': self.ORB_Low\n            })\n\n    def CloseAllPositions(self):\n        if self.Position is not None:\n            self.Liquidate()\n            self.TradeDirection = None\n\n    def OnEndOfAlgorithm(self):\n        # Prepare ORB plot data\n        orb_df = pd.DataFrame(self._orb_history)\n        if not orb_df.empty:\n            self.AddChart(\"ORB\", orb_df[['Time', 'High', 'Low']])\n        \n        # Prepare Trades plot data\n        # We want to plot the direction. We can use a dummy value or just plot the entry/exit.\n        # Let's plot the entry price and direction.\n        trade_df = pd.DataFrame(self._trade_data)\n        if not trade_df.empty:\n            # Create a column for direction indicator (1 for Long, -1 for Short, 0 for Flat)\n            trade_df['DirectionVal'] = trade_df['Direction'].apply(lambda x: 1 if x == 'Long' else (-1 if x == 'Short' else 0))\n            self.AddChart(\"Trades\", trade_df[['Time', 'Price', 'DirectionVal']])\n",
+    "source_sha256": "ec5440d62090ca63b4a3b0123ca0b7eacd0875f61db8df531fa4217b26fed82c",
+    "started_at": "2026-11-14T22:39:50.012598+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39414039,
+    "compile_id": "be5e749e67978547a7d061f07fd41007-01bb2305e22854870e8d78673d647730",
+    "compile_created": {
+      "compileId": "be5e749e67978547a7d061f07fd41007-01bb2305e22854870e8d78673d647730",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39414039,
+      "signature": "01bb2305e22854870e8d78673d647730",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "be5e749e67978547a7d061f07fd41007-01bb2305e22854870e8d78673d647730",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39414039, with CompileID: be5e749e67978547a7d061f07fd41007-01bb2305e22854870e8d78673d647730, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39414039, with CompileID: be5e749e67978547a7d061f07fd41007-01bb2305e22854870e8d78673d647730, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "5f0c0e3165dd0332cd7398ff44370572",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-opening-range-breakout_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39414039,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "5f0c0e3165dd0332cd7398ff44370572",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 27
+        },
+        "backtestStart": "2026-11-14 22:39:54",
+        "backtestEnd": "2026-11-14 22:39:54",
+        "created": "2026-11-14 22:39:54",
+        "snapshotId": 39414041,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-opening-range-breakout_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39414039,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "5f0c0e3165dd0332cd7398ff44370572",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 27
+        },
+        "backtestStart": "2026-11-14 22:39:54",
+        "backtestEnd": "2026-11-14 22:39:54",
+        "created": "2026-11-14 22:39:54",
+        "snapshotId": 39414041,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)",
+        "progress": 0,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.6%",
+          "Used RAM (MB)": "120",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-5f0c0e3165dd0332cd7398ff44370572",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:40:36.182348+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS; LEGACY_API: Add, AddChart, CloseAllPositions, ExecuteORBDecision, Liquidate, SetCash, SetEndDate, SetHoldings, SetStartDate",
+  "total_orders": null
+}

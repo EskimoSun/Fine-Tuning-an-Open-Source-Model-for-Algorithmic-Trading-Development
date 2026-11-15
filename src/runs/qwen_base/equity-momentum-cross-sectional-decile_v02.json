@@ -1,0 +1,315 @@
+{
+  "prompt_id": "equity-momentum-cross-sectional-decile_v02",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport QuantConnect as QC\nfrom QuantConnect.Algorithm import QC_Algorithm\nfrom QuantConnect.Data.Market import AdjustedPriceData\nfrom QuantConnect.Util import Utilities\nfrom typing import List, Dict, Tuple\n\nclass SPY_Momentum_Portfolio(QC_Algorithm):\n    \"\"\"\n    Algorithm that holds the top 10% of stocks from the SPY universe \n    based on 252-day momentum (percent price change).\n    \n    Strategy:\n    1. Universe: Stocks in SPY ETF.\n    2. Filter: Keep top 100 by dollar volume.\n    3. Signal: Calculate 252-day percent price change using adjusted prices.\n    4. Execution: At the start of each month, hold top 10% by momentum in equal weights.\n    5. Rebalance: Sell positions not in the new top 10%.\n    6. Period: Jan 1, 2022 to Dec 31, 2024.\n    7. Capital: $250,000.\n    \"\"\"\n\n    def Initialize(self):\n        \"\"\"Initialize the algorithm.\"\"\"\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        self.SetCash(250000)\n        \n        # Set the universe to stocks contained in the SPY ETF\n        self.SetUniverseSelection(self.UniverseSelectionMethod.Market, self.UniverseSelectionMethod.Manual)\n        # Note: In LEAN, getting the constituents of a specific ETF like SPY dynamically \n        # usually requires a custom data provider or a predefined list if not available via standard API.\n        # Since the standard QuantConnect API does not provide a direct \"Get SPY Constituents\" function \n        # that updates daily without a custom data feed, we will simulate the universe selection \n        # by using a predefined list of major SPY constituents if available in the data, \n        # OR we must rely on the fact that the user might have a custom data feed.\n        # \n        # However, to strictly follow the prompt \"Use the stocks in the SPY ETF as my universe\" \n        # without inventing an API, we need to acknowledge a limitation: \n        # The standard QuantConnect API does not expose a live, dynamic list of SPY constituents \n        # via a simple function call like `GetSPYConstituents()`. \n        # \n        # WORKAROUND: We will use a static list of major SPY constituents known to be in the ETF \n        # during this period to demonstrate the logic. In a production environment, \n        # you would need a custom data provider that feeds the daily SPY constituents.\n        # \n        # IMPORTANT: This list is a representative sample of SPY constituents. \n        # For a real backtest, you must replace this with a dynamic data feed.\n        self.spy_constituents = [\n            \"AAPL\", \"MSFT\", \"NVDA\", \"AMZN\", \"GOOGL\", \"META\", \"BRK.B\", \"GOOGL\", \"TSLA\", \"UNH\",\n            \"JNJ\", \"V\", \"JPM\", \"XOM\", \"WMT\", \"JNJ\", \"PG\", \"MA\", \"HD\", \"CVX\",\n            \"MRK\", \"ABBV\", \"PFE\", \"COST\", \"AVGO\", \"PEP\", \"KO\", \"TMO\", \"ABT\", \"ACN\",\n            \"DHR\", \"BMY\", \"LLY\", \"NEE\", \"MCD\", \"CRM\", \"VZ\", \"ADBE\", \"CSCO\", \"INTC\",\n            \"TXN\", \"QCOM\", \"HON\", \"UPS\", \"LOW\", \"IBM\", \"AMGN\", \"SBUX\", \"MDLZ\", \"CAT\",\n            \"GS\", \"BA\", \"BLK\", \"AXP\", \"GILD\", \"MMM\", \"BLK\", \"ISRG\", \"DE\", \"MDT\",\n            \"CVS\", \"SYK\", \"LMT\", \"PLD\", \"ZTS\", \"BDX\", \"REGN\", \"TJX\", \"ADI\", \"AMAT\",\n            \"ADI\", \"LRCX\", \"KLAC\", \"SNPS\", \"CDNS\", \"MCHP\", \"FTNT\", \"ADP\", \"PAYX\", \"CTSH\",\n            \"ORLY\", \"ROST\", \"GM\", \"F\", \"SBUX\", \"NKE\", \"MNST\", \"CMCSA\", \"TMUS\", \"INTU\",\n            \"AMAT\", \"ADI\", \"LRCX\", \"KLAC\", \"SNPS\", \"CDNS\", \"MCHP\", \"FTNT\", \"ADP\", \"PAYX\",\n            \"CTSH\", \"ORLY\", \"ROST\", \"GM\", \"F\", \"SBUX\", \"NKE\", \"MNST\", \"CMCSA\", \"TMUS\", \"INTU\"\n        ]\n        \n        # Remove duplicates and ensure we have a reasonable set for the demo\n        self.spy_constituents = list(set(self.spy_constituents))\n        \n        # We will use a custom universe selection that filters the standard universe \n        # to only include these symbols.\n        self.SetUniverseSelection(self.UniverseSelectionMethod.Market, self.UniverseSelectionMethod.Manual)\n        \n        # Define the universe manually for the backtest period\n        self.SetUniverse(self.UniverseSelectionMethod.Manual, self.spy_constituents)\n\n    def OnSecuritiesChanged(self, changes):\n        \"\"\"Handle security changes.\"\"\"\n        for security in changes.Added:\n            self.Log(f\"Added security: {security.Symbol}\")\n        for security in changes.Removed:\n            self.Log(f\"Removed security: {security.Symbol}\")\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        We will perform the rebalancing at the start of each month.\n        \"\"\"\n        if self.Time.Date.Month == 1 and self.Time.Date.Day == 1:\n            self.Rebalance(data)\n\n    def Rebalance(self, data):\n        \"\"\"\n        Perform the monthly rebalancing logic.\n        1. Filter universe to top 100 by dollar volume.\n        2. Calculate 252-day momentum for each.\n        3. Select top 10% (rounded to integer).\n        4. Buy/Sell to achieve equal weights.\n        \"\"\"\n        current_date = self.Time.Date\n        \n        # 1. Get current universe securities\n        securities = self.Securities.Values\n        \n        # Filter to only those in our SPY list (in case the universe expanded/contracted)\n        # and ensure we have data for them.\n        valid_symbols = [s.Symbol for s in securities if s.Symbol.Value in self.spy_constituents]\n        \n        # Filter out symbols without sufficient data or zero volume\n        candidates = []\n        for symbol in valid_symbols:\n            if symbol in data:\n                security = data[symbol]\n                # Check if we have enough history for 252 days (approx 1 year)\n                # We check the bar count roughly by looking at the security object if available,\n                # but primarily we rely on the fact that we are backtesting.\n                # We need to calculate volume.\n                if security.Volume > 0:\n                    candidates.append((symbol, security))\n        \n        # Sort by Dollar Volume (Price * Volume)\n        # Note: We use the current bar's price and volume.\n        candidates.sort(key=lambda x: x[1].Price * x[1].Volume, reverse=True)\n        \n        # Keep top 100\n        top_100 = candidates[:100]\n        \n        if len(top_100) == 0:\n            self.Log(\"No valid securities found for rebalancing.\")\n            return\n\n        # 2. Calculate 252-day momentum for each candidate\n        # We need the last 252 trading days of adjusted close.\n        # Since we are in a backtest, we can access the history.\n        \n        momentum_scores = []\n        \n        for symbol, _ in top_100:\n            # Get the adjusted price data\n            # We need to look back 252 days from the current date\n            # In LEAN, we can use the security's history or the data feed.\n            # Since we are iterating, let's try to get the bar from 252 days ago.\n            \n            # Calculate the date 252 days ago\n            # Note: 252 trading days is roughly 1 year, but we need to account for weekends/holidays.\n            # For simplicity in this script, we will approximate by looking at the data history.\n            # However, the most robust way in LEAN is to use the `Security` object's history \n            # or query the data feed.\n            \n            # Let's assume we have enough data. We will calculate the return.\n            # We need the Adjusted Close.\n            \n            # Get the most recent bar\n            latest_bar = data[symbol]\n            if latest_bar is None:\n                continue\n                \n            # We need the bar from 252 days ago. \n            # Since we don't have a direct \"get bar N days ago\" function in OnData without iterating,\n            # we will rely on the fact that the backtest engine provides history.\n            # However, to keep this self-contained and efficient, we will use a simplified approach:\n            # We will assume the data object contains the necessary history or we calculate based on available bars.\n            \n            # A more accurate way in LEAN Python:\n            # Use the `Security` object to get the history, but that can be heavy.\n            # Instead, we will use the `Data` feed's history if available, or simply assume \n            # the `latest_bar` is the current one and we need to find the one 252 days prior.\n            \n            # Since we cannot easily iterate 252 days back in OnData efficiently without storing history,\n            # and the prompt asks for a single file, we will implement a logic that assumes \n            # the data feed provides the necessary context or we use a simplified window.\n            # \n            # CORRECTION: In a real LEAN backtest, you would typically store the history in a dictionary \n            # or use the `Security` object's `History` method. \n            # Given the constraints of a single file and OnData, we will use a simplified calculation \n            # assuming we can access the price 252 days ago. \n            # \n            # To make this runnable without external history storage, we will use the `Security` object \n            # to fetch the history for the specific symbol.\n            \n            try:\n                # Fetch 252 days of history\n                # We need to adjust for trading days. 252 trading days is approx 1 year.\n                # We will fetch a large window and slice it.\n                history = self.Securities[symbol].History(252, QC.DataNormalizationMode.Adjusted)\n                \n                if len(history) < 2:\n                    continue\n                    \n                # Get the last bar (today) and the bar 252 days ago (first bar in this slice)\n                # Note: History returns bars from oldest to newest.\n                price_252_days_ago = history[0].AdjustedClose\n                price_today = history[-1].AdjustedClose\n                \n                if price_252_days_ago == 0:\n                    continue\n                    \n                momentum = (price_today - price_252_days_ago) / price_252_days_ago\n                momentum_scores.append((symbol, momentum))\n                \n            except Exception as e:\n                self.Log(f\"Error calculating momentum for {symbol}: {e}\")\n                continue\n\n        # Sort by momentum descending\n        momentum_scores.sort(key=lambda x: x[1], reverse=True)\n        \n        # 3. Select top 10%\n        # If we have 100 stocks, top 10% is 10 stocks.\n        # If we have fewer than 100 (due to data issues), we take ceil(10% of count).\n        count = len(momentum_scores)\n        target_count = max(1, int(count * 0.10))\n        \n        # Ensure we don't exceed the count\n        if target_count > count:\n            target_count = count\n            \n        selected_symbols = [s[0] for s in momentum_scores[:target_count]]\n        \n        self.Log(f\"Rebalancing on {current_date}. Selected {len(selected_symbols)} stocks: {selected_symbols}\")\n        \n        # 4. Execute trades to achieve equal weights\n        # Total cash available\n        total_cash = self.Portfolio.TotalPortfolioValue\n        \n        # We want to hold equal weights in the selected stocks.\n        # Weight per stock = 1 / target_count\n        # Value per stock = total_cash / target_count\n        \n        # However, we must account for existing positions.\n        # We will liquidate everything first, then buy the new set.\n        \n        # Sell all existing positions\n        for symbol in self.Portfolio.Keys:\n            if symbol.Value in selected_symbols:\n                # If it's already in the list, we might not need to sell, \n                # but to ensure equal weight, we sell and rebuy.\n                # Actually, if it's in the list, we just need to adjust quantity.\n                # But for simplicity and to ensure \"sell anything no longer selected\",\n                # we will sell everything not in the list, and then rebalance the whole portfolio.\n                pass\n            else:\n                # Sell positions not in the new list\n                if symbol in self.Portfolio:\n                    position = self.Portfolio[symbol]\n                    if position.Quantity > 0:\n                        self.Liquidate(symbol)\n                        self.Log(f\"Sold {symbol} (not in top 10%)\")\n        \n        # Now, we need to buy the selected symbols to equal weight.\n        # Calculate target quantity for each selected symbol.\n        # Target Value = Total Portfolio Value / Number of Selected Stocks\n        # Note: We assume we want to invest the entire portfolio value into these stocks.\n        \n        target_value_per_stock = total_cash / target_count\n        \n        for symbol in selected_symbols:\n            if symbol in self.Portfolio:\n                current_position = self.Portfolio[symbol]\n                current_value = current_position.Value\n                current_quantity = current_position.Quantity\n                \n                # Calculate new quantity needed\n                # New Quantity = Target Value / Current Price\n                current_price = data[symbol].Price if symbol in data else 0\n                \n                if current_price > 0:\n                    new_quantity = int(target_value_per_stock / current_price)\n                    \n                    # If we already have a position, we need to adjust.\n                    # If new_quantity > current_quantity, buy the difference.\n                    # If new_quantity < current_quantity, sell the difference.\n                    \n                    if new_quantity > current_quantity:\n                        buy_qty = new_quantity - current_quantity\n                        if buy_qty > 0:\n                            self.SetHoldings(symbol, new_quantity)\n                            self.Log(f\"Buying {symbol}: {buy_qty} shares\")\n                    elif new_quantity < current_quantity:\n                        sell_qty = current_quantity - new_quantity\n                        if sell_qty > 0:\n                            self.Liquidate(symbol) # This sells all, then we can buy back the exact amount? \n                            # Actually, Liquidate sells all. Then we buy the new quantity.\n                            # But Liquidate might trigger a sell order.\n                            # Better: Sell the difference.\n                            self.Sell(symbol, sell_qty)\n                            self.Log(f\"Selling {symbol}: {sell_qty} shares\")\n                    else:\n                        # Already at target\n                        pass\n                else:\n                    self.Liquidate(symbol)\n            else:\n                # Buy the stock\n                if symbol in data and data[symbol].Price > 0:\n                    buy_qty = int(target_value_per_stock / data[symbol].Price)\n                    if buy_qty > 0:\n                        self.SetHoldings(symbol, buy_qty)\n                        self.Log(f\"Buying {symbol}: {buy_qty} shares\")\n                else:\n                    self.Log(f\"Cannot buy {symbol}, price is 0 or missing.\")\n\n        self.Log(f\"Rebalancing complete. Portfolio value: {total_cash}\")\n\n    def OnEndOfAlgorithm(self):\n        \"\"\"Called when the algorithm ends.\"\"\"\n        self.Log(\"Algorithm finished.\")\n```",
+  "generated_at": "2026-11-14T22:26:14.011223+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "Liquidate, Log, Rebalance, Sell, SetCash, SetEndDate, SetHoldings, SetStartDate, SetUniverse, SetUniverseSelection"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "add_universe"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "month_start"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "dollar_volume"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import QuantConnect as QC\nfrom QuantConnect.Algorithm import QC_Algorithm\nfrom QuantConnect.Data.Market import AdjustedPriceData\nfrom QuantConnect.Util import Utilities\nfrom typing import List, Dict, Tuple\n\nclass SPY_Momentum_Portfolio(QC_Algorithm):\n    \"\"\"\n    Algorithm that holds the top 10% of stocks from the SPY universe \n    based on 252-day momentum (percent price change).\n    \n    Strategy:\n    1. Universe: Stocks in SPY ETF.\n    2. Filter: Keep top 100 by dollar volume.\n    3. Signal: Calculate 252-day percent price change using adjusted prices.\n    4. Execution: At the start of each month, hold top 10% by momentum in equal weights.\n    5. Rebalance: Sell positions not in the new top 10%.\n    6. Period: Jan 1, 2022 to Dec 31, 2024.\n    7. Capital: $250,000.\n    \"\"\"\n\n    def Initialize(self):\n        \"\"\"Initialize the algorithm.\"\"\"\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        self.SetCash(250000)\n        \n        # Set the universe to stocks contained in the SPY ETF\n        self.SetUniverseSelection(self.UniverseSelectionMethod.Market, self.UniverseSelectionMethod.Manual)\n        # Note: In LEAN, getting the constituents of a specific ETF like SPY dynamically \n        # usually requires a custom data provider or a predefined list if not available via standard API.\n        # Since the standard QuantConnect API does not provide a direct \"Get SPY Constituents\" function \n        # that updates daily without a custom data feed, we will simulate the universe selection \n        # by using a predefined list of major SPY constituents if available in the data, \n        # OR we must rely on the fact that the user might have a custom data feed.\n        # \n        # However, to strictly follow the prompt \"Use the stocks in the SPY ETF as my universe\" \n        # without inventing an API, we need to acknowledge a limitation: \n        # The standard QuantConnect API does not expose a live, dynamic list of SPY constituents \n        # via a simple function call like `GetSPYConstituents()`. \n        # \n        # WORKAROUND: We will use a static list of major SPY constituents known to be in the ETF \n        # during this period to demonstrate the logic. In a production environment, \n        # you would need a custom data provider that feeds the daily SPY constituents.\n        # \n        # IMPORTANT: This list is a representative sample of SPY constituents. \n        # For a real backtest, you must replace this with a dynamic data feed.\n        self.spy_constituents = [\n            \"AAPL\", \"MSFT\", \"NVDA\", \"AMZN\", \"GOOGL\", \"META\", \"BRK.B\", \"GOOGL\", \"TSLA\", \"UNH\",\n            \"JNJ\", \"V\", \"JPM\", \"XOM\", \"WMT\", \"JNJ\", \"PG\", \"MA\", \"HD\", \"CVX\",\n            \"MRK\", \"ABBV\", \"PFE\", \"COST\", \"AVGO\", \"PEP\", \"KO\", \"TMO\", \"ABT\", \"ACN\",\n            \"DHR\", \"BMY\", \"LLY\", \"NEE\", \"MCD\", \"CRM\", \"VZ\", \"ADBE\", \"CSCO\", \"INTC\",\n            \"TXN\", \"QCOM\", \"HON\", \"UPS\", \"LOW\", \"IBM\", \"AMGN\", \"SBUX\", \"MDLZ\", \"CAT\",\n            \"GS\", \"BA\", \"BLK\", \"AXP\", \"GILD\", \"MMM\", \"BLK\", \"ISRG\", \"DE\", \"MDT\",\n            \"CVS\", \"SYK\", \"LMT\", \"PLD\", \"ZTS\", \"BDX\", \"REGN\", \"TJX\", \"ADI\", \"AMAT\",\n            \"ADI\", \"LRCX\", \"KLAC\", \"SNPS\", \"CDNS\", \"MCHP\", \"FTNT\", \"ADP\", \"PAYX\", \"CTSH\",\n            \"ORLY\", \"ROST\", \"GM\", \"F\", \"SBUX\", \"NKE\", \"MNST\", \"CMCSA\", \"TMUS\", \"INTU\",\n            \"AMAT\", \"ADI\", \"LRCX\", \"KLAC\", \"SNPS\", \"CDNS\", \"MCHP\", \"FTNT\", \"ADP\", \"PAYX\",\n            \"CTSH\", \"ORLY\", \"ROST\", \"GM\", \"F\", \"SBUX\", \"NKE\", \"MNST\", \"CMCSA\", \"TMUS\", \"INTU\"\n        ]\n        \n        # Remove duplicates and ensure we have a reasonable set for the demo\n        self.spy_constituents = list(set(self.spy_constituents))\n        \n        # We will use a custom universe selection that filters the standard universe \n        # to only include these symbols.\n        self.SetUniverseSelection(self.UniverseSelectionMethod.Market, self.UniverseSelectionMethod.Manual)\n        \n        # Define the universe manually for the backtest period\n        self.SetUniverse(self.UniverseSelectionMethod.Manual, self.spy_constituents)\n\n    def OnSecuritiesChanged(self, changes):\n        \"\"\"Handle security changes.\"\"\"\n        for security in changes.Added:\n            self.Log(f\"Added security: {security.Symbol}\")\n        for security in changes.Removed:\n            self.Log(f\"Removed security: {security.Symbol}\")\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        We will perform the rebalancing at the start of each month.\n        \"\"\"\n        if self.Time.Date.Month == 1 and self.Time.Date.Day == 1:\n            self.Rebalance(data)\n\n    def Rebalance(self, data):\n        \"\"\"\n        Perform the monthly rebalancing logic.\n        1. Filter universe to top 100 by dollar volume.\n        2. Calculate 252-day momentum for each.\n        3. Select top 10% (rounded to integer).\n        4. Buy/Sell to achieve equal weights.\n        \"\"\"\n        current_date = self.Time.Date\n        \n        # 1. Get current universe securities\n        securities = self.Securities.Values\n        \n        # Filter to only those in our SPY list (in case the universe expanded/contracted)\n        # and ensure we have data for them.\n        valid_symbols = [s.Symbol for s in securities if s.Symbol.Value in self.spy_constituents]\n        \n        # Filter out symbols without sufficient data or zero volume\n        candidates = []\n        for symbol in valid_symbols:\n            if symbol in data:\n                security = data[symbol]\n                # Check if we have enough history for 252 days (approx 1 year)\n                # We check the bar count roughly by looking at the security object if available,\n                # but primarily we rely on the fact that we are backtesting.\n                # We need to calculate volume.\n                if security.Volume > 0:\n                    candidates.append((symbol, security))\n        \n        # Sort by Dollar Volume (Price * Volume)\n        # Note: We use the current bar's price and volume.\n        candidates.sort(key=lambda x: x[1].Price * x[1].Volume, reverse=True)\n        \n        # Keep top 100\n        top_100 = candidates[:100]\n        \n        if len(top_100) == 0:\n            self.Log(\"No valid securities found for rebalancing.\")\n            return\n\n        # 2. Calculate 252-day momentum for each candidate\n        # We need the last 252 trading days of adjusted close.\n        # Since we are in a backtest, we can access the history.\n        \n        momentum_scores = []\n        \n        for symbol, _ in top_100:\n            # Get the adjusted price data\n            # We need to look back 252 days from the current date\n            # In LEAN, we can use the security's history or the data feed.\n            # Since we are iterating, let's try to get the bar from 252 days ago.\n            \n            # Calculate the date 252 days ago\n            # Note: 252 trading days is roughly 1 year, but we need to account for weekends/holidays.\n            # For simplicity in this script, we will approximate by looking at the data history.\n            # However, the most robust way in LEAN is to use the `Security` object's history \n            # or query the data feed.\n            \n            # Let's assume we have enough data. We will calculate the return.\n            # We need the Adjusted Close.\n            \n            # Get the most recent bar\n            latest_bar = data[symbol]\n            if latest_bar is None:\n                continue\n                \n            # We need the bar from 252 days ago. \n            # Since we don't have a direct \"get bar N days ago\" function in OnData without iterating,\n            # we will rely on the fact that the backtest engine provides history.\n            # However, to keep this self-contained and efficient, we will use a simplified approach:\n            # We will assume the data object contains the necessary history or we calculate based on available bars.\n            \n            # A more accurate way in LEAN Python:\n            # Use the `Security` object to get the history, but that can be heavy.\n            # Instead, we will use the `Data` feed's history if available, or simply assume \n            # the `latest_bar` is the current one and we need to find the one 252 days prior.\n            \n            # Since we cannot easily iterate 252 days back in OnData efficiently without storing history,\n            # and the prompt asks for a single file, we will implement a logic that assumes \n            # the data feed provides the necessary context or we use a simplified window.\n            # \n            # CORRECTION: In a real LEAN backtest, you would typically store the history in a dictionary \n            # or use the `Security` object's `History` method. \n            # Given the constraints of a single file and OnData, we will use a simplified calculation \n            # assuming we can access the price 252 days ago. \n            # \n            # To make this runnable without external history storage, we will use the `Security` object \n            # to fetch the history for the specific symbol.\n            \n            try:\n                # Fetch 252 days of history\n                # We need to adjust for trading days. 252 trading days is approx 1 year.\n                # We will fetch a large window and slice it.\n                history = self.Securities[symbol].History(252, QC.DataNormalizationMode.Adjusted)\n                \n                if len(history) < 2:\n                    continue\n                    \n                # Get the last bar (today) and the bar 252 days ago (first bar in this slice)\n                # Note: History returns bars from oldest to newest.\n                price_252_days_ago = history[0].AdjustedClose\n                price_today = history[-1].AdjustedClose\n                \n                if price_252_days_ago == 0:\n                    continue\n                    \n                momentum = (price_today - price_252_days_ago) / price_252_days_ago\n                momentum_scores.append((symbol, momentum))\n                \n            except Exception as e:\n                self.Log(f\"Error calculating momentum for {symbol}: {e}\")\n                continue\n\n        # Sort by momentum descending\n        momentum_scores.sort(key=lambda x: x[1], reverse=True)\n        \n        # 3. Select top 10%\n        # If we have 100 stocks, top 10% is 10 stocks.\n        # If we have fewer than 100 (due to data issues), we take ceil(10% of count).\n        count = len(momentum_scores)\n        target_count = max(1, int(count * 0.10))\n        \n        # Ensure we don't exceed the count\n        if target_count > count:\n            target_count = count\n            \n        selected_symbols = [s[0] for s in momentum_scores[:target_count]]\n        \n        self.Log(f\"Rebalancing on {current_date}. Selected {len(selected_symbols)} stocks: {selected_symbols}\")\n        \n        # 4. Execute trades to achieve equal weights\n        # Total cash available\n        total_cash = self.Portfolio.TotalPortfolioValue\n        \n        # We want to hold equal weights in the selected stocks.\n        # Weight per stock = 1 / target_count\n        # Value per stock = total_cash / target_count\n        \n        # However, we must account for existing positions.\n        # We will liquidate everything first, then buy the new set.\n        \n        # Sell all existing positions\n        for symbol in self.Portfolio.Keys:\n            if symbol.Value in selected_symbols:\n                # If it's already in the list, we might not need to sell, \n                # but to ensure equal weight, we sell and rebuy.\n                # Actually, if it's in the list, we just need to adjust quantity.\n                # But for simplicity and to ensure \"sell anything no longer selected\",\n                # we will sell everything not in the list, and then rebalance the whole portfolio.\n                pass\n            else:\n                # Sell positions not in the new list\n                if symbol in self.Portfolio:\n                    position = self.Portfolio[symbol]\n                    if position.Quantity > 0:\n                        self.Liquidate(symbol)\n                        self.Log(f\"Sold {symbol} (not in top 10%)\")\n        \n        # Now, we need to buy the selected symbols to equal weight.\n        # Calculate target quantity for each selected symbol.\n        # Target Value = Total Portfolio Value / Number of Selected Stocks\n        # Note: We assume we want to invest the entire portfolio value into these stocks.\n        \n        target_value_per_stock = total_cash / target_count\n        \n        for symbol in selected_symbols:\n            if symbol in self.Portfolio:\n                current_position = self.Portfolio[symbol]\n                current_value = current_position.Value\n                current_quantity = current_position.Quantity\n                \n                # Calculate new quantity needed\n                # New Quantity = Target Value / Current Price\n                current_price = data[symbol].Price if symbol in data else 0\n                \n                if current_price > 0:\n                    new_quantity = int(target_value_per_stock / current_price)\n                    \n                    # If we already have a position, we need to adjust.\n                    # If new_quantity > current_quantity, buy the difference.\n                    # If new_quantity < current_quantity, sell the difference.\n                    \n                    if new_quantity > current_quantity:\n                        buy_qty = new_quantity - current_quantity\n                        if buy_qty > 0:\n                            self.SetHoldings(symbol, new_quantity)\n                            self.Log(f\"Buying {symbol}: {buy_qty} shares\")\n                    elif new_quantity < current_quantity:\n                        sell_qty = current_quantity - new_quantity\n                        if sell_qty > 0:\n                            self.Liquidate(symbol) # This sells all, then we can buy back the exact amount? \n                            # Actually, Liquidate sells all. Then we buy the new quantity.\n                            # But Liquidate might trigger a sell order.\n                            # Better: Sell the difference.\n                            self.Sell(symbol, sell_qty)\n                            self.Log(f\"Selling {symbol}: {sell_qty} shares\")\n                    else:\n                        # Already at target\n                        pass\n                else:\n                    self.Liquidate(symbol)\n            else:\n                # Buy the stock\n                if symbol in data and data[symbol].Price > 0:\n                    buy_qty = int(target_value_per_stock / data[symbol].Price)\n                    if buy_qty > 0:\n                        self.SetHoldings(symbol, buy_qty)\n                        self.Log(f\"Buying {symbol}: {buy_qty} shares\")\n                else:\n                    self.Log(f\"Cannot buy {symbol}, price is 0 or missing.\")\n\n        self.Log(f\"Rebalancing complete. Portfolio value: {total_cash}\")\n\n    def OnEndOfAlgorithm(self):\n        \"\"\"Called when the algorithm ends.\"\"\"\n        self.Log(\"Algorithm finished.\")\n",
+    "source_sha256": "8b24ccf972b1e87207448c173aac6207f37358e6463cbb0a807be8c3efaa5429",
+    "started_at": "2026-11-14T22:26:14.016435+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39413472,
+    "compile_id": "b34789efaa686a191d1912872c51c63f-5fdd639a1ecf395e67edbc051c14d8ba",
+    "compile_created": {
+      "compileId": "b34789efaa686a191d1912872c51c63f-5fdd639a1ecf395e67edbc051c14d8ba",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39413472,
+      "signature": "5fdd639a1ecf395e67edbc051c14d8ba",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "b34789efaa686a191d1912872c51c63f-5fdd639a1ecf395e67edbc051c14d8ba",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39413472, with CompileID: b34789efaa686a191d1912872c51c63f-5fdd639a1ecf395e67edbc051c14d8ba, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39413472, with CompileID: b34789efaa686a191d1912872c51c63f-5fdd639a1ecf395e67edbc051c14d8ba, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "691670419e8fb44260cfbac1814c2882",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v02",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413472,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "691670419e8fb44260cfbac1814c2882",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 0
+        },
+        "backtestStart": "2026-11-14 22:26:17",
+        "backtestEnd": "2026-11-14 22:26:17",
+        "created": "2026-11-14 22:26:17",
+        "snapshotId": 39413474,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v02",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413472,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "691670419e8fb44260cfbac1814c2882",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 0
+        },
+        "backtestStart": "2026-11-14 22:26:17",
+        "backtestEnd": "2026-11-14 22:26:17",
+        "created": "2026-11-14 22:26:17",
+        "snapshotId": 39413474,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 2\n cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 2\n cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 2\n cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.3%",
+          "Used RAM (MB)": "178",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-691670419e8fb44260cfbac1814c2882",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 2\n cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 2\n cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 2\n cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:27:05.011148+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS; LEGACY_API: Liquidate, Log, Rebalance, Sell, SetCash, SetEndDate, SetHoldings, SetStartDate, SetUniverse, SetUniverseSelection; PROMPT_MISS: add_universe; PROMPT_MISS: month_start; PROMPT_MISS: dollar_volume",
+  "total_orders": null
+}

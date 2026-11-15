@@ -1,0 +1,291 @@
+{
+  "prompt_id": "equity-sixty-forty-portfolio_v10",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nfrom datetime import datetime\nfrom QuantConnect import Resolution\nfrom QuantConnect.Algorithm import QC\nfrom QuantConnect.Data.UniverseSelection import EquityUniverse\nfrom QuantConnect.Orders import OrderType\nfrom QuantConnect.Portfolio import PortfolioTarget\nfrom QuantConnect.Scheduling import DateRule, TimeRule\nfrom QuantConnect.Scheduling.Schedule import Schedule\nfrom QuantConnect.Scheduling.DateRules import QuarterStart\nfrom QuantConnect.Scheduling.TimeRules import AfterMarketOpen\n\nclass DriftThresholdPortfolio(QC):\n    \"\"\"\n    A QuantConnect LEAN algorithm implementing a simple drift-based rebalancing strategy\n    between SPY and TLT with a 5% threshold.\n    \"\"\"\n    \n    # Class attribute for the drift threshold\n    _drift_threshold = 0.05\n    \n    def initialize(self):\n        \"\"\"\n        Initialize the algorithm with specific dates, cash, and asset allocations.\n        \"\"\"\n        # Set the trading period\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        \n        # Set initial cash\n        self.set_cash(100000)\n        \n        # Add equities with minute resolution\n        self.spy_symbol = self.add_equity('SPY', Resolution.MINUTE).symbol\n        self.tlt_symbol = self.add_equity('TLT', Resolution.MINUTE).symbol\n        \n        # Define target weights\n        self.targets = {\n            self.spy_symbol: 0.6,\n            self.tlt_symbol: 0.4\n        }\n        \n        # Schedule rebalancing at the start of each quarter, 1 minute after market open\n        self.schedule.on(\n            DateRule(QuarterStart('SPY')),\n            TimeRule.AfterMarketOpen('SPY', 1),\n            self._rebalance\n        )\n    \n    def on_data(self, data):\n        \"\"\"\n        Process incoming data. If the portfolio is not yet invested,\n        set the initial holdings to the target weights.\n        \"\"\"\n        # Check if the portfolio is invested\n        if not self.portfolio.invested:\n            # Set initial holdings to targets\n            self.set_holdings([\n                PortfolioTarget(self.spy_symbol, 0.6),\n                PortfolioTarget(self.tlt_symbol, 0.4)\n            ])\n            return\n        \n        # Check if we are at a scheduled rebalance time\n        # Note: The schedule handles the timing, but we ensure we don't rebalance unnecessarily\n        # if the condition is met in _rebalance.\n        pass\n    \n    def _rebalance(self):\n        \"\"\"\n        Rebalance the portfolio if the drift exceeds the threshold.\n        \"\"\"\n        # Calculate current weights\n        weights = {}\n        for symbol in self.portfolio.symbols:\n            holding_value = self.portfolio[symbol].holdings_value\n            total_value = self.portfolio.total_portfolio_value\n            if total_value > 0:\n                weights[symbol] = holding_value / total_value\n            else:\n                weights[symbol] = 0.0\n        \n        # Check if all weights are within the drift threshold\n        all_within_threshold = True\n        for symbol, target_weight in self.targets.items():\n            current_weight = weights.get(symbol, 0.0)\n            if abs(current_weight - target_weight) > self._drift_threshold:\n                all_within_threshold = False\n                break\n        \n        # If all weights are within the threshold, do nothing\n        if all_within_threshold:\n            return\n        \n        # Rebalance to target weights\n        self.set_holdings([\n            PortfolioTarget(self.spy_symbol, 0.6),\n            PortfolioTarget(self.tlt_symbol, 0.4)\n        ])\n```",
+  "generated_at": "2026-11-14T22:23:34.028450+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "from datetime import datetime\nfrom QuantConnect import Resolution\nfrom QuantConnect.Algorithm import QC\nfrom QuantConnect.Data.UniverseSelection import EquityUniverse\nfrom QuantConnect.Orders import OrderType\nfrom QuantConnect.Portfolio import PortfolioTarget\nfrom QuantConnect.Scheduling import DateRule, TimeRule\nfrom QuantConnect.Scheduling.Schedule import Schedule\nfrom QuantConnect.Scheduling.DateRules import QuarterStart\nfrom QuantConnect.Scheduling.TimeRules import AfterMarketOpen\n\nclass DriftThresholdPortfolio(QC):\n    \"\"\"\n    A QuantConnect LEAN algorithm implementing a simple drift-based rebalancing strategy\n    between SPY and TLT with a 5% threshold.\n    \"\"\"\n    \n    # Class attribute for the drift threshold\n    _drift_threshold = 0.05\n    \n    def initialize(self):\n        \"\"\"\n        Initialize the algorithm with specific dates, cash, and asset allocations.\n        \"\"\"\n        # Set the trading period\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        \n        # Set initial cash\n        self.set_cash(100000)\n        \n        # Add equities with minute resolution\n        self.spy_symbol = self.add_equity('SPY', Resolution.MINUTE).symbol\n        self.tlt_symbol = self.add_equity('TLT', Resolution.MINUTE).symbol\n        \n        # Define target weights\n        self.targets = {\n            self.spy_symbol: 0.6,\n            self.tlt_symbol: 0.4\n        }\n        \n        # Schedule rebalancing at the start of each quarter, 1 minute after market open\n        self.schedule.on(\n            DateRule(QuarterStart('SPY')),\n            TimeRule.AfterMarketOpen('SPY', 1),\n            self._rebalance\n        )\n    \n    def on_data(self, data):\n        \"\"\"\n        Process incoming data. If the portfolio is not yet invested,\n        set the initial holdings to the target weights.\n        \"\"\"\n        # Check if the portfolio is invested\n        if not self.portfolio.invested:\n            # Set initial holdings to targets\n            self.set_holdings([\n                PortfolioTarget(self.spy_symbol, 0.6),\n                PortfolioTarget(self.tlt_symbol, 0.4)\n            ])\n            return\n        \n        # Check if we are at a scheduled rebalance time\n        # Note: The schedule handles the timing, but we ensure we don't rebalance unnecessarily\n        # if the condition is met in _rebalance.\n        pass\n    \n    def _rebalance(self):\n        \"\"\"\n        Rebalance the portfolio if the drift exceeds the threshold.\n        \"\"\"\n        # Calculate current weights\n        weights = {}\n        for symbol in self.portfolio.symbols:\n            holding_value = self.portfolio[symbol].holdings_value\n            total_value = self.portfolio.total_portfolio_value\n            if total_value > 0:\n                weights[symbol] = holding_value / total_value\n            else:\n                weights[symbol] = 0.0\n        \n        # Check if all weights are within the drift threshold\n        all_within_threshold = True\n        for symbol, target_weight in self.targets.items():\n            current_weight = weights.get(symbol, 0.0)\n            if abs(current_weight - target_weight) > self._drift_threshold:\n                all_within_threshold = False\n                break\n        \n        # If all weights are within the threshold, do nothing\n        if all_within_threshold:\n            return\n        \n        # Rebalance to target weights\n        self.set_holdings([\n            PortfolioTarget(self.spy_symbol, 0.6),\n            PortfolioTarget(self.tlt_symbol, 0.4)\n        ])\n",
+    "source_sha256": "aa3598468460d8a644b8ac9aa5fa109f8b5fd9d7eff1134cc707b0dfc9783c24",
+    "started_at": "2026-11-14T22:23:34.031305+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39413368,
+    "compile_id": "4ae4b0adeb6adee3ee4c8213c6dc684f-7721216c97d725776bcd188cb265252f",
+    "compile_created": {
+      "compileId": "4ae4b0adeb6adee3ee4c8213c6dc684f-7721216c97d725776bcd188cb265252f",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39413368,
+      "signature": "7721216c97d725776bcd188cb265252f",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "4ae4b0adeb6adee3ee4c8213c6dc684f-7721216c97d725776bcd188cb265252f",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39413368, with CompileID: 4ae4b0adeb6adee3ee4c8213c6dc684f-7721216c97d725776bcd188cb265252f, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39413368, with CompileID: 4ae4b0adeb6adee3ee4c8213c6dc684f-7721216c97d725776bcd188cb265252f, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "3b57d281db52314df6ec04b54a24d1ef",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-sixty-forty-portfolio_v10",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413368,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "3b57d281db52314df6ec04b54a24d1ef",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 17
+        },
+        "backtestStart": "2026-11-14 22:23:40",
+        "backtestEnd": "2026-11-14 22:23:40",
+        "created": "2026-11-14 22:23:40",
+        "snapshotId": 39413371,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-sixty-forty-portfolio_v10",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413368,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "3b57d281db52314df6ec04b54a24d1ef",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 17
+        },
+        "backtestStart": "2026-11-14 22:23:40",
+        "backtestEnd": "2026-11-14 22:23:40",
+        "created": "2026-11-14 22:23:40",
+        "snapshotId": 39413371,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC\n in main.py: line 3\n cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC\n in main.py: line 3\n cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC\n in main.py: line 3\n cannot import name 'QC' from 'QuantConnect.Algorithm' (unknown location)",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.2%",
+          "Used RAM (MB)": "177",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-3b57d281db52314df6ec04b54a24d1ef",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC\n in main.py: line 3\n cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC\n in main.py: line 3\n cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC\n in main.py: line 3\n cannot import name 'QC' from 'QuantConnect.Algorithm' (unknown location)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:24:29.176135+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS",
+  "total_orders": null
+}

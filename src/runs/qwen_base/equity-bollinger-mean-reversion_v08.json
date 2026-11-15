@@ -1,0 +1,121 @@
+{
+  "prompt_id": "equity-bollinger-mean-reversion_v08",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\n# QuantConnect LEAN Algorithm for Bollinger Mean Reversion on SPY\n# Date Range: 2024-09-01 to 2024-12-31\n# Capital: $100,000\n# Strategy: Long when price < Lower Band, Liquidate when price >= Middle Band\n\nfrom datetime import datetime\nimport QuantConnect.Algorithm as QCAlgorithm\nimport QuantConnect.Indicators as Indicators\n\nclass BollingerMeanReversion(QCAlgorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Set cash to $100,000.\n        - Add SPY data with daily resolution.\n        - Define the trading window.\n        \"\"\"\n        self.SetCash(100000.0)\n        \n        # Add SPY data\n        self.Add(Equity(\"SPY\"), Resolution.Daily)\n        \n        # Set the trading window\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Initialize indicators\n        self._window = 20\n        self._stdDev = 2.0\n        self._bb = None\n        self._middle = None\n        self._lower = None\n        \n        # Initialize position tracking\n        self._isInvested = False\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        - Calculate Bollinger Bands.\n        - Execute logic at 08:00 (simulated by checking if we have a new bar).\n        - Since data is daily, the first bar of the day is treated as the 08:00 signal.\n        \"\"\"\n        # Ensure we have data for SPY\n        if not data.ContainsKey(\"SPY\"):\n            return\n\n        symbol = data[\"SPY\"]\n        if symbol is None:\n            return\n\n        # Calculate indicators\n        # We need at least 20 days of data to calculate the bands\n        if len(symbol.History(self._window)) < self._window:\n            return\n\n        prices = symbol.History(self._window).Select(\"Close\").ToList()\n        \n        # Calculate SMA (Middle Band)\n        sma = Indicators.SMA(prices, self._window)\n        middle_band = sma[self._window - 1]\n        \n        # Calculate Standard Deviation\n        std_dev = Indicators.StandardDeviation(prices, self._window)\n        std_value = std_dev[self._window - 1]\n        \n        # Calculate Upper and Lower Bands\n        upper_band = middle_band + (self._stdDev * std_value)\n        lower_band = middle_band - (self._stdDev * std_value)\n        \n        current_price = symbol.Close\n        \n        # Logic:\n        # 1. If not invested and price < Lower Band -> Allocate 100% Long\n        # 2. If invested and price >= Middle Band -> Liquidate\n        \n        # Check entry condition\n        if not self._isInvested:\n            if current_price < lower_band:\n                # Allocate 100% of capital\n                self.SetHoldings(\"SPY\", 1.0)\n                self._isInvested = True\n                self.Log(f\"Entry Signal: Price {current_price} < Lower Band {lower_band}\")\n        \n        # Check exit condition\n        elif self._isInvested:\n            if current_price >= middle_band:\n                # Liquidate position\n                self.SetHoldings(\"SPY\", 0.0)\n                self._isInvested = False\n                self.Log(f\"Exit Signal: Price {current_price} >= Middle Band {middle_band}\")\n\n# This class is instantiated by the QuantConnect engine.\n# To run this, you would typically use the QuantConnect CLI or the LEAN engine.\n# Example CLI command: qc run main.py --data-folder /path/to/data\n```",
+  "generated_at": "2026-11-14T21:42:55.133494+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "Add, Log, SetCash, SetEndDate, SetHoldings, SetStartDate"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ".bb( / bollingerbands"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "infrastructure_error",
+    "stage": "backtest",
+    "source": "# QuantConnect LEAN Algorithm for Bollinger Mean Reversion on SPY\n# Date Range: 2024-09-01 to 2024-12-31\n# Capital: $100,000\n# Strategy: Long when price < Lower Band, Liquidate when price >= Middle Band\n\nfrom datetime import datetime\nimport QuantConnect.Algorithm as QCAlgorithm\nimport QuantConnect.Indicators as Indicators\n\nclass BollingerMeanReversion(QCAlgorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Set cash to $100,000.\n        - Add SPY data with daily resolution.\n        - Define the trading window.\n        \"\"\"\n        self.SetCash(100000.0)\n        \n        # Add SPY data\n        self.Add(Equity(\"SPY\"), Resolution.Daily)\n        \n        # Set the trading window\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Initialize indicators\n        self._window = 20\n        self._stdDev = 2.0\n        self._bb = None\n        self._middle = None\n        self._lower = None\n        \n        # Initialize position tracking\n        self._isInvested = False\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        - Calculate Bollinger Bands.\n        - Execute logic at 08:00 (simulated by checking if we have a new bar).\n        - Since data is daily, the first bar of the day is treated as the 08:00 signal.\n        \"\"\"\n        # Ensure we have data for SPY\n        if not data.ContainsKey(\"SPY\"):\n            return\n\n        symbol = data[\"SPY\"]\n        if symbol is None:\n            return\n\n        # Calculate indicators\n        # We need at least 20 days of data to calculate the bands\n        if len(symbol.History(self._window)) < self._window:\n            return\n\n        prices = symbol.History(self._window).Select(\"Close\").ToList()\n        \n        # Calculate SMA (Middle Band)\n        sma = Indicators.SMA(prices, self._window)\n        middle_band = sma[self._window - 1]\n        \n        # Calculate Standard Deviation\n        std_dev = Indicators.StandardDeviation(prices, self._window)\n        std_value = std_dev[self._window - 1]\n        \n        # Calculate Upper and Lower Bands\n        upper_band = middle_band + (self._stdDev * std_value)\n        lower_band = middle_band - (self._stdDev * std_value)\n        \n        current_price = symbol.Close\n        \n        # Logic:\n        # 1. If not invested and price < Lower Band -> Allocate 100% Long\n        # 2. If invested and price >= Middle Band -> Liquidate\n        \n        # Check entry condition\n        if not self._isInvested:\n            if current_price < lower_band:\n                # Allocate 100% of capital\n                self.SetHoldings(\"SPY\", 1.0)\n                self._isInvested = True\n                self.Log(f\"Entry Signal: Price {current_price} < Lower Band {lower_band}\")\n        \n        # Check exit condition\n        elif self._isInvested:\n            if current_price >= middle_band:\n                # Liquidate position\n                self.SetHoldings(\"SPY\", 0.0)\n                self._isInvested = False\n                self.Log(f\"Exit Signal: Price {current_price} >= Middle Band {middle_band}\")\n\n# This class is instantiated by the QuantConnect engine.\n# To run this, you would typically use the QuantConnect CLI or the LEAN engine.\n# Example CLI command: qc run main.py --data-folder /path/to/data\n",
+    "source_sha256": "d32c41ce379e710ab47e8707132c430245d1627a5d659bed2bf7e16790c357a1",
+    "started_at": "2026-11-14T23:49:48.463886+00:00",
+    "compile_errors": 0,
+    "runtime_errors": null,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "infrastructure: HTTPSConnectionPool(host='www.quantconnect.com', port=443): Read timed out. (read timeout=60)",
+    "project_id": 39416982,
+    "compile_id": "50fe272a28192f71c7e323ac0407ec54-39d49921830da156414f1118b54f7822",
+    "compile_created": {
+      "compileId": "50fe272a28192f71c7e323ac0407ec54-39d49921830da156414f1118b54f7822",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39416982,
+      "signature": "39d49921830da156414f1118b54f7822",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "50fe272a28192f71c7e323ac0407ec54-39d49921830da156414f1118b54f7822",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39416982, with CompileID: 50fe272a28192f71c7e323ac0407ec54-39d49921830da156414f1118b54f7822, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39416982, with CompileID: 50fe272a28192f71c7e323ac0407ec54-39d49921830da156414f1118b54f7822, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "23dd3da613dc77066d8dee8892bd9ab3",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-bollinger-mean-reversion_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39416982,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "23dd3da613dc77066d8dee8892bd9ab3",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 4
+        },
+        "backtestStart": "2026-11-14 23:49:51",
+        "backtestEnd": "2026-11-14 23:49:51",
+        "created": "2026-11-14 23:49:51",
+        "snapshotId": 39416984,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "error": "HTTPSConnectionPool(host='www.quantconnect.com', port=443): Read timed out. (read timeout=60)",
+    "error_type": "ReadTimeout",
+    "finished_at": "2026-11-14T23:50:52.379943+00:00"
+  },
+  "note": "infrastructure: HTTPSConnectionPool(host='www.quantconnect.com', port=443): Read timed out. (read timeout=60); LEGACY_API: Add, Log, SetCash, SetEndDate, SetHoldings, SetStartDate; PROMPT_MISS: .bb( / bollingerbands",
+  "compile_errors": 0,
+  "runtime_errors": null,
+  "statistics": {},
+  "qc_note": "infrastructure: HTTPSConnectionPool(host='www.quantconnect.com', port=443): Read timed out. (read timeout=60)"
+}

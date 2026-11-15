@@ -1,0 +1,331 @@
+{
+  "prompt_id": "equity-atr-volatility-stop_v02",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\n# QuantConnect LEAN Algorithm in Python (Snake Case API)\n# Strategy: Hold SPY, track highest close since entry.\n# Exit condition: Close < HighestClose - (3 * ATR(14)).\n# Re-entry: Buy on the next bar after exit.\n# Data: Minute bars, 2022-01-01 to 2024-12-31.\n# Capital: $100,000.\n\nfrom datetime import datetime\nimport QuantConnect.Algorithm as QCAlgorithm\nimport QuantConnect.Indicators as Indicators\n\nclass SPYATRStrategy(QCAlgorithm.QCAlgorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Set cash to $100,000.\n        - Add SPY minute data from 2022-01-01 to 2024-12-31.\n        - Initialize indicators and tracking variables.\n        \"\"\"\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Set initial cash\n        self.SetInitialCash(100000)\n        \n        # Add SPY minute data\n        self.Add(Equity.SPY, Resolution.Minute)\n        \n        # Initialize 14-period ATR\n        self.atr = Indicators.ATR(self.SPY, 14)\n        \n        # Tracking variables\n        self.highest_close = 0.0\n        self.position_value = 0.0\n        self.is_in_position = False\n        \n        # Log initialization\n        self.Log(\"Strategy Initialized: SPY ATR Protection\")\n        self.Log(\"Capital: $100,000\")\n        self.Log(\"Data: Minute, 2022-01-01 to 2024-12-31\")\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        - If no position, buy SPY and set highest_close to current close.\n        - If in position, check exit condition: Close < HighestClose - (3 * ATR).\n        - If exit condition met, sell all.\n        - If sold, buy back on the next bar (handled by logic flow).\n        \"\"\"\n        if not data.SPY:\n            return\n\n        current_close = data.SPY.Close\n        current_atr = self.atr[data.SPY]\n        \n        # Ensure ATR is not NaN (first few bars might be)\n        if current_atr is None or current_atr == 0:\n            return\n\n        # Calculate the stop loss threshold\n        stop_loss_threshold = self.highest_close - (3 * current_atr)\n\n        # If we are not in a position, enter\n        if not self.is_in_position:\n            # Buy with all available cash\n            self.SetHoldings(Equity.SPY, 1.0)\n            self.is_in_position = True\n            \n            # Set the highest close to the current close upon entry\n            self.highest_close = current_close\n            \n            self.Log(f\"Entry: Bought SPY at {current_close:.2f}. Tracking High: {self.highest_close:.2f}\")\n            return\n\n        # If we are in a position, check for exit\n        if current_close < stop_loss_threshold:\n            # Sell everything\n            self.ClosePosition(Equity.SPY)\n            self.is_in_position = False\n            \n            self.Log(f\"Exit Triggered: Close ({current_close:.2f}) < High ({self.highest_close:.2f}) - 3*ATR ({3*current_atr:.2f})\")\n            self.Log(f\"Stop Loss Level: {stop_loss_threshold:.2f}\")\n            \n            # Note: The requirement says \"buy again on the next bar\".\n            # Since this is a minute bar algorithm, the \"next bar\" logic is naturally handled\n            # by the loop continuing to the next minute. If the next minute's close is valid,\n            # the 'if not self.is_in_position' block at the top will execute.\n            # We do not force a buy here to ensure we wait for the \"next bar\" close.\n\n# Run the algorithm\nif __name__ == \"__main__\":\n    # This block is for local testing if running outside the QuantConnect platform\n    # In the actual QC environment, this class is instantiated by the platform.\n    print(\"This script is designed to run within the QuantConnect LEAN environment.\")\n    print(\"To run, upload this file to the QuantConnect platform and create a new algorithm.\")\n```",
+  "generated_at": "2026-11-14T21:53:14.657656+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "Add, ClosePosition, Log, SetEndDate, SetHoldings, SetInitialCash, SetStartDate"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# QuantConnect LEAN Algorithm in Python (Snake Case API)\n# Strategy: Hold SPY, track highest close since entry.\n# Exit condition: Close < HighestClose - (3 * ATR(14)).\n# Re-entry: Buy on the next bar after exit.\n# Data: Minute bars, 2022-01-01 to 2024-12-31.\n# Capital: $100,000.\n\nfrom datetime import datetime\nimport QuantConnect.Algorithm as QCAlgorithm\nimport QuantConnect.Indicators as Indicators\n\nclass SPYATRStrategy(QCAlgorithm.QCAlgorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Set cash to $100,000.\n        - Add SPY minute data from 2022-01-01 to 2024-12-31.\n        - Initialize indicators and tracking variables.\n        \"\"\"\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Set initial cash\n        self.SetInitialCash(100000)\n        \n        # Add SPY minute data\n        self.Add(Equity.SPY, Resolution.Minute)\n        \n        # Initialize 14-period ATR\n        self.atr = Indicators.ATR(self.SPY, 14)\n        \n        # Tracking variables\n        self.highest_close = 0.0\n        self.position_value = 0.0\n        self.is_in_position = False\n        \n        # Log initialization\n        self.Log(\"Strategy Initialized: SPY ATR Protection\")\n        self.Log(\"Capital: $100,000\")\n        self.Log(\"Data: Minute, 2022-01-01 to 2024-12-31\")\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        - If no position, buy SPY and set highest_close to current close.\n        - If in position, check exit condition: Close < HighestClose - (3 * ATR).\n        - If exit condition met, sell all.\n        - If sold, buy back on the next bar (handled by logic flow).\n        \"\"\"\n        if not data.SPY:\n            return\n\n        current_close = data.SPY.Close\n        current_atr = self.atr[data.SPY]\n        \n        # Ensure ATR is not NaN (first few bars might be)\n        if current_atr is None or current_atr == 0:\n            return\n\n        # Calculate the stop loss threshold\n        stop_loss_threshold = self.highest_close - (3 * current_atr)\n\n        # If we are not in a position, enter\n        if not self.is_in_position:\n            # Buy with all available cash\n            self.SetHoldings(Equity.SPY, 1.0)\n            self.is_in_position = True\n            \n            # Set the highest close to the current close upon entry\n            self.highest_close = current_close\n            \n            self.Log(f\"Entry: Bought SPY at {current_close:.2f}. Tracking High: {self.highest_close:.2f}\")\n            return\n\n        # If we are in a position, check for exit\n        if current_close < stop_loss_threshold:\n            # Sell everything\n            self.ClosePosition(Equity.SPY)\n            self.is_in_position = False\n            \n            self.Log(f\"Exit Triggered: Close ({current_close:.2f}) < High ({self.highest_close:.2f}) - 3*ATR ({3*current_atr:.2f})\")\n            self.Log(f\"Stop Loss Level: {stop_loss_threshold:.2f}\")\n            \n            # Note: The requirement says \"buy again on the next bar\".\n            # Since this is a minute bar algorithm, the \"next bar\" logic is naturally handled\n            # by the loop continuing to the next minute. If the next minute's close is valid,\n            # the 'if not self.is_in_position' block at the top will execute.\n            # We do not force a buy here to ensure we wait for the \"next bar\" close.\n\n# Run the algorithm\nif __name__ == \"__main__\":\n    # This block is for local testing if running outside the QuantConnect platform\n    # In the actual QC environment, this class is instantiated by the platform.\n    print(\"This script is designed to run within the QuantConnect LEAN environment.\")\n    print(\"To run, upload this file to the QuantConnect platform and create a new algorithm.\")\n",
+    "source_sha256": "ddd7c3dd523d339ff2232b533f2222ff4440b0f42e3f865f6cf9c99c96dcc318",
+    "started_at": "2026-11-14T21:53:14.659212+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;SPYATRStrategy&#039; object has no attribute &#039;SetInitialCash&#039;\n  at Initialize\n    self.Se",
+    "project_id": 39412047,
+    "compile_id": "53fb9ccd751b6065290bcbff457870b9-f8e22bb0c831170761b6024b5c14c3a7",
+    "compile_created": {
+      "compileId": "53fb9ccd751b6065290bcbff457870b9-f8e22bb0c831170761b6024b5c14c3a7",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39412047,
+      "signature": "f8e22bb0c831170761b6024b5c14c3a7",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "53fb9ccd751b6065290bcbff457870b9-f8e22bb0c831170761b6024b5c14c3a7",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39412047, with CompileID: 53fb9ccd751b6065290bcbff457870b9-f8e22bb0c831170761b6024b5c14c3a7, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39412047, with CompileID: 53fb9ccd751b6065290bcbff457870b9-f8e22bb0c831170761b6024b5c14c3a7, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "874c6d106986bfbb2d1da21d563d8672",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-atr-volatility-stop_v02",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39412047,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "874c6d106986bfbb2d1da21d563d8672",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 13
+        },
+        "backtestStart": "2026-11-14 21:53:19",
+        "backtestEnd": "2026-11-14 21:53:19",
+        "created": "2026-11-14 21:53:19",
+        "snapshotId": 39412051,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-atr-volatility-stop_v02",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39412047,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "874c6d106986bfbb2d1da21d563d8672",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 13
+        },
+        "backtestStart": "2026-11-14 21:53:19",
+        "backtestEnd": "2026-11-14 21:53:19",
+        "created": "2026-11-14 21:53:19",
+        "snapshotId": 39412051,
+        "status": "Runtime Error",
+        "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;SPYATRStrategy&#039; object has no attribute &#039;SetInitialCash&#039;\n  at Initialize\n    self.SetInitialCash(100000)\n    ^^^^^^^^^^^^^^^^^^^\n in main.py: line 24\n &#039;SPYATRStrategy&#039; object has no attribute &#039;SetInitialCash&#039;",
+        "stacktrace": "'SPYATRStrategy' object has no attribute 'SetInitialCash'\n  at Initialize\n    self.SetInitialCash(100000)\n    ^^^^^^^^^^^^^^^^^^^\n in main.py: line 24\n 'SPYATRStrategy' object has no attribute 'SetInitialCash'",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "7.8%",
+          "Used RAM (MB)": "121",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-874c6d106986bfbb2d1da21d563d8672",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:11"
+        }
+      },
+      "success": true
+    },
+    "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;SPYATRStrategy&#039; object has no attribute &#039;SetInitialCash&#039;\n  at Initialize\n    self.SetInitialCash(100000)\n    ^^^^^^^^^^^^^^^^^^^\n in main.py: line 24\n &#039;SPYATRStrategy&#039; object has no attribute &#039;SetInitialCash&#039;",
+    "stacktrace": "'SPYATRStrategy' object has no attribute 'SetInitialCash'\n  at Initialize\n    self.SetInitialCash(100000)\n    ^^^^^^^^^^^^^^^^^^^\n in main.py: line 24\n 'SPYATRStrategy' object has no attribute 'SetInitialCash'",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T21:54:07.138488+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;SPYATRStrategy&#039; object has no attribute &#039;SetInitialCash&#039;\n  at Initialize\n    self.Se",
+  "note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;SPYATRStrategy&#039; object has no attribute &#039;SetInitialCash&#039;\n  at Initialize\n    self.Se; LEGACY_API: Add, ClosePosition, Log, SetEndDate, SetHoldings, SetInitialCash, SetStartDate",
+  "total_orders": null
+}

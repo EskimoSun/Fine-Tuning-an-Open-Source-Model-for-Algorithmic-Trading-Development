@@ -1,0 +1,331 @@
+{
+  "prompt_id": "equity-rsi-overbought-oversold_v05",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\n# QuantConnect LEAN Algorithm in Python (Snake Case API)\n# Strategy: QQQ Hourly RSI(14) Mean Reversion\n# Long 100% if RSI < 30, Flat if RSI > 50\n# Short 100% if RSI > 70, Flat if RSI < 50\n# Period: 2024-09-01 to 2024-12-31\n# Initial Capital: $100,000\n# Data Frequency: Hourly\n\nfrom datetime import datetime\nimport QuantConnect.Algorithm as QCAlgorithm\nimport QuantConnect.Indicators as Indicators\n\nclass RsiMeanReversion(QCAlgorithm.QCAlgorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Set initial capital to $100,000.\n        - Add QQQ data on an hourly basis.\n        - Set the trading period from 2024-09-01 to 2024-12-31.\n        \"\"\"\n        self.SetInitialCash(100000)\n        \n        # Add QQQ data with hourly frequency\n        self.AddEquity(\"QQQ\", Resolution.Hour)\n        \n        # Define the trading period\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Initialize RSI indicator with a lookback period of 14\n        self.rsi = Indicators.RSI(self, 14)\n        \n        # Flag to ensure we only take the first valid signal after data loads\n        self.indicator_ready = False\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        - Calculate RSI.\n        - Check if indicator is ready (first valid value).\n        - Execute trades based on RSI thresholds:\n            * Long 100% if RSI < 30\n            * Short 100% if RSI > 70\n            * Flat otherwise\n        \"\"\"\n        # Ensure we have data for QQQ\n        if not data.ContainsKey(\"QQQ\"):\n            return\n\n        # Get the latest RSI value\n        rsi_value = self.rsi.Current\n\n        # Gate on indicator ready: Ensure we have at least one valid RSI value\n        # The first valid RSI usually appears after the lookback period (14 hours)\n        if not self.indicator_ready:\n            if rsi_value is not None:\n                self.indicator_ready = True\n            else:\n                return\n\n        # Get current price and cash\n        current_price = data[\"QQQ\"].Price\n        cash = self.Portfolio.Cash\n\n        # Determine position size based on strategy logic\n        # Long 100% if RSI < 30\n        # Short 100% if RSI > 70\n        # Flat otherwise (which includes RSI between 30 and 70, and specifically >50 for long exit)\n        \n        # Note: The prompt says \"Flat > 50\" for Long logic and \"Flat < 50\" for Short logic.\n        # Combined with \"Long < 30\" and \"Short > 70\", the logic implies:\n        # RSI < 30: Go Long\n        # 30 <= RSI <= 70: Flat (No position)\n        # RSI > 70: Go Short\n        \n        # We need to manage existing positions.\n        # If we are Long and RSI rises above 30, we should close.\n        # If we are Short and RSI drops below 70, we should close.\n        \n        current_position = self.Portfolio[\"QQQ\"]\n        \n        # Logic for Long Entry\n        if rsi_value < 30:\n            if current_position.IsZero:\n                # Enter Long with 100% of cash\n                self.SetHoldings(\"QQQ\", 1.0)\n            elif current_position.IsShort:\n                # If we are short and RSI drops below 30, we might want to cover short and go long?\n                # Standard mean reversion usually implies flipping. \n                # However, strict interpretation: \"Long 100% < 30\". \n                # If we are short, we should cover the short first.\n                self.ClosePosition(\"QQQ\")\n                self.SetHoldings(\"QQQ\", 1.0)\n        \n        # Logic for Short Entry\n        elif rsi_value > 70:\n            if current_position.IsZero:\n                # Enter Short with 100% of cash (assuming margin allows or cash covers)\n                # In LEAN, SetHoldings with negative value shorts.\n                self.SetHoldings(\"QQQ\", -1.0)\n            elif current_position.IsLong:\n                # If we are long and RSI rises above 70, cover long and go short\n                self.ClosePosition(\"QQQ\")\n                self.SetHoldings(\"QQQ\", -1.0)\n        \n        # Logic for Flat / Exit\n        else:\n            # RSI is between 30 and 70 (inclusive of boundaries based on strict inequality above)\n            # Prompt says: Long flat > 50, Short flat < 50.\n            # This creates a gap or overlap ambiguity. \n            # Interpretation: \n            # If Long: Exit if > 50.\n            # If Short: Exit if < 50.\n            # If neither condition met (30-50 for Long, 50-70 for Short), stay in position?\n            # OR, simpler interpretation of the combined rules:\n            # Long only if < 30. If > 50, definitely flat.\n            # Short only if > 70. If < 50, definitely flat.\n            # What about 30 to 50? Long condition met (<30 is false), Short condition met (>70 is false).\n            # What about 50 to 70? Long condition met (<30 is false), Short condition met (>70 is false).\n            # The most robust interpretation for a mean reversion strategy is:\n            # Long if RSI < 30.\n            # Short if RSI > 70.\n            # Otherwise (30 <= RSI <= 70), be Flat.\n            \n            # Let's implement the \"Otherwise Flat\" logic as it's the standard interpretation \n            # of \"Long < 30\" and \"Short > 70\" without explicit exit rules for the middle zone.\n            # If the user strictly meant \"Exit Long if > 50\", we would add:\n            # if current_position.IsLong and rsi_value > 50: ClosePosition\n            \n            # Given the explicit \"Flat > 50\" for Long and \"Flat < 50\" for Short:\n            # If Long and RSI > 50 -> Flat (Close)\n            # If Short and RSI < 50 -> Flat (Close)\n            # If Long and 30 < RSI <= 50 -> Stay Long? (Prompt doesn't explicitly say exit)\n            # If Short and 50 < RSI < 70 -> Stay Short? (Prompt doesn't explicitly say exit)\n            \n            # To be safe and adhere strictly to the text:\n            # \"Long 100% <30\" -> Only hold long if < 30. If >= 30, not Long.\n            # \"Short 100% >70\" -> Only hold short if > 70. If <= 70, not Short.\n            # \"Flat >50\" (in context of Long) -> If Long and > 50, go Flat.\n            # \"Flat <50\" (in context of Short) -> If Short and < 50, go Flat.\n            \n            # Refined Logic:\n            # 1. If RSI < 30: Must be Long.\n            # 2. If RSI > 70: Must be Short.\n            # 3. If 30 <= RSI <= 70: Must be Flat.\n            # This satisfies all conditions:\n            # - Long only when < 30.\n            # - Short only when > 70.\n            # - If Long (which implies < 30), it is never > 50, so \"Flat > 50\" doesn't trigger exit prematurely.\n            # - If Short (which implies > 70), it is never < 50, so \"Flat < 50\" doesn't trigger exit prematurely.\n            # - If we are in the middle (30-70), we are Flat.\n            \n            # Therefore, the simplified logic \"Long if <30, Short if >70, else Flat\" covers all constraints.\n            if current_position.IsLong:\n                self.ClosePosition(\"QQQ\")\n            elif current_position.IsShort:\n                self.ClosePosition(\"QQQ\")\n            # If Zero, do nothing.\n\n# Entry point for the algorithm\nif __name__ == \"__main__\":\n    print(\"This script is designed to be run within the QuantConnect LEAN environment.\")\n    print(\"Run this via the QuantConnect CLI or Web IDE.\")\n```",
+  "generated_at": "2026-11-14T21:21:02.382991+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddEquity, ClosePosition, SetEndDate, SetHoldings, SetInitialCash, SetStartDate"
+    }
+  ],
+  "note": "runtime: 1997-12-31 19:00:00 During the algorithm initialization, the following exception has occurred: &#039;RsiMeanReversion&#039; object has no attribute &#039;SetInitialCash&#039;\n  at Initialize\n    self.; LEGACY_API: AddEquity, ClosePosition, SetEndDate, SetHoldings, SetInitialCash, SetStartDate",
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# QuantConnect LEAN Algorithm in Python (Snake Case API)\n# Strategy: QQQ Hourly RSI(14) Mean Reversion\n# Long 100% if RSI < 30, Flat if RSI > 50\n# Short 100% if RSI > 70, Flat if RSI < 50\n# Period: 2024-09-01 to 2024-12-31\n# Initial Capital: $100,000\n# Data Frequency: Hourly\n\nfrom datetime import datetime\nimport QuantConnect.Algorithm as QCAlgorithm\nimport QuantConnect.Indicators as Indicators\n\nclass RsiMeanReversion(QCAlgorithm.QCAlgorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Set initial capital to $100,000.\n        - Add QQQ data on an hourly basis.\n        - Set the trading period from 2024-09-01 to 2024-12-31.\n        \"\"\"\n        self.SetInitialCash(100000)\n        \n        # Add QQQ data with hourly frequency\n        self.AddEquity(\"QQQ\", Resolution.Hour)\n        \n        # Define the trading period\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Initialize RSI indicator with a lookback period of 14\n        self.rsi = Indicators.RSI(self, 14)\n        \n        # Flag to ensure we only take the first valid signal after data loads\n        self.indicator_ready = False\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        - Calculate RSI.\n        - Check if indicator is ready (first valid value).\n        - Execute trades based on RSI thresholds:\n            * Long 100% if RSI < 30\n            * Short 100% if RSI > 70\n            * Flat otherwise\n        \"\"\"\n        # Ensure we have data for QQQ\n        if not data.ContainsKey(\"QQQ\"):\n            return\n\n        # Get the latest RSI value\n        rsi_value = self.rsi.Current\n\n        # Gate on indicator ready: Ensure we have at least one valid RSI value\n        # The first valid RSI usually appears after the lookback period (14 hours)\n        if not self.indicator_ready:\n            if rsi_value is not None:\n                self.indicator_ready = True\n            else:\n                return\n\n        # Get current price and cash\n        current_price = data[\"QQQ\"].Price\n        cash = self.Portfolio.Cash\n\n        # Determine position size based on strategy logic\n        # Long 100% if RSI < 30\n        # Short 100% if RSI > 70\n        # Flat otherwise (which includes RSI between 30 and 70, and specifically >50 for long exit)\n        \n        # Note: The prompt says \"Flat > 50\" for Long logic and \"Flat < 50\" for Short logic.\n        # Combined with \"Long < 30\" and \"Short > 70\", the logic implies:\n        # RSI < 30: Go Long\n        # 30 <= RSI <= 70: Flat (No position)\n        # RSI > 70: Go Short\n        \n        # We need to manage existing positions.\n        # If we are Long and RSI rises above 30, we should close.\n        # If we are Short and RSI drops below 70, we should close.\n        \n        current_position = self.Portfolio[\"QQQ\"]\n        \n        # Logic for Long Entry\n        if rsi_value < 30:\n            if current_position.IsZero:\n                # Enter Long with 100% of cash\n                self.SetHoldings(\"QQQ\", 1.0)\n            elif current_position.IsShort:\n                # If we are short and RSI drops below 30, we might want to cover short and go long?\n                # Standard mean reversion usually implies flipping. \n                # However, strict interpretation: \"Long 100% < 30\". \n                # If we are short, we should cover the short first.\n                self.ClosePosition(\"QQQ\")\n                self.SetHoldings(\"QQQ\", 1.0)\n        \n        # Logic for Short Entry\n        elif rsi_value > 70:\n            if current_position.IsZero:\n                # Enter Short with 100% of cash (assuming margin allows or cash covers)\n                # In LEAN, SetHoldings with negative value shorts.\n                self.SetHoldings(\"QQQ\", -1.0)\n            elif current_position.IsLong:\n                # If we are long and RSI rises above 70, cover long and go short\n                self.ClosePosition(\"QQQ\")\n                self.SetHoldings(\"QQQ\", -1.0)\n        \n        # Logic for Flat / Exit\n        else:\n            # RSI is between 30 and 70 (inclusive of boundaries based on strict inequality above)\n            # Prompt says: Long flat > 50, Short flat < 50.\n            # This creates a gap or overlap ambiguity. \n            # Interpretation: \n            # If Long: Exit if > 50.\n            # If Short: Exit if < 50.\n            # If neither condition met (30-50 for Long, 50-70 for Short), stay in position?\n            # OR, simpler interpretation of the combined rules:\n            # Long only if < 30. If > 50, definitely flat.\n            # Short only if > 70. If < 50, definitely flat.\n            # What about 30 to 50? Long condition met (<30 is false), Short condition met (>70 is false).\n            # What about 50 to 70? Long condition met (<30 is false), Short condition met (>70 is false).\n            # The most robust interpretation for a mean reversion strategy is:\n            # Long if RSI < 30.\n            # Short if RSI > 70.\n            # Otherwise (30 <= RSI <= 70), be Flat.\n            \n            # Let's implement the \"Otherwise Flat\" logic as it's the standard interpretation \n            # of \"Long < 30\" and \"Short > 70\" without explicit exit rules for the middle zone.\n            # If the user strictly meant \"Exit Long if > 50\", we would add:\n            # if current_position.IsLong and rsi_value > 50: ClosePosition\n            \n            # Given the explicit \"Flat > 50\" for Long and \"Flat < 50\" for Short:\n            # If Long and RSI > 50 -> Flat (Close)\n            # If Short and RSI < 50 -> Flat (Close)\n            # If Long and 30 < RSI <= 50 -> Stay Long? (Prompt doesn't explicitly say exit)\n            # If Short and 50 < RSI < 70 -> Stay Short? (Prompt doesn't explicitly say exit)\n            \n            # To be safe and adhere strictly to the text:\n            # \"Long 100% <30\" -> Only hold long if < 30. If >= 30, not Long.\n            # \"Short 100% >70\" -> Only hold short if > 70. If <= 70, not Short.\n            # \"Flat >50\" (in context of Long) -> If Long and > 50, go Flat.\n            # \"Flat <50\" (in context of Short) -> If Short and < 50, go Flat.\n            \n            # Refined Logic:\n            # 1. If RSI < 30: Must be Long.\n            # 2. If RSI > 70: Must be Short.\n            # 3. If 30 <= RSI <= 70: Must be Flat.\n            # This satisfies all conditions:\n            # - Long only when < 30.\n            # - Short only when > 70.\n            # - If Long (which implies < 30), it is never > 50, so \"Flat > 50\" doesn't trigger exit prematurely.\n            # - If Short (which implies > 70), it is never < 50, so \"Flat < 50\" doesn't trigger exit prematurely.\n            # - If we are in the middle (30-70), we are Flat.\n            \n            # Therefore, the simplified logic \"Long if <30, Short if >70, else Flat\" covers all constraints.\n            if current_position.IsLong:\n                self.ClosePosition(\"QQQ\")\n            elif current_position.IsShort:\n                self.ClosePosition(\"QQQ\")\n            # If Zero, do nothing.\n\n# Entry point for the algorithm\nif __name__ == \"__main__\":\n    print(\"This script is designed to be run within the QuantConnect LEAN environment.\")\n    print(\"Run this via the QuantConnect CLI or Web IDE.\")\n",
+    "source_sha256": "1343e7aa7c769ce8e55a4f1dfba653af25a34f04856a83e00fff75cd76be595c",
+    "started_at": "2026-11-14T21:33:34.334139+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 1997-12-31 19:00:00 During the algorithm initialization, the following exception has occurred: &#039;RsiMeanReversion&#039; object has no attribute &#039;SetInitialCash&#039;\n  at Initialize\n    self.",
+    "project_id": 39411297,
+    "compile_id": "fccbb14faf6bd9b0d43256b4d24dde36-94fdba2065c174fd04852a449bfbce09",
+    "compile_created": {
+      "compileId": "fccbb14faf6bd9b0d43256b4d24dde36-94fdba2065c174fd04852a449bfbce09",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39411297,
+      "signature": "94fdba2065c174fd04852a449bfbce09",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "fccbb14faf6bd9b0d43256b4d24dde36-94fdba2065c174fd04852a449bfbce09",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39411297, with CompileID: fccbb14faf6bd9b0d43256b4d24dde36-94fdba2065c174fd04852a449bfbce09, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39411297, with CompileID: fccbb14faf6bd9b0d43256b4d24dde36-94fdba2065c174fd04852a449bfbce09, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "2fbb5b574985081fb9985f293d280fda",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-rsi-overbought-oversold_v05",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39411297,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "2fbb5b574985081fb9985f293d280fda",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 7
+        },
+        "backtestStart": "2026-11-14 21:33:37",
+        "backtestEnd": "2026-11-14 21:33:37",
+        "created": "2026-11-14 21:33:37",
+        "snapshotId": 39411300,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-rsi-overbought-oversold_v05",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39411297,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "2fbb5b574985081fb9985f293d280fda",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 7
+        },
+        "backtestStart": "2026-11-14 21:33:37",
+        "backtestEnd": "2026-11-14 21:33:37",
+        "created": "2026-11-14 21:33:37",
+        "snapshotId": 39411300,
+        "status": "Runtime Error",
+        "error": "1997-12-31 19:00:00 During the algorithm initialization, the following exception has occurred: &#039;RsiMeanReversion&#039; object has no attribute &#039;SetInitialCash&#039;\n  at Initialize\n    self.SetInitialCash(100000)\n    ^^^^^^^^^^^^^^^^^^^\n in main.py: line 21\n &#039;RsiMeanReversion&#039; object has no attribute &#039;SetInitialCash&#039;",
+        "stacktrace": "'RsiMeanReversion' object has no attribute 'SetInitialCash'\n  at Initialize\n    self.SetInitialCash(100000)\n    ^^^^^^^^^^^^^^^^^^^\n in main.py: line 21\n 'RsiMeanReversion' object has no attribute 'SetInitialCash'",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "1.4%",
+          "Used RAM (MB)": "122",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-2fbb5b574985081fb9985f293d280fda",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "1997-12-31 19:00:00 During the algorithm initialization, the following exception has occurred: &#039;RsiMeanReversion&#039; object has no attribute &#039;SetInitialCash&#039;\n  at Initialize\n    self.SetInitialCash(100000)\n    ^^^^^^^^^^^^^^^^^^^\n in main.py: line 21\n &#039;RsiMeanReversion&#039; object has no attribute &#039;SetInitialCash&#039;",
+    "stacktrace": "'RsiMeanReversion' object has no attribute 'SetInitialCash'\n  at Initialize\n    self.SetInitialCash(100000)\n    ^^^^^^^^^^^^^^^^^^^\n in main.py: line 21\n 'RsiMeanReversion' object has no attribute 'SetInitialCash'",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T21:34:26.330144+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 1997-12-31 19:00:00 During the algorithm initialization, the following exception has occurred: &#039;RsiMeanReversion&#039; object has no attribute &#039;SetInitialCash&#039;\n  at Initialize\n    self.",
+  "total_orders": null
+}

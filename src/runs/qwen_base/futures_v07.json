@@ -1,0 +1,331 @@
+{
+  "prompt_id": "futures_v07",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport QuantConnect as QC\n\n# Initialize the algorithm\nclass SP500Baseline(QC.Algorithm.QCAlgorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm with a long-only strategy on E-mini S&P 500 futures.\n        Handles contract rolls automatically for the September to December 2024 window.\n        \"\"\"\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Set cash balance for paper trading\n        self.SetCash(100000)\n        \n        # Define the symbol for E-mini S&P 500 Futures\n        # The symbol format is \"SP\" for the underlying, but we need the specific future contract.\n        # QuantConnect automatically handles the rolling of futures contracts based on the symbol definition.\n        # We use the standard symbol for the E-mini S&P 500.\n        self.SP500 = QC.Data.Universe.Resolution.Minute.Bars(\"SP\", QC.Data.Universe.Resolution.Minute)\n        \n        # Initialize the portfolio\n        self.Portfolio = self.Portfolio\n        \n        # Strategy parameters\n        self.Quantity = 1  # Number of contracts\n        self.LongOnly = True\n        \n        # Log initialization\n        self.Log(\"Initializing SP500 Baseline Strategy...\")\n        self.Log(f\"Start Date: {self.SetStartDate()}\")\n        self.Log(f\"End Date: {self.SetEndDate()}\")\n        self.Log(f\"Initial Cash: ${self.SetCash()}\")\n        self.Log(\"Strategy: Long Exposure to E-mini S&P 500 Futures\")\n        self.Log(\"Contract Roll: Automatic (handled by QuantConnect)\")\n\n    def OnData(self, data):\n        \"\"\"\n        Execute the trading logic on every data bar.\n        Maintains a long position in the E-mini S&P 500 future.\n        \"\"\"\n        # Check if we have data for the SP500 symbol\n        if self.SP500 is None:\n            return\n\n        # Get the current price of the SP500 future\n        current_price = self.SP500.LastPrice\n        \n        # Determine the target position size\n        # Since we want a baseline long exposure, we simply hold 1 contract.\n        # QuantConnect's futures handling automatically rolls the contract \n        # to the next month when the current contract expires or becomes illiquid.\n        # For the Sep-Dec 2024 window, it will roll from Sep -> Oct -> Nov -> Dec.\n        \n        # Calculate the order quantity (positive for long)\n        order_quantity = self.Quantity\n        \n        # Check if we are currently holding the desired position\n        current_position = self.Portfolio.Positions[self.SP500.Symbol]\n        \n        if current_position is None:\n            # No position exists, open a long position\n            self.Log(f\"Opening Long Position at {current_price}\")\n            self.SetHoldings(self.SP500.Symbol, order_quantity)\n        elif current_position.Quantity != order_quantity:\n            # Position size has changed (e.g., due to roll or adjustment), update it\n            self.Log(f\"Adjusting Position from {current_position.Quantity} to {order_quantity}\")\n            self.SetHoldings(self.SP500.Symbol, order_quantity)\n        else:\n            # Position is already at the target level, do nothing\n            pass\n\n        # Log current status periodically\n        if self.Time.Minute % 60 == 0:\n            self.Log(f\"Time: {self.Time}, Price: {current_price}, Position: {current_position.Quantity if current_position else 0}\")\n```",
+  "generated_at": "2026-11-14T23:42:36.944711+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "Log, SetCash, SetEndDate, SetHoldings, SetStartDate"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import QuantConnect as QC\n\n# Initialize the algorithm\nclass SP500Baseline(QC.Algorithm.QCAlgorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm with a long-only strategy on E-mini S&P 500 futures.\n        Handles contract rolls automatically for the September to December 2024 window.\n        \"\"\"\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Set cash balance for paper trading\n        self.SetCash(100000)\n        \n        # Define the symbol for E-mini S&P 500 Futures\n        # The symbol format is \"SP\" for the underlying, but we need the specific future contract.\n        # QuantConnect automatically handles the rolling of futures contracts based on the symbol definition.\n        # We use the standard symbol for the E-mini S&P 500.\n        self.SP500 = QC.Data.Universe.Resolution.Minute.Bars(\"SP\", QC.Data.Universe.Resolution.Minute)\n        \n        # Initialize the portfolio\n        self.Portfolio = self.Portfolio\n        \n        # Strategy parameters\n        self.Quantity = 1  # Number of contracts\n        self.LongOnly = True\n        \n        # Log initialization\n        self.Log(\"Initializing SP500 Baseline Strategy...\")\n        self.Log(f\"Start Date: {self.SetStartDate()}\")\n        self.Log(f\"End Date: {self.SetEndDate()}\")\n        self.Log(f\"Initial Cash: ${self.SetCash()}\")\n        self.Log(\"Strategy: Long Exposure to E-mini S&P 500 Futures\")\n        self.Log(\"Contract Roll: Automatic (handled by QuantConnect)\")\n\n    def OnData(self, data):\n        \"\"\"\n        Execute the trading logic on every data bar.\n        Maintains a long position in the E-mini S&P 500 future.\n        \"\"\"\n        # Check if we have data for the SP500 symbol\n        if self.SP500 is None:\n            return\n\n        # Get the current price of the SP500 future\n        current_price = self.SP500.LastPrice\n        \n        # Determine the target position size\n        # Since we want a baseline long exposure, we simply hold 1 contract.\n        # QuantConnect's futures handling automatically rolls the contract \n        # to the next month when the current contract expires or becomes illiquid.\n        # For the Sep-Dec 2024 window, it will roll from Sep -> Oct -> Nov -> Dec.\n        \n        # Calculate the order quantity (positive for long)\n        order_quantity = self.Quantity\n        \n        # Check if we are currently holding the desired position\n        current_position = self.Portfolio.Positions[self.SP500.Symbol]\n        \n        if current_position is None:\n            # No position exists, open a long position\n            self.Log(f\"Opening Long Position at {current_price}\")\n            self.SetHoldings(self.SP500.Symbol, order_quantity)\n        elif current_position.Quantity != order_quantity:\n            # Position size has changed (e.g., due to roll or adjustment), update it\n            self.Log(f\"Adjusting Position from {current_position.Quantity} to {order_quantity}\")\n            self.SetHoldings(self.SP500.Symbol, order_quantity)\n        else:\n            # Position is already at the target level, do nothing\n            pass\n\n        # Log current status periodically\n        if self.Time.Minute % 60 == 0:\n            self.Log(f\"Time: {self.Time}, Price: {current_price}, Position: {current_position.Quantity if current_position else 0}\")\n",
+    "source_sha256": "1b49bc82c08a862112c42edb045680484bbdc72e7d3906488ec410a0622a91fe",
+    "started_at": "2026-11-14T23:42:36.945834+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Universe\n  at Initialize\n    self.SP500 = QC.Data.Universe.Resolution.Minute.Bars(&quot;SP&quot;, QC.Data",
+    "project_id": 39416658,
+    "compile_id": "8a11fbc59811805cb27df07e9de5b900-714cc028c597c011cbcfda295e450714",
+    "compile_created": {
+      "compileId": "8a11fbc59811805cb27df07e9de5b900-714cc028c597c011cbcfda295e450714",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39416658,
+      "signature": "714cc028c597c011cbcfda295e450714",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "8a11fbc59811805cb27df07e9de5b900-714cc028c597c011cbcfda295e450714",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39416658, with CompileID: 8a11fbc59811805cb27df07e9de5b900-714cc028c597c011cbcfda295e450714, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39416658, with CompileID: 8a11fbc59811805cb27df07e9de5b900-714cc028c597c011cbcfda295e450714, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "4d26aee20f92cc9618bfc3a1a46d9b38",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v07",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39416658,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "4d26aee20f92cc9618bfc3a1a46d9b38",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 4
+        },
+        "backtestStart": "2026-11-14 23:42:40",
+        "backtestEnd": "2026-11-14 23:42:40",
+        "created": "2026-11-14 23:42:40",
+        "snapshotId": 39416661,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v07",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39416658,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "4d26aee20f92cc9618bfc3a1a46d9b38",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 4
+        },
+        "backtestStart": "2026-11-14 23:42:40",
+        "backtestEnd": "2026-11-14 23:42:40",
+        "created": "2026-11-14 23:42:40",
+        "snapshotId": 39416661,
+        "status": "Runtime Error",
+        "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Universe\n  at Initialize\n    self.SP500 = QC.Data.Universe.Resolution.Minute.Bars(&quot;SP&quot;, QC.Data.Universe.Resolution.Minute)\n                 ^^^^^^^^^^^^^^^^\n in main.py: line 20\n Universe",
+        "stacktrace": "Universe\n  at Initialize\n    self.SP500 = QC.Data.Universe.Resolution.Minute.Bars(\"SP\", QC.Data.Universe.Resolution.Minute)\n                 ^^^^^^^^^^^^^^^^\n in main.py: line 20\n Universe",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "1.9%",
+          "Used RAM (MB)": "173",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-4d26aee20f92cc9618bfc3a1a46d9b38",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Universe\n  at Initialize\n    self.SP500 = QC.Data.Universe.Resolution.Minute.Bars(&quot;SP&quot;, QC.Data.Universe.Resolution.Minute)\n                 ^^^^^^^^^^^^^^^^\n in main.py: line 20\n Universe",
+    "stacktrace": "Universe\n  at Initialize\n    self.SP500 = QC.Data.Universe.Resolution.Minute.Bars(\"SP\", QC.Data.Universe.Resolution.Minute)\n                 ^^^^^^^^^^^^^^^^\n in main.py: line 20\n Universe",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T23:43:29.070942+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Universe\n  at Initialize\n    self.SP500 = QC.Data.Universe.Resolution.Minute.Bars(&quot;SP&quot;, QC.Data",
+  "note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Universe\n  at Initialize\n    self.SP500 = QC.Data.Universe.Resolution.Minute.Bars(&quot;SP&quot;, QC.Data; LEGACY_API: Log, SetCash, SetEndDate, SetHoldings, SetStartDate",
+  "total_orders": null
+}

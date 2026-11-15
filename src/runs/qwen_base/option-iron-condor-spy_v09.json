@@ -1,0 +1,309 @@
+{
+  "prompt_id": "option-iron-condor-spy_v09",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\n# pylint: disable=missing-docstring, unused-variable, too-few-public-methods\n\"\"\"\nWeekly SPY Iron Condor Reference Algorithm.\n\nStrategy:\n- Window: 2024-09-01 to 2024-12-31\n- Capital: 100,000\n- Chain Filter: Strikes -10 to +10 around current price.\n- Expiries: 0 to 7 days (Weekly options).\n- Entry: Every Monday 1 minute after open.\n- Exit: Every Friday 5 minutes before close.\n- Structure:\n  - Short Call: Nearest strike with +0.10 delta.\n  - Short Put: Nearest strike with -0.10 delta.\n  - Long Call: 3 strikes further out (out-of-the-money relative to short call).\n  - Long Put: 3 strikes further out (out-of-the-money relative to short put).\n- Constraints:\n  - Must have at least 4 calls and 4 puts in the filtered chain.\n  - Skip if any leg lacks a bid or ask.\n  - Defined risk only (Iron Condor).\n  - One condor at a time.\n  - No naked short options.\n\"\"\"\n\nfrom datetime import datetime, timedelta\nfrom typing import Optional, List, Tuple, Dict\n\nimport pandas as pd\nfrom quantconnect import Algorithm, QCBrokerage, QCDataHandler\nfrom quantconnect.options import OptionChain, OptionContract, OptionStrategy\nfrom quantconnect.options.strategies import IronCondor\n\nclass WeeklySpyIronCondor(Algorithm):\n    \"\"\"\n    Implements a weekly SPY iron condor strategy using the snake_case API.\n    \"\"\"\n\n    def initialize(self) -> None:\n        \"\"\"\n        Initialize the algorithm with security definitions and initial prices.\n        \"\"\"\n        # Define the underlying security\n        self.add_equity(\"SPY\", \"SPY\")\n        \n        # Set initial prices to seed the model as requested\n        self.set_initial_price(\"SPY\", 550.00)\n        \n        # Define the trading window\n        self.set_start_date(\"2024-09-01\")\n        self.set_end_date(\"2024-12-31\")\n        \n        # Capital constraint\n        self.set_cash(100000.0)\n        \n        # Schedule events\n        # Open: Every Monday, 1 minute after market open (9:31 AM ET)\n        self.schedule_event(\n            event_type=\"open_condor\",\n            frequency=\"weekly\",\n            day_of_week=\"monday\",\n            time=\"09:31:00\",\n            time_zone=\"America/New_York\"\n        )\n        \n        # Close: Every Friday, 5 minutes before market close (3:55 PM ET)\n        self.schedule_event(\n            event_type=\"close_condor\",\n            frequency=\"weekly\",\n            day_of_week=\"friday\",\n            time=\"15:55:00\",\n            time_zone=\"America/New_York\"\n        )\n        \n        # State variables\n        self._current_condor: Optional[IronCondor] = None\n        self._has_position = False\n\n    def on_event(self, event: str) -> None:\n        \"\"\"\n        Handle scheduled events for opening and closing positions.\n        \"\"\"\n        if event == \"open_condor\":\n            self._open_condor()\n        elif event == \"close_condor\":\n            self._close_condor()\n\n    def _open_condor(self) -> None:\n        \"\"\"\n        Execute the logic to open a new iron condor position.\n        \"\"\"\n        # Check if we already have a position (defined risk, one at a time)\n        if self._has_position:\n            self.log(\"Position already open. Skipping entry.\")\n            return\n\n        # Get the option chain for SPY\n        # We need options expiring within 0 to 7 days\n        # Since we are on a Monday, we look for the weekly expiring that Friday\n        # QuantConnect OptionChain handles expiration filtering if we specify the date range\n        # However, we need to construct the chain manually based on the 7-day window\n        \n        # Get current date and time\n        current_date = self.get_datetime()\n        \n        # Calculate the expiration date (next Friday)\n        # If today is Monday, next Friday is in 4 days.\n        # We need to find the specific Friday expiration within the next 7 days.\n        days_until_friday = (4 - current_date.weekday()) % 7\n        if days_until_friday == 0:\n            days_until_friday = 7 # Should not happen on Monday logic, but safety check\n        expiration_date = current_date + timedelta(days=days_until_friday)\n        \n        # Filter for expiries between now and expiration_date (inclusive)\n        # The API allows filtering by expiration date\n        option_chain = self.get_option_chain(\n            symbol=\"SPY\",\n            expiration_date=expiration_date,\n            days_to_expiration_min=0,\n            days_to_expiration_max=7\n        )\n        \n        if option_chain is None or len(option_chain) == 0:\n            self.log(\"No option chain data available for the target expiration.\")\n            return\n\n        # Filter strikes: -10 to +10 around the money\n        # We need the current underlying price\n        current_price = self.get_security_price(\"SPY\")\n        if current_price is None:\n            self.log(\"Underlying price not available.\")\n            return\n            \n        strike_min = max(1, int(current_price - 10))\n        strike_max = int(current_price + 10)\n        \n        # Extract calls and puts within strike bounds\n        valid_calls = []\n        valid_puts = []\n        \n        for contract in option_chain:\n            if contract.strike >= strike_min and contract.strike <= strike_max:\n                if contract.type == \"call\":\n                    valid_calls.append(contract)\n                elif contract.type == \"put\":\n                    valid_puts.append(contract)\n        \n        # Requirement: At least 4 calls and 4 puts\n        if len(valid_calls) < 4 or len(valid_puts) < 4:\n            self.log(f\"Insufficient liquidity. Calls: {len(valid_calls)}, Puts: {len(valid_puts)}. Need 4 each.\")\n            return\n\n        # Sort contracts by strike price\n        valid_calls.sort(key=lambda x: x.strike)\n        valid_puts.sort(key=lambda x: x.strike)\n        \n        # Find Short Call: Nearest strike with +0.10 delta\n        # We need to calculate delta. QuantConnect doesn't always provide real-time delta in the chain object directly \n        # without a pricing model, but we can approximate or use the provided delta if available.\n        # Assuming the OptionContract has a 'delta' attribute or we use a pricing model.\n        # For this reference, we will assume the chain provides delta or we calculate it.\n        # If delta is not available, we fall back to strike proximity for the \"nearest\" logic as a proxy \n        # if the API doesn't expose it, but the prompt specifically asks for delta.\n        # We will attempt to access the delta attribute.\n        \n        short_call_contract: Optional[OptionContract] = None\n        short_put_contract: Optional[OptionContract] = None\n        \n        # Search for short call (+0.10 delta)\n        for call in valid_calls:\n            # Check if delta is available. If not, we might need to price it.\n            # Assuming 'delta' is accessible.\n            if hasattr(call, 'delta') and call.delta is not None:\n                if 0.09 <= call.delta <= 0.11:\n                    short_call_contract = call\n                    break\n        \n        # If delta not found in object, we might need to use a pricing model to find it.\n        # However, for this specific reference implementation using standard helpers:\n        # If the above fails, we log and skip to ensure compliance with \"nearest +0.10 delta\".\n        if short_call_contract is None:\n            self.log(\"Could not find a call with delta approx +0.10.\")\n            return\n\n        # Search for short put (-0.10 delta)\n        for put in valid_puts:\n            if hasattr(put, 'delta') and put.delta is not None:\n                if -0.11 <= put.delta <= -0.09:\n                    short_put_contract = put\n                    break\n        \n        if short_put_contract is None:\n            self.log(\"Could not find a put with delta approx -0.10.\")\n            return\n\n        # Find Long Call: 3 strikes further out (OTM relative to short call)\n        # Short call strike is S_c. We need a call with strike S_l > S_c.\n        # \"3 strikes further out\" implies skipping 2 strikes and taking the 3rd? \n        # Or simply the strike that is 3 index positions away? \n        # Interpretation: Find the call contract that is 3 positions away in the sorted list from the short call.\n        \n        short_call_index = valid_calls.index(short_call_contract)\n        long_call_index = short_call_index + 3\n        \n        if long_call_index >= len(valid_calls):\n            self.log(\"Cannot find long call leg 3 strikes out.\")\n            return\n            \n        long_call_contract = valid_calls[long_call_index]\n        \n        # Find Long Put: 3 strikes further out (OTM relative to short put)\n        # Short put strike is S_p. We need a put with strike S_l < S_p (since puts are OTM when strike < price).\n        # Wait, for a put, OTM means Strike < Current Price.\n        # Short put is -0.10 delta (OTM). Long put should be further OTM (lower strike).\n        # In the sorted list (ascending strike), the short put is at some index.\n        # We need to go \"further out\" which means lower strike for puts.\n        # So we look backwards in the sorted list.\n        \n        short_put_index = valid_puts.index(short_put_contract)\n        long_put_index = short_put_index - 3\n        \n        if long_put_index < 0:\n            self.log(\"Cannot find long put leg 3 strikes out.\")\n            return\n            \n        long_put_contract = valid_puts[long_put_index]\n        \n        # Verify bounds for long legs (optional sanity check, though index logic handles it)\n        # Ensure long call strike is significantly OTM\n        if long_call_contract.strike <= short_call_contract.strike:\n            self.log(\"Long call strike not sufficiently OTM.\")\n            return\n            \n        # Ensure long put strike is significantly OTM\n        if long_put_contract.strike >= short_put_contract.strike:\n            self.log(\"Long put strike not sufficiently OTM.\")\n            return\n\n        # Check for bid/ask on all legs\n        legs = [short_call_contract, short_put_contract, long_call_contract, long_put_contract]\n        for leg in legs:\n            if leg.bid is None or leg.ask is None:\n                self.log(f\"Leg {leg.strike} {leg.type} lacks bid/ask.\")\n                return\n\n        # Construct the Iron Condor\n        # Order: Short Call, Short Put, Long Call, Long Put\n        # The OptionStrategies helper usually takes the contracts in a specific order or as a set.\n        # Standard Iron Condor: Short OTM Call, Short OTM Put, Long ITM Call, Long ITM Put? \n        # No, standard Iron Condor: Short OTM Call, Short OTM Put, Long Further OTM Call, Long Further OTM Put.\n        # Our selection:\n        # Short Call: +0.10 delta (OTM)\n        # Short Put: -0.10 delta (OTM)\n        # Long Call: 3 strikes higher (Further OTM)\n        # Long Put: 3 strikes lower (Further OTM)\n        \n        # Create the strategy object\n        # Note: The exact constructor signature for IronCondor in QC Python might vary slightly by version.\n        # Typically it takes the four contracts.\n        try:\n            condor_strategy = IronCondor(\n                short_call=short_call_contract,\n                short_put=short_put_contract,\n                long_call=long_call_contract,\n                long_put=long_put_contract\n            )\n        except Exception as e:\n            self.log(f\"Failed to create IronCondor strategy: {e}\")\n            return\n\n        # Execute the trade\n        # We assume the strategy object has an execute method or we use the brokerage to buy/sell.\n        # Using the helper to generate the order list.\n        orders = condor_strategy.get_orders()\n        \n        if orders:\n            self.submit_orders(orders)\n            self._current_condor = condor_strategy\n            self._has_position = True\n            self.log(f\"Opened Iron Condor: SC={short_call_contract.strike}, SP={short_put_contract.strike}, LC={long_call_contract.strike}, LP={long_put_contract.strike}\")\n        else:\n            self.log(\"No orders generated for the iron condor.\")\n\n    def _close_condor(self) -> None:\n        \"\"\"\n        Execute the logic to close the current iron condor position.\n        \"\"\"\n        if not self._has_position or self._current_condor is None:\n            self.log(\"No open position to close.\")\n            return\n\n        # Liquidate all positions\n        # We can use the strategy object to generate reverse orders or simply sell to close\n        # Using the strategy helper to get close orders\n        close_orders = self._current_condor.get_close_orders()\n        \n        if close_orders:\n            self.submit_orders(close_orders)\n            self._has_position = False\n            self._current_condor = None\n            self.log(\"Closed Iron Condor position.\")\n        else:\n            # Fallback: Sell all options manually if helper fails\n            # This is a simplified fallback. In production, ensure get_close_orders works.\n            self.log(\"Using manual liquidation fallback.\")\n            # Get all option positions\n            positions = self.get_option_positions()\n            for pos in positions:\n                # Sell to close\n                # Assuming we can sell the quantity held\n                self.sell(pos.symbol, pos.quantity)\n            self._has_position = False\n            self._current_condor = None\n\n    def on_data(self, data: pd.DataFrame) -> None:\n        \"\"\"\n        Handle incoming market data.\n        \"\"\"\n        # No specific data handling required for this event-driven strategy\n        pass\n\n    def on_order_event(self, order: object) -> None:\n        \"\"\"\n        Handle order execution events.\n        \"\"\"\n        # Log order status for debugging\n        if order.status == \"filled\":\n            self.log(f\"Order filled: {order.symbol} {order.side} {order.quantity}\")\n        elif order.status == \"rejected\":\n            self.log(f\"Order rejected: {order.symbol} {order.side} {order.quantity}\")\n```",
+  "generated_at": "2026-11-14T23:35:20.823620+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "get_datetime, get_option_chain, get_option_positions, get_security_price, schedule_event, set_initial_price, submit_orders"
+    },
+    {
+      "code": "NO_ORDERS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "add_option"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# pylint: disable=missing-docstring, unused-variable, too-few-public-methods\n\"\"\"\nWeekly SPY Iron Condor Reference Algorithm.\n\nStrategy:\n- Window: 2024-09-01 to 2024-12-31\n- Capital: 100,000\n- Chain Filter: Strikes -10 to +10 around current price.\n- Expiries: 0 to 7 days (Weekly options).\n- Entry: Every Monday 1 minute after open.\n- Exit: Every Friday 5 minutes before close.\n- Structure:\n  - Short Call: Nearest strike with +0.10 delta.\n  - Short Put: Nearest strike with -0.10 delta.\n  - Long Call: 3 strikes further out (out-of-the-money relative to short call).\n  - Long Put: 3 strikes further out (out-of-the-money relative to short put).\n- Constraints:\n  - Must have at least 4 calls and 4 puts in the filtered chain.\n  - Skip if any leg lacks a bid or ask.\n  - Defined risk only (Iron Condor).\n  - One condor at a time.\n  - No naked short options.\n\"\"\"\n\nfrom datetime import datetime, timedelta\nfrom typing import Optional, List, Tuple, Dict\n\nimport pandas as pd\nfrom quantconnect import Algorithm, QCBrokerage, QCDataHandler\nfrom quantconnect.options import OptionChain, OptionContract, OptionStrategy\nfrom quantconnect.options.strategies import IronCondor\n\nclass WeeklySpyIronCondor(Algorithm):\n    \"\"\"\n    Implements a weekly SPY iron condor strategy using the snake_case API.\n    \"\"\"\n\n    def initialize(self) -> None:\n        \"\"\"\n        Initialize the algorithm with security definitions and initial prices.\n        \"\"\"\n        # Define the underlying security\n        self.add_equity(\"SPY\", \"SPY\")\n        \n        # Set initial prices to seed the model as requested\n        self.set_initial_price(\"SPY\", 550.00)\n        \n        # Define the trading window\n        self.set_start_date(\"2024-09-01\")\n        self.set_end_date(\"2024-12-31\")\n        \n        # Capital constraint\n        self.set_cash(100000.0)\n        \n        # Schedule events\n        # Open: Every Monday, 1 minute after market open (9:31 AM ET)\n        self.schedule_event(\n            event_type=\"open_condor\",\n            frequency=\"weekly\",\n            day_of_week=\"monday\",\n            time=\"09:31:00\",\n            time_zone=\"America/New_York\"\n        )\n        \n        # Close: Every Friday, 5 minutes before market close (3:55 PM ET)\n        self.schedule_event(\n            event_type=\"close_condor\",\n            frequency=\"weekly\",\n            day_of_week=\"friday\",\n            time=\"15:55:00\",\n            time_zone=\"America/New_York\"\n        )\n        \n        # State variables\n        self._current_condor: Optional[IronCondor] = None\n        self._has_position = False\n\n    def on_event(self, event: str) -> None:\n        \"\"\"\n        Handle scheduled events for opening and closing positions.\n        \"\"\"\n        if event == \"open_condor\":\n            self._open_condor()\n        elif event == \"close_condor\":\n            self._close_condor()\n\n    def _open_condor(self) -> None:\n        \"\"\"\n        Execute the logic to open a new iron condor position.\n        \"\"\"\n        # Check if we already have a position (defined risk, one at a time)\n        if self._has_position:\n            self.log(\"Position already open. Skipping entry.\")\n            return\n\n        # Get the option chain for SPY\n        # We need options expiring within 0 to 7 days\n        # Since we are on a Monday, we look for the weekly expiring that Friday\n        # QuantConnect OptionChain handles expiration filtering if we specify the date range\n        # However, we need to construct the chain manually based on the 7-day window\n        \n        # Get current date and time\n        current_date = self.get_datetime()\n        \n        # Calculate the expiration date (next Friday)\n        # If today is Monday, next Friday is in 4 days.\n        # We need to find the specific Friday expiration within the next 7 days.\n        days_until_friday = (4 - current_date.weekday()) % 7\n        if days_until_friday == 0:\n            days_until_friday = 7 # Should not happen on Monday logic, but safety check\n        expiration_date = current_date + timedelta(days=days_until_friday)\n        \n        # Filter for expiries between now and expiration_date (inclusive)\n        # The API allows filtering by expiration date\n        option_chain = self.get_option_chain(\n            symbol=\"SPY\",\n            expiration_date=expiration_date,\n            days_to_expiration_min=0,\n            days_to_expiration_max=7\n        )\n        \n        if option_chain is None or len(option_chain) == 0:\n            self.log(\"No option chain data available for the target expiration.\")\n            return\n\n        # Filter strikes: -10 to +10 around the money\n        # We need the current underlying price\n        current_price = self.get_security_price(\"SPY\")\n        if current_price is None:\n            self.log(\"Underlying price not available.\")\n            return\n            \n        strike_min = max(1, int(current_price - 10))\n        strike_max = int(current_price + 10)\n        \n        # Extract calls and puts within strike bounds\n        valid_calls = []\n        valid_puts = []\n        \n        for contract in option_chain:\n            if contract.strike >= strike_min and contract.strike <= strike_max:\n                if contract.type == \"call\":\n                    valid_calls.append(contract)\n                elif contract.type == \"put\":\n                    valid_puts.append(contract)\n        \n        # Requirement: At least 4 calls and 4 puts\n        if len(valid_calls) < 4 or len(valid_puts) < 4:\n            self.log(f\"Insufficient liquidity. Calls: {len(valid_calls)}, Puts: {len(valid_puts)}. Need 4 each.\")\n            return\n\n        # Sort contracts by strike price\n        valid_calls.sort(key=lambda x: x.strike)\n        valid_puts.sort(key=lambda x: x.strike)\n        \n        # Find Short Call: Nearest strike with +0.10 delta\n        # We need to calculate delta. QuantConnect doesn't always provide real-time delta in the chain object directly \n        # without a pricing model, but we can approximate or use the provided delta if available.\n        # Assuming the OptionContract has a 'delta' attribute or we use a pricing model.\n        # For this reference, we will assume the chain provides delta or we calculate it.\n        # If delta is not available, we fall back to strike proximity for the \"nearest\" logic as a proxy \n        # if the API doesn't expose it, but the prompt specifically asks for delta.\n        # We will attempt to access the delta attribute.\n        \n        short_call_contract: Optional[OptionContract] = None\n        short_put_contract: Optional[OptionContract] = None\n        \n        # Search for short call (+0.10 delta)\n        for call in valid_calls:\n            # Check if delta is available. If not, we might need to price it.\n            # Assuming 'delta' is accessible.\n            if hasattr(call, 'delta') and call.delta is not None:\n                if 0.09 <= call.delta <= 0.11:\n                    short_call_contract = call\n                    break\n        \n        # If delta not found in object, we might need to use a pricing model to find it.\n        # However, for this specific reference implementation using standard helpers:\n        # If the above fails, we log and skip to ensure compliance with \"nearest +0.10 delta\".\n        if short_call_contract is None:\n            self.log(\"Could not find a call with delta approx +0.10.\")\n            return\n\n        # Search for short put (-0.10 delta)\n        for put in valid_puts:\n            if hasattr(put, 'delta') and put.delta is not None:\n                if -0.11 <= put.delta <= -0.09:\n                    short_put_contract = put\n                    break\n        \n        if short_put_contract is None:\n            self.log(\"Could not find a put with delta approx -0.10.\")\n            return\n\n        # Find Long Call: 3 strikes further out (OTM relative to short call)\n        # Short call strike is S_c. We need a call with strike S_l > S_c.\n        # \"3 strikes further out\" implies skipping 2 strikes and taking the 3rd? \n        # Or simply the strike that is 3 index positions away? \n        # Interpretation: Find the call contract that is 3 positions away in the sorted list from the short call.\n        \n        short_call_index = valid_calls.index(short_call_contract)\n        long_call_index = short_call_index + 3\n        \n        if long_call_index >= len(valid_calls):\n            self.log(\"Cannot find long call leg 3 strikes out.\")\n            return\n            \n        long_call_contract = valid_calls[long_call_index]\n        \n        # Find Long Put: 3 strikes further out (OTM relative to short put)\n        # Short put strike is S_p. We need a put with strike S_l < S_p (since puts are OTM when strike < price).\n        # Wait, for a put, OTM means Strike < Current Price.\n        # Short put is -0.10 delta (OTM). Long put should be further OTM (lower strike).\n        # In the sorted list (ascending strike), the short put is at some index.\n        # We need to go \"further out\" which means lower strike for puts.\n        # So we look backwards in the sorted list.\n        \n        short_put_index = valid_puts.index(short_put_contract)\n        long_put_index = short_put_index - 3\n        \n        if long_put_index < 0:\n            self.log(\"Cannot find long put leg 3 strikes out.\")\n            return\n            \n        long_put_contract = valid_puts[long_put_index]\n        \n        # Verify bounds for long legs (optional sanity check, though index logic handles it)\n        # Ensure long call strike is significantly OTM\n        if long_call_contract.strike <= short_call_contract.strike:\n            self.log(\"Long call strike not sufficiently OTM.\")\n            return\n            \n        # Ensure long put strike is significantly OTM\n        if long_put_contract.strike >= short_put_contract.strike:\n            self.log(\"Long put strike not sufficiently OTM.\")\n            return\n\n        # Check for bid/ask on all legs\n        legs = [short_call_contract, short_put_contract, long_call_contract, long_put_contract]\n        for leg in legs:\n            if leg.bid is None or leg.ask is None:\n                self.log(f\"Leg {leg.strike} {leg.type} lacks bid/ask.\")\n                return\n\n        # Construct the Iron Condor\n        # Order: Short Call, Short Put, Long Call, Long Put\n        # The OptionStrategies helper usually takes the contracts in a specific order or as a set.\n        # Standard Iron Condor: Short OTM Call, Short OTM Put, Long ITM Call, Long ITM Put? \n        # No, standard Iron Condor: Short OTM Call, Short OTM Put, Long Further OTM Call, Long Further OTM Put.\n        # Our selection:\n        # Short Call: +0.10 delta (OTM)\n        # Short Put: -0.10 delta (OTM)\n        # Long Call: 3 strikes higher (Further OTM)\n        # Long Put: 3 strikes lower (Further OTM)\n        \n        # Create the strategy object\n        # Note: The exact constructor signature for IronCondor in QC Python might vary slightly by version.\n        # Typically it takes the four contracts.\n        try:\n            condor_strategy = IronCondor(\n                short_call=short_call_contract,\n                short_put=short_put_contract,\n                long_call=long_call_contract,\n                long_put=long_put_contract\n            )\n        except Exception as e:\n            self.log(f\"Failed to create IronCondor strategy: {e}\")\n            return\n\n        # Execute the trade\n        # We assume the strategy object has an execute method or we use the brokerage to buy/sell.\n        # Using the helper to generate the order list.\n        orders = condor_strategy.get_orders()\n        \n        if orders:\n            self.submit_orders(orders)\n            self._current_condor = condor_strategy\n            self._has_position = True\n            self.log(f\"Opened Iron Condor: SC={short_call_contract.strike}, SP={short_put_contract.strike}, LC={long_call_contract.strike}, LP={long_put_contract.strike}\")\n        else:\n            self.log(\"No orders generated for the iron condor.\")\n\n    def _close_condor(self) -> None:\n        \"\"\"\n        Execute the logic to close the current iron condor position.\n        \"\"\"\n        if not self._has_position or self._current_condor is None:\n            self.log(\"No open position to close.\")\n            return\n\n        # Liquidate all positions\n        # We can use the strategy object to generate reverse orders or simply sell to close\n        # Using the strategy helper to get close orders\n        close_orders = self._current_condor.get_close_orders()\n        \n        if close_orders:\n            self.submit_orders(close_orders)\n            self._has_position = False\n            self._current_condor = None\n            self.log(\"Closed Iron Condor position.\")\n        else:\n            # Fallback: Sell all options manually if helper fails\n            # This is a simplified fallback. In production, ensure get_close_orders works.\n            self.log(\"Using manual liquidation fallback.\")\n            # Get all option positions\n            positions = self.get_option_positions()\n            for pos in positions:\n                # Sell to close\n                # Assuming we can sell the quantity held\n                self.sell(pos.symbol, pos.quantity)\n            self._has_position = False\n            self._current_condor = None\n\n    def on_data(self, data: pd.DataFrame) -> None:\n        \"\"\"\n        Handle incoming market data.\n        \"\"\"\n        # No specific data handling required for this event-driven strategy\n        pass\n\n    def on_order_event(self, order: object) -> None:\n        \"\"\"\n        Handle order execution events.\n        \"\"\"\n        # Log order status for debugging\n        if order.status == \"filled\":\n            self.log(f\"Order filled: {order.symbol} {order.side} {order.quantity}\")\n        elif order.status == \"rejected\":\n            self.log(f\"Order rejected: {order.symbol} {order.side} {order.quantity}\")\n",
+    "source_sha256": "f974375ee984c85efdf7d6616a43da04be0e7deb3a4e2a3158ad6ab0f131c467",
+    "started_at": "2026-11-14T23:35:20.837159+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39416322,
+    "compile_id": "64fe6978259cc2f5e9ea13e89aae874e-c493bde036333f707f9def6b08002465",
+    "compile_created": {
+      "compileId": "64fe6978259cc2f5e9ea13e89aae874e-c493bde036333f707f9def6b08002465",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39416322,
+      "signature": "c493bde036333f707f9def6b08002465",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "64fe6978259cc2f5e9ea13e89aae874e-c493bde036333f707f9def6b08002465",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39416322, with CompileID: 64fe6978259cc2f5e9ea13e89aae874e-c493bde036333f707f9def6b08002465, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39416322, with CompileID: 64fe6978259cc2f5e9ea13e89aae874e-c493bde036333f707f9def6b08002465, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "81d728724e339a7e0a578fb83c2f200f",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "option-iron-condor-spy_v09",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39416322,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "81d728724e339a7e0a578fb83c2f200f",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 35
+        },
+        "backtestStart": "2026-11-14 23:35:24",
+        "backtestEnd": "2026-11-14 23:35:24",
+        "created": "2026-11-14 23:35:24",
+        "snapshotId": 39416325,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "option-iron-condor-spy_v09",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39416322,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "81d728724e339a7e0a578fb83c2f200f",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 35
+        },
+        "backtestStart": "2026-11-14 23:35:24",
+        "backtestEnd": "2026-11-14 23:35:24",
+        "created": "2026-11-14 23:35:24",
+        "snapshotId": 39416325,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): No module named &#039;quantconnect&#039;. If it is a Python package, ensure it is installed in the environment.\n  at \n    from quantconnect import Algorithm, QCBrokerage, QCDataHandler\n in main.py: line 29\n No module named &#039;quantconnect&#039; Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): No module named &#039;quantconnect&#039;. If it is a Python package, ensure it is installed in the environment.\n  at \n    from quantconnect import Algorithm, QCBrokerage, QCDataHandler\n in main.py: line 29\n No module named &#039;quantconnect&#039;",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): No module named 'quantconnect'. If it is a Python package, ensure it is installed in the environment.\n  at <module>\n    from quantconnect import Algorithm, QCBrokerage, QCDataHandler\n in main.py: line 29\n No module named 'quantconnect'",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.4%",
+          "Used RAM (MB)": "149",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-81d728724e339a7e0a578fb83c2f200f",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): No module named &#039;quantconnect&#039;. If it is a Python package, ensure it is installed in the environment.\n  at \n    from quantconnect import Algorithm, QCBrokerage, QCDataHandler\n in main.py: line 29\n No module named &#039;quantconnect&#039; Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): No module named &#039;quantconnect&#039;. If it is a Python package, ensure it is installed in the environment.\n  at \n    from quantconnect import Algorithm, QCBrokerage, QCDataHandler\n in main.py: line 29\n No module named &#039;quantconnect&#039;",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): No module named 'quantconnect'. If it is a Python package, ensure it is installed in the environment.\n  at <module>\n    from quantconnect import Algorithm, QCBrokerage, QCDataHandler\n in main.py: line 29\n No module named 'quantconnect'",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T23:36:13.101919+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS; UNKNOWN_API: get_datetime, get_option_chain, get_option_positions, get_security_price, schedule_event, set_initial_price, submit_orders; NO_ORDERS; PROMPT_MISS: add_option",
+  "total_orders": null
+}

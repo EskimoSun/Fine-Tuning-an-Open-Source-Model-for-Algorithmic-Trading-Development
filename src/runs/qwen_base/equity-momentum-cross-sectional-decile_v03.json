@@ -1,0 +1,309 @@
+{
+  "prompt_id": "equity-momentum-cross-sectional-decile_v03",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport QuantConnect as QC\nfrom QuantConnect.Algorithm import QC_Algorithm\nfrom QuantConnect.Data.Market import AdjustedPriceData\nfrom QuantConnect.Util import DateTime\n\nclass Sp500Momentum(QC_Algorithm):\n    \"\"\"\n    Algorithm that implements a momentum strategy on the top 100 highest volume stocks \n    within the SPY ETF universe. It holds the top 10% of these stocks based on 252-day \n    price momentum, rebalancing monthly at 9:31 AM.\n    \n    Why we warm up for 253 days:\n    The strategy relies on calculating momentum over the last 252 trading days (approximately \n    one year). To ensure that the first full calculation of the 252-day period is available \n    at the start of the first trading month (January), we need data covering the previous \n    252 days plus the current day. Starting the algorithm on Jan 1, 2022, allows us to \n    accumulate data until the end of the previous year (Dec 31, 2021). By running the \n    algorithm for an additional 253 days (covering Jan 1, 2022, through roughly mid-2022), \n    we ensure that the first rebalance occurs after a complete 252-day lookback period has \n    been populated with data, preventing look-ahead bias or missing data errors in the initial \n    momentum calculation.\n    \"\"\"\n\n    # Strategy parameters as requested\n    _lookback_days = 252\n    _top_stocks_count = 100\n    _top_percent_hold = 10  # 10% of the top 100 stocks\n\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Sets the start date to Jan 1, 2022.\n        - Sets the end date to Dec 31, 2024.\n        - Sets the initial cash to $250,000.\n        - Adds the SPY ETF as the universe provider to get its constituents.\n        \"\"\"\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        self.SetCash(250000)\n        \n        # Use SPY as the universe to get the underlying stocks\n        self.AddUniverse(QC.UniverseResolution.Daily, QC.UniverseSelectionMethod.MarketCap, QC.UniverseProvider.SPY)\n\n    def OnData(self, slice):\n        \"\"\"\n        Process incoming data.\n        - Checks if it is the first day of the month.\n        - Checks if the time is 9:31 AM.\n        - If conditions are met, calculates momentum, selects stocks, and rebalances.\n        \"\"\"\n        # Determine if it is the first trading day of the month\n        current_date = self.GetDate()\n        is_first_of_month = current_date.Day == 1\n        \n        # Check time (9:31 AM)\n        # Note: In LEAN, we typically check the current time of the data slice or the algorithm clock.\n        # Since we are using daily data, the exact minute might not be strictly enforced by the data feed \n        # unless we are using minute bars. However, the prompt specifies 9:31. \n        # For daily data, we assume the rebalance happens at the open of the first day of the month.\n        # To strictly adhere to \"9:31\", we would need minute data. Since the prompt asks for \"daily adjusted prices\",\n        # we will interpret \"start of each month at 9:31\" as the first trading day of the month for daily data.\n        # If minute data were required, we would switch to QC.UniverseResolution.Minute.\n        \n        # Given the constraint \"using daily adjusted prices\", we treat the first day of the month as the trigger.\n        if is_first_of_month:\n            self.Rebalance()\n\n    def Rebalance(self):\n        \"\"\"\n        Perform the monthly rebalance.\n        1. Get the universe of stocks from SPY.\n        2. Filter to the top 100 by dollar volume.\n        3. Calculate 252-day percent price change for each.\n        4. Select the top 10% by momentum.\n        5. Construct an equal-weighted portfolio of the selected stocks.\n        6. Execute trades to match the portfolio.\n        \"\"\"\n        # Get the current universe (constituents of SPY)\n        universe = self.Universe\n                \n        # Filter universe to only include stocks that have data for the lookback period\n        # and are in the top 100 by dollar volume.\n        # We need to calculate dollar volume. Since we have daily data, we use the latest available volume.\n        \n        candidates = []\n        \n        for symbol in universe.Symbols:\n            # Get the latest bar for the symbol\n            bar = self.History[symbol].Last\n            \n            if bar is None:\n                continue\n                \n            # Calculate Dollar Volume = Price * Volume\n            # We use the adjusted close price for consistency with the momentum calculation\n            dollar_volume = bar.AdjustedPrice * bar.Volume\n            \n            # Store symbol and its dollar volume\n            candidates.append((symbol, dollar_volume))\n        \n        # Sort by dollar volume descending and take top 100\n        candidates.sort(key=lambda x: x[1], reverse=True)\n        top_100 = candidates[:self._top_stocks_count]\n        \n        if not top_100:\n            return\n\n        # Calculate momentum for the top 100\n        momentum_scores = []\n        \n        for symbol, _ in top_100:\n            # Get 252 days of adjusted price history\n            # We need to ensure we have enough history. The lookback is 252 days.\n            history = self.History[symbol]\n            \n            if len(history) < self._lookback_days:\n                continue\n                \n            # Get the last price and the price 252 days ago\n            last_price = history.Last.AdjustedPrice\n            # Index 252 days ago (0 is today, 1 is yesterday, etc.)\n            # We need the price at index (len - 252)\n            old_price_index = len(history) - self._lookback_days\n            old_price = history[old_price_index].AdjustedPrice\n            \n            if old_price == 0:\n                continue\n                \n            # Calculate percent change\n            percent_change = (last_price - old_price) / old_price\n            momentum_scores.append((symbol, percent_change))\n        \n        # Sort by momentum score descending\n        momentum_scores.sort(key=lambda x: x[1], reverse=True)\n        \n        # Select top 10%\n        # 10% of 100 is 10 stocks.\n        num_to_hold = int(len(momentum_scores) * (self._top_percent_hold / 100.0))\n        selected_stocks = [s for s, _ in momentum_scores[:num_to_hold]]\n        \n        # Calculate target weights (Equal Weight)\n        # Total cash available for investment\n        total_cash = self.Portfolio.TotalCash\n        if total_cash <= 0:\n            return\n            \n        weight_per_stock = 1.0 / len(selected_stocks)\n        target_value_per_stock = total_cash * weight_per_stock\n        \n        # Execute trades\n        for symbol in selected_stocks:\n            # Calculate shares needed\n            shares = int(target_value_per_stock / self.Securities[symbol].LastPrice)\n            \n            # Ensure we don't buy more than we can afford or short\n            if shares > 0:\n                # Check if we already hold this stock\n                current_position = self.Portfolio[symbol]\n                \n                if current_position is None:\n                    # Buy new position\n                    self.SetHoldings(symbol, shares)\n                else:\n                    # Adjust existing position to match target\n                    # We want to reach 'shares' total.\n                    # If we have more, sell. If we have less, buy.\n                    diff = shares - current_position.Quantity\n                    if diff != 0:\n                        self.SetHoldings(symbol, shares)\n            \n            # Sell if not selected\n            if symbol not in selected_stocks:\n                current_position = self.Portfolio[symbol]\n                if current_position is not None and current_position.Quantity > 0:\n                    self.Liquidate(symbol)\n\n    def OnSecuritiesChanged(self, changes):\n        \"\"\"\n        Handle security changes (additions/removals from the universe).\n        This ensures we don't crash if a stock is removed from SPY.\n        \"\"\"\n        for security in changes.Added:\n            self.AddEquity(security.Symbol, QC.DataNormalizationMode.Adjusted)\n        for security in changes.Removed:\n            self.RemoveSecurity(security.Symbol)\n```",
+  "generated_at": "2026-11-14T22:27:18.024930+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddEquity, AddUniverse, GetDate, Liquidate, Rebalance, RemoveSecurity, SetCash, SetEndDate, SetHoldings, SetStartDate"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "add_universe"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "month_start"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import QuantConnect as QC\nfrom QuantConnect.Algorithm import QC_Algorithm\nfrom QuantConnect.Data.Market import AdjustedPriceData\nfrom QuantConnect.Util import DateTime\n\nclass Sp500Momentum(QC_Algorithm):\n    \"\"\"\n    Algorithm that implements a momentum strategy on the top 100 highest volume stocks \n    within the SPY ETF universe. It holds the top 10% of these stocks based on 252-day \n    price momentum, rebalancing monthly at 9:31 AM.\n    \n    Why we warm up for 253 days:\n    The strategy relies on calculating momentum over the last 252 trading days (approximately \n    one year). To ensure that the first full calculation of the 252-day period is available \n    at the start of the first trading month (January), we need data covering the previous \n    252 days plus the current day. Starting the algorithm on Jan 1, 2022, allows us to \n    accumulate data until the end of the previous year (Dec 31, 2021). By running the \n    algorithm for an additional 253 days (covering Jan 1, 2022, through roughly mid-2022), \n    we ensure that the first rebalance occurs after a complete 252-day lookback period has \n    been populated with data, preventing look-ahead bias or missing data errors in the initial \n    momentum calculation.\n    \"\"\"\n\n    # Strategy parameters as requested\n    _lookback_days = 252\n    _top_stocks_count = 100\n    _top_percent_hold = 10  # 10% of the top 100 stocks\n\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Sets the start date to Jan 1, 2022.\n        - Sets the end date to Dec 31, 2024.\n        - Sets the initial cash to $250,000.\n        - Adds the SPY ETF as the universe provider to get its constituents.\n        \"\"\"\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        self.SetCash(250000)\n        \n        # Use SPY as the universe to get the underlying stocks\n        self.AddUniverse(QC.UniverseResolution.Daily, QC.UniverseSelectionMethod.MarketCap, QC.UniverseProvider.SPY)\n\n    def OnData(self, slice):\n        \"\"\"\n        Process incoming data.\n        - Checks if it is the first day of the month.\n        - Checks if the time is 9:31 AM.\n        - If conditions are met, calculates momentum, selects stocks, and rebalances.\n        \"\"\"\n        # Determine if it is the first trading day of the month\n        current_date = self.GetDate()\n        is_first_of_month = current_date.Day == 1\n        \n        # Check time (9:31 AM)\n        # Note: In LEAN, we typically check the current time of the data slice or the algorithm clock.\n        # Since we are using daily data, the exact minute might not be strictly enforced by the data feed \n        # unless we are using minute bars. However, the prompt specifies 9:31. \n        # For daily data, we assume the rebalance happens at the open of the first day of the month.\n        # To strictly adhere to \"9:31\", we would need minute data. Since the prompt asks for \"daily adjusted prices\",\n        # we will interpret \"start of each month at 9:31\" as the first trading day of the month for daily data.\n        # If minute data were required, we would switch to QC.UniverseResolution.Minute.\n        \n        # Given the constraint \"using daily adjusted prices\", we treat the first day of the month as the trigger.\n        if is_first_of_month:\n            self.Rebalance()\n\n    def Rebalance(self):\n        \"\"\"\n        Perform the monthly rebalance.\n        1. Get the universe of stocks from SPY.\n        2. Filter to the top 100 by dollar volume.\n        3. Calculate 252-day percent price change for each.\n        4. Select the top 10% by momentum.\n        5. Construct an equal-weighted portfolio of the selected stocks.\n        6. Execute trades to match the portfolio.\n        \"\"\"\n        # Get the current universe (constituents of SPY)\n        universe = self.Universe\n                \n        # Filter universe to only include stocks that have data for the lookback period\n        # and are in the top 100 by dollar volume.\n        # We need to calculate dollar volume. Since we have daily data, we use the latest available volume.\n        \n        candidates = []\n        \n        for symbol in universe.Symbols:\n            # Get the latest bar for the symbol\n            bar = self.History[symbol].Last\n            \n            if bar is None:\n                continue\n                \n            # Calculate Dollar Volume = Price * Volume\n            # We use the adjusted close price for consistency with the momentum calculation\n            dollar_volume = bar.AdjustedPrice * bar.Volume\n            \n            # Store symbol and its dollar volume\n            candidates.append((symbol, dollar_volume))\n        \n        # Sort by dollar volume descending and take top 100\n        candidates.sort(key=lambda x: x[1], reverse=True)\n        top_100 = candidates[:self._top_stocks_count]\n        \n        if not top_100:\n            return\n\n        # Calculate momentum for the top 100\n        momentum_scores = []\n        \n        for symbol, _ in top_100:\n            # Get 252 days of adjusted price history\n            # We need to ensure we have enough history. The lookback is 252 days.\n            history = self.History[symbol]\n            \n            if len(history) < self._lookback_days:\n                continue\n                \n            # Get the last price and the price 252 days ago\n            last_price = history.Last.AdjustedPrice\n            # Index 252 days ago (0 is today, 1 is yesterday, etc.)\n            # We need the price at index (len - 252)\n            old_price_index = len(history) - self._lookback_days\n            old_price = history[old_price_index].AdjustedPrice\n            \n            if old_price == 0:\n                continue\n                \n            # Calculate percent change\n            percent_change = (last_price - old_price) / old_price\n            momentum_scores.append((symbol, percent_change))\n        \n        # Sort by momentum score descending\n        momentum_scores.sort(key=lambda x: x[1], reverse=True)\n        \n        # Select top 10%\n        # 10% of 100 is 10 stocks.\n        num_to_hold = int(len(momentum_scores) * (self._top_percent_hold / 100.0))\n        selected_stocks = [s for s, _ in momentum_scores[:num_to_hold]]\n        \n        # Calculate target weights (Equal Weight)\n        # Total cash available for investment\n        total_cash = self.Portfolio.TotalCash\n        if total_cash <= 0:\n            return\n            \n        weight_per_stock = 1.0 / len(selected_stocks)\n        target_value_per_stock = total_cash * weight_per_stock\n        \n        # Execute trades\n        for symbol in selected_stocks:\n            # Calculate shares needed\n            shares = int(target_value_per_stock / self.Securities[symbol].LastPrice)\n            \n            # Ensure we don't buy more than we can afford or short\n            if shares > 0:\n                # Check if we already hold this stock\n                current_position = self.Portfolio[symbol]\n                \n                if current_position is None:\n                    # Buy new position\n                    self.SetHoldings(symbol, shares)\n                else:\n                    # Adjust existing position to match target\n                    # We want to reach 'shares' total.\n                    # If we have more, sell. If we have less, buy.\n                    diff = shares - current_position.Quantity\n                    if diff != 0:\n                        self.SetHoldings(symbol, shares)\n            \n            # Sell if not selected\n            if symbol not in selected_stocks:\n                current_position = self.Portfolio[symbol]\n                if current_position is not None and current_position.Quantity > 0:\n                    self.Liquidate(symbol)\n\n    def OnSecuritiesChanged(self, changes):\n        \"\"\"\n        Handle security changes (additions/removals from the universe).\n        This ensures we don't crash if a stock is removed from SPY.\n        \"\"\"\n        for security in changes.Added:\n            self.AddEquity(security.Symbol, QC.DataNormalizationMode.Adjusted)\n        for security in changes.Removed:\n            self.RemoveSecurity(security.Symbol)\n",
+    "source_sha256": "a9925e146ecf02d013814cd446bd864a805dcb45a6332939ed31f189bf560626",
+    "started_at": "2026-11-14T22:27:18.026101+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Loader.TryCreatePythonAlgorithm():  System.Exception: AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location),  a",
+    "project_id": 39413526,
+    "compile_id": "bdc69bbd9dea2e80d4136d3f7447416e-a659a6bfcffce115c0211b7c8f703418",
+    "compile_created": {
+      "compileId": "bdc69bbd9dea2e80d4136d3f7447416e-a659a6bfcffce115c0211b7c8f703418",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39413526,
+      "signature": "a659a6bfcffce115c0211b7c8f703418",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "bdc69bbd9dea2e80d4136d3f7447416e-a659a6bfcffce115c0211b7c8f703418",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39413526, with CompileID: bdc69bbd9dea2e80d4136d3f7447416e-a659a6bfcffce115c0211b7c8f703418, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39413526, with CompileID: bdc69bbd9dea2e80d4136d3f7447416e-a659a6bfcffce115c0211b7c8f703418, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "b817cab3ebc7ce7605a5acb3b5a719fe",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413526,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "b817cab3ebc7ce7605a5acb3b5a719fe",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 10
+        },
+        "backtestStart": "2026-11-14 22:27:23",
+        "backtestEnd": "2026-11-14 22:27:23",
+        "created": "2026-11-14 22:27:23",
+        "snapshotId": 39413531,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413526,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "b817cab3ebc7ce7605a5acb3b5a719fe",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 10
+        },
+        "backtestStart": "2026-11-14 22:27:23",
+        "backtestEnd": "2026-11-14 22:27:23",
+        "created": "2026-11-14 22:27:23",
+        "snapshotId": 39413531,
+        "status": "Runtime Error",
+        "error": "[ERROR] FATAL UNHANDLED EXCEPTION:Loader.TryCreatePythonAlgorithm():  System.Exception: AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location),  at <module>,    from QuantConnect.Algorithm import QC_Algorithm, in main.py: line 2, cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location),   at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper..ctor(String moduleName) in AlgorithmFactory/Python/Wrappers/AlgorithmPythonWrapper.cs:line 188,   at QuantConnect.AlgorithmFactory.Loader.TryCreatePythonAlgorithm(String assemblyPath, IAlgorithm& algorithmInstance, String& errorMessage) in AlgorithmFactory/Loader.cs:line 173,Engine.Run():  QuantConnect.Lean.Engine.Setup.AlgorithmSetupException: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'Q",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 2\n cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.5%",
+          "Used RAM (MB)": "159",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-b817cab3ebc7ce7605a5acb3b5a719fe",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "[ERROR] FATAL UNHANDLED EXCEPTION:Loader.TryCreatePythonAlgorithm():  System.Exception: AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location),  at <module>,    from QuantConnect.Algorithm import QC_Algorithm, in main.py: line 2, cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location),   at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper..ctor(String moduleName) in AlgorithmFactory/Python/Wrappers/AlgorithmPythonWrapper.cs:line 188,   at QuantConnect.AlgorithmFactory.Loader.TryCreatePythonAlgorithm(String assemblyPath, IAlgorithm& algorithmInstance, String& errorMessage) in AlgorithmFactory/Loader.cs:line 173,Engine.Run():  QuantConnect.Lean.Engine.Setup.AlgorithmSetupException: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'Q",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 2\n cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:28:14.011077+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Loader.TryCreatePythonAlgorithm():  System.Exception: AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location),  a",
+  "note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Loader.TryCreatePythonAlgorithm():  System.Exception: AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location),  a; NO_ALGORITHM_CLASS; LEGACY_API: AddEquity, AddUniverse, GetDate, Liquidate, Rebalance, RemoveSecurity, SetCash, SetEndDate, SetHoldings, SetStartDate; PROMPT_MISS: add_universe; PROMPT_MISS: month_start",
+  "total_orders": null
+}

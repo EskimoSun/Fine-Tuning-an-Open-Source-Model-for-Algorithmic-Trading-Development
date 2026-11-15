@@ -1,0 +1,297 @@
+{
+  "prompt_id": "equity-atr-volatility-stop_v03",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\n# QuantConnect LEAN Algorithm in Python\n# Strategy: ATR Trailing Stop on SPY (Minute Data)\n# Class Name: AtrTrailingStop\n# Date Range: 2022-01-01 to 2024-12-31\n# Initial Capital: $100,000\n# Logic: Hold SPY. Track highest close since entry. \n#        If Close < (Highest Close - 3 * ATR), sell all.\n#        Buy back on the next bar and reset tracking.\n#        Plot Stop Level and Trailing High.\n\nfrom QuantConnect.Algorithm import QC\nfrom QuantConnect.Data.Market import MinuteBar\nfrom QuantConnect.Util import datetime\nimport pandas as pd\n\nclass AtrTrailingStop(QC.Algorithm.QCAlgorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Set the start and end dates.\n        - Add the SPY security.\n        - Set initial cash.\n        - Define parameters for the strategy.\n        \"\"\"\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Add SPY minute data\n        self.Add(Equity.SPY, Resolution.Minute)\n        \n        # Set initial capital\n        self.SetInitialCash(100000)\n        \n        # Strategy Parameters\n        self.lookback = 14\n        self.stop_multiplier = 3.0\n        \n        # State variables\n        self.position = None\n        self.entry_price = 0.0\n        self.highest_close = 0.0\n        self.atr = 0.0\n        self.stop_level = 0.0\n        self.is_ready = False  # Wait until ATR has enough data\n        \n        # Add a chart for visualization\n        self.AddChart(Equity.SPY, Resolution.Minute, \"Stop\")\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        - Calculate ATR if not ready.\n        - Manage position (Entry, Trailing Stop, Re-entry).\n        - Update plots.\n        \"\"\"\n        if not data.ContainsKey(Equity.SPY):\n            return\n\n        bar = data[Equity.SPY]\n        current_price = bar.Close\n        current_high = bar.High\n        \n        # Calculate ATR if we don't have enough history yet\n        if not self.is_ready:\n            # We need at least 'lookback' bars to calculate a valid ATR\n            if len(self.History(Equity.SPY, self.lookback, Resolution.Minute)) >= self.lookback:\n                self.atr = self.CalculateATR(self.lookback)\n                self.is_ready = True\n            return\n\n        # If we are in a position\n        if self.position is not None:\n            # Update the highest close since entry\n            if current_price > self.highest_close:\n                self.highest_close = current_price\n            \n            # Calculate the stop level\n            self.stop_level = self.highest_close - (self.stop_multiplier * self.atr)\n            \n            # Check if we hit the stop\n            if current_price < self.stop_level:\n                # Sell everything\n                self.Liquidate(Equity.SPY)\n                self.highest_close = 0.0\n                self.stop_level = 0.0\n                self.log_message(f\"Stop Hit: Sold at {current_price:.2f}. Stop Level was {self.stop_level:.2f}\")\n            \n            # Plot the stop level and trailing high\n            self.AddPlot(\"Stop\", self.stop_level, \"SPY\")\n            self.AddPlot(\"TrailingHigh\", self.highest_close, \"SPY\")\n\n        # If we are not in a position\n        else:\n            # Wait for the next bar to buy back after a stop hit, \n            # or enter on the first valid bar if we haven't entered yet.\n            # The prompt says \"buy again on the next bar\". \n            # Since we are in OnData, if we just sold, we wait for the next call.\n            # If we haven't entered yet, we enter now.\n            \n            # Check if we should enter (e.g., if we just sold, we wait for next bar logic handled by state reset)\n            # Actually, the prompt implies: Sell -> Wait 1 bar -> Buy.\n            # Since we are in the same bar where we sold, we do nothing here.\n            # We only buy if we are not in a position AND we have valid data.\n            \n            # Simple logic: If no position, enter immediately unless we just sold in this bar.\n            # To strictly follow \"buy again on the next bar\", we would need a flag.\n            # However, standard trailing stop logic usually re-enters on the next available bar.\n            # Let's assume standard re-entry on the next bar where we are flat.\n            \n            # To ensure we don't buy and sell in the same bar if we just sold:\n            # We can check if we sold in this bar. But simpler: just enter if flat.\n            # The \"next bar\" constraint is naturally handled because if we sell at T, \n            # we are flat at T. At T+1, we are flat, so we buy.\n            \n            if self.highest_close == 0.0:\n                # First entry or re-entry\n                self.entry_price = current_price\n                self.highest_close = current_price\n                self.stop_level = current_price - (self.stop_multiplier * self.atr)\n                self.SetHoldings(Equity.SPY, 100000)\n                self.log_message(f\"Entry: Bought at {current_price:.2f}. Stop Level: {self.stop_level:.2f}\")\n            \n            # Plot the stop level and trailing high\n            self.AddPlot(\"Stop\", self.stop_level, \"SPY\")\n            self.AddPlot(\"TrailingHigh\", self.highest_close, \"SPY\")\n\n    def CalculateATR(self, period):\n        \"\"\"\n        Helper method to calculate ATR using the standard True Range method.\n        \"\"\"\n        history = self.History(Equity.SPY, period, Resolution.Minute)\n        if len(history) < period:\n            return 0.0\n        \n        # Calculate True Range for the last 'period' bars\n        # True Range = Max(High - Low, |High Prev - Low|, |High Prev - Low|)\n        atr_values = []\n        \n        for i in range(1, len(history)):\n            prev_bar = history[i-1]\n            curr_bar = history[i]\n            \n            high_low = curr_bar.High - curr_bar.Low\n            prev_close = prev_bar.Close\n            curr_high = curr_bar.High\n            curr_low = curr_bar.Low\n            \n            # Previous Close to Current High/Low\n            range1 = abs(curr_high - prev_close)\n            range2 = abs(curr_low - prev_close)\n            \n            true_range = max(high_low, range1, range2)\n            atr_values.append(true_range)\n        \n        # Average of the True Ranges\n        return sum(atr_values) / len(atr_values)\n\n    def OnOrderEvent(self, order):\n        \"\"\"\n        Handle order events (optional, mostly for logging).\n        \"\"\"\n        pass\n\n    def log_message(self, message):\n        \"\"\"\n        Helper to log messages to the QuantConnect log.\n        \"\"\"\n        self.Log(message)\n```",
+  "generated_at": "2026-11-14T21:54:16.078619+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "Add, AddChart, AddPlot, CalculateATR, History, Liquidate, Log, SetEndDate, SetHoldings, SetInitialCash"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ".atr( / averagetruerange"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# QuantConnect LEAN Algorithm in Python\n# Strategy: ATR Trailing Stop on SPY (Minute Data)\n# Class Name: AtrTrailingStop\n# Date Range: 2022-01-01 to 2024-12-31\n# Initial Capital: $100,000\n# Logic: Hold SPY. Track highest close since entry. \n#        If Close < (Highest Close - 3 * ATR), sell all.\n#        Buy back on the next bar and reset tracking.\n#        Plot Stop Level and Trailing High.\n\nfrom QuantConnect.Algorithm import QC\nfrom QuantConnect.Data.Market import MinuteBar\nfrom QuantConnect.Util import datetime\nimport pandas as pd\n\nclass AtrTrailingStop(QC.Algorithm.QCAlgorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Set the start and end dates.\n        - Add the SPY security.\n        - Set initial cash.\n        - Define parameters for the strategy.\n        \"\"\"\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Add SPY minute data\n        self.Add(Equity.SPY, Resolution.Minute)\n        \n        # Set initial capital\n        self.SetInitialCash(100000)\n        \n        # Strategy Parameters\n        self.lookback = 14\n        self.stop_multiplier = 3.0\n        \n        # State variables\n        self.position = None\n        self.entry_price = 0.0\n        self.highest_close = 0.0\n        self.atr = 0.0\n        self.stop_level = 0.0\n        self.is_ready = False  # Wait until ATR has enough data\n        \n        # Add a chart for visualization\n        self.AddChart(Equity.SPY, Resolution.Minute, \"Stop\")\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        - Calculate ATR if not ready.\n        - Manage position (Entry, Trailing Stop, Re-entry).\n        - Update plots.\n        \"\"\"\n        if not data.ContainsKey(Equity.SPY):\n            return\n\n        bar = data[Equity.SPY]\n        current_price = bar.Close\n        current_high = bar.High\n        \n        # Calculate ATR if we don't have enough history yet\n        if not self.is_ready:\n            # We need at least 'lookback' bars to calculate a valid ATR\n            if len(self.History(Equity.SPY, self.lookback, Resolution.Minute)) >= self.lookback:\n                self.atr = self.CalculateATR(self.lookback)\n                self.is_ready = True\n            return\n\n        # If we are in a position\n        if self.position is not None:\n            # Update the highest close since entry\n            if current_price > self.highest_close:\n                self.highest_close = current_price\n            \n            # Calculate the stop level\n            self.stop_level = self.highest_close - (self.stop_multiplier * self.atr)\n            \n            # Check if we hit the stop\n            if current_price < self.stop_level:\n                # Sell everything\n                self.Liquidate(Equity.SPY)\n                self.highest_close = 0.0\n                self.stop_level = 0.0\n                self.log_message(f\"Stop Hit: Sold at {current_price:.2f}. Stop Level was {self.stop_level:.2f}\")\n            \n            # Plot the stop level and trailing high\n            self.AddPlot(\"Stop\", self.stop_level, \"SPY\")\n            self.AddPlot(\"TrailingHigh\", self.highest_close, \"SPY\")\n\n        # If we are not in a position\n        else:\n            # Wait for the next bar to buy back after a stop hit, \n            # or enter on the first valid bar if we haven't entered yet.\n            # The prompt says \"buy again on the next bar\". \n            # Since we are in OnData, if we just sold, we wait for the next call.\n            # If we haven't entered yet, we enter now.\n            \n            # Check if we should enter (e.g., if we just sold, we wait for next bar logic handled by state reset)\n            # Actually, the prompt implies: Sell -> Wait 1 bar -> Buy.\n            # Since we are in the same bar where we sold, we do nothing here.\n            # We only buy if we are not in a position AND we have valid data.\n            \n            # Simple logic: If no position, enter immediately unless we just sold in this bar.\n            # To strictly follow \"buy again on the next bar\", we would need a flag.\n            # However, standard trailing stop logic usually re-enters on the next available bar.\n            # Let's assume standard re-entry on the next bar where we are flat.\n            \n            # To ensure we don't buy and sell in the same bar if we just sold:\n            # We can check if we sold in this bar. But simpler: just enter if flat.\n            # The \"next bar\" constraint is naturally handled because if we sell at T, \n            # we are flat at T. At T+1, we are flat, so we buy.\n            \n            if self.highest_close == 0.0:\n                # First entry or re-entry\n                self.entry_price = current_price\n                self.highest_close = current_price\n                self.stop_level = current_price - (self.stop_multiplier * self.atr)\n                self.SetHoldings(Equity.SPY, 100000)\n                self.log_message(f\"Entry: Bought at {current_price:.2f}. Stop Level: {self.stop_level:.2f}\")\n            \n            # Plot the stop level and trailing high\n            self.AddPlot(\"Stop\", self.stop_level, \"SPY\")\n            self.AddPlot(\"TrailingHigh\", self.highest_close, \"SPY\")\n\n    def CalculateATR(self, period):\n        \"\"\"\n        Helper method to calculate ATR using the standard True Range method.\n        \"\"\"\n        history = self.History(Equity.SPY, period, Resolution.Minute)\n        if len(history) < period:\n            return 0.0\n        \n        # Calculate True Range for the last 'period' bars\n        # True Range = Max(High - Low, |High Prev - Low|, |High Prev - Low|)\n        atr_values = []\n        \n        for i in range(1, len(history)):\n            prev_bar = history[i-1]\n            curr_bar = history[i]\n            \n            high_low = curr_bar.High - curr_bar.Low\n            prev_close = prev_bar.Close\n            curr_high = curr_bar.High\n            curr_low = curr_bar.Low\n            \n            # Previous Close to Current High/Low\n            range1 = abs(curr_high - prev_close)\n            range2 = abs(curr_low - prev_close)\n            \n            true_range = max(high_low, range1, range2)\n            atr_values.append(true_range)\n        \n        # Average of the True Ranges\n        return sum(atr_values) / len(atr_values)\n\n    def OnOrderEvent(self, order):\n        \"\"\"\n        Handle order events (optional, mostly for logging).\n        \"\"\"\n        pass\n\n    def log_message(self, message):\n        \"\"\"\n        Helper to log messages to the QuantConnect log.\n        \"\"\"\n        self.Log(message)\n",
+    "source_sha256": "dc393f93066257de315e732c9f2af7826956d2dc43b5bd8320279d9b7e9ca1af",
+    "started_at": "2026-11-14T21:54:16.080932+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39412091,
+    "compile_id": "16cfa348cd733fce2d7528c751780045-7b6fd1919a0e6daae403ec1de6d51682",
+    "compile_created": {
+      "compileId": "16cfa348cd733fce2d7528c751780045-7b6fd1919a0e6daae403ec1de6d51682",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39412091,
+      "signature": "7b6fd1919a0e6daae403ec1de6d51682",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "16cfa348cd733fce2d7528c751780045-7b6fd1919a0e6daae403ec1de6d51682",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39412091, with CompileID: 16cfa348cd733fce2d7528c751780045-7b6fd1919a0e6daae403ec1de6d51682, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39412091, with CompileID: 16cfa348cd733fce2d7528c751780045-7b6fd1919a0e6daae403ec1de6d51682, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "9d370d22d3d770a9683d1f0ac54b9cf7",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-atr-volatility-stop_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39412091,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "9d370d22d3d770a9683d1f0ac54b9cf7",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 11
+        },
+        "backtestStart": "2026-11-14 21:54:19",
+        "backtestEnd": "2026-11-14 21:54:19",
+        "created": "2026-11-14 21:54:19",
+        "snapshotId": 39412095,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-atr-volatility-stop_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39412091,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "9d370d22d3d770a9683d1f0ac54b9cf7",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 11
+        },
+        "backtestStart": "2026-11-14 21:54:19",
+        "backtestEnd": "2026-11-14 21:54:19",
+        "created": "2026-11-14 21:54:19",
+        "snapshotId": 39412095,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC\n in main.py: line 11\n cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC\n in main.py: line 11\n cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC\n in main.py: line 11\n cannot import name 'QC' from 'QuantConnect.Algorithm' (unknown location)",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.6%",
+          "Used RAM (MB)": "121",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-9d370d22d3d770a9683d1f0ac54b9cf7",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC\n in main.py: line 11\n cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC\n in main.py: line 11\n cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC\n in main.py: line 11\n cannot import name 'QC' from 'QuantConnect.Algorithm' (unknown location)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T21:55:06.298920+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; LEGACY_API: Add, AddChart, AddPlot, CalculateATR, History, Liquidate, Log, SetEndDate, SetHoldings, SetInitialCash; PROMPT_MISS: .atr( / averagetruerange",
+  "total_orders": null
+}

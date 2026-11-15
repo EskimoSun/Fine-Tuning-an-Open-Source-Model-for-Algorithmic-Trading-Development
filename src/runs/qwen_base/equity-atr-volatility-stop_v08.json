@@ -1,0 +1,331 @@
+{
+  "prompt_id": "equity-atr-volatility-stop_v08",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\n# QuantConnect LEAN Algorithm: ATR Chandelier Stop Strategy on SPY\n# This script implements a trailing stop strategy using the ATR (Average True Range) indicator.\n# It runs on a minute resolution for SPY from 2022-01-01 to 2024-12-31.\n# Strategy Logic:\n# 1. Flat: Allocate 100% Long. Set Trailing High = Entry Close.\n# 2. Update: Trailing High = max(Trailing High, Current Close).\n# 3. Stop: Stop Level = Trailing High - (3 * ATR).\n# 4. Exit: If Close < Stop Level, liquidate.\n# 5. Re-entry: On the next bar, re-enter 100% Long and reset Trailing High.\n\nfrom datetime import datetime\nimport QuantConnect.Algorithm as QAC\nimport QuantConnect.Indicators as QAI\n\nclass ATRChandelierStop(QAC.QCAlgorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Set the start and end dates.\n        - Add the SPY security.\n        - Set the initial cash.\n        - Define the ATR parameters.\n        \"\"\"\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Add SPY security with minute resolution\n        self.Add(Equity(\"SPY\", Resolution.Minute))\n        \n        # Set initial capital\n        self.SetInitialCash(100000)\n        \n        # Strategy Parameters\n        self.atrPeriod = 14\n        self.atrMultiplier = 3.0\n        self.positionSizePercent = 1.0  # 100% allocation\n        \n        # State variables\n        self.currentPosition = None\n        self.trailingHigh = None\n        self.entryClose = None\n        self.stopLevel = None\n        \n        # Initialize ATR indicator\n        self.atrIndicator = None\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        - Calculate ATR if not already done.\n        - Check for entry conditions (Flat).\n        - Manage existing position (Trailing Stop logic).\n        - Handle exit and re-entry logic.\n        \"\"\"\n        # Ensure we have data for SPY\n        if data.SPY is None:\n            return\n\n        # Calculate ATR if not initialized\n        if self.atrIndicator is None:\n            self.atrIndicator = QAI.ATR(data.SPY, self.atrPeriod)\n\n        # Get current price\n        currentPrice = data.SPY.Close\n        \n        # --- Entry Logic (Flat State) ---\n        if self.currentPosition is None:\n            # Check if we are flat (no position)\n            # Allocate 100% Long\n            self.SetHoldings(\"SPY\", self.positionSizePercent)\n            \n            # Set initial state variables\n            self.entryClose = currentPrice\n            self.trailingHigh = currentPrice\n            self.stopLevel = self.trailingHigh - (self.atrMultiplier * self.atrIndicator.Value)\n            \n            self.Log(f\"Initial Entry at {currentPrice:.2f}. Trailing High: {self.trailingHigh:.2f}, Stop: {self.stopLevel:.2f}\")\n\n        # --- Position Management Logic ---\n        else:\n            # We are in a position. Check for exit condition.\n            # Stop Level = Trailing High - (3 * ATR)\n            # If Close falls below Stop, liquidate.\n            \n            currentStop = self.trailingHigh - (self.atrMultiplier * self.atrIndicator.Value)\n            \n            # Check if close is below the stop level\n            if currentPrice < currentStop:\n                self.Log(f\"Stop Hit! Close {currentPrice:.2f} < Stop {currentStop:.2f}. Liquidating position.\")\n                self.ClosePosition(\"SPY\")\n                \n                # Re-enter on the next bar (handled in the next OnData call)\n                # We set a flag to ensure we don't re-enter immediately if the bar closes below stop\n                # but the logic naturally waits for the next bar because the position is closed.\n                # However, to strictly follow \"re-enter 100% on the next bar\", we just close now.\n                # The next iteration of OnData will see self.currentPosition is None and enter.\n                return\n\n            # Update Trailing High\n            if currentPrice > self.trailingHigh:\n                self.trailingHigh = currentPrice\n                # Update Stop Level based on new Trailing High\n                self.stopLevel = self.trailingHigh - (self.atrMultiplier * self.atrIndicator.Value)\n                self.Log(f\"Trailing High Updated to {self.trailingHigh:.2f}. New Stop: {self.stopLevel:.2f}\")\n\n            # Ensure position size remains 100%\n            self.SetHoldings(\"SPY\", self.positionSizePercent)\n\n    def OnEndOfAlgorithm(self):\n        \"\"\"\n        Log final summary.\n        \"\"\"\n        self.Log(\"Algorithm execution completed.\")\n        self.Log(f\"Final Trailing High: {self.trailingHigh}\")\n        self.Log(f\"Final Stop Level: {self.stopLevel}\")\n\n# Note: This script is designed to be run within the QuantConnect LEAN environment.\n# To run this, you would typically use the QuantConnect CLI or the LEAN engine.\n# Example CLI command:\n# qc run main.py --data-folder /path/to/data --output-folder /path/to/output\n```",
+  "generated_at": "2026-11-14T21:59:49.013016+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "Add, ClosePosition, Log, SetEndDate, SetHoldings, SetInitialCash, SetStartDate"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# QuantConnect LEAN Algorithm: ATR Chandelier Stop Strategy on SPY\n# This script implements a trailing stop strategy using the ATR (Average True Range) indicator.\n# It runs on a minute resolution for SPY from 2022-01-01 to 2024-12-31.\n# Strategy Logic:\n# 1. Flat: Allocate 100% Long. Set Trailing High = Entry Close.\n# 2. Update: Trailing High = max(Trailing High, Current Close).\n# 3. Stop: Stop Level = Trailing High - (3 * ATR).\n# 4. Exit: If Close < Stop Level, liquidate.\n# 5. Re-entry: On the next bar, re-enter 100% Long and reset Trailing High.\n\nfrom datetime import datetime\nimport QuantConnect.Algorithm as QAC\nimport QuantConnect.Indicators as QAI\n\nclass ATRChandelierStop(QAC.QCAlgorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Set the start and end dates.\n        - Add the SPY security.\n        - Set the initial cash.\n        - Define the ATR parameters.\n        \"\"\"\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Add SPY security with minute resolution\n        self.Add(Equity(\"SPY\", Resolution.Minute))\n        \n        # Set initial capital\n        self.SetInitialCash(100000)\n        \n        # Strategy Parameters\n        self.atrPeriod = 14\n        self.atrMultiplier = 3.0\n        self.positionSizePercent = 1.0  # 100% allocation\n        \n        # State variables\n        self.currentPosition = None\n        self.trailingHigh = None\n        self.entryClose = None\n        self.stopLevel = None\n        \n        # Initialize ATR indicator\n        self.atrIndicator = None\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        - Calculate ATR if not already done.\n        - Check for entry conditions (Flat).\n        - Manage existing position (Trailing Stop logic).\n        - Handle exit and re-entry logic.\n        \"\"\"\n        # Ensure we have data for SPY\n        if data.SPY is None:\n            return\n\n        # Calculate ATR if not initialized\n        if self.atrIndicator is None:\n            self.atrIndicator = QAI.ATR(data.SPY, self.atrPeriod)\n\n        # Get current price\n        currentPrice = data.SPY.Close\n        \n        # --- Entry Logic (Flat State) ---\n        if self.currentPosition is None:\n            # Check if we are flat (no position)\n            # Allocate 100% Long\n            self.SetHoldings(\"SPY\", self.positionSizePercent)\n            \n            # Set initial state variables\n            self.entryClose = currentPrice\n            self.trailingHigh = currentPrice\n            self.stopLevel = self.trailingHigh - (self.atrMultiplier * self.atrIndicator.Value)\n            \n            self.Log(f\"Initial Entry at {currentPrice:.2f}. Trailing High: {self.trailingHigh:.2f}, Stop: {self.stopLevel:.2f}\")\n\n        # --- Position Management Logic ---\n        else:\n            # We are in a position. Check for exit condition.\n            # Stop Level = Trailing High - (3 * ATR)\n            # If Close falls below Stop, liquidate.\n            \n            currentStop = self.trailingHigh - (self.atrMultiplier * self.atrIndicator.Value)\n            \n            # Check if close is below the stop level\n            if currentPrice < currentStop:\n                self.Log(f\"Stop Hit! Close {currentPrice:.2f} < Stop {currentStop:.2f}. Liquidating position.\")\n                self.ClosePosition(\"SPY\")\n                \n                # Re-enter on the next bar (handled in the next OnData call)\n                # We set a flag to ensure we don't re-enter immediately if the bar closes below stop\n                # but the logic naturally waits for the next bar because the position is closed.\n                # However, to strictly follow \"re-enter 100% on the next bar\", we just close now.\n                # The next iteration of OnData will see self.currentPosition is None and enter.\n                return\n\n            # Update Trailing High\n            if currentPrice > self.trailingHigh:\n                self.trailingHigh = currentPrice\n                # Update Stop Level based on new Trailing High\n                self.stopLevel = self.trailingHigh - (self.atrMultiplier * self.atrIndicator.Value)\n                self.Log(f\"Trailing High Updated to {self.trailingHigh:.2f}. New Stop: {self.stopLevel:.2f}\")\n\n            # Ensure position size remains 100%\n            self.SetHoldings(\"SPY\", self.positionSizePercent)\n\n    def OnEndOfAlgorithm(self):\n        \"\"\"\n        Log final summary.\n        \"\"\"\n        self.Log(\"Algorithm execution completed.\")\n        self.Log(f\"Final Trailing High: {self.trailingHigh}\")\n        self.Log(f\"Final Stop Level: {self.stopLevel}\")\n\n# Note: This script is designed to be run within the QuantConnect LEAN environment.\n# To run this, you would typically use the QuantConnect CLI or the LEAN engine.\n# Example CLI command:\n# qc run main.py --data-folder /path/to/data --output-folder /path/to/output\n",
+    "source_sha256": "35f37b94df400a28a1d8efd1c5ea38e0a064352bd5421b5791aa8e663606a1db",
+    "started_at": "2026-11-14T21:59:49.014039+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;ATRChandelierStop&#039; object has no attribute &#039;Add&#039; Did you mean: &#039;ad&#039;, &#039",
+    "project_id": 39412326,
+    "compile_id": "4eda8d9edbb90d8b6aea8a6697decb9e-2ce73665ad56c0abab42c4ffd9ac963d",
+    "compile_created": {
+      "compileId": "4eda8d9edbb90d8b6aea8a6697decb9e-2ce73665ad56c0abab42c4ffd9ac963d",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39412326,
+      "signature": "2ce73665ad56c0abab42c4ffd9ac963d",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "4eda8d9edbb90d8b6aea8a6697decb9e-2ce73665ad56c0abab42c4ffd9ac963d",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39412326, with CompileID: 4eda8d9edbb90d8b6aea8a6697decb9e-2ce73665ad56c0abab42c4ffd9ac963d, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39412326, with CompileID: 4eda8d9edbb90d8b6aea8a6697decb9e-2ce73665ad56c0abab42c4ffd9ac963d, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "65b551c46ed67107fae754e3a09f128f",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-atr-volatility-stop_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39412326,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "65b551c46ed67107fae754e3a09f128f",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 4
+        },
+        "backtestStart": "2026-11-14 21:59:52",
+        "backtestEnd": "2026-11-14 21:59:52",
+        "created": "2026-11-14 21:59:52",
+        "snapshotId": 39412328,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-atr-volatility-stop_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39412326,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "65b551c46ed67107fae754e3a09f128f",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 4
+        },
+        "backtestStart": "2026-11-14 21:59:52",
+        "backtestEnd": "2026-11-14 21:59:52",
+        "created": "2026-11-14 21:59:52",
+        "snapshotId": 39412328,
+        "status": "Runtime Error",
+        "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;ATRChandelierStop&#039; object has no attribute &#039;Add&#039; Did you mean: &#039;ad&#039;, &#039;addiff&#039;, &#039;add_cfd&#039;, &#039;add_tag&#039;, &#039;add_data&#039;?\n  at Initialize\n    self.Add(Equity(&quot;SPY&quot;, Resolution.Minute))\n    ^^^^^^^^\n in main.py: line 28\n &#039;ATRChandelierStop&#039; object has no attribute &#039;Add&#039; Did you mean: &#039;ad&#039;, &#039;addiff&#039;, &#039;add_cfd&#039;, &#039;add_tag&#039;, &#039;add_data&#039;?",
+        "stacktrace": "'ATRChandelierStop' object has no attribute 'Add' Did you mean: 'ad', 'addiff', 'add_cfd', 'add_tag', 'add_data'?\n  at Initialize\n    self.Add(Equity(\"SPY\", Resolution.Minute))\n    ^^^^^^^^\n in main.py: line 28\n 'ATRChandelierStop' object has no attribute 'Add' Did you mean: 'ad', 'addiff', 'add_cfd', 'add_tag', 'add_data'?",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "1.4%",
+          "Used RAM (MB)": "125",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-65b551c46ed67107fae754e3a09f128f",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:11"
+        }
+      },
+      "success": true
+    },
+    "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;ATRChandelierStop&#039; object has no attribute &#039;Add&#039; Did you mean: &#039;ad&#039;, &#039;addiff&#039;, &#039;add_cfd&#039;, &#039;add_tag&#039;, &#039;add_data&#039;?\n  at Initialize\n    self.Add(Equity(&quot;SPY&quot;, Resolution.Minute))\n    ^^^^^^^^\n in main.py: line 28\n &#039;ATRChandelierStop&#039; object has no attribute &#039;Add&#039; Did you mean: &#039;ad&#039;, &#039;addiff&#039;, &#039;add_cfd&#039;, &#039;add_tag&#039;, &#039;add_data&#039;?",
+    "stacktrace": "'ATRChandelierStop' object has no attribute 'Add' Did you mean: 'ad', 'addiff', 'add_cfd', 'add_tag', 'add_data'?\n  at Initialize\n    self.Add(Equity(\"SPY\", Resolution.Minute))\n    ^^^^^^^^\n in main.py: line 28\n 'ATRChandelierStop' object has no attribute 'Add' Did you mean: 'ad', 'addiff', 'add_cfd', 'add_tag', 'add_data'?",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:00:40.030580+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;ATRChandelierStop&#039; object has no attribute &#039;Add&#039; Did you mean: &#039;ad&#039;, &#039",
+  "note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;ATRChandelierStop&#039; object has no attribute &#039;Add&#039; Did you mean: &#039;ad&#039;, &#039; LEGACY_API: Add, ClosePosition, Log, SetEndDate, SetHoldings, SetInitialCash, SetStartDate",
+  "total_orders": null
+}

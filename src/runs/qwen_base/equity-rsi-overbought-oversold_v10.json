@@ -1,0 +1,291 @@
+{
+  "prompt_id": "equity-rsi-overbought-oversold_v10",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nfrom QuantConnect import *\nfrom QuantConnect.Algorithm import QCAlgo\nfrom QuantConnect.Data.Market import EquityPriceHistory\nfrom QuantConnect.Indicators import RSI\nfrom QuantConnect.Orders import OrderType, OrderSide\nfrom QuantConnect.Securities import SecurityType\n\nclass RSIStrategy(QCAlgo):\n    def initialize(self):\n        # Set date range\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        \n        # Set initial cash\n        self.set_cash(100000)\n        \n        # Enable automatic indicator warm-up\n        self.settings.automatic_indicator_warm_up = True\n        \n        # Add QQQ equity with hourly resolution\n        self.equity = self.add_equity('QQQ', Resolution.HOUR)\n        \n        # Calculate RSI with Wilder's smoothing method\n        self.rsi = self.rsi(self.equity, 14, MovingAverageType.WILDERS, Resolution.HOUR)\n        \n        # Plot the RSI indicator\n        self.plot_indicator('RSI', self.rsi)\n\n    def on_data(self, data):\n        # Return early if RSI is not ready\n        if not self.rsi.is_ready:\n            return\n\n        # Get current holdings quantity for QQQ\n        quantity = self.equity.holdings.quantity\n\n        # Trading Logic based on RSI and Holdings\n        # Condition 1: Long entry (quantity <= 0 and RSI < 30)\n        if quantity <= 0 and self.rsi.current_value < 30:\n            self.set_holdings(self.equity, 1)\n        \n        # Condition 2: Liquidate (quantity > 0 and RSI > 50)\n        elif quantity > 0 and self.rsi.current_value > 50:\n            self.liquidate(self.equity)\n        \n        # Condition 3: Short entry (quantity >= 0 and RSI > 70)\n        # Note: quantity >= 0 covers both 0 and positive. If we are flat or long, we short.\n        elif quantity >= 0 and self.rsi.current_value > 70:\n            self.set_holdings(self.equity, -1)\n        \n        # Condition 4: Liquidate Short (quantity < 0 and RSI < 50)\n        elif quantity < 0 and self.rsi.current_value < 50:\n            self.liquidate(self.equity)\n\n        # Note: If none of the specific conditions are met, we hold the current position.\n        # For example, if we are long (quantity > 0) and RSI is between 30 and 50, we do nothing.\n        # If we are short (quantity < 0) and RSI is between 50 and 70, we do nothing.\n```",
+  "generated_at": "2026-11-14T21:37:08.936448+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "from QuantConnect import *\nfrom QuantConnect.Algorithm import QCAlgo\nfrom QuantConnect.Data.Market import EquityPriceHistory\nfrom QuantConnect.Indicators import RSI\nfrom QuantConnect.Orders import OrderType, OrderSide\nfrom QuantConnect.Securities import SecurityType\n\nclass RSIStrategy(QCAlgo):\n    def initialize(self):\n        # Set date range\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        \n        # Set initial cash\n        self.set_cash(100000)\n        \n        # Enable automatic indicator warm-up\n        self.settings.automatic_indicator_warm_up = True\n        \n        # Add QQQ equity with hourly resolution\n        self.equity = self.add_equity('QQQ', Resolution.HOUR)\n        \n        # Calculate RSI with Wilder's smoothing method\n        self.rsi = self.rsi(self.equity, 14, MovingAverageType.WILDERS, Resolution.HOUR)\n        \n        # Plot the RSI indicator\n        self.plot_indicator('RSI', self.rsi)\n\n    def on_data(self, data):\n        # Return early if RSI is not ready\n        if not self.rsi.is_ready:\n            return\n\n        # Get current holdings quantity for QQQ\n        quantity = self.equity.holdings.quantity\n\n        # Trading Logic based on RSI and Holdings\n        # Condition 1: Long entry (quantity <= 0 and RSI < 30)\n        if quantity <= 0 and self.rsi.current_value < 30:\n            self.set_holdings(self.equity, 1)\n        \n        # Condition 2: Liquidate (quantity > 0 and RSI > 50)\n        elif quantity > 0 and self.rsi.current_value > 50:\n            self.liquidate(self.equity)\n        \n        # Condition 3: Short entry (quantity >= 0 and RSI > 70)\n        # Note: quantity >= 0 covers both 0 and positive. If we are flat or long, we short.\n        elif quantity >= 0 and self.rsi.current_value > 70:\n            self.set_holdings(self.equity, -1)\n        \n        # Condition 4: Liquidate Short (quantity < 0 and RSI < 50)\n        elif quantity < 0 and self.rsi.current_value < 50:\n            self.liquidate(self.equity)\n\n        # Note: If none of the specific conditions are met, we hold the current position.\n        # For example, if we are long (quantity > 0) and RSI is between 30 and 50, we do nothing.\n        # If we are short (quantity < 0) and RSI is between 50 and 70, we do nothing.\n",
+    "source_sha256": "0dd7e8520497461364ec67c028ac0d9a5783e28a7651a0e7c553ae3a6fa235c8",
+    "started_at": "2026-11-14T21:37:08.938399+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39411452,
+    "compile_id": "cc506d09308e861d821fbc8291fc53a6-a3b5ac149e48867711c9cd8865457005",
+    "compile_created": {
+      "compileId": "cc506d09308e861d821fbc8291fc53a6-a3b5ac149e48867711c9cd8865457005",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39411452,
+      "signature": "a3b5ac149e48867711c9cd8865457005",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "cc506d09308e861d821fbc8291fc53a6-a3b5ac149e48867711c9cd8865457005",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39411452, with CompileID: cc506d09308e861d821fbc8291fc53a6-a3b5ac149e48867711c9cd8865457005, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39411452, with CompileID: cc506d09308e861d821fbc8291fc53a6-a3b5ac149e48867711c9cd8865457005, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "10a66e677eeeb095aefe64990b743093",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-rsi-overbought-oversold_v10",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39411452,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "10a66e677eeeb095aefe64990b743093",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 15
+        },
+        "backtestStart": "2026-11-14 21:37:12",
+        "backtestEnd": "2026-11-14 21:37:12",
+        "created": "2026-11-14 21:37:12",
+        "snapshotId": 39411455,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-rsi-overbought-oversold_v10",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39411452,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "10a66e677eeeb095aefe64990b743093",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 15
+        },
+        "backtestStart": "2026-11-14 21:37:12",
+        "backtestEnd": "2026-11-14 21:37:12",
+        "created": "2026-11-14 21:37:12",
+        "snapshotId": 39411455,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.5%",
+          "Used RAM (MB)": "151",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-10a66e677eeeb095aefe64990b743093",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T21:37:58.505812+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS",
+  "total_orders": null
+}

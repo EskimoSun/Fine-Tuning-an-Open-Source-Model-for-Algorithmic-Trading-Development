@@ -1,0 +1,331 @@
+{
+  "prompt_id": "equity-atr-volatility-stop_v10",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\n# QuantConnect LEAN Algorithm in Python (snake_case API)\n# Strategy: Trailing Stop based on ATR with Re-entry logic\n\nfrom datetime import datetime\nimport QuantConnect.Algorithm as QCAlgorithm\nimport QuantConnect.Data as Data\n\nclass TrailingStopReentry(QCAlgorithm.QCAlgorithm):\n    def initialize(self):\n        # Set date range\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        \n        # Set initial cash\n        self.set_cash(100000)\n        \n        # Enable automatic indicator warm-up\n        self.settings.automatic_indicator_warm_up = True\n        \n        # Add SPY equity data at minute resolution\n        self.spy = self.add_equity('SPY', Data.Resolution.MINUTE)\n        \n        # Calculate 14-period ATR\n        self.atr = self.atr(self.spy.symbol, 14)\n        \n        # Initialize strategy state variables\n        self._trailing_high = 0.0\n        self._waiting_to_reenter = False\n        \n        # Plotting setup\n        self.add_plot(\"Trailing High\", self._trailing_high)\n        self.add_plot(\"Stop Level\", self._calculate_stop())\n\n    def on_data(self, data):\n        # Return early if ATR is not ready or no bar exists for SPY\n        if not self.atr.is_ready or not data.contains(self.spy.symbol):\n            return\n\n        bar = data.get(self.spy.symbol)\n        close_price = bar.close\n        \n        # Check re-entry condition\n        if self._waiting_to_reenter:\n            # Re-enter the market\n            self.set_holdings(self.spy.symbol, 1.0)\n            # Update trailing high to current close\n            self._trailing_high = close_price\n            # Clear the waiting flag\n            self._waiting_to_reenter = False\n            return\n\n        # Check if portfolio is currently invested\n        if not self.portfolio.invested:\n            # Initial entry\n            self.set_holdings(self.spy.symbol, 1.0)\n            # Set initial trailing high\n            self._trailing_high = close_price\n            return\n\n        # Update trailing high\n        self._trailing_high = max(self._trailing_high, close_price)\n        \n        # Calculate stop level\n        stop_level = self._trailing_high - (3.0 * self.atr.current.value)\n        \n        # Check for stop loss trigger\n        if close_price < stop_level:\n            # Liquidate position\n            self.liquidate(self.spy.symbol)\n            # Set flag to wait for re-entry\n            self._waiting_to_reenter = True\n            # Reset trailing high\n            self._trailing_high = 0.0\n            \n            # Update plots for the next bar\n            self.add_plot(\"Trailing High\", self._trailing_high)\n            self.add_plot(\"Stop Level\", stop_level)\n\n    def _calculate_stop(self):\n        \"\"\"Helper method to calculate current stop level for plotting.\"\"\"\n        if self._trailing_high == 0.0:\n            return None\n        return self._trailing_high - (3.0 * self.atr.current.value)\n```",
+  "generated_at": "2026-11-14T22:01:55.343859+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "add_plot"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# QuantConnect LEAN Algorithm in Python (snake_case API)\n# Strategy: Trailing Stop based on ATR with Re-entry logic\n\nfrom datetime import datetime\nimport QuantConnect.Algorithm as QCAlgorithm\nimport QuantConnect.Data as Data\n\nclass TrailingStopReentry(QCAlgorithm.QCAlgorithm):\n    def initialize(self):\n        # Set date range\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        \n        # Set initial cash\n        self.set_cash(100000)\n        \n        # Enable automatic indicator warm-up\n        self.settings.automatic_indicator_warm_up = True\n        \n        # Add SPY equity data at minute resolution\n        self.spy = self.add_equity('SPY', Data.Resolution.MINUTE)\n        \n        # Calculate 14-period ATR\n        self.atr = self.atr(self.spy.symbol, 14)\n        \n        # Initialize strategy state variables\n        self._trailing_high = 0.0\n        self._waiting_to_reenter = False\n        \n        # Plotting setup\n        self.add_plot(\"Trailing High\", self._trailing_high)\n        self.add_plot(\"Stop Level\", self._calculate_stop())\n\n    def on_data(self, data):\n        # Return early if ATR is not ready or no bar exists for SPY\n        if not self.atr.is_ready or not data.contains(self.spy.symbol):\n            return\n\n        bar = data.get(self.spy.symbol)\n        close_price = bar.close\n        \n        # Check re-entry condition\n        if self._waiting_to_reenter:\n            # Re-enter the market\n            self.set_holdings(self.spy.symbol, 1.0)\n            # Update trailing high to current close\n            self._trailing_high = close_price\n            # Clear the waiting flag\n            self._waiting_to_reenter = False\n            return\n\n        # Check if portfolio is currently invested\n        if not self.portfolio.invested:\n            # Initial entry\n            self.set_holdings(self.spy.symbol, 1.0)\n            # Set initial trailing high\n            self._trailing_high = close_price\n            return\n\n        # Update trailing high\n        self._trailing_high = max(self._trailing_high, close_price)\n        \n        # Calculate stop level\n        stop_level = self._trailing_high - (3.0 * self.atr.current.value)\n        \n        # Check for stop loss trigger\n        if close_price < stop_level:\n            # Liquidate position\n            self.liquidate(self.spy.symbol)\n            # Set flag to wait for re-entry\n            self._waiting_to_reenter = True\n            # Reset trailing high\n            self._trailing_high = 0.0\n            \n            # Update plots for the next bar\n            self.add_plot(\"Trailing High\", self._trailing_high)\n            self.add_plot(\"Stop Level\", stop_level)\n\n    def _calculate_stop(self):\n        \"\"\"Helper method to calculate current stop level for plotting.\"\"\"\n        if self._trailing_high == 0.0:\n            return None\n        return self._trailing_high - (3.0 * self.atr.current.value)\n",
+    "source_sha256": "df70bde1ac89d3a837321e3525c6f0fe6b65178a584c259a3474df7f54bd60d8",
+    "started_at": "2026-11-14T22:01:55.346293+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: Resolution\n  at initialize\n    self.spy = self.add_equity(&#039;SPY&#039;, Data.Resolution.MINUTE)\n      ",
+    "project_id": 39412416,
+    "compile_id": "0311ded79fe5c6aabfe69d75e3ab60c9-e14c6a891fd915b57c0be629e535f4ba",
+    "compile_created": {
+      "compileId": "0311ded79fe5c6aabfe69d75e3ab60c9-e14c6a891fd915b57c0be629e535f4ba",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39412416,
+      "signature": "e14c6a891fd915b57c0be629e535f4ba",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "0311ded79fe5c6aabfe69d75e3ab60c9-e14c6a891fd915b57c0be629e535f4ba",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39412416, with CompileID: 0311ded79fe5c6aabfe69d75e3ab60c9-e14c6a891fd915b57c0be629e535f4ba, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39412416, with CompileID: 0311ded79fe5c6aabfe69d75e3ab60c9-e14c6a891fd915b57c0be629e535f4ba, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "2e481e4fa465b72ed850a015360c11af",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-atr-volatility-stop_v10",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39412416,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "2e481e4fa465b72ed850a015360c11af",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 13
+        },
+        "backtestStart": "2026-11-14 22:01:59",
+        "backtestEnd": "2026-11-14 22:01:59",
+        "created": "2026-11-14 22:01:59",
+        "snapshotId": 39412419,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-atr-volatility-stop_v10",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39412416,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "2e481e4fa465b72ed850a015360c11af",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 13
+        },
+        "backtestStart": "2026-11-14 22:01:59",
+        "backtestEnd": "2026-11-14 22:01:59",
+        "created": "2026-11-14 22:01:59",
+        "snapshotId": 39412419,
+        "status": "Runtime Error",
+        "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: Resolution\n  at initialize\n    self.spy = self.add_equity(&#039;SPY&#039;, Data.Resolution.MINUTE)\n                                      ^^^^^^^^^^^^^^^\n in main.py: line 21\n Resolution",
+        "stacktrace": "Resolution\n  at initialize\n    self.spy = self.add_equity('SPY', Data.Resolution.MINUTE)\n                                      ^^^^^^^^^^^^^^^\n in main.py: line 21\n Resolution",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "1.7%",
+          "Used RAM (MB)": "121",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-2e481e4fa465b72ed850a015360c11af",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:11"
+        }
+      },
+      "success": true
+    },
+    "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: Resolution\n  at initialize\n    self.spy = self.add_equity(&#039;SPY&#039;, Data.Resolution.MINUTE)\n                                      ^^^^^^^^^^^^^^^\n in main.py: line 21\n Resolution",
+    "stacktrace": "Resolution\n  at initialize\n    self.spy = self.add_equity('SPY', Data.Resolution.MINUTE)\n                                      ^^^^^^^^^^^^^^^\n in main.py: line 21\n Resolution",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:02:49.008600+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: Resolution\n  at initialize\n    self.spy = self.add_equity(&#039;SPY&#039;, Data.Resolution.MINUTE)\n      ",
+  "note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: Resolution\n  at initialize\n    self.spy = self.add_equity(&#039;SPY&#039;, Data.Resolution.MINUTE)\n      ; UNKNOWN_API: add_plot",
+  "total_orders": null
+}
