@@ -26,4 +26,4 @@ By template split (assuming the training/validation split matches `finetune/out/
 Notes:
 
 - 21 of the 81 completed backtests placed 0 trades.
-- Runtime errors from passing `Resolution` as a positional argument: 0 in-sample vs. 25 on the held-out set.
+- Runtime errors from passing `Resolution` as a positional argument: 0 in-sample vs. about 25-29 on the held-out set, depending on how the QC error text is matched (a static signature check finds 27 call sites in `rsi`/`bb`/`atr`).
