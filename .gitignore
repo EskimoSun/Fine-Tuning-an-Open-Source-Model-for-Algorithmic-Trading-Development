@@ -222,8 +222,6 @@ __marimo__/
 
 # Ignore runs except tuned
 !src/runs/
-src/runs/*
-!src/runs/qwen_tuned/
 
 .DS_Store
 src/finetune/qc_project.json

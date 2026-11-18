@@ -1,0 +1,292 @@
+{
+  "prompt_id": "equity-pairs-trading-cointegration_v02",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/Qwen-9B-finetune",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass CocaCokePepsiPairTradingAlgorithm(QCAlgorithm):\n    _pep_ratio = LinearRegression(60)\n    _pep_residues = RollingWindow(60)\n    _pep_z_score = SimpleMovingAverage(60)\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        self._ko = self.add_equity(\"KO\", Resolution.MINUTE)\n        self._pep = self.add_equity(\"PEP\", Resolution.MINUTE)\n\n        self._pep_ratio = self.linear_regression(self._ko, self._pep, 60, Resolution.DAILY)\n        # Alternatively, use a manual indicator.\n        # self._pep_ratio = LinearRegression(60)\n        # self.warm_up_indicator(self._pep_ratio, self._ko, Resolution.DAILY)\n        # self.register_indicator(self._ko, self._pep_ratio, Resolution.DAILY)\n        self._pep_residues = RollingWindow(60)\n        self._pep_z_score = SimpleMovingAverage(60)\n\n        self.schedule.on(\n            self.date_rules.every_day(self._pep.symbol),\n            self.time_rules.at(10, 0),\n            self._rebalance\n        )\n\n    def _rebalance(self) -> None:\n        if not self._pep_ratio.is_ready:\n            return\n\n        # Update the standard deviation of the residuals\n        current_residual = self._ko.price - self._pep_ratio.current.value * self._pep.price\n        self._pep_residues.add(current_residual)\n        if not self._pep_residues.is_ready:\n            return\n\n        # Z-score = (current value - mean) / standard_deviation\n        mean = self._pep_residues.mean\n        std = self._pep_residues.standard_deviation\n        if std == 0:\n            return\n        z_score = (current_residual - mean) / std\n\n        # We will buy KO when the Z-score is below -2 and sell when it is above 2\n        # We will short PEP when the Z-score is below -2 and buy when it is above 2\n        # We will close the positions when the Z-score is between -0.5 and 0.5\n        if z_score < -2.0:\n            self.set_holdings(self._ko, 0.5)\n            self.set_holdings(self._pep, -0.5)\n        elif z_score > 2.0:\n            self.set_holdings(self._ko, -0.5)\n            self.set_holdings(self._pep, 0.5)\n        elif -0.5 < z_score < 0.5:\n            self.liquidate()\n```",
+  "generated_at": "2026-11-14T21:53:50.165532+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "linear_regression"
+    }
+  ],
+  "note": "UNKNOWN_API: linear_regression",
+  "generation_elapsed_seconds": 6.253737337000004,
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass CocaCokePepsiPairTradingAlgorithm(QCAlgorithm):\n    _pep_ratio = LinearRegression(60)\n    _pep_residues = RollingWindow(60)\n    _pep_z_score = SimpleMovingAverage(60)\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        self._ko = self.add_equity(\"KO\", Resolution.MINUTE)\n        self._pep = self.add_equity(\"PEP\", Resolution.MINUTE)\n\n        self._pep_ratio = self.linear_regression(self._ko, self._pep, 60, Resolution.DAILY)\n        # Alternatively, use a manual indicator.\n        # self._pep_ratio = LinearRegression(60)\n        # self.warm_up_indicator(self._pep_ratio, self._ko, Resolution.DAILY)\n        # self.register_indicator(self._ko, self._pep_ratio, Resolution.DAILY)\n        self._pep_residues = RollingWindow(60)\n        self._pep_z_score = SimpleMovingAverage(60)\n\n        self.schedule.on(\n            self.date_rules.every_day(self._pep.symbol),\n            self.time_rules.at(10, 0),\n            self._rebalance\n        )\n\n    def _rebalance(self) -> None:\n        if not self._pep_ratio.is_ready:\n            return\n\n        # Update the standard deviation of the residuals\n        current_residual = self._ko.price - self._pep_ratio.current.value * self._pep.price\n        self._pep_residues.add(current_residual)\n        if not self._pep_residues.is_ready:\n            return\n\n        # Z-score = (current value - mean) / standard_deviation\n        mean = self._pep_residues.mean\n        std = self._pep_residues.standard_deviation\n        if std == 0:\n            return\n        z_score = (current_residual - mean) / std\n\n        # We will buy KO when the Z-score is below -2 and sell when it is above 2\n        # We will short PEP when the Z-score is below -2 and buy when it is above 2\n        # We will close the positions when the Z-score is between -0.5 and 0.5\n        if z_score < -2.0:\n            self.set_holdings(self._ko, 0.5)\n            self.set_holdings(self._pep, -0.5)\n        elif z_score > 2.0:\n            self.set_holdings(self._ko, -0.5)\n            self.set_holdings(self._pep, 0.5)\n        elif -0.5 < z_score < 0.5:\n            self.liquidate()\n",
+    "source_sha256": "aeca5c147ff88dedad2eaed2093975c49ff39a7f5e7985893fb834007f1fc042",
+    "started_at": "2026-11-14T22:20:13.540145+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39413231,
+    "compile_id": "1d055574f0e82481f5f38a7a118ff7f7-2bc38f8ff60a5e33755e984df91b3641",
+    "compile_created": {
+      "compileId": "1d055574f0e82481f5f38a7a118ff7f7-2bc38f8ff60a5e33755e984df91b3641",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39413231,
+      "signature": "2bc38f8ff60a5e33755e984df91b3641",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "1d055574f0e82481f5f38a7a118ff7f7-2bc38f8ff60a5e33755e984df91b3641",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39413231, with CompileID: 1d055574f0e82481f5f38a7a118ff7f7-2bc38f8ff60a5e33755e984df91b3641, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39413231, with CompileID: 1d055574f0e82481f5f38a7a118ff7f7-2bc38f8ff60a5e33755e984df91b3641, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "5b121d6ef0d64fb23b83babc0f478ee0",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "together_9b_tuned-equity-pairs-trading-cointegration_v02",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413231,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "5b121d6ef0d64fb23b83babc0f478ee0",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 19
+        },
+        "backtestStart": "2026-11-14 22:20:17",
+        "backtestEnd": "2026-11-14 22:20:17",
+        "created": "2026-11-14 22:20:17",
+        "snapshotId": 39413235,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "together_9b_tuned-equity-pairs-trading-cointegration_v02",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413231,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "5b121d6ef0d64fb23b83babc0f478ee0",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 19
+        },
+        "backtestStart": "2026-11-14 22:20:17",
+        "backtestEnd": "2026-11-14 22:20:17",
+        "created": "2026-11-14 22:20:17",
+        "snapshotId": 39413235,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;LinearRegression&#039; is not defined\n  at CocaCokePepsiPairTradingAlgorithm\n    _pep_ratio = LinearRegression(60)\n                 ^^^^^^^^^^^^^^^^\n in main.py: line 6\n  at \n    class CocaCokePepsiPairTradingAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;LinearRegression&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;LinearRegression&#039; is not defined\n  at CocaCokePepsiPairTradingAlgorithm\n    _pep_ratio = LinearRegression(60)\n                 ^^^^^^^^^^^^^^^^\n in main.py: line 6\n  at \n    class CocaCokePepsiPairTradingAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;LinearRegression&#039; is not defined",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'LinearRegression' is not defined\n  at CocaCokePepsiPairTradingAlgorithm\n    _pep_ratio = LinearRegression(60)\n                 ^^^^^^^^^^^^^^^^\n in main.py: line 6\n  at <module>\n    class CocaCokePepsiPairTradingAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'LinearRegression' is not defined",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "6.2%",
+          "Used RAM (MB)": "225",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-5b121d6ef0d64fb23b83babc0f478ee0",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:13"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;LinearRegression&#039; is not defined\n  at CocaCokePepsiPairTradingAlgorithm\n    _pep_ratio = LinearRegression(60)\n                 ^^^^^^^^^^^^^^^^\n in main.py: line 6\n  at \n    class CocaCokePepsiPairTradingAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;LinearRegression&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;LinearRegression&#039; is not defined\n  at CocaCokePepsiPairTradingAlgorithm\n    _pep_ratio = LinearRegression(60)\n                 ^^^^^^^^^^^^^^^^\n in main.py: line 6\n  at \n    class CocaCokePepsiPairTradingAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;LinearRegression&#039; is not defined",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'LinearRegression' is not defined\n  at CocaCokePepsiPairTradingAlgorithm\n    _pep_ratio = LinearRegression(60)\n                 ^^^^^^^^^^^^^^^^\n in main.py: line 6\n  at <module>\n    class CocaCokePepsiPairTradingAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'LinearRegression' is not defined",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:21:07.935166+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "total_orders": null,
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai"
+}
