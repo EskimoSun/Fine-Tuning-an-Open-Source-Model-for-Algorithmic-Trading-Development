@@ -16,7 +16,11 @@ Environment variables:
     QWEN_DISABLE_THINKING        set to 1 to send reasoning={"enabled": false} (default off)
     QC_USER_ID, QC_API_TOKEN     QuantConnect (QC_ORG_ID optional)
 
-Every generation and score is cached under runs/<model>/<prompt_id>.json.
+    python -m qc_eval.pipeline --models qwen_tuned --prompts data/train_prompts_sample100.jsonl \\
+        --run-name qwen_tuned_train100                           # other prompt file, own cache and sheet
+
+Every generation and score is cached under runs/<model>/<prompt_id>.json
+(runs/<run-name>/ with --run-name, which also writes QC_Eval_<run-name>.xlsx).
 Reruns reuse the cache unless you pass --regenerate, so the sheet always
 reflects outputs you can point to on disk.
 """
@@ -298,14 +302,19 @@ def save_record(path, rec):
 
 
 # ---------------------------------------------------------------- main loop
-def load_prompts():
-    with open(PROMPTS) as f:
+def load_prompts(path=PROMPTS):
+    with open(path) as f:
         return [json.loads(l) for l in f if l.strip()]
+
+
+def cache_label(model, args):
+    """Folder under runs/ for this run: --run-name when given, else the model key (plus the prompt version)."""
+    return getattr(args, "run_name", None) or run_label(model, getattr(args, "system", "v1"))
 
 
 def process(model, p, args, qc):
     system_version = getattr(args, "system", "v1")
-    label = run_label(model, system_version)
+    label = cache_label(model, args)
     path = RUNS / label / f"{p['id']}.json"
     rec = json.loads(path.read_text()) if path.exists() else {}
 
@@ -385,9 +394,26 @@ def main():
                     help="system prompt version; v2/v3 cache under runs/<model>_prompt_<v>/ and do not touch the sheet")
     ap.add_argument("--repair-attempts", type=int, default=0,
                     help="enable real QC -> model repair feedback, with this many repair attempts (1-5)")
+    ap.add_argument("--prompts", default=str(PROMPTS),
+                    help="prompt file to evaluate (default: data/prompts_100.jsonl, the test set)")
+    ap.add_argument("--run-name",
+                    help="cache under runs/<run-name>/ and write QC_Eval_<run-name>.xlsx instead of the "
+                         "model's own folder and the shared sheet; one model per run name")
     args = ap.parse_args()
 
-    prompts = load_prompts()
+    models = [m.strip() for m in args.models.split(",")]
+    prompts_path = Path(args.prompts).resolve()
+    if args.run_name:
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", args.run_name):
+            ap.error("--run-name must be a plain folder name (letters, digits, _ . -)")
+        if len(models) != 1:
+            ap.error("--run-name holds one model's records; pass a single model in --models")
+    elif prompts_path != PROMPTS.resolve():
+        # Without a run name the records would land in runs/<model>/ next to the test-set results.
+        ap.error("--prompts other than the test set needs --run-name so the test-set runs and sheet are not touched")
+    sheet_path = ROOT / "QC_Eval_{}.xlsx".format(args.run_name) if args.run_name else SHEET
+
+    prompts = load_prompts(prompts_path)
     todo = prompts
     if args.prompt_id:
         unknown = set(args.prompt_id) - {p["id"] for p in prompts}
@@ -395,13 +421,12 @@ def main():
             ap.error("Unknown prompt IDs: " + ", ".join(sorted(unknown)))
         todo = [p for p in prompts if p["id"] in args.prompt_id]
     todo = todo[: args.limit] if args.limit else todo
-    models = [m.strip() for m in args.models.split(",")]
 
     if args.repair_attempts:
         if not 1 <= args.repair_attempts <= 5 or args.mock or args.no_qc:
             ap.error("--repair-attempts requires real QC and a value from 1 to 5")
         from .auto_repair import run_batch
-        run_batch(todo, [run_label(m, args.system) for m in models], args.repair_attempts,
+        run_batch(todo, [cache_label(m, args) for m in models], args.repair_attempts,
                   args.verbose, args.print_output)
         return
 
@@ -411,8 +436,8 @@ def main():
         qc = QCClient()
         assert qc.authenticate(), "QuantConnect auth failed: check QC_USER_ID / QC_API_TOKEN"
 
-    if args.system == "v1" and not SHEET.exists():
-        sheet.build(prompts, SHEET)
+    if args.system == "v1" and not sheet_path.exists():
+        sheet.build(prompts, sheet_path)
 
     results = {}
     for model in models:
@@ -430,14 +455,14 @@ def main():
 
     if args.system != "v1":
         # Separate prompt-engineering condition: keep the agreed sheet unchanged.
-        print("\n--system {}: results cached under runs/<model>_prompt_{}/; sheet not modified".format(
-            args.system, args.system))
+        print("\n--system {}: results cached under runs/{}/; sheet not modified".format(
+            args.system, cache_label(models[0], args) if args.run_name else "<model>_prompt_" + args.system))
         return
 
     rng = random.Random(42)  # fixed seed so the human sample is the same every run
     human = rng.sample([p["id"] for p in todo], min(args.human_sample, len(todo)))
-    sheet.fill(SHEET, prompts, results, human_rows=human)
-    print(f"\nwrote {SHEET}")
+    sheet.fill(sheet_path, prompts, results, human_rows=human)
+    print(f"\nwrote {sheet_path}")
     print("Open it in Excel or Sheets to recalculate the Summary tab.")
 
 
