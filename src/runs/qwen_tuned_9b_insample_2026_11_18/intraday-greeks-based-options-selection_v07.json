@@ -1,0 +1,1562 @@
+{
+  "prompt_id": "intraday-greeks-based-options-selection_v07",
+  "model": "qwen_tuned_9b_final_nothink_insample",
+  "base_model": "qwen_tuned_9b_final_nothink_insample",
+  "model_id": "jared-309b/qwen9b-final-insample-sxz",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass OptionChainFullExample(QCAlgorithm):\n    _interest_rate_model = InterestRateProvider()\n    _last_ticket: OrderTicket = None\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 9, 5)\n        self.set_cash(500000)\n        self.settings.automatic_indicator_warm_up = True\n        self.universe_settings.minimum_time_in_universe = timedelta(0)\n\n        # Warm-up the option contracts as soon as it is added to the algorithm\n        self.settings.seed_initial_prices = True\n\n        # The EMA/price cross will determine we trade ATM contracts\n        self._index = self.add_index(\"RUT\")\n        ema = self.ema(self._index, 60)\n        # To use a manual EMA instead, replace the automatic indicator above with:\n        # ema = ExponentialMovingAverage(60)\n        # self.warm_up_indicator(self._index, ema)\n        # self.register_indicator(self._index, ema)\n        ema.updated += self._trade_target_delta_contract\n\n        self._option_chain_symbol = Symbol.create_canonical_option(self._index, \"RUTW\", Market.USA, \"?RUTW\")\n        self._dividend_yield_model = DividendYieldProvider(self._index)\n\n    def _trade_target_delta_contract(self, ema: ExponentialMovingAverage, current: IndicatorDataPoint) -> None:\n        # Pace trades every 10 minutes\n        last_trade_time = self._last_ticket.time if self._last_ticket else None\n        if last_trade_time and (self.utc_time-last_trade_time).total_seconds() < 600: return\n\n        if not ema.is_ready: return\n\n        spot = self._index.price\n\n        if spot > current.value and spot > ema[-1].value:\n            atm_call = self._get_target_delta_contract(OptionRight.CALL, spot)\n            if atm_call and not self.portfolio[atm_call].invested:\n                self._last_ticket = self.market_order(atm_call, 1)\n\n        if spot < current.value and spot < ema[-1].value:\n            atm_put = self._get_target_delta_contract(OptionRight.PUT, spot)\n            if atm_put and not self.portfolio[atm_put].invested:\n                self._last_ticket = self.market_order(atm_put, 1)\n\n    def _get_target_delta_contract(self, right: OptionRight, spot: float, target_delta: float = 0.4) -> Symbol | None:\n        mirror_option_right = OptionRight.PUT if right == OptionRight.CALL else OptionRight.CALL\n        chain = self.option_chain(self._option_chain_symbol)\n        if not chain:\n            return None\n        expiry = min([x.expiry for x in chain])\n\n        def get_delta(x: OptionContract) -> tuple[OptionContract, float]:\n            mirror_option = Symbol.create_option(x.symbol.underlying, \"RUT\", Market.USA, OptionStyle.EUROPEAN, mirror_option_right, x.strike, x.expiry)\n            delta = Delta(x, self._interest_rate_model, self._dividend_yield_model, mirror_option)\n            self.warm_up_indicator([x.symbol, mirror_option, x.symbol.underlying], delta, Resolution.MINUTE)\n            return x, abs(delta.current.value)\n\n        contracts = sorted([x for x in chain if x.expiry == expiry and x.right == right],\n            key=lambda x: abs(spot - x.strike))[:10]\n        delta_by_contract = sorted([get_delta(x) for x in contracts],\n            key=lambda x: abs(target_delta - x[1]))\n\n        if not delta_by_contract:\n            return None\n\n        return self.add_option_contract(delta_by_contract[0][0])\n```",
+  "generated_at": "2026-11-18T19:51:07.649211+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "add_option_contract"
+    }
+  ],
+  "note": "UNKNOWN_API: add_option_contract",
+  "qc_evaluation": {
+    "status": "completed",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass OptionChainFullExample(QCAlgorithm):\n    _interest_rate_model = InterestRateProvider()\n    _last_ticket: OrderTicket = None\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 9, 5)\n        self.set_cash(500000)\n        self.settings.automatic_indicator_warm_up = True\n        self.universe_settings.minimum_time_in_universe = timedelta(0)\n\n        # Warm-up the option contracts as soon as it is added to the algorithm\n        self.settings.seed_initial_prices = True\n\n        # The EMA/price cross will determine we trade ATM contracts\n        self._index = self.add_index(\"RUT\")\n        ema = self.ema(self._index, 60)\n        # To use a manual EMA instead, replace the automatic indicator above with:\n        # ema = ExponentialMovingAverage(60)\n        # self.warm_up_indicator(self._index, ema)\n        # self.register_indicator(self._index, ema)\n        ema.updated += self._trade_target_delta_contract\n\n        self._option_chain_symbol = Symbol.create_canonical_option(self._index, \"RUTW\", Market.USA, \"?RUTW\")\n        self._dividend_yield_model = DividendYieldProvider(self._index)\n\n    def _trade_target_delta_contract(self, ema: ExponentialMovingAverage, current: IndicatorDataPoint) -> None:\n        # Pace trades every 10 minutes\n        last_trade_time = self._last_ticket.time if self._last_ticket else None\n        if last_trade_time and (self.utc_time-last_trade_time).total_seconds() < 600: return\n\n        if not ema.is_ready: return\n\n        spot = self._index.price\n\n        if spot > current.value and spot > ema[-1].value:\n            atm_call = self._get_target_delta_contract(OptionRight.CALL, spot)\n            if atm_call and not self.portfolio[atm_call].invested:\n                self._last_ticket = self.market_order(atm_call, 1)\n\n        if spot < current.value and spot < ema[-1].value:\n            atm_put = self._get_target_delta_contract(OptionRight.PUT, spot)\n            if atm_put and not self.portfolio[atm_put].invested:\n                self._last_ticket = self.market_order(atm_put, 1)\n\n    def _get_target_delta_contract(self, right: OptionRight, spot: float, target_delta: float = 0.4) -> Symbol | None:\n        mirror_option_right = OptionRight.PUT if right == OptionRight.CALL else OptionRight.CALL\n        chain = self.option_chain(self._option_chain_symbol)\n        if not chain:\n            return None\n        expiry = min([x.expiry for x in chain])\n\n        def get_delta(x: OptionContract) -> tuple[OptionContract, float]:\n            mirror_option = Symbol.create_option(x.symbol.underlying, \"RUT\", Market.USA, OptionStyle.EUROPEAN, mirror_option_right, x.strike, x.expiry)\n            delta = Delta(x, self._interest_rate_model, self._dividend_yield_model, mirror_option)\n            self.warm_up_indicator([x.symbol, mirror_option, x.symbol.underlying], delta, Resolution.MINUTE)\n            return x, abs(delta.current.value)\n\n        contracts = sorted([x for x in chain if x.expiry == expiry and x.right == right],\n            key=lambda x: abs(spot - x.strike))[:10]\n        delta_by_contract = sorted([get_delta(x) for x in contracts],\n            key=lambda x: abs(target_delta - x[1]))\n\n        if not delta_by_contract:\n            return None\n\n        return self.add_option_contract(delta_by_contract[0][0])\n",
+    "source_sha256": "7059605475b2ba80a7ed5dac6424ba1cb123d15c2cd7288799cf574736ba0b5a",
+    "started_at": "2026-11-18T20:38:47.298700+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 0,
+    "statistics": {
+      "Total Orders": "60",
+      "Average Win": "0.33%",
+      "Average Loss": "-0.13%",
+      "Compounding Annual Return": "333.467%",
+      "Drawdown": "3.000%",
+      "Expectancy": "1.019",
+      "Start Equity": "500000",
+      "End Equity": "509485.6",
+      "Net Profit": "1.897%",
+      "Sharpe Ratio": "6.173",
+      "Sortino Ratio": "50.608",
+      "Probabilistic Sharpe Ratio": "60.685%",
+      "Loss Rate": "44%",
+      "Win Rate": "56%",
+      "Profit-Loss Ratio": "2.60",
+      "Alpha": "0.347",
+      "Beta": "-2.414",
+      "Annual Standard Deviation": "0.388",
+      "Annual Variance": "0.151",
+      "Information Ratio": "6.07",
+      "Tracking Error": "0.535",
+      "Treynor Ratio": "-0.993",
+      "Total Fees": "$0.00",
+      "Estimated Strategy Capacity": "$110000.00",
+      "Lowest Capacity Asset": "RUTW 32KMN2VK4G7N2|RUT 31",
+      "Portfolio Turnover": "1.02%",
+      "Drawdown Recovery": "0"
+    },
+    "runtime_statistics": {
+      "Equity": "$509,485.60",
+      "Fees": "-$0.00",
+      "Holdings": "$3,712.50",
+      "Net Profit": "$13,833.10",
+      "Probabilistic Sharpe Ratio": "60.685%",
+      "Return": "1.90 %",
+      "Unrealized": "$-6,900.00",
+      "Volume": "$26,395.00"
+    },
+    "logs": [
+      "2024-09-01 00:00:00 Launching analysis for 3589ee2d04714380e51b7d54d24fba88 with LEAN Engine v2.5.0.0.18271",
+      "2024-09-05 16:15:00 Algorithm Id:(3589ee2d04714380e51b7d54d24fba88) completed in 69.46 seconds at 1k data points per second. Processing total of 55,998 data points."
+    ],
+    "qc_note": "",
+    "project_id": 39642334,
+    "compile_id": "f69deea3f7b57c0362d9029848ae1a04-c3a91d76728bc603740b21171ff18c99",
+    "compile_created": {
+      "compileId": "f69deea3f7b57c0362d9029848ae1a04-c3a91d76728bc603740b21171ff18c99",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39642334,
+      "signature": "c3a91d76728bc603740b21171ff18c99",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "f69deea3f7b57c0362d9029848ae1a04-c3a91d76728bc603740b21171ff18c99",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39642334, with CompileID: f69deea3f7b57c0362d9029848ae1a04-c3a91d76728bc603740b21171ff18c99, Lean Version: 2.5.0.0.18271"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39642334, with CompileID: f69deea3f7b57c0362d9029848ae1a04-c3a91d76728bc603740b21171ff18c99, Lean Version: 2.5.0.0.18271"
+    ],
+    "backtest_id": "3589ee2d04714380e51b7d54d24fba88",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "intraday-greeks-based-options-selection_v07",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39642334,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "3589ee2d04714380e51b7d54d24fba88",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 12
+        },
+        "backtestStart": "2026-11-18 20:38:52",
+        "backtestEnd": "2026-11-18 20:38:52",
+        "created": "2026-11-18 20:38:52",
+        "snapshotId": 39642336,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-20T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": "",
+        "name": "intraday-greeks-based-options-selection_v07",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39642334,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "3589ee2d04714380e51b7d54d24fba88",
+        "tradeableDates": 3,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 12
+        },
+        "backtestStart": "2024-09-01 00:00:00",
+        "backtestEnd": "2024-09-05 23:59:59",
+        "created": "2026-11-18 20:38:52",
+        "snapshotId": 39642336,
+        "status": "Completed.",
+        "error": null,
+        "stacktrace": null,
+        "progress": 1,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          },
+          "Drawdown": {
+            "name": "Drawdown"
+          },
+          "Portfolio Turnover": {
+            "name": "Portfolio Turnover"
+          },
+          "Exposure": {
+            "name": "Exposure"
+          },
+          "Capacity": {
+            "name": "Capacity"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": {
+          "M1_20240905": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-09-05T05:00:00Z",
+              "totalNumberOfTrades": 25,
+              "numberOfWinningTrades": 13,
+              "numberOfLosingTrades": 12,
+              "totalProfitLoss": "-18335.00",
+              "totalProfit": "0",
+              "totalLoss": "-18335.00",
+              "largestProfit": "0",
+              "largestLoss": "-1240.0",
+              "averageProfitLoss": "-733.4000",
+              "averageProfit": "0",
+              "averageLoss": "-733.4000",
+              "averageTradeDuration": "13:25:21.5999996",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "13:25:21.5999996",
+              "medianTradeDuration": "14:14:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "14:14:00",
+              "maxConsecutiveWinningTrades": 11,
+              "maxConsecutiveLosingTrades": 8,
+              "profitLossRatio": "0",
+              "winLossRatio": "1.0833",
+              "winRate": "0.52",
+              "lossRate": "0.48",
+              "averageMAE": "-733.4000",
+              "averageMFE": "1370.0600",
+              "largestMAE": "-1240.0",
+              "largestMFE": "4680.00",
+              "maximumClosedTradeDrawdown": "-18335.00",
+              "maximumIntraTradeDrawdown": "-18335.00",
+              "profitLossStandardDeviation": "280.6789",
+              "profitLossDownsideDeviation": "280.6789",
+              "profitFactor": "0",
+              "sharpeRatio": "-2.6129",
+              "sortinoRatio": "-2.6129",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "5590.00",
+              "averageEndTradeDrawdown": "-2103.4600",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0033",
+              "averageLossRate": "-0.0013",
+              "profitLossRatio": "2.6048",
+              "winRate": "0.56",
+              "lossRate": "0.44",
+              "expectancy": "1.0187",
+              "startEquity": "500000",
+              "endEquity": "509485.6",
+              "compoundingAnnualReturn": "3.3347",
+              "drawdown": "0.030",
+              "totalNetProfit": "0.0190",
+              "sharpeRatio": "6.1729",
+              "probabilisticSharpeRatio": "0.6069",
+              "sortinoRatio": "50.6080",
+              "alpha": "0.3469",
+              "beta": "-2.4139",
+              "annualStandardDeviation": "0.3885",
+              "annualVariance": "0.1509",
+              "informationRatio": "6.0696",
+              "trackingError": "0.5351",
+              "treynorRatio": "-0.9935",
+              "portfolioTurnover": "0.0102",
+              "valueAtRisk99": "-0.052",
+              "valueAtRisk95": "-0.035",
+              "drawdownRecovery": "0"
+            },
+            "closedTrades": []
+          },
+          "M3_20240905": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-09-05T05:00:00Z",
+              "totalNumberOfTrades": 25,
+              "numberOfWinningTrades": 13,
+              "numberOfLosingTrades": 12,
+              "totalProfitLoss": "-18335.00",
+              "totalProfit": "0",
+              "totalLoss": "-18335.00",
+              "largestProfit": "0",
+              "largestLoss": "-1240.0",
+              "averageProfitLoss": "-733.4000",
+              "averageProfit": "0",
+              "averageLoss": "-733.4000",
+              "averageTradeDuration": "13:25:21.5999996",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "13:25:21.5999996",
+              "medianTradeDuration": "14:14:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "14:14:00",
+              "maxConsecutiveWinningTrades": 11,
+              "maxConsecutiveLosingTrades": 8,
+              "profitLossRatio": "0",
+              "winLossRatio": "1.0833",
+              "winRate": "0.52",
+              "lossRate": "0.48",
+              "averageMAE": "-733.4000",
+              "averageMFE": "1370.0600",
+              "largestMAE": "-1240.0",
+              "largestMFE": "4680.00",
+              "maximumClosedTradeDrawdown": "-18335.00",
+              "maximumIntraTradeDrawdown": "-18335.00",
+              "profitLossStandardDeviation": "280.6789",
+              "profitLossDownsideDeviation": "280.6789",
+              "profitFactor": "0",
+              "sharpeRatio": "-2.6129",
+              "sortinoRatio": "-2.6129",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "5590.00",
+              "averageEndTradeDrawdown": "-2103.4600",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0033",
+              "averageLossRate": "-0.0013",
+              "profitLossRatio": "2.6048",
+              "winRate": "0.56",
+              "lossRate": "0.44",
+              "expectancy": "1.0187",
+              "startEquity": "500000",
+              "endEquity": "509485.6",
+              "compoundingAnnualReturn": "3.3347",
+              "drawdown": "0.030",
+              "totalNetProfit": "0.0190",
+              "sharpeRatio": "6.1729",
+              "probabilisticSharpeRatio": "0.6069",
+              "sortinoRatio": "50.6080",
+              "alpha": "0.3469",
+              "beta": "-2.4139",
+              "annualStandardDeviation": "0.3885",
+              "annualVariance": "0.1509",
+              "informationRatio": "6.0696",
+              "trackingError": "0.5351",
+              "treynorRatio": "-0.9935",
+              "portfolioTurnover": "0.0102",
+              "valueAtRisk99": "-0.052",
+              "valueAtRisk95": "-0.035",
+              "drawdownRecovery": "0"
+            },
+            "closedTrades": []
+          },
+          "M6_20240905": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-09-05T05:00:00Z",
+              "totalNumberOfTrades": 25,
+              "numberOfWinningTrades": 13,
+              "numberOfLosingTrades": 12,
+              "totalProfitLoss": "-18335.00",
+              "totalProfit": "0",
+              "totalLoss": "-18335.00",
+              "largestProfit": "0",
+              "largestLoss": "-1240.0",
+              "averageProfitLoss": "-733.4000",
+              "averageProfit": "0",
+              "averageLoss": "-733.4000",
+              "averageTradeDuration": "13:25:21.5999996",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "13:25:21.5999996",
+              "medianTradeDuration": "14:14:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "14:14:00",
+              "maxConsecutiveWinningTrades": 11,
+              "maxConsecutiveLosingTrades": 8,
+              "profitLossRatio": "0",
+              "winLossRatio": "1.0833",
+              "winRate": "0.52",
+              "lossRate": "0.48",
+              "averageMAE": "-733.4000",
+              "averageMFE": "1370.0600",
+              "largestMAE": "-1240.0",
+              "largestMFE": "4680.00",
+              "maximumClosedTradeDrawdown": "-18335.00",
+              "maximumIntraTradeDrawdown": "-18335.00",
+              "profitLossStandardDeviation": "280.6789",
+              "profitLossDownsideDeviation": "280.6789",
+              "profitFactor": "0",
+              "sharpeRatio": "-2.6129",
+              "sortinoRatio": "-2.6129",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "5590.00",
+              "averageEndTradeDrawdown": "-2103.4600",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0033",
+              "averageLossRate": "-0.0013",
+              "profitLossRatio": "2.6048",
+              "winRate": "0.56",
+              "lossRate": "0.44",
+              "expectancy": "1.0187",
+              "startEquity": "500000",
+              "endEquity": "509485.6",
+              "compoundingAnnualReturn": "3.3347",
+              "drawdown": "0.030",
+              "totalNetProfit": "0.0190",
+              "sharpeRatio": "6.1729",
+              "probabilisticSharpeRatio": "0.6069",
+              "sortinoRatio": "50.6080",
+              "alpha": "0.3469",
+              "beta": "-2.4139",
+              "annualStandardDeviation": "0.3885",
+              "annualVariance": "0.1509",
+              "informationRatio": "6.0696",
+              "trackingError": "0.5351",
+              "treynorRatio": "-0.9935",
+              "portfolioTurnover": "0.0102",
+              "valueAtRisk99": "-0.052",
+              "valueAtRisk95": "-0.035",
+              "drawdownRecovery": "0"
+            },
+            "closedTrades": []
+          },
+          "M12_20240905": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-09-05T05:00:00Z",
+              "totalNumberOfTrades": 25,
+              "numberOfWinningTrades": 13,
+              "numberOfLosingTrades": 12,
+              "totalProfitLoss": "-18335.00",
+              "totalProfit": "0",
+              "totalLoss": "-18335.00",
+              "largestProfit": "0",
+              "largestLoss": "-1240.0",
+              "averageProfitLoss": "-733.4000",
+              "averageProfit": "0",
+              "averageLoss": "-733.4000",
+              "averageTradeDuration": "13:25:21.5999996",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "13:25:21.5999996",
+              "medianTradeDuration": "14:14:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "14:14:00",
+              "maxConsecutiveWinningTrades": 11,
+              "maxConsecutiveLosingTrades": 8,
+              "profitLossRatio": "0",
+              "winLossRatio": "1.0833",
+              "winRate": "0.52",
+              "lossRate": "0.48",
+              "averageMAE": "-733.4000",
+              "averageMFE": "1370.0600",
+              "largestMAE": "-1240.0",
+              "largestMFE": "4680.00",
+              "maximumClosedTradeDrawdown": "-18335.00",
+              "maximumIntraTradeDrawdown": "-18335.00",
+              "profitLossStandardDeviation": "280.6789",
+              "profitLossDownsideDeviation": "280.6789",
+              "profitFactor": "0",
+              "sharpeRatio": "-2.6129",
+              "sortinoRatio": "-2.6129",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "5590.00",
+              "averageEndTradeDrawdown": "-2103.4600",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0033",
+              "averageLossRate": "-0.0013",
+              "profitLossRatio": "2.6048",
+              "winRate": "0.56",
+              "lossRate": "0.44",
+              "expectancy": "1.0187",
+              "startEquity": "500000",
+              "endEquity": "509485.6",
+              "compoundingAnnualReturn": "3.3347",
+              "drawdown": "0.030",
+              "totalNetProfit": "0.0190",
+              "sharpeRatio": "6.1729",
+              "probabilisticSharpeRatio": "0.6069",
+              "sortinoRatio": "50.6080",
+              "alpha": "0.3469",
+              "beta": "-2.4139",
+              "annualStandardDeviation": "0.3885",
+              "annualVariance": "0.1509",
+              "informationRatio": "6.0696",
+              "trackingError": "0.5351",
+              "treynorRatio": "-0.9935",
+              "portfolioTurnover": "0.0102",
+              "valueAtRisk99": "-0.052",
+              "valueAtRisk95": "-0.035",
+              "drawdownRecovery": "0"
+            },
+            "closedTrades": []
+          }
+        },
+        "runtimeStatistics": {
+          "Equity": "$509,485.60",
+          "Fees": "-$0.00",
+          "Holdings": "$3,712.50",
+          "Net Profit": "$13,833.10",
+          "Probabilistic Sharpe Ratio": "60.685%",
+          "Return": "1.90 %",
+          "Unrealized": "$-6,900.00",
+          "Volume": "$26,395.00"
+        },
+        "statistics": {
+          "Total Orders": "60",
+          "Average Win": "0.33%",
+          "Average Loss": "-0.13%",
+          "Compounding Annual Return": "333.467%",
+          "Drawdown": "3.000%",
+          "Expectancy": "1.019",
+          "Start Equity": "500000",
+          "End Equity": "509485.6",
+          "Net Profit": "1.897%",
+          "Sharpe Ratio": "6.173",
+          "Sortino Ratio": "50.608",
+          "Probabilistic Sharpe Ratio": "60.685%",
+          "Loss Rate": "44%",
+          "Win Rate": "56%",
+          "Profit-Loss Ratio": "2.60",
+          "Alpha": "0.347",
+          "Beta": "-2.414",
+          "Annual Standard Deviation": "0.388",
+          "Annual Variance": "0.151",
+          "Information Ratio": "6.07",
+          "Tracking Error": "0.535",
+          "Treynor Ratio": "-0.993",
+          "Total Fees": "$0.00",
+          "Estimated Strategy Capacity": "$110000.00",
+          "Lowest Capacity Asset": "RUTW 32KMN2VK4G7N2|RUT 31",
+          "Portfolio Turnover": "1.02%",
+          "Drawdown Recovery": "0"
+        },
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": "2024-09-03T13:31:00Z",
+            "endDateTime": "2024-09-05T05:00:00Z",
+            "totalNumberOfTrades": 25,
+            "numberOfWinningTrades": 13,
+            "numberOfLosingTrades": 12,
+            "totalProfitLoss": "-18335.00",
+            "totalProfit": "0",
+            "totalLoss": "-18335.00",
+            "largestProfit": "0",
+            "largestLoss": "-1240.0",
+            "averageProfitLoss": "-733.4000",
+            "averageProfit": "0",
+            "averageLoss": "-733.4000",
+            "averageTradeDuration": "13:25:21.5999996",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "13:25:21.5999996",
+            "medianTradeDuration": "14:14:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "14:14:00",
+            "maxConsecutiveWinningTrades": 11,
+            "maxConsecutiveLosingTrades": 8,
+            "profitLossRatio": "0",
+            "winLossRatio": "1.0833",
+            "winRate": "0.52",
+            "lossRate": "0.48",
+            "averageMAE": "-733.4000",
+            "averageMFE": "1370.0600",
+            "largestMAE": "-1240.0",
+            "largestMFE": "4680.00",
+            "maximumClosedTradeDrawdown": "-18335.00",
+            "maximumIntraTradeDrawdown": "-18335.00",
+            "profitLossStandardDeviation": "280.6789",
+            "profitLossDownsideDeviation": "280.6789",
+            "profitFactor": "0",
+            "sharpeRatio": "-2.6129",
+            "sortinoRatio": "-2.6129",
+            "profitToMaxDrawdownRatio": "-1",
+            "maximumEndTradeDrawdown": "5590.00",
+            "averageEndTradeDrawdown": "-2103.4600",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0033",
+            "averageLossRate": "-0.0013",
+            "profitLossRatio": "2.6048",
+            "winRate": "0.56",
+            "lossRate": "0.44",
+            "expectancy": "1.0187",
+            "startEquity": "500000",
+            "endEquity": "509485.6",
+            "compoundingAnnualReturn": "3.3347",
+            "drawdown": "0.030",
+            "totalNetProfit": "0.0190",
+            "sharpeRatio": "6.1729",
+            "probabilisticSharpeRatio": "0.6069",
+            "sortinoRatio": "50.6080",
+            "alpha": "0.3469",
+            "beta": "-2.4139",
+            "annualStandardDeviation": "0.3885",
+            "annualVariance": "0.1509",
+            "informationRatio": "6.0696",
+            "trackingError": "0.5351",
+            "treynorRatio": "-0.9935",
+            "portfolioTurnover": "0.0102",
+            "valueAtRisk99": "-0.052",
+            "valueAtRisk95": "-0.035",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": [
+            {
+              "id": "271c0314-553f-414d-a501-16ef75ddcf41",
+              "symbols": [
+                {
+                  "value": "RUTW  240903C02155000",
+                  "id": "RUTW YLIMXFMKPQR2|RUT 31",
+                  "permtick": "RUTW  240903C02155000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-03T19:06:00Z",
+              "entryPrice": 2.4,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-04T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -240,
+              "totalFees": 0,
+              "mae": -240,
+              "mfe": 0,
+              "duration": "09:54:00",
+              "endTradeDrawdown": 240,
+              "isWin": false,
+              "orderIds": [
+                13,
+                15
+              ]
+            },
+            {
+              "id": "d0ccc404-edb2-49bd-bfff-e126e4b61731",
+              "symbols": [
+                {
+                  "value": "RUTW  240903C02160000",
+                  "id": "RUTW YLIMX6PWGW5Q|RUT 31",
+                  "permtick": "RUTW  240903C02160000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-03T17:39:00Z",
+              "entryPrice": 5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-04T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -500,
+              "totalFees": 0,
+              "mae": -500,
+              "mfe": 0,
+              "duration": "11:21:00",
+              "endTradeDrawdown": 500,
+              "isWin": false,
+              "orderIds": [
+                11,
+                16
+              ]
+            },
+            {
+              "id": "68f76bfa-bfd5-4571-8705-f9dabea382a5",
+              "symbols": [
+                {
+                  "value": "RUTW  240903P02145000",
+                  "id": "RUTW 32KMN2VK4G7N2|RUT 31",
+                  "permtick": "RUTW  240903P02145000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-03T19:39:00Z",
+              "entryPrice": 1.95,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-04T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -195,
+              "totalFees": 0,
+              "mae": -195,
+              "mfe": 25,
+              "duration": "09:21:00",
+              "endTradeDrawdown": 220,
+              "isWin": false,
+              "orderIds": [
+                14,
+                17
+              ]
+            },
+            {
+              "id": "e0656a84-b1f7-47bb-b96d-88406515ec1f",
+              "symbols": [
+                {
+                  "value": "RUTW  240903P02150000",
+                  "id": "RUTW 32KMN2MOXSDHQ|RUT 31",
+                  "permtick": "RUTW  240903P02150000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-03T18:24:00Z",
+              "entryPrice": 3.3,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-04T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -330,
+              "totalFees": 0,
+              "mae": -330,
+              "mfe": 710,
+              "duration": "10:36:00",
+              "endTradeDrawdown": 1040,
+              "isWin": false,
+              "orderIds": [
+                12,
+                18
+              ]
+            },
+            {
+              "id": "4507a38d-0347-47f6-a951-be0e250128eb",
+              "symbols": [
+                {
+                  "value": "RUTW  240903P02155000",
+                  "id": "RUTW 32KMN2VLRZK4U|RUT 31",
+                  "permtick": "RUTW  240903P02155000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-03T17:01:00Z",
+              "entryPrice": 4.4,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-04T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -440,
+              "totalFees": 0,
+              "mae": -440,
+              "mfe": 810,
+              "duration": "11:59:00",
+              "endTradeDrawdown": 1250,
+              "isWin": true,
+              "orderIds": [
+                10,
+                19
+              ]
+            },
+            {
+              "id": "603e27f2-30bc-4a21-9ebf-234db61183e4",
+              "symbols": [
+                {
+                  "value": "RUTW  240903P02160000",
+                  "id": "RUTW 32KMN2MP3QPJI|RUT 31",
+                  "permtick": "RUTW  240903P02160000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-03T16:33:00Z",
+              "entryPrice": 5.4,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-04T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -540,
+              "totalFees": 0,
+              "mae": -540,
+              "mfe": 1070,
+              "duration": "12:27:00",
+              "endTradeDrawdown": 1610,
+              "isWin": true,
+              "orderIds": [
+                9,
+                20
+              ]
+            },
+            {
+              "id": "54c598b1-37dc-4cd3-baac-28527aaa81f4",
+              "symbols": [
+                {
+                  "value": "RUTW  240903P02165000",
+                  "id": "RUTW 32KMN2VNFIWMM|RUT 31",
+                  "permtick": "RUTW  240903P02165000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-03T16:07:00Z",
+              "entryPrice": 5.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-04T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -520,
+              "totalFees": 0,
+              "mae": -520,
+              "mfe": 1570,
+              "duration": "12:53:00",
+              "endTradeDrawdown": 2090,
+              "isWin": true,
+              "orderIds": [
+                8,
+                21
+              ]
+            },
+            {
+              "id": "5bb89fa7-4bec-4eb5-b804-d75c8c5a8905",
+              "symbols": [
+                {
+                  "value": "RUTW  240903P02170000",
+                  "id": "RUTW 32KMN2MP9P1LA|RUT 31",
+                  "permtick": "RUTW  240903P02170000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-03T14:46:00Z",
+              "entryPrice": 8.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-04T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -820,
+              "totalFees": 0,
+              "mae": -820,
+              "mfe": 1780,
+              "duration": "14:14:00",
+              "endTradeDrawdown": 2600,
+              "isWin": true,
+              "orderIds": [
+                7,
+                22
+              ]
+            },
+            {
+              "id": "e72f0c4a-ef81-472e-a549-a97a0a1d4952",
+              "symbols": [
+                {
+                  "value": "RUTW  240903P02175000",
+                  "id": "RUTW 32KMN2VP3294E|RUT 31",
+                  "permtick": "RUTW  240903P02175000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-03T14:33:00Z",
+              "entryPrice": 7.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-04T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -720,
+              "totalFees": 0,
+              "mae": -720,
+              "mfe": 2385,
+              "duration": "14:27:00",
+              "endTradeDrawdown": 3105,
+              "isWin": true,
+              "orderIds": [
+                6,
+                23
+              ]
+            },
+            {
+              "id": "7fdee5df-f930-405e-a522-5acfef4542de",
+              "symbols": [
+                {
+                  "value": "RUTW  240903P02180000",
+                  "id": "RUTW 32KMN2MPFNDN2|RUT 31",
+                  "permtick": "RUTW  240903P02180000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-03T14:21:00Z",
+              "entryPrice": 8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-04T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -800,
+              "totalFees": 0,
+              "mae": -800,
+              "mfe": 2790,
+              "duration": "14:39:00",
+              "endTradeDrawdown": 3590,
+              "isWin": true,
+              "orderIds": [
+                5,
+                24
+              ]
+            },
+            {
+              "id": "5c85f6c0-497a-438e-8c13-652815b358e2",
+              "symbols": [
+                {
+                  "value": "RUTW  240903P02185000",
+                  "id": "RUTW 32KMN2VQQLLM6|RUT 31",
+                  "permtick": "RUTW  240903P02185000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-03T14:11:00Z",
+              "entryPrice": 9.4,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-04T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -940,
+              "totalFees": 0,
+              "mae": -940,
+              "mfe": 3150,
+              "duration": "14:49:00",
+              "endTradeDrawdown": 4090,
+              "isWin": true,
+              "orderIds": [
+                4,
+                25
+              ]
+            },
+            {
+              "id": "c0e411a1-ee79-46d8-94b0-2f69fef82b32",
+              "symbols": [
+                {
+                  "value": "RUTW  240903P02190000",
+                  "id": "RUTW 32KMN2MPLLPOU|RUT 31",
+                  "permtick": "RUTW  240903P02190000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-03T14:01:00Z",
+              "entryPrice": 11,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-04T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1100,
+              "totalFees": 0,
+              "mae": -1100,
+              "mfe": 3490,
+              "duration": "14:59:00",
+              "endTradeDrawdown": 4590,
+              "isWin": true,
+              "orderIds": [
+                3,
+                26
+              ]
+            },
+            {
+              "id": "f0ff2361-383f-40fb-864e-0fe1b2fbeab0",
+              "symbols": [
+                {
+                  "value": "RUTW  240903P02195000",
+                  "id": "RUTW 32KMN2VSE4Y3Y|RUT 31",
+                  "permtick": "RUTW  240903P02195000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-03T13:51:00Z",
+              "entryPrice": 11.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-04T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1110,
+              "totalFees": 0,
+              "mae": -1110,
+              "mfe": 3980,
+              "duration": "15:09:00",
+              "endTradeDrawdown": 5090,
+              "isWin": true,
+              "orderIds": [
+                2,
+                27
+              ]
+            },
+            {
+              "id": "0f3ad4c9-8cf9-4a63-8d1b-53145490a552",
+              "symbols": [
+                {
+                  "value": "RUTW  240903P02200000",
+                  "id": "RUTW 32KMN2LT0RX4E|RUT 31",
+                  "permtick": "RUTW  240903P02200000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-03T13:31:00Z",
+              "entryPrice": 9.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-04T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -910,
+              "totalFees": 0,
+              "mae": -910,
+              "mfe": 4680,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 5590,
+              "isWin": true,
+              "orderIds": [
+                1,
+                28
+              ]
+            },
+            {
+              "id": "0a53b77f-0ace-47af-8040-3861bbbae82b",
+              "symbols": [
+                {
+                  "value": "RUTW  240904C02140000",
+                  "id": "RUTW YLJMDA2QMZ7Y|RUT 31",
+                  "permtick": "RUTW  240904C02140000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-04T19:23:00Z",
+              "entryPrice": 5.3,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-05T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -530,
+              "totalFees": 0,
+              "mae": -530,
+              "mfe": 702.5,
+              "duration": "09:37:00",
+              "endTradeDrawdown": 1232.5,
+              "isWin": true,
+              "orderIds": [
+                39,
+                40
+              ]
+            },
+            {
+              "id": "1eab5226-282b-4d27-871b-cd8d0da4b264",
+              "symbols": [
+                {
+                  "value": "RUTW  240904C02145000",
+                  "id": "RUTW YLJMDIY395F2|RUT 31",
+                  "permtick": "RUTW  240904C02145000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-04T13:55:00Z",
+              "entryPrice": 10.5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-05T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1050,
+              "totalFees": 0,
+              "mae": -1050,
+              "mfe": 1320,
+              "duration": "15:05:00",
+              "endTradeDrawdown": 2370,
+              "isWin": false,
+              "orderIds": [
+                31,
+                41
+              ]
+            },
+            {
+              "id": "aa88c6e4-e9b0-4113-8e7a-334417503ebc",
+              "symbols": [
+                {
+                  "value": "RUTW  240904C02150000",
+                  "id": "RUTW YLJMDA2WLB9Q|RUT 31",
+                  "permtick": "RUTW  240904C02150000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-04T14:12:00Z",
+              "entryPrice": 8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-05T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -800,
+              "totalFees": 0,
+              "mae": -800,
+              "mfe": 1135,
+              "duration": "14:48:00",
+              "endTradeDrawdown": 1935,
+              "isWin": false,
+              "orderIds": [
+                32,
+                42
+              ]
+            },
+            {
+              "id": "01026fa2-27f3-4c24-ac1f-715810b25ae1",
+              "symbols": [
+                {
+                  "value": "RUTW  240904C02155000",
+                  "id": "RUTW YLJMDIZQSHWU|RUT 31",
+                  "permtick": "RUTW  240904C02155000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-04T14:31:00Z",
+              "entryPrice": 8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-05T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -800,
+              "totalFees": 0,
+              "mae": -800,
+              "mfe": 700,
+              "duration": "14:29:00",
+              "endTradeDrawdown": 1500,
+              "isWin": false,
+              "orderIds": [
+                33,
+                43
+              ]
+            },
+            {
+              "id": "09a04a09-148f-4127-ad5b-4506cc32bfc0",
+              "symbols": [
+                {
+                  "value": "RUTW  240904C02160000",
+                  "id": "RUTW YLJMDA32JNBI|RUT 31",
+                  "permtick": "RUTW  240904C02160000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-04T14:41:00Z",
+              "entryPrice": 8.3,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-05T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -830,
+              "totalFees": 0,
+              "mae": -830,
+              "mfe": 310,
+              "duration": "14:19:00",
+              "endTradeDrawdown": 1140,
+              "isWin": false,
+              "orderIds": [
+                34,
+                44
+              ]
+            },
+            {
+              "id": "3486025b-faee-4b72-8b25-3a3be099625e",
+              "symbols": [
+                {
+                  "value": "RUTW  240904C02165000",
+                  "id": "RUTW YLJMDJ1EBUEM|RUT 31",
+                  "permtick": "RUTW  240904C02165000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-04T14:53:00Z",
+              "entryPrice": 7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-05T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -700,
+              "totalFees": 0,
+              "mae": -700,
+              "mfe": 150,
+              "duration": "14:07:00",
+              "endTradeDrawdown": 850,
+              "isWin": false,
+              "orderIds": [
+                35,
+                45
+              ]
+            },
+            {
+              "id": "bfdd8e2b-7789-425c-893b-f2baad6fa791",
+              "symbols": [
+                {
+                  "value": "RUTW  240904P02140000",
+                  "id": "RUTW 32KNMIQ1XWSLQ|RUT 31",
+                  "permtick": "RUTW  240904P02140000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-04T13:31:00Z",
+              "entryPrice": 12.4,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-05T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1240,
+              "totalFees": 0,
+              "mae": -1240,
+              "mfe": 15,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 1255,
+              "isWin": false,
+              "orderIds": [
+                29,
+                46
+              ]
+            },
+            {
+              "id": "58074e0d-5eda-4eab-8573-cf4b7884fb9e",
+              "symbols": [
+                {
+                  "value": "RUTW  240904P02145000",
+                  "id": "RUTW 32KNMIYXAIYSU|RUT 31",
+                  "permtick": "RUTW  240904P02145000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-04T13:41:00Z",
+              "entryPrice": 11.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-05T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1120,
+              "totalFees": 0,
+              "mae": -1120,
+              "mfe": 535,
+              "duration": "15:19:00",
+              "endTradeDrawdown": 1655,
+              "isWin": false,
+              "orderIds": [
+                30,
+                47
+              ]
+            },
+            {
+              "id": "ee81eb3f-1f93-4cf9-a0a6-cded5f5f5faf",
+              "symbols": [
+                {
+                  "value": "RUTW  240904P02150000",
+                  "id": "RUTW 32KNMIQ23V4NI|RUT 31",
+                  "permtick": "RUTW  240904P02150000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-04T16:02:00Z",
+              "entryPrice": 5.4,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-05T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -540,
+              "totalFees": 0,
+              "mae": -540,
+              "mfe": 694,
+              "duration": "12:58:00",
+              "endTradeDrawdown": 1234,
+              "isWin": false,
+              "orderIds": [
+                38,
+                48
+              ]
+            },
+            {
+              "id": "41498259-5092-4ab1-8624-82f0424015d7",
+              "symbols": [
+                {
+                  "value": "RUTW  240904P02155000",
+                  "id": "RUTW 32KNMIYYY2BAM|RUT 31",
+                  "permtick": "RUTW  240904P02155000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-04T15:32:00Z",
+              "entryPrice": 7.7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-05T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -770,
+              "totalFees": 0,
+              "mae": -770,
+              "mfe": 885,
+              "duration": "13:28:00",
+              "endTradeDrawdown": 1655,
+              "isWin": true,
+              "orderIds": [
+                37,
+                49
+              ]
+            },
+            {
+              "id": "86df71b5-7ffa-47b7-a4ce-f5af3d36ae39",
+              "symbols": [
+                {
+                  "value": "RUTW  240904P02160000",
+                  "id": "RUTW 32KNMIQ29TGPA|RUT 31",
+                  "permtick": "RUTW  240904P02160000",
+                  "underlying": {
+                    "value": "RUT",
+                    "id": "RUT 31",
+                    "permtick": "RUT"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-04T15:22:00Z",
+              "entryPrice": 7.9,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-05T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -790,
+              "totalFees": 0,
+              "mae": -790,
+              "mfe": 1365,
+              "duration": "13:38:00",
+              "endTradeDrawdown": 2155,
+              "isWin": true,
+              "orderIds": [
+                36,
+                50
+              ]
+            }
+          ]
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-20T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "AlgorithmSpeedAnalysis / SlowExecution",
+            "issue": "The algorithm is running below 40k data points per second.",
+            "sample": "Processing 811 data points per second recently (811 average); 80% complete after 1m, about 33s remaining at the recent pace.",
+            "solutions": [
+              "Review the algorithm code for inefficiencies.",
+              "To see where the execution time is spent, set the `performance_sample_period` setting, like `self.settings.performance_sample_period = timedelta(days=1)`, and rerun to get a \"Performance\" time-breakdown chart.",
+              "If there is a universe, reduce its size.",
+              "Reduce the data resolution.",
+              "If the algorithm is training a model, reduce the amount of training data or reduce the number of epochs in the training process.",
+              "If the projected runtime is not acceptable, stop the backtest, apply the changes above, and run it again."
+            ]
+          },
+          {
+            "name": "OrderFillsDuringExtendedMarketHoursAnalysis",
+            "issue": "The algorithm filled orders during extended market hours.Filling orders during extended market hours can cause a lot of slippage since there is less liquidity than during regular trading hours.",
+            "sample": {
+              "id": "3589ee2d04714380e51b7d54d24fba88-15-1",
+              "algorithmId": "3589ee2d04714380e51b7d54d24fba88",
+              "orderId": 15,
+              "orderEventId": 1,
+              "symbol": "RUTW YLIMXFMKPQR2|RUT 31",
+              "symbolValue": "RUTW  240903C02155000",
+              "symbolPermtick": "RUTW",
+              "time": 1725426000,
+              "status": "filled",
+              "fillPrice": 0,
+              "fillPriceCurrency": "",
+              "fillQuantity": -1,
+              "direction": "sell",
+              "orderType": "optionExercise",
+              "message": "OTM. Underlying: 2148.91. Loss: -240.0",
+              "isAssignment": false,
+              "quantity": -1
+            },
+            "count": 25,
+            "solutions": [
+              "If you don't intend to trading during extended market hours, add a guard before you place orders.\n```\nif self.is_market_open(self._symbol):\n    self.market_order(self._symbol, quantity)\n```"
+            ]
+          },
+          {
+            "name": "PortfolioMarginUsageAnalysis",
+            "issue": "The algorithm sometimes only utilizes a small proportion of the margin available.",
+            "sample": "Number of days when the 3-day SMA of the margin usage drops below 50%: 3",
+            "solutions": [
+              "Adjust the strategy logic or position sizing to utilize more margin.",
+              "If the algorithm logic leads to periods of time when the portfolio sits in cash, consider holding a \"risk-free\" asset during these periods."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "137.4%",
+          "Used RAM (MB)": "491",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-3589ee2d04714380e51b7d54d24fba88",
+          "LEAN Version": "v2.5.0.0.18271",
+          "Up Time": "0d 00:01:13"
+        }
+      },
+      "success": true
+    },
+    "error": null,
+    "stacktrace": null,
+    "has_initialize_error": false,
+    "trade_statistics": {
+      "startDateTime": "2024-09-03T13:31:00Z",
+      "endDateTime": "2024-09-05T05:00:00Z",
+      "totalNumberOfTrades": 25,
+      "numberOfWinningTrades": 13,
+      "numberOfLosingTrades": 12,
+      "totalProfitLoss": "-18335.00",
+      "totalProfit": "0",
+      "totalLoss": "-18335.00",
+      "largestProfit": "0",
+      "largestLoss": "-1240.0",
+      "averageProfitLoss": "-733.4000",
+      "averageProfit": "0",
+      "averageLoss": "-733.4000",
+      "averageTradeDuration": "13:25:21.5999996",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "13:25:21.5999996",
+      "medianTradeDuration": "14:14:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "14:14:00",
+      "maxConsecutiveWinningTrades": 11,
+      "maxConsecutiveLosingTrades": 8,
+      "profitLossRatio": "0",
+      "winLossRatio": "1.0833",
+      "winRate": "0.52",
+      "lossRate": "0.48",
+      "averageMAE": "-733.4000",
+      "averageMFE": "1370.0600",
+      "largestMAE": "-1240.0",
+      "largestMFE": "4680.00",
+      "maximumClosedTradeDrawdown": "-18335.00",
+      "maximumIntraTradeDrawdown": "-18335.00",
+      "profitLossStandardDeviation": "280.6789",
+      "profitLossDownsideDeviation": "280.6789",
+      "profitFactor": "0",
+      "sharpeRatio": "-2.6129",
+      "sortinoRatio": "-2.6129",
+      "profitToMaxDrawdownRatio": "-1",
+      "maximumEndTradeDrawdown": "5590.00",
+      "averageEndTradeDrawdown": "-2103.4600",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": "60",
+    "finished_at": "2026-11-18T20:40:10.154592+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "statistics": {
+    "Total Orders": "60",
+    "Average Win": "0.33%",
+    "Average Loss": "-0.13%",
+    "Compounding Annual Return": "333.467%",
+    "Drawdown": "3.000%",
+    "Expectancy": "1.019",
+    "Start Equity": "500000",
+    "End Equity": "509485.6",
+    "Net Profit": "1.897%",
+    "Sharpe Ratio": "6.173",
+    "Sortino Ratio": "50.608",
+    "Probabilistic Sharpe Ratio": "60.685%",
+    "Loss Rate": "44%",
+    "Win Rate": "56%",
+    "Profit-Loss Ratio": "2.60",
+    "Alpha": "0.347",
+    "Beta": "-2.414",
+    "Annual Standard Deviation": "0.388",
+    "Annual Variance": "0.151",
+    "Information Ratio": "6.07",
+    "Tracking Error": "0.535",
+    "Treynor Ratio": "-0.993",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$110000.00",
+    "Lowest Capacity Asset": "RUTW 32KMN2VK4G7N2|RUT 31",
+    "Portfolio Turnover": "1.02%",
+    "Drawdown Recovery": "0"
+  },
+  "qc_note": "",
+  "total_orders": "60"
+}

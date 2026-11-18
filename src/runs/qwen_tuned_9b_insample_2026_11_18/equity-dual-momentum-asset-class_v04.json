@@ -1,0 +1,291 @@
+{
+  "prompt_id": "equity-dual-momentum-asset-class_v04",
+  "model": "qwen_tuned_9b_final_nothink_insample",
+  "base_model": "qwen_tuned_9b_final_nothink_insample",
+  "model_id": "jared-309b/qwen9b-final-insample-sxz",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):\n    _averages: dict[Symbol, 'SelectionData'] = {}\n    _count = 10\n    _tolerance = 0.01\n    _target_percent = 0.95\n    _duration = timedelta(days=182)\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n        self.universe_settings.leverage = 2\n        self.universe_settings.resolution = Resolution.MINUTE\n        # Add a Selection data object to hold the indicator instances.\n        self._selection = Selection(self._choose_assets)\n        # Create and subscribe the ETF universe.\n        universe = self.add_universe(self._selection)\n        # Set the portfolio construction parameters.\n        self.set_portfolio_target(universe, self._target_percent)\n\n    def _choose_assets(self, data: List[ETF]) -> List[Symbol]:\n        # Select the ETFs with the strongest trend.\n        selected = {}\n        for d in data:\n            if d.symbol not in self._averages:\n                # Initialize the selection data with the selected indicator.\n                self._averages[d.symbol] = SelectionData()\n            \n            # Warm up the indicators with the daily history.\n            history = self.history[d.symbol](self._duration, Resolution.DAILY)\n            if not history:\n                continue\n            \n            # Update the indicators with the daily history.\n            ema_fast, ema_slow = self._averages[d.symbol].indicators\n            ema_fast.update(history.end_time, history.close[0])\n            ema_slow.update(history.end_time, history.close[0])\n            \n            # We will select the assets with the greatest divergence between the two indicators\n            # while they are both increasing or both decreasing.\n            fast_above = ema_fast.current.value > ema_slow.current.value\n            divergence = abs(ema_fast.current.value - ema_slow.current.value)\n            if not selected or divergence > selected[0].indicators[1].current.value:\n                selected = [d.symbol, *selected[1:]]\n            if len(selected) > self._count:\n                selected = selected[1:]\n        \n        # Request subscription to the newly selected ETFs.\n        for symbol in selected:\n            self.add_security(symbol)\n\n    def on_data(self, slice: Slice) -> None:\n        # We will buy the ETFs that are following the trend.\n        for security in slice.securities:\n            if not security.investable:\n                continue\n            indicators = self._averages[security.symbol].indicators\n            ema_fast = indicators[0]\n            ema_slow = indicators[1]\n            # If the two indicators are both increasing and the price is above the two EMAs, we will buy the ETF.\n            # It is a classic cross trend-following strategy.\n            fast_above = ema_fast.current.value > ema_slow.current.value\n            if slice.time in ema_fast.updated and slice.time in ema_slow.updated:\n                if fast_above and not self.portfolio[security.symbol].invested:\n                    self.set_holdings(security, self._target_percent)\n                if not fast_above and self.portfolio[security.symbol].invested:\n                    self.liquidate(security)\n\n\nclass SelectionData:\n    def __init__(self) -> None:\n        self.indicators: list[ExponentialMovingAverage] = []\n        self._count = 2\n        for i in range(self._count):\n            self.indicators.append(ExponentialMovingAverage(10 + i * 10))\n\n    def update(self, time: datetime, value: float) -> bool:\n        # We will use a simplified market regime model to filter the trades.\n        # It is a classic example of using multiple indicators to filter trades.\n        # We will only trade if the two indicators are both increasing or both decreasing.\n        for indicator in self.indicators:\n            indicator.update(time, value)\n        if not self.indicators[0].is_ready or not self.indicators[1].is_ready:\n            return False\n        # If the two indicators are both increasing, it is an uptrend and we will buy.\n        # It is a simple trend following strategy.\n        fast_above = self.indicators[0].current.value > self.indicators[1].current.value\n        if not self.indicators[0].previous.is_ready or not self.indicators[1].previous.is_ready:\n            return False\n        # We will not trade if the two indicators are crossed.\n        return fast_above == self.indicators[0].previous.value > self.indicators[1].previous.value\n```",
+  "generated_at": "2026-11-18T19:50:59.461339+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "set_portfolio_target"
+    }
+  ],
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; UNKNOWN_API: set_portfolio_target",
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):\n    _averages: dict[Symbol, 'SelectionData'] = {}\n    _count = 10\n    _tolerance = 0.01\n    _target_percent = 0.95\n    _duration = timedelta(days=182)\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n        self.universe_settings.leverage = 2\n        self.universe_settings.resolution = Resolution.MINUTE\n        # Add a Selection data object to hold the indicator instances.\n        self._selection = Selection(self._choose_assets)\n        # Create and subscribe the ETF universe.\n        universe = self.add_universe(self._selection)\n        # Set the portfolio construction parameters.\n        self.set_portfolio_target(universe, self._target_percent)\n\n    def _choose_assets(self, data: List[ETF]) -> List[Symbol]:\n        # Select the ETFs with the strongest trend.\n        selected = {}\n        for d in data:\n            if d.symbol not in self._averages:\n                # Initialize the selection data with the selected indicator.\n                self._averages[d.symbol] = SelectionData()\n            \n            # Warm up the indicators with the daily history.\n            history = self.history[d.symbol](self._duration, Resolution.DAILY)\n            if not history:\n                continue\n            \n            # Update the indicators with the daily history.\n            ema_fast, ema_slow = self._averages[d.symbol].indicators\n            ema_fast.update(history.end_time, history.close[0])\n            ema_slow.update(history.end_time, history.close[0])\n            \n            # We will select the assets with the greatest divergence between the two indicators\n            # while they are both increasing or both decreasing.\n            fast_above = ema_fast.current.value > ema_slow.current.value\n            divergence = abs(ema_fast.current.value - ema_slow.current.value)\n            if not selected or divergence > selected[0].indicators[1].current.value:\n                selected = [d.symbol, *selected[1:]]\n            if len(selected) > self._count:\n                selected = selected[1:]\n        \n        # Request subscription to the newly selected ETFs.\n        for symbol in selected:\n            self.add_security(symbol)\n\n    def on_data(self, slice: Slice) -> None:\n        # We will buy the ETFs that are following the trend.\n        for security in slice.securities:\n            if not security.investable:\n                continue\n            indicators = self._averages[security.symbol].indicators\n            ema_fast = indicators[0]\n            ema_slow = indicators[1]\n            # If the two indicators are both increasing and the price is above the two EMAs, we will buy the ETF.\n            # It is a classic cross trend-following strategy.\n            fast_above = ema_fast.current.value > ema_slow.current.value\n            if slice.time in ema_fast.updated and slice.time in ema_slow.updated:\n                if fast_above and not self.portfolio[security.symbol].invested:\n                    self.set_holdings(security, self._target_percent)\n                if not fast_above and self.portfolio[security.symbol].invested:\n                    self.liquidate(security)\n\n\nclass SelectionData:\n    def __init__(self) -> None:\n        self.indicators: list[ExponentialMovingAverage] = []\n        self._count = 2\n        for i in range(self._count):\n            self.indicators.append(ExponentialMovingAverage(10 + i * 10))\n\n    def update(self, time: datetime, value: float) -> bool:\n        # We will use a simplified market regime model to filter the trades.\n        # It is a classic example of using multiple indicators to filter trades.\n        # We will only trade if the two indicators are both increasing or both decreasing.\n        for indicator in self.indicators:\n            indicator.update(time, value)\n        if not self.indicators[0].is_ready or not self.indicators[1].is_ready:\n            return False\n        # If the two indicators are both increasing, it is an uptrend and we will buy.\n        # It is a simple trend following strategy.\n        fast_above = self.indicators[0].current.value > self.indicators[1].current.value\n        if not self.indicators[0].previous.is_ready or not self.indicators[1].previous.is_ready:\n            return False\n        # We will not trade if the two indicators are crossed.\n        return fast_above == self.indicators[0].previous.value > self.indicators[1].previous.value\n",
+    "source_sha256": "cf381041cb61c351782d5eb2ed1d0186c605b6639f0ce0242d3aee1ad1579dd6",
+    "started_at": "2026-11-18T20:28:18.846778+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39641879,
+    "compile_id": "f0efd0b16375ae576d48e12ab322ff9f-877afff1a4900b257d3a78adf195fccf",
+    "compile_created": {
+      "compileId": "f0efd0b16375ae576d48e12ab322ff9f-877afff1a4900b257d3a78adf195fccf",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39641879,
+      "signature": "877afff1a4900b257d3a78adf195fccf",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "f0efd0b16375ae576d48e12ab322ff9f-877afff1a4900b257d3a78adf195fccf",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39641879, with CompileID: f0efd0b16375ae576d48e12ab322ff9f-877afff1a4900b257d3a78adf195fccf, Lean Version: 2.5.0.0.18271"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39641879, with CompileID: f0efd0b16375ae576d48e12ab322ff9f-877afff1a4900b257d3a78adf195fccf, Lean Version: 2.5.0.0.18271"
+    ],
+    "backtest_id": "2c0cd861b5c22ee4284ddff74079ab94",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-dual-momentum-asset-class_v04",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39641879,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "2c0cd861b5c22ee4284ddff74079ab94",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 14
+        },
+        "backtestStart": "2026-11-18 20:28:24",
+        "backtestEnd": "2026-11-18 20:28:24",
+        "created": "2026-11-18 20:28:24",
+        "snapshotId": 39641890,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-20T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-dual-momentum-asset-class_v04",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39641879,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "2c0cd861b5c22ee4284ddff74079ab94",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 14
+        },
+        "backtestStart": "2026-11-18 20:28:24",
+        "backtestEnd": "2026-11-18 20:28:24",
+        "created": "2026-11-18 20:28:24",
+        "snapshotId": 39641890,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;ETF&#039; is not defined\n  at EmaCrossUniverseSelectionAlgorithm\n    def _choose_assets(self, data: List[ETF]) -&gt; List[Symbol]:\n                                        ^^^\n in main.py: line 27\n  at \n    class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):\n in main.py: line 6\n name &#039;ETF&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;ETF&#039; is not defined\n  at EmaCrossUniverseSelectionAlgorithm\n    def _choose_assets(self, data: List[ETF]) -&gt; List[Symbol]:\n                                        ^^^\n in main.py: line 27\n  at \n    class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):\n in main.py: line 6\n name &#039;ETF&#039; is not defined",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'ETF' is not defined\n  at EmaCrossUniverseSelectionAlgorithm\n    def _choose_assets(self, data: List[ETF]) -> List[Symbol]:\n                                        ^^^\n in main.py: line 27\n  at <module>\n    class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):\n in main.py: line 6\n name 'ETF' is not defined",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-20T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.4%",
+          "Used RAM (MB)": "202",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-2c0cd861b5c22ee4284ddff74079ab94",
+          "LEAN Version": "v2.5.0.0.18271",
+          "Up Time": "0d 00:00:15"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;ETF&#039; is not defined\n  at EmaCrossUniverseSelectionAlgorithm\n    def _choose_assets(self, data: List[ETF]) -&gt; List[Symbol]:\n                                        ^^^\n in main.py: line 27\n  at \n    class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):\n in main.py: line 6\n name &#039;ETF&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;ETF&#039; is not defined\n  at EmaCrossUniverseSelectionAlgorithm\n    def _choose_assets(self, data: List[ETF]) -&gt; List[Symbol]:\n                                        ^^^\n in main.py: line 27\n  at \n    class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):\n in main.py: line 6\n name &#039;ETF&#039; is not defined",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'ETF' is not defined\n  at EmaCrossUniverseSelectionAlgorithm\n    def _choose_assets(self, data: List[ETF]) -> List[Symbol]:\n                                        ^^^\n in main.py: line 27\n  at <module>\n    class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):\n in main.py: line 6\n name 'ETF' is not defined",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-18T20:29:17.254724+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "total_orders": null
+}

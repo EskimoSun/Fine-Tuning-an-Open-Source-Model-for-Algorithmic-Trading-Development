@@ -1,0 +1,4563 @@
+{
+  "prompt_id": "index-options-universe_v06",
+  "model": "qwen_tuned_9b_final_nothink_insample",
+  "base_model": "qwen_tuned_9b_final_nothink_insample",
+  "model_id": "jared-309b/qwen9b-final-insample-sxz",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass IndexOptionAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        # Subscribe to the Option chain.\n        self._option = self.add_index_option(\"SPX\", \"SPXW\")\n        # Filter the Option universe to only select 0DTE Options.\n        self._option.set_filter(lambda u: u.expiration(0, 0).strikes(-1, 1))\n        # Filter the Option universe by Delta. The last set_filter call prevails.\n        # self._option.set_filter(lambda u: u.delta(0.25, 0.75))\n\n    def on_data(self, slice: Slice) -> None:\n        if self.portfolio.invested:\n            return\n        # Get the Option chain data.\n        chain = slice.option_chains.get(self._option)\n        if not chain:\n            return\n        \n        # Sorted the call Option contracts according to their strike prices.\n        calls = sorted([x for x in chain if x.right == OptionRight.CALL], key=lambda x: x.strike)\n        if not calls: return\n\n        # Buy 1 0DTE call Option contract for the SPX index.\n        self.buy(calls[0], 1)\n```",
+  "generated_at": "2026-11-18T19:51:02.380124+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ORDERS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    }
+  ],
+  "note": "NO_ORDERS",
+  "qc_evaluation": {
+    "status": "completed",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass IndexOptionAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        # Subscribe to the Option chain.\n        self._option = self.add_index_option(\"SPX\", \"SPXW\")\n        # Filter the Option universe to only select 0DTE Options.\n        self._option.set_filter(lambda u: u.expiration(0, 0).strikes(-1, 1))\n        # Filter the Option universe by Delta. The last set_filter call prevails.\n        # self._option.set_filter(lambda u: u.delta(0.25, 0.75))\n\n    def on_data(self, slice: Slice) -> None:\n        if self.portfolio.invested:\n            return\n        # Get the Option chain data.\n        chain = slice.option_chains.get(self._option)\n        if not chain:\n            return\n        \n        # Sorted the call Option contracts according to their strike prices.\n        calls = sorted([x for x in chain if x.right == OptionRight.CALL], key=lambda x: x.strike)\n        if not calls: return\n\n        # Buy 1 0DTE call Option contract for the SPX index.\n        self.buy(calls[0], 1)\n",
+    "source_sha256": "67eb4f39cd716ae1e57842412749d98c97050bea41df3bf683cf4274d28d147a",
+    "started_at": "2026-11-18T20:38:25.025382+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 0,
+    "statistics": {
+      "Total Orders": "167",
+      "Average Win": "2.21%",
+      "Average Loss": "-1.38%",
+      "Compounding Annual Return": "-31.390%",
+      "Drawdown": "22.800%",
+      "Expectancy": "0.317",
+      "Start Equity": "100000",
+      "End Equity": "88161",
+      "Net Profit": "-11.839%",
+      "Sharpe Ratio": "-0.828",
+      "Sortino Ratio": "-1.272",
+      "Probabilistic Sharpe Ratio": "9.799%",
+      "Loss Rate": "49%",
+      "Win Rate": "51%",
+      "Profit-Loss Ratio": "1.60",
+      "Alpha": "-0.328",
+      "Beta": "1.522",
+      "Annual Standard Deviation": "0.295",
+      "Annual Variance": "0.087",
+      "Information Ratio": "-1.181",
+      "Tracking Error": "0.254",
+      "Treynor Ratio": "-0.161",
+      "Total Fees": "$0.00",
+      "Estimated Strategy Capacity": "$2400000.00",
+      "Lowest Capacity Asset": "SPXW YOQTO9MTVFWU|SPX 31",
+      "Portfolio Turnover": "1.59%",
+      "Drawdown Recovery": "8"
+    },
+    "runtime_statistics": {
+      "Equity": "$88,161.00",
+      "Fees": "-$0.00",
+      "Holdings": "$5.00",
+      "Net Profit": "$-8,454.00",
+      "Probabilistic Sharpe Ratio": "9.799%",
+      "Return": "-11.84 %",
+      "Unrealized": "$-3,385.00",
+      "Volume": "$177,660.00"
+    },
+    "logs": [
+      "2024-09-01 00:00:00 Launching analysis for 8d3120ea88579b04426fe7626d083d86 with LEAN Engine v2.5.0.0.18271",
+      "2025-01-01 01:00:00 Algorithm Id:(8d3120ea88579b04426fe7626d083d86) completed in 10.10 seconds at 179k data points per second. Processing total of 1,805,955 data points."
+    ],
+    "qc_note": "",
+    "project_id": 39642322,
+    "compile_id": "2c2f086d4b60cd0f9c5b0a7126e67515-d96a4a76f3c38a70b93c124ea222c47a",
+    "compile_created": {
+      "compileId": "2c2f086d4b60cd0f9c5b0a7126e67515-d96a4a76f3c38a70b93c124ea222c47a",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39642322,
+      "signature": "d96a4a76f3c38a70b93c124ea222c47a",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "2c2f086d4b60cd0f9c5b0a7126e67515-d96a4a76f3c38a70b93c124ea222c47a",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39642322, with CompileID: 2c2f086d4b60cd0f9c5b0a7126e67515-d96a4a76f3c38a70b93c124ea222c47a, Lean Version: 2.5.0.0.18271"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39642322, with CompileID: 2c2f086d4b60cd0f9c5b0a7126e67515-d96a4a76f3c38a70b93c124ea222c47a, Lean Version: 2.5.0.0.18271"
+    ],
+    "backtest_id": "8d3120ea88579b04426fe7626d083d86",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "index-options-universe_v06",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39642322,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "8d3120ea88579b04426fe7626d083d86",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 0
+        },
+        "backtestStart": "2026-11-18 20:38:29",
+        "backtestEnd": "2026-11-18 20:38:29",
+        "created": "2026-11-18 20:38:29",
+        "snapshotId": 39642323,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-20T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": "",
+        "name": "index-options-universe_v06",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39642322,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "8d3120ea88579b04426fe7626d083d86",
+        "tradeableDates": 84,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 0
+        },
+        "backtestStart": "2024-09-01 00:00:00",
+        "backtestEnd": "2024-12-31 23:59:59",
+        "created": "2026-11-18 20:38:29",
+        "snapshotId": 39642323,
+        "status": "Completed.",
+        "error": null,
+        "stacktrace": null,
+        "progress": 1,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          },
+          "Drawdown": {
+            "name": "Drawdown"
+          },
+          "Portfolio Turnover": {
+            "name": "Portfolio Turnover"
+          },
+          "Exposure": {
+            "name": "Exposure"
+          },
+          "Capacity": {
+            "name": "Capacity"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": {
+          "M1_20240930": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-09-28T05:00:00Z",
+              "totalNumberOfTrades": 19,
+              "numberOfWinningTrades": 5,
+              "numberOfLosingTrades": 14,
+              "totalProfitLoss": "-51190.0",
+              "totalProfit": "0",
+              "totalLoss": "-51190.0",
+              "largestProfit": "0",
+              "largestLoss": "-10210.0",
+              "averageProfitLoss": "-2694.2105",
+              "averageProfit": "0",
+              "averageLoss": "-2694.2105",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.3571",
+              "winRate": "0.2632",
+              "lossRate": "0.7368",
+              "averageMAE": "-2694.2105",
+              "averageMFE": "1276.4737",
+              "largestMAE": "-10210.0",
+              "largestMFE": "5247.00",
+              "maximumClosedTradeDrawdown": "-51190.0",
+              "maximumIntraTradeDrawdown": "-52775.00",
+              "profitLossStandardDeviation": "2164.2584",
+              "profitLossDownsideDeviation": "2164.2584",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.2449",
+              "sortinoRatio": "-1.2449",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "12050.00",
+              "averageEndTradeDrawdown": "-3970.6842",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0207",
+              "averageLossRate": "-0.0155",
+              "profitLossRatio": "1.3329",
+              "winRate": "0.5263",
+              "lossRate": "0.4737",
+              "expectancy": "0.2278",
+              "startEquity": "100000",
+              "endEquity": "90476",
+              "compoundingAnnualReturn": "-0.7081",
+              "drawdown": "0.148",
+              "totalNetProfit": "-0.0952",
+              "sharpeRatio": "-2.6523",
+              "probabilisticSharpeRatio": "0.0640",
+              "sortinoRatio": "-3.9083",
+              "alpha": "-0.8357",
+              "beta": "1.1962",
+              "annualStandardDeviation": "0.2621",
+              "annualVariance": "0.0687",
+              "informationRatio": "-3.6142",
+              "trackingError": "0.2248",
+              "treynorRatio": "-0.5811",
+              "portfolioTurnover": "0.0185",
+              "valueAtRisk99": "-0.042",
+              "valueAtRisk95": "-0.031",
+              "drawdownRecovery": "8"
+            },
+            "closedTrades": []
+          },
+          "M1_20241031": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-30T13:31:00Z",
+              "endDateTime": "2024-10-31T05:00:00Z",
+              "totalNumberOfTrades": 23,
+              "numberOfWinningTrades": 9,
+              "numberOfLosingTrades": 14,
+              "totalProfitLoss": "-40680.0",
+              "totalProfit": "0",
+              "totalLoss": "-40680.0",
+              "largestProfit": "0",
+              "largestLoss": "-5070.0",
+              "averageProfitLoss": "-1768.6957",
+              "averageProfit": "0",
+              "averageLoss": "-1768.6957",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 2,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.6429",
+              "winRate": "0.3913",
+              "lossRate": "0.6087",
+              "averageMAE": "-1768.6957",
+              "averageMFE": "1245.3913",
+              "largestMAE": "-5070.0",
+              "largestMFE": "3745.00",
+              "maximumClosedTradeDrawdown": "-40680.0",
+              "maximumIntraTradeDrawdown": "-42755.00",
+              "profitLossStandardDeviation": "1285.4228",
+              "profitLossDownsideDeviation": "1285.4228",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.3760",
+              "sortinoRatio": "-1.3760",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "6281.00",
+              "averageEndTradeDrawdown": "-3014.0870",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0179",
+              "averageLossRate": "-0.0138",
+              "profitLossRatio": "1.2919",
+              "winRate": "0.4783",
+              "lossRate": "0.5217",
+              "expectancy": "0.0961",
+              "startEquity": "90476",
+              "endEquity": "85399",
+              "compoundingAnnualReturn": "-0.4970",
+              "drawdown": "0.121",
+              "totalNetProfit": "-0.0561",
+              "sharpeRatio": "-1.3038",
+              "probabilisticSharpeRatio": "0.2033",
+              "sortinoRatio": "-1.9523",
+              "alpha": "-0.6583",
+              "beta": "2.2092",
+              "annualStandardDeviation": "0.2656",
+              "annualVariance": "0.0706",
+              "informationRatio": "-2.1384",
+              "trackingError": "0.2280",
+              "treynorRatio": "-0.1568",
+              "portfolioTurnover": "0.0145",
+              "valueAtRisk99": "-0.040",
+              "valueAtRisk95": "-0.029",
+              "drawdownRecovery": "8"
+            },
+            "closedTrades": []
+          },
+          "M1_20241130": {
+            "tradeStatistics": {
+              "startDateTime": "2024-10-31T13:31:00Z",
+              "endDateTime": "2024-11-30T06:00:00Z",
+              "totalNumberOfTrades": 21,
+              "numberOfWinningTrades": 10,
+              "numberOfLosingTrades": 11,
+              "totalProfitLoss": "-50120.00",
+              "totalProfit": "0",
+              "totalLoss": "-50120.00",
+              "largestProfit": "0",
+              "largestLoss": "-11870.0",
+              "averageProfitLoss": "-2386.6667",
+              "averageProfit": "0",
+              "averageLoss": "-2386.6667",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 4,
+              "maxConsecutiveLosingTrades": 5,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.9091",
+              "winRate": "0.4762",
+              "lossRate": "0.5238",
+              "averageMAE": "-2386.6667",
+              "averageMFE": "1620.0952",
+              "largestMAE": "-11870.0",
+              "largestMFE": "4730.00",
+              "maximumClosedTradeDrawdown": "-50120.00",
+              "maximumIntraTradeDrawdown": "-53460.00",
+              "profitLossStandardDeviation": "2421.4636",
+              "profitLossDownsideDeviation": "2421.4636",
+              "profitFactor": "0",
+              "sharpeRatio": "-0.9856",
+              "sortinoRatio": "-0.9856",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "15655.00",
+              "averageEndTradeDrawdown": "-4006.7619",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0201",
+              "averageLossRate": "-0.0128",
+              "profitLossRatio": "1.5685",
+              "winRate": "0.5714",
+              "lossRate": "0.4286",
+              "expectancy": "0.4677",
+              "startEquity": "85399",
+              "endEquity": "90515",
+              "compoundingAnnualReturn": "1.0755",
+              "drawdown": "0.078",
+              "totalNetProfit": "0.0599",
+              "sharpeRatio": "3.3031",
+              "probabilisticSharpeRatio": "0.6722",
+              "sortinoRatio": "7.2723",
+              "alpha": "-0.1780",
+              "beta": "1.9274",
+              "annualStandardDeviation": "0.2854",
+              "annualVariance": "0.0815",
+              "informationRatio": "1.5875",
+              "trackingError": "0.2276",
+              "treynorRatio": "0.4892",
+              "portfolioTurnover": "0.0188",
+              "valueAtRisk99": "-0.039",
+              "valueAtRisk95": "-0.027",
+              "drawdownRecovery": "5"
+            },
+            "closedTrades": []
+          },
+          "M1_20241231": {
+            "tradeStatistics": {
+              "startDateTime": "2024-12-02T14:31:00Z",
+              "endDateTime": "2024-12-31T06:00:00Z",
+              "totalNumberOfTrades": 20,
+              "numberOfWinningTrades": 6,
+              "numberOfLosingTrades": 14,
+              "totalProfitLoss": "-32280.00",
+              "totalProfit": "0",
+              "totalLoss": "-32280.00",
+              "largestProfit": "0",
+              "largestLoss": "-6200",
+              "averageProfitLoss": "-1614.0000",
+              "averageProfit": "0",
+              "averageLoss": "-1614.0000",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 4,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.4286",
+              "winRate": "0.3",
+              "lossRate": "0.7",
+              "averageMAE": "-1614.0000",
+              "averageMFE": "1517.2500",
+              "largestMAE": "-6200",
+              "largestMFE": "10610.00",
+              "maximumClosedTradeDrawdown": "-32280.00",
+              "maximumIntraTradeDrawdown": "-32680.00",
+              "profitLossStandardDeviation": "1372.0601",
+              "profitLossDownsideDeviation": "1372.0601",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.1763",
+              "sortinoRatio": "-1.1763",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "11840.00",
+              "averageEndTradeDrawdown": "-3131.2500",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0324",
+              "averageLossRate": "-0.0125",
+              "profitLossRatio": "2.5909",
+              "winRate": "0.45",
+              "lossRate": "0.55",
+              "expectancy": "0.6159",
+              "startEquity": "90515",
+              "endEquity": "88161",
+              "compoundingAnnualReturn": "-0.2692",
+              "drawdown": "0.127",
+              "totalNetProfit": "-0.0260",
+              "sharpeRatio": "0.3577",
+              "probabilisticSharpeRatio": "0.4097",
+              "sortinoRatio": "0.5125",
+              "alpha": "0.4672",
+              "beta": "1.6277",
+              "annualStandardDeviation": "0.3720",
+              "annualVariance": "0.1384",
+              "informationRatio": "1.0422",
+              "trackingError": "0.3246",
+              "treynorRatio": "0.0818",
+              "portfolioTurnover": "0.0119",
+              "valueAtRisk99": "-0.054",
+              "valueAtRisk95": "-0.038",
+              "drawdownRecovery": "20"
+            },
+            "closedTrades": []
+          },
+          "M1_20250101": {
+            "tradeStatistics": {
+              "startDateTime": null,
+              "endDateTime": null,
+              "totalNumberOfTrades": 0,
+              "numberOfWinningTrades": 0,
+              "numberOfLosingTrades": 0,
+              "totalProfitLoss": "0",
+              "totalProfit": "0",
+              "totalLoss": "0",
+              "largestProfit": "0",
+              "largestLoss": "0",
+              "averageProfitLoss": "0",
+              "averageProfit": "0",
+              "averageLoss": "0",
+              "averageTradeDuration": "00:00:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "00:00:00",
+              "medianTradeDuration": "00:00:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "00:00:00",
+              "maxConsecutiveWinningTrades": 0,
+              "maxConsecutiveLosingTrades": 0,
+              "profitLossRatio": "0",
+              "winLossRatio": "0",
+              "winRate": "0",
+              "lossRate": "0",
+              "averageMAE": "0",
+              "averageMFE": "0",
+              "largestMAE": "0",
+              "largestMFE": "0",
+              "maximumClosedTradeDrawdown": "0",
+              "maximumIntraTradeDrawdown": "0",
+              "profitLossStandardDeviation": "0",
+              "profitLossDownsideDeviation": "0",
+              "profitFactor": "0",
+              "sharpeRatio": "0",
+              "sortinoRatio": "0",
+              "profitToMaxDrawdownRatio": "0",
+              "maximumEndTradeDrawdown": "0",
+              "averageEndTradeDrawdown": "0",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0",
+              "averageLossRate": "0",
+              "profitLossRatio": "0",
+              "winRate": "0",
+              "lossRate": "0",
+              "expectancy": "0",
+              "startEquity": "88161",
+              "endEquity": "88161",
+              "compoundingAnnualReturn": "0",
+              "drawdown": "0",
+              "totalNetProfit": "0",
+              "sharpeRatio": "0",
+              "probabilisticSharpeRatio": "0",
+              "sortinoRatio": "0",
+              "alpha": "0",
+              "beta": "0",
+              "annualStandardDeviation": "0",
+              "annualVariance": "0",
+              "informationRatio": "0",
+              "trackingError": "0",
+              "treynorRatio": "0",
+              "portfolioTurnover": "0.0192",
+              "valueAtRisk99": "0",
+              "valueAtRisk95": "0",
+              "drawdownRecovery": "0"
+            },
+            "closedTrades": []
+          },
+          "M3_20240930": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-09-28T05:00:00Z",
+              "totalNumberOfTrades": 19,
+              "numberOfWinningTrades": 5,
+              "numberOfLosingTrades": 14,
+              "totalProfitLoss": "-51190.0",
+              "totalProfit": "0",
+              "totalLoss": "-51190.0",
+              "largestProfit": "0",
+              "largestLoss": "-10210.0",
+              "averageProfitLoss": "-2694.2105",
+              "averageProfit": "0",
+              "averageLoss": "-2694.2105",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.3571",
+              "winRate": "0.2632",
+              "lossRate": "0.7368",
+              "averageMAE": "-2694.2105",
+              "averageMFE": "1276.4737",
+              "largestMAE": "-10210.0",
+              "largestMFE": "5247.00",
+              "maximumClosedTradeDrawdown": "-51190.0",
+              "maximumIntraTradeDrawdown": "-52775.00",
+              "profitLossStandardDeviation": "2164.2584",
+              "profitLossDownsideDeviation": "2164.2584",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.2449",
+              "sortinoRatio": "-1.2449",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "12050.00",
+              "averageEndTradeDrawdown": "-3970.6842",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0207",
+              "averageLossRate": "-0.0155",
+              "profitLossRatio": "1.3329",
+              "winRate": "0.5263",
+              "lossRate": "0.4737",
+              "expectancy": "0.2278",
+              "startEquity": "100000",
+              "endEquity": "90476",
+              "compoundingAnnualReturn": "-0.7081",
+              "drawdown": "0.148",
+              "totalNetProfit": "-0.0952",
+              "sharpeRatio": "-2.6523",
+              "probabilisticSharpeRatio": "0.0640",
+              "sortinoRatio": "-3.9083",
+              "alpha": "-0.8357",
+              "beta": "1.1962",
+              "annualStandardDeviation": "0.2621",
+              "annualVariance": "0.0687",
+              "informationRatio": "-3.6142",
+              "trackingError": "0.2248",
+              "treynorRatio": "-0.5811",
+              "portfolioTurnover": "0.0185",
+              "valueAtRisk99": "-0.042",
+              "valueAtRisk95": "-0.031",
+              "drawdownRecovery": "8"
+            },
+            "closedTrades": []
+          },
+          "M3_20241031": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-10-31T05:00:00Z",
+              "totalNumberOfTrades": 42,
+              "numberOfWinningTrades": 14,
+              "numberOfLosingTrades": 28,
+              "totalProfitLoss": "-91870.0",
+              "totalProfit": "0",
+              "totalLoss": "-91870.0",
+              "largestProfit": "0",
+              "largestLoss": "-10210.0",
+              "averageProfitLoss": "-2187.3810",
+              "averageProfit": "0",
+              "averageLoss": "-2187.3810",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.5",
+              "winRate": "0.3333",
+              "lossRate": "0.6667",
+              "averageMAE": "-2187.3810",
+              "averageMFE": "1259.4524",
+              "largestMAE": "-10210.0",
+              "largestMFE": "5247.00",
+              "maximumClosedTradeDrawdown": "-91870.0",
+              "maximumIntraTradeDrawdown": "-93455.00",
+              "profitLossStandardDeviation": "1777.7460",
+              "profitLossDownsideDeviation": "1777.7460",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.2304",
+              "sortinoRatio": "-1.2304",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "12050.00",
+              "averageEndTradeDrawdown": "-3446.8333",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0191",
+              "averageLossRate": "-0.0148",
+              "profitLossRatio": "1.2896",
+              "winRate": "0.5",
+              "lossRate": "0.5",
+              "expectancy": "0.1448",
+              "startEquity": "100000",
+              "endEquity": "85399",
+              "compoundingAnnualReturn": "-0.6131",
+              "drawdown": "0.176",
+              "totalNetProfit": "-0.1460",
+              "sharpeRatio": "-1.9800",
+              "probabilisticSharpeRatio": "0.0475",
+              "sortinoRatio": "-3.0092",
+              "alpha": "-0.6662",
+              "beta": "1.5002",
+              "annualStandardDeviation": "0.2619",
+              "annualVariance": "0.0686",
+              "informationRatio": "-2.7501",
+              "trackingError": "0.2243",
+              "treynorRatio": "-0.3457",
+              "portfolioTurnover": "0.0164",
+              "valueAtRisk99": "-0.041",
+              "valueAtRisk95": "-0.030",
+              "drawdownRecovery": "8"
+            },
+            "closedTrades": []
+          },
+          "M3_20241130": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-11-30T06:00:00Z",
+              "totalNumberOfTrades": 63,
+              "numberOfWinningTrades": 24,
+              "numberOfLosingTrades": 39,
+              "totalProfitLoss": "-141990.00",
+              "totalProfit": "0",
+              "totalLoss": "-141990.00",
+              "largestProfit": "0",
+              "largestLoss": "-11870.0",
+              "averageProfitLoss": "-2253.8095",
+              "averageProfit": "0",
+              "averageLoss": "-2253.8095",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 4,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.6154",
+              "winRate": "0.3810",
+              "lossRate": "0.6190",
+              "averageMAE": "-2253.8095",
+              "averageMFE": "1379.6667",
+              "largestMAE": "-11870.0",
+              "largestMFE": "5247.00",
+              "maximumClosedTradeDrawdown": "-141990.00",
+              "maximumIntraTradeDrawdown": "-143575.00",
+              "profitLossStandardDeviation": "1997.5846",
+              "profitLossDownsideDeviation": "1997.5846",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.1283",
+              "sortinoRatio": "-1.1283",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "15655.00",
+              "averageEndTradeDrawdown": "-3633.4762",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0195",
+              "averageLossRate": "-0.0142",
+              "profitLossRatio": "1.3698",
+              "winRate": "0.5238",
+              "lossRate": "0.4762",
+              "expectancy": "0.2413",
+              "startEquity": "100000",
+              "endEquity": "90515",
+              "compoundingAnnualReturn": "-0.3322",
+              "drawdown": "0.201",
+              "totalNetProfit": "-0.0948",
+              "sharpeRatio": "-0.9728",
+              "probabilisticSharpeRatio": "0.1163",
+              "sortinoRatio": "-1.6420",
+              "alpha": "-0.5184",
+              "beta": "1.4767",
+              "annualStandardDeviation": "0.2683",
+              "annualVariance": "0.0720",
+              "informationRatio": "-1.9209",
+              "trackingError": "0.2266",
+              "treynorRatio": "-0.1767",
+              "portfolioTurnover": "0.0172",
+              "valueAtRisk99": "-0.040",
+              "valueAtRisk95": "-0.029",
+              "drawdownRecovery": "8"
+            },
+            "closedTrades": []
+          },
+          "M3_20241231": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-30T13:31:00Z",
+              "endDateTime": "2024-12-31T06:00:00Z",
+              "totalNumberOfTrades": 64,
+              "numberOfWinningTrades": 25,
+              "numberOfLosingTrades": 39,
+              "totalProfitLoss": "-123080.00",
+              "totalProfit": "0",
+              "totalLoss": "-123080.00",
+              "largestProfit": "0",
+              "largestLoss": "-11870.0",
+              "averageProfitLoss": "-1923.1250",
+              "averageProfit": "0",
+              "averageLoss": "-1923.1250",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 4,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.6410",
+              "winRate": "0.3906",
+              "lossRate": "0.6094",
+              "averageMAE": "-1923.1250",
+              "averageMFE": "1453.2969",
+              "largestMAE": "-11870.0",
+              "largestMFE": "10610.00",
+              "maximumClosedTradeDrawdown": "-123080.00",
+              "maximumIntraTradeDrawdown": "-125155.00",
+              "profitLossStandardDeviation": "1765.4577",
+              "profitLossDownsideDeviation": "1765.4577",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.0893",
+              "sortinoRatio": "-1.0893",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "15655.00",
+              "averageEndTradeDrawdown": "-3376.4219",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0219",
+              "averageLossRate": "-0.0129",
+              "profitLossRatio": "1.6987",
+              "winRate": "0.5",
+              "lossRate": "0.5",
+              "expectancy": "0.3493",
+              "startEquity": "90476",
+              "endEquity": "88161",
+              "compoundingAnnualReturn": "-0.0980",
+              "drawdown": "0.178",
+              "totalNetProfit": "-0.0256",
+              "sharpeRatio": "0.2188",
+              "probabilisticSharpeRatio": "0.3163",
+              "sortinoRatio": "0.3431",
+              "alpha": "-0.0429",
+              "beta": "1.6116",
+              "annualStandardDeviation": "0.3026",
+              "annualVariance": "0.0916",
+              "informationRatio": "-0.0056",
+              "trackingError": "0.2593",
+              "treynorRatio": "0.0411",
+              "portfolioTurnover": "0.0150",
+              "valueAtRisk99": "-0.044",
+              "valueAtRisk95": "-0.031",
+              "drawdownRecovery": "8"
+            },
+            "closedTrades": []
+          },
+          "M3_20250101": {
+            "tradeStatistics": {
+              "startDateTime": "2024-10-31T13:31:00Z",
+              "endDateTime": "2024-12-31T06:00:00Z",
+              "totalNumberOfTrades": 41,
+              "numberOfWinningTrades": 16,
+              "numberOfLosingTrades": 25,
+              "totalProfitLoss": "-82400.00",
+              "totalProfit": "0",
+              "totalLoss": "-82400.00",
+              "largestProfit": "0",
+              "largestLoss": "-11870.0",
+              "averageProfitLoss": "-2009.7561",
+              "averageProfit": "0",
+              "averageLoss": "-2009.7561",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 4,
+              "maxConsecutiveLosingTrades": 5,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.64",
+              "winRate": "0.3902",
+              "lossRate": "0.6098",
+              "averageMAE": "-2009.7561",
+              "averageMFE": "1569.9268",
+              "largestMAE": "-11870.0",
+              "largestMFE": "10610.00",
+              "maximumClosedTradeDrawdown": "-82400.00",
+              "maximumIntraTradeDrawdown": "-85740.00",
+              "profitLossStandardDeviation": "1994.7049",
+              "profitLossDownsideDeviation": "1994.7049",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.0075",
+              "sortinoRatio": "-1.0075",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "15655.00",
+              "averageEndTradeDrawdown": "-3579.6829",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0247",
+              "averageLossRate": "-0.0127",
+              "profitLossRatio": "1.9550",
+              "winRate": "0.5122",
+              "lossRate": "0.4878",
+              "expectancy": "0.5135",
+              "startEquity": "85399",
+              "endEquity": "88161",
+              "compoundingAnnualReturn": "0.2095",
+              "drawdown": "0.149",
+              "totalNetProfit": "0.0323",
+              "sharpeRatio": "0.6323",
+              "probabilisticSharpeRatio": "0.4117",
+              "sortinoRatio": "0.9533",
+              "alpha": "0.0519",
+              "beta": "1.7630",
+              "annualStandardDeviation": "0.3283",
+              "annualVariance": "0.1078",
+              "informationRatio": "0.4284",
+              "trackingError": "0.2784",
+              "treynorRatio": "0.1177",
+              "portfolioTurnover": "0.0154",
+              "valueAtRisk99": "-0.047",
+              "valueAtRisk95": "-0.033",
+              "drawdownRecovery": "5"
+            },
+            "closedTrades": []
+          },
+          "M6_20240930": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-09-28T05:00:00Z",
+              "totalNumberOfTrades": 19,
+              "numberOfWinningTrades": 5,
+              "numberOfLosingTrades": 14,
+              "totalProfitLoss": "-51190.0",
+              "totalProfit": "0",
+              "totalLoss": "-51190.0",
+              "largestProfit": "0",
+              "largestLoss": "-10210.0",
+              "averageProfitLoss": "-2694.2105",
+              "averageProfit": "0",
+              "averageLoss": "-2694.2105",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.3571",
+              "winRate": "0.2632",
+              "lossRate": "0.7368",
+              "averageMAE": "-2694.2105",
+              "averageMFE": "1276.4737",
+              "largestMAE": "-10210.0",
+              "largestMFE": "5247.00",
+              "maximumClosedTradeDrawdown": "-51190.0",
+              "maximumIntraTradeDrawdown": "-52775.00",
+              "profitLossStandardDeviation": "2164.2584",
+              "profitLossDownsideDeviation": "2164.2584",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.2449",
+              "sortinoRatio": "-1.2449",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "12050.00",
+              "averageEndTradeDrawdown": "-3970.6842",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0207",
+              "averageLossRate": "-0.0155",
+              "profitLossRatio": "1.3329",
+              "winRate": "0.5263",
+              "lossRate": "0.4737",
+              "expectancy": "0.2278",
+              "startEquity": "100000",
+              "endEquity": "90476",
+              "compoundingAnnualReturn": "-0.7081",
+              "drawdown": "0.148",
+              "totalNetProfit": "-0.0952",
+              "sharpeRatio": "-2.6523",
+              "probabilisticSharpeRatio": "0.0640",
+              "sortinoRatio": "-3.9083",
+              "alpha": "-0.8357",
+              "beta": "1.1962",
+              "annualStandardDeviation": "0.2621",
+              "annualVariance": "0.0687",
+              "informationRatio": "-3.6142",
+              "trackingError": "0.2248",
+              "treynorRatio": "-0.5811",
+              "portfolioTurnover": "0.0185",
+              "valueAtRisk99": "-0.042",
+              "valueAtRisk95": "-0.031",
+              "drawdownRecovery": "8"
+            },
+            "closedTrades": []
+          },
+          "M6_20241031": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-10-31T05:00:00Z",
+              "totalNumberOfTrades": 42,
+              "numberOfWinningTrades": 14,
+              "numberOfLosingTrades": 28,
+              "totalProfitLoss": "-91870.0",
+              "totalProfit": "0",
+              "totalLoss": "-91870.0",
+              "largestProfit": "0",
+              "largestLoss": "-10210.0",
+              "averageProfitLoss": "-2187.3810",
+              "averageProfit": "0",
+              "averageLoss": "-2187.3810",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.5",
+              "winRate": "0.3333",
+              "lossRate": "0.6667",
+              "averageMAE": "-2187.3810",
+              "averageMFE": "1259.4524",
+              "largestMAE": "-10210.0",
+              "largestMFE": "5247.00",
+              "maximumClosedTradeDrawdown": "-91870.0",
+              "maximumIntraTradeDrawdown": "-93455.00",
+              "profitLossStandardDeviation": "1777.7460",
+              "profitLossDownsideDeviation": "1777.7460",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.2304",
+              "sortinoRatio": "-1.2304",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "12050.00",
+              "averageEndTradeDrawdown": "-3446.8333",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0191",
+              "averageLossRate": "-0.0148",
+              "profitLossRatio": "1.2896",
+              "winRate": "0.5",
+              "lossRate": "0.5",
+              "expectancy": "0.1448",
+              "startEquity": "100000",
+              "endEquity": "85399",
+              "compoundingAnnualReturn": "-0.6131",
+              "drawdown": "0.176",
+              "totalNetProfit": "-0.1460",
+              "sharpeRatio": "-1.9800",
+              "probabilisticSharpeRatio": "0.0475",
+              "sortinoRatio": "-3.0092",
+              "alpha": "-0.6662",
+              "beta": "1.5002",
+              "annualStandardDeviation": "0.2619",
+              "annualVariance": "0.0686",
+              "informationRatio": "-2.7501",
+              "trackingError": "0.2243",
+              "treynorRatio": "-0.3457",
+              "portfolioTurnover": "0.0164",
+              "valueAtRisk99": "-0.041",
+              "valueAtRisk95": "-0.030",
+              "drawdownRecovery": "8"
+            },
+            "closedTrades": []
+          },
+          "M6_20241130": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-11-30T06:00:00Z",
+              "totalNumberOfTrades": 63,
+              "numberOfWinningTrades": 24,
+              "numberOfLosingTrades": 39,
+              "totalProfitLoss": "-141990.00",
+              "totalProfit": "0",
+              "totalLoss": "-141990.00",
+              "largestProfit": "0",
+              "largestLoss": "-11870.0",
+              "averageProfitLoss": "-2253.8095",
+              "averageProfit": "0",
+              "averageLoss": "-2253.8095",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 4,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.6154",
+              "winRate": "0.3810",
+              "lossRate": "0.6190",
+              "averageMAE": "-2253.8095",
+              "averageMFE": "1379.6667",
+              "largestMAE": "-11870.0",
+              "largestMFE": "5247.00",
+              "maximumClosedTradeDrawdown": "-141990.00",
+              "maximumIntraTradeDrawdown": "-143575.00",
+              "profitLossStandardDeviation": "1997.5846",
+              "profitLossDownsideDeviation": "1997.5846",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.1283",
+              "sortinoRatio": "-1.1283",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "15655.00",
+              "averageEndTradeDrawdown": "-3633.4762",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0195",
+              "averageLossRate": "-0.0142",
+              "profitLossRatio": "1.3698",
+              "winRate": "0.5238",
+              "lossRate": "0.4762",
+              "expectancy": "0.2413",
+              "startEquity": "100000",
+              "endEquity": "90515",
+              "compoundingAnnualReturn": "-0.3322",
+              "drawdown": "0.201",
+              "totalNetProfit": "-0.0948",
+              "sharpeRatio": "-0.9728",
+              "probabilisticSharpeRatio": "0.1163",
+              "sortinoRatio": "-1.6420",
+              "alpha": "-0.5184",
+              "beta": "1.4767",
+              "annualStandardDeviation": "0.2683",
+              "annualVariance": "0.0720",
+              "informationRatio": "-1.9209",
+              "trackingError": "0.2266",
+              "treynorRatio": "-0.1767",
+              "portfolioTurnover": "0.0172",
+              "valueAtRisk99": "-0.040",
+              "valueAtRisk95": "-0.029",
+              "drawdownRecovery": "8"
+            },
+            "closedTrades": []
+          },
+          "M6_20241231": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-12-31T06:00:00Z",
+              "totalNumberOfTrades": 83,
+              "numberOfWinningTrades": 30,
+              "numberOfLosingTrades": 53,
+              "totalProfitLoss": "-174270.00",
+              "totalProfit": "0",
+              "totalLoss": "-174270.00",
+              "largestProfit": "0",
+              "largestLoss": "-11870.0",
+              "averageProfitLoss": "-2099.6386",
+              "averageProfit": "0",
+              "averageLoss": "-2099.6386",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 4,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.5660",
+              "winRate": "0.3614",
+              "lossRate": "0.6386",
+              "averageMAE": "-2099.6386",
+              "averageMFE": "1412.8193",
+              "largestMAE": "-11870.0",
+              "largestMFE": "10610.00",
+              "maximumClosedTradeDrawdown": "-174270.00",
+              "maximumIntraTradeDrawdown": "-175855.00",
+              "profitLossStandardDeviation": "1878.5830",
+              "profitLossDownsideDeviation": "1878.5830",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.1177",
+              "sortinoRatio": "-1.1177",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "15655.00",
+              "averageEndTradeDrawdown": "-3512.4578",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0221",
+              "averageLossRate": "-0.0138",
+              "profitLossRatio": "1.6024",
+              "winRate": "0.5060",
+              "lossRate": "0.4940",
+              "expectancy": "0.3169",
+              "startEquity": "100000",
+              "endEquity": "88161",
+              "compoundingAnnualReturn": "-0.3147",
+              "drawdown": "0.228",
+              "totalNetProfit": "-0.1184",
+              "sharpeRatio": "-0.6233",
+              "probabilisticSharpeRatio": "0.1310",
+              "sortinoRatio": "-0.9766",
+              "alpha": "-0.2806",
+              "beta": "1.4995",
+              "annualStandardDeviation": "0.2931",
+              "annualVariance": "0.0859",
+              "informationRatio": "-0.9863",
+              "trackingError": "0.2515",
+              "treynorRatio": "-0.1218",
+              "portfolioTurnover": "0.0159",
+              "valueAtRisk99": "-0.044",
+              "valueAtRisk95": "-0.031",
+              "drawdownRecovery": "8"
+            },
+            "closedTrades": []
+          },
+          "M6_20250101": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-12-31T06:00:00Z",
+              "totalNumberOfTrades": 83,
+              "numberOfWinningTrades": 30,
+              "numberOfLosingTrades": 53,
+              "totalProfitLoss": "-174270.00",
+              "totalProfit": "0",
+              "totalLoss": "-174270.00",
+              "largestProfit": "0",
+              "largestLoss": "-11870.0",
+              "averageProfitLoss": "-2099.6386",
+              "averageProfit": "0",
+              "averageLoss": "-2099.6386",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 4,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.5660",
+              "winRate": "0.3614",
+              "lossRate": "0.6386",
+              "averageMAE": "-2099.6386",
+              "averageMFE": "1412.8193",
+              "largestMAE": "-11870.0",
+              "largestMFE": "10610.00",
+              "maximumClosedTradeDrawdown": "-174270.00",
+              "maximumIntraTradeDrawdown": "-175855.00",
+              "profitLossStandardDeviation": "1878.5830",
+              "profitLossDownsideDeviation": "1878.5830",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.1177",
+              "sortinoRatio": "-1.1177",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "15655.00",
+              "averageEndTradeDrawdown": "-3512.4578",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0221",
+              "averageLossRate": "-0.0138",
+              "profitLossRatio": "1.6024",
+              "winRate": "0.5060",
+              "lossRate": "0.4940",
+              "expectancy": "0.3169",
+              "startEquity": "100000",
+              "endEquity": "88161",
+              "compoundingAnnualReturn": "-0.3139",
+              "drawdown": "0.228",
+              "totalNetProfit": "-0.1184",
+              "sharpeRatio": "-0.8283",
+              "probabilisticSharpeRatio": "0.0980",
+              "sortinoRatio": "-1.2722",
+              "alpha": "-0.3284",
+              "beta": "1.5222",
+              "annualStandardDeviation": "0.2954",
+              "annualVariance": "0.0872",
+              "informationRatio": "-1.1813",
+              "trackingError": "0.2537",
+              "treynorRatio": "-0.1607",
+              "portfolioTurnover": "0.0159",
+              "valueAtRisk99": "-0.044",
+              "valueAtRisk95": "-0.031",
+              "drawdownRecovery": "8"
+            },
+            "closedTrades": []
+          },
+          "M12_20240930": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-09-28T05:00:00Z",
+              "totalNumberOfTrades": 19,
+              "numberOfWinningTrades": 5,
+              "numberOfLosingTrades": 14,
+              "totalProfitLoss": "-51190.0",
+              "totalProfit": "0",
+              "totalLoss": "-51190.0",
+              "largestProfit": "0",
+              "largestLoss": "-10210.0",
+              "averageProfitLoss": "-2694.2105",
+              "averageProfit": "0",
+              "averageLoss": "-2694.2105",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.3571",
+              "winRate": "0.2632",
+              "lossRate": "0.7368",
+              "averageMAE": "-2694.2105",
+              "averageMFE": "1276.4737",
+              "largestMAE": "-10210.0",
+              "largestMFE": "5247.00",
+              "maximumClosedTradeDrawdown": "-51190.0",
+              "maximumIntraTradeDrawdown": "-52775.00",
+              "profitLossStandardDeviation": "2164.2584",
+              "profitLossDownsideDeviation": "2164.2584",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.2449",
+              "sortinoRatio": "-1.2449",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "12050.00",
+              "averageEndTradeDrawdown": "-3970.6842",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0207",
+              "averageLossRate": "-0.0155",
+              "profitLossRatio": "1.3329",
+              "winRate": "0.5263",
+              "lossRate": "0.4737",
+              "expectancy": "0.2278",
+              "startEquity": "100000",
+              "endEquity": "90476",
+              "compoundingAnnualReturn": "-0.7081",
+              "drawdown": "0.148",
+              "totalNetProfit": "-0.0952",
+              "sharpeRatio": "-2.6523",
+              "probabilisticSharpeRatio": "0.0640",
+              "sortinoRatio": "-3.9083",
+              "alpha": "-0.8357",
+              "beta": "1.1962",
+              "annualStandardDeviation": "0.2621",
+              "annualVariance": "0.0687",
+              "informationRatio": "-3.6142",
+              "trackingError": "0.2248",
+              "treynorRatio": "-0.5811",
+              "portfolioTurnover": "0.0185",
+              "valueAtRisk99": "-0.042",
+              "valueAtRisk95": "-0.031",
+              "drawdownRecovery": "8"
+            },
+            "closedTrades": []
+          },
+          "M12_20241031": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-10-31T05:00:00Z",
+              "totalNumberOfTrades": 42,
+              "numberOfWinningTrades": 14,
+              "numberOfLosingTrades": 28,
+              "totalProfitLoss": "-91870.0",
+              "totalProfit": "0",
+              "totalLoss": "-91870.0",
+              "largestProfit": "0",
+              "largestLoss": "-10210.0",
+              "averageProfitLoss": "-2187.3810",
+              "averageProfit": "0",
+              "averageLoss": "-2187.3810",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.5",
+              "winRate": "0.3333",
+              "lossRate": "0.6667",
+              "averageMAE": "-2187.3810",
+              "averageMFE": "1259.4524",
+              "largestMAE": "-10210.0",
+              "largestMFE": "5247.00",
+              "maximumClosedTradeDrawdown": "-91870.0",
+              "maximumIntraTradeDrawdown": "-93455.00",
+              "profitLossStandardDeviation": "1777.7460",
+              "profitLossDownsideDeviation": "1777.7460",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.2304",
+              "sortinoRatio": "-1.2304",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "12050.00",
+              "averageEndTradeDrawdown": "-3446.8333",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0191",
+              "averageLossRate": "-0.0148",
+              "profitLossRatio": "1.2896",
+              "winRate": "0.5",
+              "lossRate": "0.5",
+              "expectancy": "0.1448",
+              "startEquity": "100000",
+              "endEquity": "85399",
+              "compoundingAnnualReturn": "-0.6131",
+              "drawdown": "0.176",
+              "totalNetProfit": "-0.1460",
+              "sharpeRatio": "-1.9800",
+              "probabilisticSharpeRatio": "0.0475",
+              "sortinoRatio": "-3.0092",
+              "alpha": "-0.6662",
+              "beta": "1.5002",
+              "annualStandardDeviation": "0.2619",
+              "annualVariance": "0.0686",
+              "informationRatio": "-2.7501",
+              "trackingError": "0.2243",
+              "treynorRatio": "-0.3457",
+              "portfolioTurnover": "0.0164",
+              "valueAtRisk99": "-0.041",
+              "valueAtRisk95": "-0.030",
+              "drawdownRecovery": "8"
+            },
+            "closedTrades": []
+          },
+          "M12_20241130": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-11-30T06:00:00Z",
+              "totalNumberOfTrades": 63,
+              "numberOfWinningTrades": 24,
+              "numberOfLosingTrades": 39,
+              "totalProfitLoss": "-141990.00",
+              "totalProfit": "0",
+              "totalLoss": "-141990.00",
+              "largestProfit": "0",
+              "largestLoss": "-11870.0",
+              "averageProfitLoss": "-2253.8095",
+              "averageProfit": "0",
+              "averageLoss": "-2253.8095",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 4,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.6154",
+              "winRate": "0.3810",
+              "lossRate": "0.6190",
+              "averageMAE": "-2253.8095",
+              "averageMFE": "1379.6667",
+              "largestMAE": "-11870.0",
+              "largestMFE": "5247.00",
+              "maximumClosedTradeDrawdown": "-141990.00",
+              "maximumIntraTradeDrawdown": "-143575.00",
+              "profitLossStandardDeviation": "1997.5846",
+              "profitLossDownsideDeviation": "1997.5846",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.1283",
+              "sortinoRatio": "-1.1283",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "15655.00",
+              "averageEndTradeDrawdown": "-3633.4762",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0195",
+              "averageLossRate": "-0.0142",
+              "profitLossRatio": "1.3698",
+              "winRate": "0.5238",
+              "lossRate": "0.4762",
+              "expectancy": "0.2413",
+              "startEquity": "100000",
+              "endEquity": "90515",
+              "compoundingAnnualReturn": "-0.3322",
+              "drawdown": "0.201",
+              "totalNetProfit": "-0.0948",
+              "sharpeRatio": "-0.9728",
+              "probabilisticSharpeRatio": "0.1163",
+              "sortinoRatio": "-1.6420",
+              "alpha": "-0.5184",
+              "beta": "1.4767",
+              "annualStandardDeviation": "0.2683",
+              "annualVariance": "0.0720",
+              "informationRatio": "-1.9209",
+              "trackingError": "0.2266",
+              "treynorRatio": "-0.1767",
+              "portfolioTurnover": "0.0172",
+              "valueAtRisk99": "-0.040",
+              "valueAtRisk95": "-0.029",
+              "drawdownRecovery": "8"
+            },
+            "closedTrades": []
+          },
+          "M12_20241231": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-12-31T06:00:00Z",
+              "totalNumberOfTrades": 83,
+              "numberOfWinningTrades": 30,
+              "numberOfLosingTrades": 53,
+              "totalProfitLoss": "-174270.00",
+              "totalProfit": "0",
+              "totalLoss": "-174270.00",
+              "largestProfit": "0",
+              "largestLoss": "-11870.0",
+              "averageProfitLoss": "-2099.6386",
+              "averageProfit": "0",
+              "averageLoss": "-2099.6386",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 4,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.5660",
+              "winRate": "0.3614",
+              "lossRate": "0.6386",
+              "averageMAE": "-2099.6386",
+              "averageMFE": "1412.8193",
+              "largestMAE": "-11870.0",
+              "largestMFE": "10610.00",
+              "maximumClosedTradeDrawdown": "-174270.00",
+              "maximumIntraTradeDrawdown": "-175855.00",
+              "profitLossStandardDeviation": "1878.5830",
+              "profitLossDownsideDeviation": "1878.5830",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.1177",
+              "sortinoRatio": "-1.1177",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "15655.00",
+              "averageEndTradeDrawdown": "-3512.4578",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0221",
+              "averageLossRate": "-0.0138",
+              "profitLossRatio": "1.6024",
+              "winRate": "0.5060",
+              "lossRate": "0.4940",
+              "expectancy": "0.3169",
+              "startEquity": "100000",
+              "endEquity": "88161",
+              "compoundingAnnualReturn": "-0.3147",
+              "drawdown": "0.228",
+              "totalNetProfit": "-0.1184",
+              "sharpeRatio": "-0.6233",
+              "probabilisticSharpeRatio": "0.1310",
+              "sortinoRatio": "-0.9766",
+              "alpha": "-0.2806",
+              "beta": "1.4995",
+              "annualStandardDeviation": "0.2931",
+              "annualVariance": "0.0859",
+              "informationRatio": "-0.9863",
+              "trackingError": "0.2515",
+              "treynorRatio": "-0.1218",
+              "portfolioTurnover": "0.0159",
+              "valueAtRisk99": "-0.044",
+              "valueAtRisk95": "-0.031",
+              "drawdownRecovery": "8"
+            },
+            "closedTrades": []
+          },
+          "M12_20250101": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-03T13:31:00Z",
+              "endDateTime": "2024-12-31T06:00:00Z",
+              "totalNumberOfTrades": 83,
+              "numberOfWinningTrades": 30,
+              "numberOfLosingTrades": 53,
+              "totalProfitLoss": "-174270.00",
+              "totalProfit": "0",
+              "totalLoss": "-174270.00",
+              "largestProfit": "0",
+              "largestLoss": "-11870.0",
+              "averageProfitLoss": "-2099.6386",
+              "averageProfit": "0",
+              "averageLoss": "-2099.6386",
+              "averageTradeDuration": "15:29:00",
+              "averageWinningTradeDuration": "00:00:00",
+              "averageLosingTradeDuration": "15:29:00",
+              "medianTradeDuration": "15:29:00",
+              "medianWinningTradeDuration": "00:00:00",
+              "medianLosingTradeDuration": "15:29:00",
+              "maxConsecutiveWinningTrades": 4,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "0",
+              "winLossRatio": "0.5660",
+              "winRate": "0.3614",
+              "lossRate": "0.6386",
+              "averageMAE": "-2099.6386",
+              "averageMFE": "1412.8193",
+              "largestMAE": "-11870.0",
+              "largestMFE": "10610.00",
+              "maximumClosedTradeDrawdown": "-174270.00",
+              "maximumIntraTradeDrawdown": "-175855.00",
+              "profitLossStandardDeviation": "1878.5830",
+              "profitLossDownsideDeviation": "1878.5830",
+              "profitFactor": "0",
+              "sharpeRatio": "-1.1177",
+              "sortinoRatio": "-1.1177",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "15655.00",
+              "averageEndTradeDrawdown": "-3512.4578",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "0"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0221",
+              "averageLossRate": "-0.0138",
+              "profitLossRatio": "1.6024",
+              "winRate": "0.5060",
+              "lossRate": "0.4940",
+              "expectancy": "0.3169",
+              "startEquity": "100000",
+              "endEquity": "88161",
+              "compoundingAnnualReturn": "-0.3139",
+              "drawdown": "0.228",
+              "totalNetProfit": "-0.1184",
+              "sharpeRatio": "-0.8283",
+              "probabilisticSharpeRatio": "0.0980",
+              "sortinoRatio": "-1.2722",
+              "alpha": "-0.3284",
+              "beta": "1.5222",
+              "annualStandardDeviation": "0.2954",
+              "annualVariance": "0.0872",
+              "informationRatio": "-1.1813",
+              "trackingError": "0.2537",
+              "treynorRatio": "-0.1607",
+              "portfolioTurnover": "0.0159",
+              "valueAtRisk99": "-0.044",
+              "valueAtRisk95": "-0.031",
+              "drawdownRecovery": "8"
+            },
+            "closedTrades": []
+          }
+        },
+        "runtimeStatistics": {
+          "Equity": "$88,161.00",
+          "Fees": "-$0.00",
+          "Holdings": "$5.00",
+          "Net Profit": "$-8,454.00",
+          "Probabilistic Sharpe Ratio": "9.799%",
+          "Return": "-11.84 %",
+          "Unrealized": "$-3,385.00",
+          "Volume": "$177,660.00"
+        },
+        "statistics": {
+          "Total Orders": "167",
+          "Average Win": "2.21%",
+          "Average Loss": "-1.38%",
+          "Compounding Annual Return": "-31.390%",
+          "Drawdown": "22.800%",
+          "Expectancy": "0.317",
+          "Start Equity": "100000",
+          "End Equity": "88161",
+          "Net Profit": "-11.839%",
+          "Sharpe Ratio": "-0.828",
+          "Sortino Ratio": "-1.272",
+          "Probabilistic Sharpe Ratio": "9.799%",
+          "Loss Rate": "49%",
+          "Win Rate": "51%",
+          "Profit-Loss Ratio": "1.60",
+          "Alpha": "-0.328",
+          "Beta": "1.522",
+          "Annual Standard Deviation": "0.295",
+          "Annual Variance": "0.087",
+          "Information Ratio": "-1.181",
+          "Tracking Error": "0.254",
+          "Treynor Ratio": "-0.161",
+          "Total Fees": "$0.00",
+          "Estimated Strategy Capacity": "$2400000.00",
+          "Lowest Capacity Asset": "SPXW YOQTO9MTVFWU|SPX 31",
+          "Portfolio Turnover": "1.59%",
+          "Drawdown Recovery": "8"
+        },
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": "2024-09-03T13:31:00Z",
+            "endDateTime": "2024-12-31T06:00:00Z",
+            "totalNumberOfTrades": 83,
+            "numberOfWinningTrades": 30,
+            "numberOfLosingTrades": 53,
+            "totalProfitLoss": "-174270.00",
+            "totalProfit": "0",
+            "totalLoss": "-174270.00",
+            "largestProfit": "0",
+            "largestLoss": "-11870.0",
+            "averageProfitLoss": "-2099.6386",
+            "averageProfit": "0",
+            "averageLoss": "-2099.6386",
+            "averageTradeDuration": "15:29:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "15:29:00",
+            "medianTradeDuration": "15:29:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "15:29:00",
+            "maxConsecutiveWinningTrades": 4,
+            "maxConsecutiveLosingTrades": 6,
+            "profitLossRatio": "0",
+            "winLossRatio": "0.5660",
+            "winRate": "0.3614",
+            "lossRate": "0.6386",
+            "averageMAE": "-2099.6386",
+            "averageMFE": "1412.8193",
+            "largestMAE": "-11870.0",
+            "largestMFE": "10610.00",
+            "maximumClosedTradeDrawdown": "-174270.00",
+            "maximumIntraTradeDrawdown": "-175855.00",
+            "profitLossStandardDeviation": "1878.5830",
+            "profitLossDownsideDeviation": "1878.5830",
+            "profitFactor": "0",
+            "sharpeRatio": "-1.1177",
+            "sortinoRatio": "-1.1177",
+            "profitToMaxDrawdownRatio": "-1",
+            "maximumEndTradeDrawdown": "15655.00",
+            "averageEndTradeDrawdown": "-3512.4578",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0221",
+            "averageLossRate": "-0.0138",
+            "profitLossRatio": "1.6024",
+            "winRate": "0.5060",
+            "lossRate": "0.4940",
+            "expectancy": "0.3169",
+            "startEquity": "100000",
+            "endEquity": "88161",
+            "compoundingAnnualReturn": "-0.3139",
+            "drawdown": "0.228",
+            "totalNetProfit": "-0.1184",
+            "sharpeRatio": "-0.8283",
+            "probabilisticSharpeRatio": "0.0980",
+            "sortinoRatio": "-1.2722",
+            "alpha": "-0.3284",
+            "beta": "1.5222",
+            "annualStandardDeviation": "0.2954",
+            "annualVariance": "0.0872",
+            "informationRatio": "-1.1813",
+            "trackingError": "0.2537",
+            "treynorRatio": "-0.1607",
+            "portfolioTurnover": "0.0159",
+            "valueAtRisk99": "-0.044",
+            "valueAtRisk95": "-0.031",
+            "drawdownRecovery": "8"
+          },
+          "closedTrades": [
+            {
+              "id": "a282dd5d-d954-463d-998f-72fbd15ea0fe",
+              "symbols": [
+                {
+                  "value": "SPXW  240903C05645000",
+                  "id": "SPXW YLIMXVNR9V3I|SPX 31",
+                  "permtick": "SPXW  240903C05645000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-03T13:31:00Z",
+              "entryPrice": 3.4,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-04T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -340,
+              "totalFees": 0,
+              "mae": -340,
+              "mfe": 10,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 350,
+              "isWin": false,
+              "orderIds": [
+                1,
+                2
+              ]
+            },
+            {
+              "id": "a4e7f46f-3a3b-4ff3-8f7b-2ad1397f4c84",
+              "symbols": [
+                {
+                  "value": "SPXW  240904C05525000",
+                  "id": "SPXW YLJMDYH2WGBY|SPX 31",
+                  "permtick": "SPXW  240904C05525000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-04T13:31:00Z",
+              "entryPrice": 12.6,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-05T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1260,
+              "totalFees": 0,
+              "mae": -1260,
+              "mfe": 1925,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 3185,
+              "isWin": false,
+              "orderIds": [
+                3,
+                4
+              ]
+            },
+            {
+              "id": "c2c5a9b4-fe9c-4c61-b5f7-198290a1d7e0",
+              "symbols": [
+                {
+                  "value": "SPXW  240905C05515000",
+                  "id": "SPXW YLKLU1SLFUZY|SPX 31",
+                  "permtick": "SPXW  240905C05515000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-05T13:31:00Z",
+              "entryPrice": 22.4,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-06T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -2240,
+              "totalFees": 0,
+              "mae": -2240,
+              "mfe": 1170,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 3410,
+              "isWin": false,
+              "orderIds": [
+                5,
+                6
+              ]
+            },
+            {
+              "id": "984d6f3c-d89f-4809-b44f-e49077164fc9",
+              "symbols": [
+                {
+                  "value": "SPXW  240906C05500000",
+                  "id": "SPXW YLLL9G2S7EUM|SPX 31",
+                  "permtick": "SPXW  240906C05500000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-06T13:31:00Z",
+              "entryPrice": 29.7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-07T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -2970,
+              "totalFees": 0,
+              "mae": -2970,
+              "mfe": 261,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 3231,
+              "isWin": false,
+              "orderIds": [
+                7,
+                8
+              ]
+            },
+            {
+              "id": "e6949ad9-cf1c-4db6-94d5-02509509b4fa",
+              "symbols": [
+                {
+                  "value": "SPXW  240909C05405000",
+                  "id": "SPXW YLOJMER2U27I|SPX 31",
+                  "permtick": "SPXW  240909C05405000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-09T13:31:00Z",
+              "entryPrice": 52.4,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-10T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -5240,
+              "totalFees": 0,
+              "mae": -5240,
+              "mfe": 2800,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 8040,
+              "isWin": true,
+              "orderIds": [
+                9,
+                10
+              ]
+            },
+            {
+              "id": "7c5f6c1a-f732-4b52-9c92-4ea153f47717",
+              "symbols": [
+                {
+                  "value": "SPXW  240910C05470000",
+                  "id": "SPXW YLPJ1VSTOYMM|SPX 31",
+                  "permtick": "SPXW  240910C05470000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-10T13:31:00Z",
+              "entryPrice": 28.8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-11T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -2880,
+              "totalFees": 0,
+              "mae": -2880,
+              "mfe": 125,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 3005,
+              "isWin": false,
+              "orderIds": [
+                11,
+                12
+              ]
+            },
+            {
+              "id": "22beec79-1545-4f33-aecb-bac1f73a71f7",
+              "symbols": [
+                {
+                  "value": "SPXW  240911C05495000",
+                  "id": "SPXW YLQIILWATOZ2|SPX 31",
+                  "permtick": "SPXW  240911C05495000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-11T13:31:00Z",
+              "entryPrice": 12.9,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-12T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1290,
+              "totalFees": 0,
+              "mae": -1290,
+              "mfe": 5247,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 6537,
+              "isWin": true,
+              "orderIds": [
+                13,
+                14
+              ]
+            },
+            {
+              "id": "fee9b431-5590-4421-b9d8-28e5ee84039b",
+              "symbols": [
+                {
+                  "value": "SPXW  240912C05550000",
+                  "id": "SPXW YLRHY2KHH5CE|SPX 31",
+                  "permtick": "SPXW  240912C05550000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-12T13:31:00Z",
+              "entryPrice": 18.8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-13T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1880,
+              "totalFees": 0,
+              "mae": -1880,
+              "mfe": 3245,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 5125,
+              "isWin": true,
+              "orderIds": [
+                15,
+                16
+              ]
+            },
+            {
+              "id": "21ba261d-3d06-482f-b673-9c9994b95302",
+              "symbols": [
+                {
+                  "value": "SPXW  240913C05595000",
+                  "id": "SPXW YLSHET36CO8E|SPX 31",
+                  "permtick": "SPXW  240913C05595000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-13T13:31:00Z",
+              "entryPrice": 20.5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-14T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -2050,
+              "totalFees": 0,
+              "mae": -2050,
+              "mfe": 2155,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 4205,
+              "isWin": true,
+              "orderIds": [
+                17,
+                18
+              ]
+            },
+            {
+              "id": "5ad660f5-73d0-4b41-9a8c-02a3a4baab58",
+              "symbols": [
+                {
+                  "value": "SPXW  240916C05625000",
+                  "id": "SPXW YLVFR3BN6Z72|SPX 31",
+                  "permtick": "SPXW  240916C05625000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-16T13:31:00Z",
+              "entryPrice": 12.7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-17T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1270,
+              "totalFees": 0,
+              "mae": -1270,
+              "mfe": 430,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 1700,
+              "isWin": false,
+              "orderIds": [
+                19,
+                20
+              ]
+            },
+            {
+              "id": "8a2077dd-722b-4a11-b465-8409e7fdb3d0",
+              "symbols": [
+                {
+                  "value": "SPXW  240917C05630000",
+                  "id": "SPXW YLWF6JFNHLJI|SPX 31",
+                  "permtick": "SPXW  240917C05630000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-17T13:31:00Z",
+              "entryPrice": 33,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-18T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -3300,
+              "totalFees": 0,
+              "mae": -3300,
+              "mfe": 932,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 4232,
+              "isWin": false,
+              "orderIds": [
+                21,
+                22
+              ]
+            },
+            {
+              "id": "863033bf-f922-4915-92e7-c5079b882cb4",
+              "symbols": [
+                {
+                  "value": "SPXW  240918C05635000",
+                  "id": "SPXW YLXENA3MVU0E|SPX 31",
+                  "permtick": "SPXW  240918C05635000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-18T13:31:00Z",
+              "entryPrice": 31.9,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-19T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -3190,
+              "totalFees": 0,
+              "mae": -3190,
+              "mfe": 2280,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 5470,
+              "isWin": false,
+              "orderIds": [
+                23,
+                24
+              ]
+            },
+            {
+              "id": "4cea585c-2207-4b56-917a-9c5ec336cbca",
+              "symbols": [
+                {
+                  "value": "SPXW  240919C05615000",
+                  "id": "SPXW YLYE3DDHVW6M|SPX 31",
+                  "permtick": "SPXW  240919C05615000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-19T13:31:00Z",
+              "entryPrice": 102.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-20T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -10210,
+              "totalFees": 0,
+              "mae": -10210,
+              "mfe": 1840,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 12050,
+              "isWin": false,
+              "orderIds": [
+                25,
+                26
+              ]
+            },
+            {
+              "id": "5772a1ad-713c-4ce7-a221-14677cda2a9c",
+              "symbols": [
+                {
+                  "value": "SPXW  240920C05710000",
+                  "id": "SPXW YLZDITKHCJF2|SPX 31",
+                  "permtick": "SPXW  240920C05710000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-20T13:31:00Z",
+              "entryPrice": 12,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-21T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1200,
+              "totalFees": 0,
+              "mae": -1200,
+              "mfe": 170,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 1370,
+              "isWin": false,
+              "orderIds": [
+                27,
+                28
+              ]
+            },
+            {
+              "id": "27258489-a1af-4d0a-8af6-6cd2b635afc6",
+              "symbols": [
+                {
+                  "value": "SPXW  240923C05700000",
+                  "id": "SPXW YM2BV1AZEWOE|SPX 31",
+                  "permtick": "SPXW  240923C05700000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-23T13:31:00Z",
+              "entryPrice": 22.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-24T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -2210,
+              "totalFees": 0,
+              "mae": -2210,
+              "mfe": 480,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 2690,
+              "isWin": false,
+              "orderIds": [
+                29,
+                30
+              ]
+            },
+            {
+              "id": "a83e4bf1-edc3-4604-a372-a322deda2fad",
+              "symbols": [
+                {
+                  "value": "SPXW  240924C05715000",
+                  "id": "SPXW YM3BBUNVN4XA|SPX 31",
+                  "permtick": "SPXW  240924C05715000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-24T13:31:00Z",
+              "entryPrice": 16.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-25T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1610,
+              "totalFees": 0,
+              "mae": -1610,
+              "mfe": 455,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 2065,
+              "isWin": true,
+              "orderIds": [
+                31,
+                32
+              ]
+            },
+            {
+              "id": "c6e4ca73-7e34-4954-a7f2-b408854177a9",
+              "symbols": [
+                {
+                  "value": "SPXW  240925C05730000",
+                  "id": "SPXW YM4ARAENMZBI|SPX 31",
+                  "permtick": "SPXW  240925C05730000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-25T13:31:00Z",
+              "entryPrice": 16.7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-26T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1670,
+              "totalFees": 0,
+              "mae": -1670,
+              "mfe": 0,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 1670,
+              "isWin": false,
+              "orderIds": [
+                33,
+                34
+              ]
+            },
+            {
+              "id": "221f5e01-09fa-49e4-bd5b-15784d0830cb",
+              "symbols": [
+                {
+                  "value": "SPXW  240926C05720000",
+                  "id": "SPXW YM5A7DRNREFI|SPX 31",
+                  "permtick": "SPXW  240926C05720000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-26T13:31:00Z",
+              "entryPrice": 43.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-27T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -4320,
+              "totalFees": 0,
+              "mae": -4320,
+              "mfe": 85,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 4405,
+              "isWin": false,
+              "orderIds": [
+                35,
+                36
+              ]
+            },
+            {
+              "id": "87f55f04-9d11-483e-bac3-2c698cdd4e33",
+              "symbols": [
+                {
+                  "value": "SPXW  240927C05740000",
+                  "id": "SPXW YM69NH55QTOU|SPX 31",
+                  "permtick": "SPXW  240927C05740000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-27T13:31:00Z",
+              "entryPrice": 20.6,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-09-28T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -2060,
+              "totalFees": 0,
+              "mae": -2060,
+              "mfe": 643,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 2703,
+              "isWin": false,
+              "orderIds": [
+                37,
+                38
+              ]
+            },
+            {
+              "id": "f69fe924-66d7-4d31-a320-8f3df0aac762",
+              "symbols": [
+                {
+                  "value": "SPXW  240930C05735000",
+                  "id": "SPXW YM980EY76CVI|SPX 31",
+                  "permtick": "SPXW  240930C05735000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-09-30T13:31:00Z",
+              "entryPrice": 10.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-01T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1010,
+              "totalFees": 0,
+              "mae": -1010,
+              "mfe": 2075,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 3085,
+              "isWin": true,
+              "orderIds": [
+                39,
+                40
+              ]
+            },
+            {
+              "id": "fcdc6ada-dd9b-41d1-b92a-4418a1fbcdaf",
+              "symbols": [
+                {
+                  "value": "SPXW  241001C05760000",
+                  "id": "SPXW YMA7FUM5YIFI|SPX 31",
+                  "permtick": "SPXW  241001C05760000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-01T13:31:00Z",
+              "entryPrice": 9.7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-02T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -970,
+              "totalFees": 0,
+              "mae": -970,
+              "mfe": 0,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 970,
+              "isWin": false,
+              "orderIds": [
+                41,
+                42
+              ]
+            },
+            {
+              "id": "6dd1b96b-f9ce-4f5a-99e9-3cc91be5f2cc",
+              "symbols": [
+                {
+                  "value": "SPXW  241002C05705000",
+                  "id": "SPXW YMB6WLJKPTPQ|SPX 31",
+                  "permtick": "SPXW  241002C05705000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-02T13:31:00Z",
+              "entryPrice": 10.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-03T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1020,
+              "totalFees": 0,
+              "mae": -1020,
+              "mfe": 1050,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 2070,
+              "isWin": false,
+              "orderIds": [
+                43,
+                44
+              ]
+            },
+            {
+              "id": "407d094e-5cdc-48c1-9454-320b6a2733f4",
+              "symbols": [
+                {
+                  "value": "SPXW  241003C05705000",
+                  "id": "SPXW YMC6COWQSKVI|SPX 31",
+                  "permtick": "SPXW  241003C05705000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-03T13:31:00Z",
+              "entryPrice": 12.3,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-04T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1230,
+              "totalFees": 0,
+              "mae": -1230,
+              "mfe": 970,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 2200,
+              "isWin": false,
+              "orderIds": [
+                45,
+                46
+              ]
+            },
+            {
+              "id": "5dd720a6-f67a-4549-868d-defea2a42bcf",
+              "symbols": [
+                {
+                  "value": "SPXW  241004C05695000",
+                  "id": "SPXW YMD5SS89BZJI|SPX 31",
+                  "permtick": "SPXW  241004C05695000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-04T13:31:00Z",
+              "entryPrice": 50.7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-05T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -5070,
+              "totalFees": 0,
+              "mae": -5070,
+              "mfe": 710,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 5780,
+              "isWin": true,
+              "orderIds": [
+                47,
+                48
+              ]
+            },
+            {
+              "id": "4954fbb0-2624-4825-8d4c-1d7b8dd79b23",
+              "symbols": [
+                {
+                  "value": "SPXW  241007C05745000",
+                  "id": "SPXW YMG452K18ZHQ|SPX 31",
+                  "permtick": "SPXW  241007C05745000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-07T13:31:00Z",
+              "entryPrice": 7.9,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-08T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -790,
+              "totalFees": 0,
+              "mae": -790,
+              "mfe": 20,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 810,
+              "isWin": false,
+              "orderIds": [
+                49,
+                50
+              ]
+            },
+            {
+              "id": "aafea24f-9bfc-4405-b2b7-96663199b8ff",
+              "symbols": [
+                {
+                  "value": "SPXW  241008C05695000",
+                  "id": "SPXW YMH3L5OXN06M|SPX 31",
+                  "permtick": "SPXW  241008C05695000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-08T13:31:00Z",
+              "entryPrice": 32.8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-09T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -3280,
+              "totalFees": 0,
+              "mae": -3280,
+              "mfe": 3001,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 6281,
+              "isWin": true,
+              "orderIds": [
+                51,
+                52
+              ]
+            },
+            {
+              "id": "5d0fff71-af05-408c-a107-6e95a843a343",
+              "symbols": [
+                {
+                  "value": "SPXW  241009C05750000",
+                  "id": "SPXW YMI30LJCM7NY|SPX 31",
+                  "permtick": "SPXW  241009C05750000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-09T13:31:00Z",
+              "entryPrice": 11.4,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-10T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1140,
+              "totalFees": 0,
+              "mae": -1140,
+              "mfe": 3530,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 4670,
+              "isWin": true,
+              "orderIds": [
+                53,
+                54
+              ]
+            },
+            {
+              "id": "892e9cbf-fcb9-4d57-aedf-dc6479345633",
+              "symbols": [
+                {
+                  "value": "SPXW  241010C05790000",
+                  "id": "SPXW YMJ2GOX6IB0U|SPX 31",
+                  "permtick": "SPXW  241010C05790000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-10T13:31:00Z",
+              "entryPrice": 7.8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-11T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -780,
+              "totalFees": 0,
+              "mae": -780,
+              "mfe": 310,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 1090,
+              "isWin": false,
+              "orderIds": [
+                55,
+                56
+              ]
+            },
+            {
+              "id": "38dc181a-2187-4043-b048-8b7d2add4f2d",
+              "symbols": [
+                {
+                  "value": "SPXW  241011C05780000",
+                  "id": "SPXW YMK1WSA6MQ4U|SPX 31",
+                  "permtick": "SPXW  241011C05780000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-11T13:31:00Z",
+              "entryPrice": 12.3,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-12T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1230,
+              "totalFees": 0,
+              "mae": -1230,
+              "mfe": 3085,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 4315,
+              "isWin": true,
+              "orderIds": [
+                57,
+                58
+              ]
+            },
+            {
+              "id": "3229a308-d8cf-4d08-9cd0-77190460f85e",
+              "symbols": [
+                {
+                  "value": "SPXW  241014C05810000",
+                  "id": "SPXW YMN092E6PZRI|SPX 31",
+                  "permtick": "SPXW  241014C05810000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-14T13:31:00Z",
+              "entryPrice": 23.8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-15T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -2380,
+              "totalFees": 0,
+              "mae": -2380,
+              "mfe": 3745,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 6125,
+              "isWin": true,
+              "orderIds": [
+                59,
+                60
+              ]
+            },
+            {
+              "id": "5c3e7fb8-84b7-4192-a3ea-77968f2c185d",
+              "symbols": [
+                {
+                  "value": "SPXW  241015C05860000",
+                  "id": "SPXW YMNZP5S6KF66|SPX 31",
+                  "permtick": "SPXW  241015C05860000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-15T13:31:00Z",
+              "entryPrice": 13.7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-16T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1370,
+              "totalFees": 0,
+              "mae": -1370,
+              "mfe": 50,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 1420,
+              "isWin": false,
+              "orderIds": [
+                61,
+                62
+              ]
+            },
+            {
+              "id": "e3bbf81c-f9e0-4620-814c-43683712df0e",
+              "symbols": [
+                {
+                  "value": "SPXW  241016C05815000",
+                  "id": "SPXW YMOZ5X64P7E6|SPX 31",
+                  "permtick": "SPXW  241016C05815000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-16T13:31:00Z",
+              "entryPrice": 12.4,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-17T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1240,
+              "totalFees": 0,
+              "mae": -1240,
+              "mfe": 2025,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 3265,
+              "isWin": true,
+              "orderIds": [
+                63,
+                64
+              ]
+            },
+            {
+              "id": "4d7f71c1-eb17-4091-88af-57bc21838224",
+              "symbols": [
+                {
+                  "value": "SPXW  241017C05840000",
+                  "id": "SPXW YMPYLCI6T9E6|SPX 31",
+                  "permtick": "SPXW  241017C05840000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-17T13:31:00Z",
+              "entryPrice": 36.3,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-18T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -3630,
+              "totalFees": 0,
+              "mae": -3630,
+              "mfe": 0,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 3630,
+              "isWin": false,
+              "orderIds": [
+                65,
+                66
+              ]
+            },
+            {
+              "id": "942ab44a-cb13-4bae-9bb5-d548076e57cc",
+              "symbols": [
+                {
+                  "value": "SPXW  241018C05840000",
+                  "id": "SPXW YMQY1FVCW0JY|SPX 31",
+                  "permtick": "SPXW  241018C05840000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-18T13:31:00Z",
+              "entryPrice": 20.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-19T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -2020,
+              "totalFees": 0,
+              "mae": -2020,
+              "mfe": 1235,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 3255,
+              "isWin": true,
+              "orderIds": [
+                67,
+                68
+              ]
+            },
+            {
+              "id": "1600ce72-96c0-474f-aa66-82fb94fcd8e5",
+              "symbols": [
+                {
+                  "value": "SPXW  241021C05860000",
+                  "id": "SPXW YMTWDPZ70Y4U|SPX 31",
+                  "permtick": "SPXW  241021C05860000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-21T13:31:00Z",
+              "entryPrice": 9.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-22T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -920,
+              "totalFees": 0,
+              "mae": -920,
+              "mfe": 220,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 1140,
+              "isWin": false,
+              "orderIds": [
+                69,
+                70
+              ]
+            },
+            {
+              "id": "92e8edc1-02ee-4d13-811f-a6f21ae83ff2",
+              "symbols": [
+                {
+                  "value": "SPXW  241022C05850000",
+                  "id": "SPXW YMUVTTC75D8U|SPX 31",
+                  "permtick": "SPXW  241022C05850000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-22T13:31:00Z",
+              "entryPrice": 3.5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-23T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -350,
+              "totalFees": 0,
+              "mae": -350,
+              "mfe": 1093,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 1443,
+              "isWin": false,
+              "orderIds": [
+                71,
+                72
+              ]
+            },
+            {
+              "id": "edee119a-996c-4a88-acd9-fac2c3a49073",
+              "symbols": [
+                {
+                  "value": "SPXW  241023C05850000",
+                  "id": "SPXW YMVV9WPD84EM|SPX 31",
+                  "permtick": "SPXW  241023C05850000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-23T13:31:00Z",
+              "entryPrice": 4.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-24T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -420,
+              "totalFees": 0,
+              "mae": -420,
+              "mfe": 0,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 420,
+              "isWin": false,
+              "orderIds": [
+                73,
+                74
+              ]
+            },
+            {
+              "id": "8f189bdb-2caa-442b-87d2-68cbcba0f3c8",
+              "symbols": [
+                {
+                  "value": "SPXW  241024C05795000",
+                  "id": "SPXW YMWUQO068JOU|SPX 31",
+                  "permtick": "SPXW  241024C05795000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-24T13:31:00Z",
+              "entryPrice": 25.3,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-25T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -2530,
+              "totalFees": 0,
+              "mae": -2530,
+              "mfe": 30,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 2560,
+              "isWin": false,
+              "orderIds": [
+                75,
+                76
+              ]
+            },
+            {
+              "id": "429a4c05-c987-401c-a3e4-fd9164ee91c2",
+              "symbols": [
+                {
+                  "value": "SPXW  241025C05805000",
+                  "id": "SPXW YMXU6REZUNCE|SPX 31",
+                  "permtick": "SPXW  241025C05805000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-25T13:31:00Z",
+              "entryPrice": 39,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-26T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -3900,
+              "totalFees": 0,
+              "mae": -3900,
+              "mfe": 1950,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 5850,
+              "isWin": false,
+              "orderIds": [
+                77,
+                78
+              ]
+            },
+            {
+              "id": "f287564e-34a9-46fc-b5c5-7961192d076e",
+              "symbols": [
+                {
+                  "value": "SPXW  241028C05805000",
+                  "id": "SPXW YN0SJ1II2WTQ|SPX 31",
+                  "permtick": "SPXW  241028C05805000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-28T13:31:00Z",
+              "entryPrice": 35.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-29T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -3520,
+              "totalFees": 0,
+              "mae": -3520,
+              "mfe": 455,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 3975,
+              "isWin": false,
+              "orderIds": [
+                79,
+                80
+              ]
+            },
+            {
+              "id": "c9b3164a-da7e-4f9c-b0dd-6de55a1f31ef",
+              "symbols": [
+                {
+                  "value": "SPXW  241029C05820000",
+                  "id": "SPXW YN1RYGVVTN7Y|SPX 31",
+                  "permtick": "SPXW  241029C05820000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-29T13:31:00Z",
+              "entryPrice": 8.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-30T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -820,
+              "totalFees": 0,
+              "mae": -820,
+              "mfe": 1870,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 2690,
+              "isWin": true,
+              "orderIds": [
+                81,
+                82
+              ]
+            },
+            {
+              "id": "82eabd63-e0d6-4773-94b6-63acaaf4f064",
+              "symbols": [
+                {
+                  "value": "SPXW  241030C05830000",
+                  "id": "SPXW YN2REK97UQFI|SPX 31",
+                  "permtick": "SPXW  241030C05830000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-30T13:31:00Z",
+              "entryPrice": 10.6,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-10-31T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1060,
+              "totalFees": 0,
+              "mae": -1060,
+              "mfe": 1220,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 2280,
+              "isWin": false,
+              "orderIds": [
+                83,
+                84
+              ]
+            },
+            {
+              "id": "fb9fb963-58ea-4523-83de-8e3f4e073a36",
+              "symbols": [
+                {
+                  "value": "SPXW  241031C05815000",
+                  "id": "SPXW YN3QVBNNUISU|SPX 31",
+                  "permtick": "SPXW  241031C05815000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-10-31T13:31:00Z",
+              "entryPrice": 2.15,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-01T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -215,
+              "totalFees": 0,
+              "mae": -215,
+              "mfe": 0,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 215,
+              "isWin": false,
+              "orderIds": [
+                85,
+                86
+              ]
+            },
+            {
+              "id": "8560fa5a-a919-4216-8891-e67be48358b8",
+              "symbols": [
+                {
+                  "value": "SPXW  241101C05700000",
+                  "id": "SPXW YN4QAOKKEBXQ|SPX 31",
+                  "permtick": "SPXW  241101C05700000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-01T13:31:00Z",
+              "entryPrice": 37.7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-02T05:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -3770,
+              "totalFees": 0,
+              "mae": -3770,
+              "mfe": 3555,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 7325,
+              "isWin": false,
+              "orderIds": [
+                87,
+                88
+              ]
+            },
+            {
+              "id": "d2aa7aab-7465-4872-8731-5b68410c63f9",
+              "symbols": [
+                {
+                  "value": "SPXW  241104C05725000",
+                  "id": "SPXW YN7ONOPGBEZY|SPX 31",
+                  "permtick": "SPXW  241104C05725000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-04T14:31:00Z",
+              "entryPrice": 17.5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-05T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1750,
+              "totalFees": 0,
+              "mae": -1750,
+              "mfe": 410,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 2160,
+              "isWin": false,
+              "orderIds": [
+                89,
+                90
+              ]
+            },
+            {
+              "id": "4e14df8d-2ad9-4bb9-8302-62910330b644",
+              "symbols": [
+                {
+                  "value": "SPXW  241105C05710000",
+                  "id": "SPXW YN8O34E8V8SU|SPX 31",
+                  "permtick": "SPXW  241105C05710000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-05T14:31:00Z",
+              "entryPrice": 25.8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-06T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -2580,
+              "totalFees": 0,
+              "mae": -2580,
+              "mfe": 4730,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 7310,
+              "isWin": true,
+              "orderIds": [
+                91,
+                92
+              ]
+            },
+            {
+              "id": "961fca42-f5ca-4466-9f0b-38654b4e9098",
+              "symbols": [
+                {
+                  "value": "SPXW  241106C05780000",
+                  "id": "SPXW YN9NJ7SKMCB2|SPX 31",
+                  "permtick": "SPXW  241106C05780000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-06T14:31:00Z",
+              "entryPrice": 118.7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-07T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -11870,
+              "totalFees": 0,
+              "mae": -11870,
+              "mfe": 3785,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 15655,
+              "isWin": true,
+              "orderIds": [
+                93,
+                94
+              ]
+            },
+            {
+              "id": "1707f71e-3f7d-48d5-9578-80096d7fc08d",
+              "symbols": [
+                {
+                  "value": "SPXW  241107C05925000",
+                  "id": "SPXW YNAMZZQ1AMCU|SPX 31",
+                  "permtick": "SPXW  241107C05925000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-07T14:31:00Z",
+              "entryPrice": 34.8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-08T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -3480,
+              "totalFees": 0,
+              "mae": -3480,
+              "mfe": 2400,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 5880,
+              "isWin": true,
+              "orderIds": [
+                95,
+                96
+              ]
+            },
+            {
+              "id": "fd41d126-35f0-4339-92c9-b62d1ef06d39",
+              "symbols": [
+                {
+                  "value": "SPXW  241108C05970000",
+                  "id": "SPXW YNBMFEM1W7KE|SPX 31",
+                  "permtick": "SPXW  241108C05970000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-08T14:31:00Z",
+              "entryPrice": 18.5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-09T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1850,
+              "totalFees": 0,
+              "mae": -1850,
+              "mfe": 2430,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 4280,
+              "isWin": true,
+              "orderIds": [
+                97,
+                98
+              ]
+            },
+            {
+              "id": "18448405-5b9b-4053-8e8f-73001967ce53",
+              "symbols": [
+                {
+                  "value": "SPXW  241111C05995000",
+                  "id": "SPXW YNEKSDIAD2GE|SPX 31",
+                  "permtick": "SPXW  241111C05995000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-11T14:31:00Z",
+              "entryPrice": 25.6,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-12T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -2560,
+              "totalFees": 0,
+              "mae": -2560,
+              "mfe": 0,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 2560,
+              "isWin": false,
+              "orderIds": [
+                99,
+                100
+              ]
+            },
+            {
+              "id": "d6a1c422-a845-460e-9a91-a844056a158e",
+              "symbols": [
+                {
+                  "value": "SPXW  241112C06000000",
+                  "id": "SPXW YNFK7PCZNPCE|SPX 31",
+                  "permtick": "SPXW  241112C06000000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-12T14:31:00Z",
+              "entryPrice": 13.3,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-13T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1330,
+              "totalFees": 0,
+              "mae": -1330,
+              "mfe": 220,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 1550,
+              "isWin": false,
+              "orderIds": [
+                101,
+                102
+              ]
+            },
+            {
+              "id": "456a24f5-a3d8-4c85-8299-3d63acb254b4",
+              "symbols": [
+                {
+                  "value": "SPXW  241113C05980000",
+                  "id": "SPXW YNGJNVG28BF2|SPX 31",
+                  "permtick": "SPXW  241113C05980000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-13T14:31:00Z",
+              "entryPrice": 18.8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-14T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1880,
+              "totalFees": 0,
+              "mae": -1880,
+              "mfe": 1029,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 2909,
+              "isWin": false,
+              "orderIds": [
+                103,
+                104
+              ]
+            },
+            {
+              "id": "d4627b97-412e-4418-83a1-5a953abaa8b8",
+              "symbols": [
+                {
+                  "value": "SPXW  241114C05985000",
+                  "id": "SPXW YNHJ4NK51ZFY|SPX 31",
+                  "permtick": "SPXW  241114C05985000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-14T14:31:00Z",
+              "entryPrice": 15.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-15T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1510,
+              "totalFees": 0,
+              "mae": -1510,
+              "mfe": 0,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 1510,
+              "isWin": false,
+              "orderIds": [
+                105,
+                106
+              ]
+            },
+            {
+              "id": "dab2ed17-09b5-4cb6-9183-5b0f9f351932",
+              "symbols": [
+                {
+                  "value": "SPXW  241115C05945000",
+                  "id": "SPXW YNIIKQQOZCMM|SPX 31",
+                  "permtick": "SPXW  241115C05945000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-15T14:31:00Z",
+              "entryPrice": 2.85,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-16T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -285,
+              "totalFees": 0,
+              "mae": -285,
+              "mfe": 0,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 285,
+              "isWin": false,
+              "orderIds": [
+                107,
+                108
+              ]
+            },
+            {
+              "id": "83ac2513-31fd-4720-a3d8-11c394d21503",
+              "symbols": [
+                {
+                  "value": "SPXW  241118C05865000",
+                  "id": "SPXW YNLGX0GYWU5Q|SPX 31",
+                  "permtick": "SPXW  241118C05865000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-18T14:31:00Z",
+              "entryPrice": 16.6,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-19T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1660,
+              "totalFees": 0,
+              "mae": -1660,
+              "mfe": 2685,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 4345,
+              "isWin": true,
+              "orderIds": [
+                109,
+                110
+              ]
+            },
+            {
+              "id": "2fbfc641-8193-41f7-b6a4-c9348cfcb298",
+              "symbols": [
+                {
+                  "value": "SPXW  241119C05890000",
+                  "id": "SPXW YNMGCFLL3TXQ|SPX 31",
+                  "permtick": "SPXW  241119C05890000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-19T14:31:00Z",
+              "entryPrice": 5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-20T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -500,
+              "totalFees": 0,
+              "mae": -500,
+              "mfe": 2905,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 3405,
+              "isWin": true,
+              "orderIds": [
+                111,
+                112
+              ]
+            },
+            {
+              "id": "64ebd79a-3dc0-4863-b47d-bd6818f8186b",
+              "symbols": [
+                {
+                  "value": "SPXW  241120C05915000",
+                  "id": "SPXW YNNFT7FKR2Y6|SPX 31",
+                  "permtick": "SPXW  241120C05915000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-20T14:31:00Z",
+              "entryPrice": 13.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-21T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1320,
+              "totalFees": 0,
+              "mae": -1320,
+              "mfe": 35,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 1355,
+              "isWin": false,
+              "orderIds": [
+                113,
+                114
+              ]
+            },
+            {
+              "id": "b588c0ce-e62f-44d1-b1c2-65311b1a82bf",
+              "symbols": [
+                {
+                  "value": "SPXW  241121C05915000",
+                  "id": "SPXW YNOF9ASQTU3Y|SPX 31",
+                  "permtick": "SPXW  241121C05915000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-21T14:31:00Z",
+              "entryPrice": 32,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-22T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -3200,
+              "totalFees": 0,
+              "mae": -3200,
+              "mfe": 1630,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 4830,
+              "isWin": true,
+              "orderIds": [
+                115,
+                116
+              ]
+            },
+            {
+              "id": "fc274ce2-271f-4b1f-903e-48359c132bcd",
+              "symbols": [
+                {
+                  "value": "SPXW  241122C05945000",
+                  "id": "SPXW YNPEPEAVIMR2|SPX 31",
+                  "permtick": "SPXW  241122C05945000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-22T14:31:00Z",
+              "entryPrice": 19.7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-23T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1970,
+              "totalFees": 0,
+              "mae": -1970,
+              "mfe": 1288,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 3258,
+              "isWin": true,
+              "orderIds": [
+                117,
+                118
+              ]
+            },
+            {
+              "id": "ac506cc7-5f22-4961-addc-a96865e9c143",
+              "symbols": [
+                {
+                  "value": "SPXW  241125C05965000",
+                  "id": "SPXW YNSD1OHOTL7Y|SPX 31",
+                  "permtick": "SPXW  241125C05965000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-25T14:31:00Z",
+              "entryPrice": 39.6,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-26T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -3960,
+              "totalFees": 0,
+              "mae": -3960,
+              "mfe": 1575,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 5535,
+              "isWin": false,
+              "orderIds": [
+                119,
+                120
+              ]
+            },
+            {
+              "id": "ccfc4a64-e6d8-45e3-8c00-87e6e62773ee",
+              "symbols": [
+                {
+                  "value": "SPXW  241126C05985000",
+                  "id": "SPXW YNTCHRY5Z1DA|SPX 31",
+                  "permtick": "SPXW  241126C05985000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-26T14:31:00Z",
+              "entryPrice": 22.3,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-27T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -2230,
+              "totalFees": 0,
+              "mae": -2230,
+              "mfe": 1655,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 3885,
+              "isWin": true,
+              "orderIds": [
+                121,
+                122
+              ]
+            },
+            {
+              "id": "894caed1-35df-4b8c-8e35-c4ad84bd95e0",
+              "symbols": [
+                {
+                  "value": "SPXW  241127C06020000",
+                  "id": "SPXW YNUBX6L347V2|SPX 31",
+                  "permtick": "SPXW  241127C06020000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-27T14:31:00Z",
+              "entryPrice": 7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-28T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -700,
+              "totalFees": 0,
+              "mae": -700,
+              "mfe": 260,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 960,
+              "isWin": false,
+              "orderIds": [
+                123,
+                124
+              ]
+            },
+            {
+              "id": "e90b8d2c-b946-415a-aa01-02774d488dc0",
+              "symbols": [
+                {
+                  "value": "SPXW  241129C05995000",
+                  "id": "SPXW YNWAU23BQNCE|SPX 31",
+                  "permtick": "SPXW  241129C05995000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-11-29T14:31:00Z",
+              "entryPrice": 15,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-11-30T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1500,
+              "totalFees": 0,
+              "mae": -1500,
+              "mfe": 3430,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 4930,
+              "isWin": true,
+              "orderIds": [
+                125,
+                126
+              ]
+            },
+            {
+              "id": "2d10ed85-2d01-44b5-91c7-2c97c331fac7",
+              "symbols": [
+                {
+                  "value": "SPXW  241202C06030000",
+                  "id": "SPXW YNZ95NF3GBPQ|SPX 31",
+                  "permtick": "SPXW  241202C06030000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T14:31:00Z",
+              "entryPrice": 19.5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-03T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1950,
+              "totalFees": 0,
+              "mae": -1950,
+              "mfe": 400,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 2350,
+              "isWin": false,
+              "orderIds": [
+                127,
+                128
+              ]
+            },
+            {
+              "id": "9a8c494d-1d00-46e8-a5af-a47b8425fa05",
+              "symbols": [
+                {
+                  "value": "SPXW  241203C06045000",
+                  "id": "SPXW YO08MFS9QEGE|SPX 31",
+                  "permtick": "SPXW  241203C06045000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-03T14:31:00Z",
+              "entryPrice": 9.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -910,
+              "totalFees": 0,
+              "mae": -910,
+              "mfe": 55,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 965,
+              "isWin": false,
+              "orderIds": [
+                129,
+                130
+              ]
+            },
+            {
+              "id": "b9c33761-58c2-48b8-83e5-ab94e9610eb4",
+              "symbols": [
+                {
+                  "value": "SPXW  241204C06045000",
+                  "id": "SPXW YO182J5FT5M6|SPX 31",
+                  "permtick": "SPXW  241204C06045000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T14:31:00Z",
+              "entryPrice": 25.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -2520,
+              "totalFees": 0,
+              "mae": -2520,
+              "mfe": 1881,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 4401,
+              "isWin": true,
+              "orderIds": [
+                131,
+                132
+              ]
+            },
+            {
+              "id": "863ea704-8141-47fc-a8e6-9095166c232c",
+              "symbols": [
+                {
+                  "value": "SPXW  241205C06085000",
+                  "id": "SPXW YO27IMP81AR2|SPX 31",
+                  "permtick": "SPXW  241205C06085000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T14:31:00Z",
+              "entryPrice": 9.9,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -990,
+              "totalFees": 0,
+              "mae": -990,
+              "mfe": 170,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 1160,
+              "isWin": false,
+              "orderIds": [
+                133,
+                134
+              ]
+            },
+            {
+              "id": "f967abb5-74e5-4622-8126-11b1a235de29",
+              "symbols": [
+                {
+                  "value": "SPXW  241206C06075000",
+                  "id": "SPXW YO36YQ0QKPF2|SPX 31",
+                  "permtick": "SPXW  241206C06075000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T14:31:00Z",
+              "entryPrice": 17.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-07T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1710,
+              "totalFees": 0,
+              "mae": -1710,
+              "mfe": 1014,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 2724,
+              "isWin": false,
+              "orderIds": [
+                135,
+                136
+              ]
+            },
+            {
+              "id": "9e7224f3-7e25-40d7-991d-e2a413f70682",
+              "symbols": [
+                {
+                  "value": "SPXW  241209C06085000",
+                  "id": "SPXW YO65B05WCBE6|SPX 31",
+                  "permtick": "SPXW  241209C06085000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-09T14:31:00Z",
+              "entryPrice": 6.8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-10T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -680,
+              "totalFees": 0,
+              "mae": -680,
+              "mfe": 170,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 850,
+              "isWin": false,
+              "orderIds": [
+                137,
+                138
+              ]
+            },
+            {
+              "id": "95019925-0b7e-4869-890c-51a44e8e448a",
+              "symbols": [
+                {
+                  "value": "SPXW  241210C06050000",
+                  "id": "SPXW YO74QECRZ13I|SPX 31",
+                  "permtick": "SPXW  241210C06050000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-10T14:31:00Z",
+              "entryPrice": 12.6,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-11T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1260,
+              "totalFees": 0,
+              "mae": -1260,
+              "mfe": 425,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 1685,
+              "isWin": false,
+              "orderIds": [
+                139,
+                140
+              ]
+            },
+            {
+              "id": "b48f43f2-fef1-4ad2-a333-a03eb8c5881e",
+              "symbols": [
+                {
+                  "value": "SPXW  241211C06035000",
+                  "id": "SPXW YO8476NYT38U|SPX 31",
+                  "permtick": "SPXW  241211C06035000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-11T14:31:00Z",
+              "entryPrice": 30.9,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-12T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -3090,
+              "totalFees": 0,
+              "mae": -3090,
+              "mfe": 2685,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 5775,
+              "isWin": true,
+              "orderIds": [
+                141,
+                142
+              ]
+            },
+            {
+              "id": "41063170-85f3-4013-af01-de49edf1690b",
+              "symbols": [
+                {
+                  "value": "SPXW  241212C06080000",
+                  "id": "SPXW YO93ML3LZJKE|SPX 31",
+                  "permtick": "SPXW  241212C06080000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-12T14:31:00Z",
+              "entryPrice": 4.6,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-13T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -460,
+              "totalFees": 0,
+              "mae": -460,
+              "mfe": 75,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 535,
+              "isWin": false,
+              "orderIds": [
+                143,
+                144
+              ]
+            },
+            {
+              "id": "9f137f33-f81d-4606-b158-e0599c9cdb3c",
+              "symbols": [
+                {
+                  "value": "SPXW  241213C06050000",
+                  "id": "SPXW YOA32OGA7AKU|SPX 31",
+                  "permtick": "SPXW  241213C06050000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-13T14:31:00Z",
+              "entryPrice": 23.7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-14T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -2370,
+              "totalFees": 0,
+              "mae": -2370,
+              "mfe": 590,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 2960,
+              "isWin": false,
+              "orderIds": [
+                145,
+                146
+              ]
+            },
+            {
+              "id": "cff173b7-b89e-4374-a488-43698fea2d56",
+              "symbols": [
+                {
+                  "value": "SPXW  241216C06050000",
+                  "id": "SPXW YOD1EYJSFK26|SPX 31",
+                  "permtick": "SPXW  241216C06050000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-16T14:31:00Z",
+              "entryPrice": 20,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-17T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -2000,
+              "totalFees": 0,
+              "mae": -2000,
+              "mfe": 1485,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 3485,
+              "isWin": true,
+              "orderIds": [
+                147,
+                148
+              ]
+            },
+            {
+              "id": "6f1e3222-e483-47b1-be47-042fc33fc03d",
+              "symbols": [
+                {
+                  "value": "SPXW  241217C06070000",
+                  "id": "SPXW YOE0V1XAEZBI|SPX 31",
+                  "permtick": "SPXW  241217C06070000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-17T14:31:00Z",
+              "entryPrice": 1.65,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-18T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -165,
+              "totalFees": 0,
+              "mae": -165,
+              "mfe": 60,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 225,
+              "isWin": false,
+              "orderIds": [
+                149,
+                150
+              ]
+            },
+            {
+              "id": "74f25bd1-acad-476f-8331-8e1fc7d8bf5c",
+              "symbols": [
+                {
+                  "value": "SPXW  241218C06050000",
+                  "id": "SPXW YOF0B5A4L2DQ|SPX 31",
+                  "permtick": "SPXW  241218C06050000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-18T14:31:00Z",
+              "entryPrice": 15.8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-19T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1580,
+              "totalFees": 0,
+              "mae": -1580,
+              "mfe": 1160,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 2740,
+              "isWin": false,
+              "orderIds": [
+                151,
+                152
+              ]
+            },
+            {
+              "id": "eb9573ac-4e6e-4792-ba68-6421b1ecb129",
+              "symbols": [
+                {
+                  "value": "SPXW  241219C05865000",
+                  "id": "SPXW YOFZRWT7A84U|SPX 31",
+                  "permtick": "SPXW  241219C05865000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-19T14:31:00Z",
+              "entryPrice": 62,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-20T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -6200,
+              "totalFees": 0,
+              "mae": -6200,
+              "mfe": 1111,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 7311,
+              "isWin": false,
+              "orderIds": [
+                153,
+                154
+              ]
+            },
+            {
+              "id": "5d8b5a83-0bc9-461b-a135-4a29f348a4ff",
+              "symbols": [
+                {
+                  "value": "SPXW  241220C05865000",
+                  "id": "SPXW YOGZ806DCZAM|SPX 31",
+                  "permtick": "SPXW  241220C05865000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-20T14:31:00Z",
+              "entryPrice": 12.3,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-21T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1230,
+              "totalFees": 0,
+              "mae": -1230,
+              "mfe": 10610,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 11840,
+              "isWin": true,
+              "orderIds": [
+                155,
+                156
+              ]
+            },
+            {
+              "id": "32cb6937-56a2-4385-90aa-fc42667af709",
+              "symbols": [
+                {
+                  "value": "SPXW  241223C05930000",
+                  "id": "SPXW YOJXJM1ZITLA|SPX 31",
+                  "permtick": "SPXW  241223C05930000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-23T14:31:00Z",
+              "entryPrice": 23.4,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-24T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -2340,
+              "totalFees": 0,
+              "mae": -2340,
+              "mfe": 2365,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 4705,
+              "isWin": true,
+              "orderIds": [
+                157,
+                158
+              ]
+            },
+            {
+              "id": "eced0e6b-7c37-418c-934d-0fe0487c989c",
+              "symbols": [
+                {
+                  "value": "SPXW  241224C05970000",
+                  "id": "SPXW YOKWZPFTEWY6|SPX 31",
+                  "permtick": "SPXW  241224C05970000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-24T14:31:00Z",
+              "entryPrice": 17.5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-25T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -1750,
+              "totalFees": 0,
+              "mae": -1750,
+              "mfe": 5077,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 6827,
+              "isWin": true,
+              "orderIds": [
+                159,
+                160
+              ]
+            },
+            {
+              "id": "7ba9a915-3247-4bf9-a7a2-a90b320bdff5",
+              "symbols": [
+                {
+                  "value": "SPXW  241226C06035000",
+                  "id": "SPXW YOMVWL5HYENI|SPX 31",
+                  "permtick": "SPXW  241226C06035000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-26T14:31:00Z",
+              "entryPrice": 6.8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-27T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -680,
+              "totalFees": 0,
+              "mae": -680,
+              "mfe": 947,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 1627,
+              "isWin": false,
+              "orderIds": [
+                161,
+                162
+              ]
+            },
+            {
+              "id": "f8d6be9a-09e1-4d20-8e21-726aed674eab",
+              "symbols": [
+                {
+                  "value": "SPXW  241227C06035000",
+                  "id": "SPXW YONVCOIO15TA|SPX 31",
+                  "permtick": "SPXW  241227C06035000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-27T14:31:00Z",
+              "entryPrice": 2.25,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-28T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -225,
+              "totalFees": 0,
+              "mae": -225,
+              "mfe": 17.5,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 242.5,
+              "isWin": false,
+              "orderIds": [
+                163,
+                164
+              ]
+            },
+            {
+              "id": "97f6cb04-1cb1-488c-a022-a4216d5b20a8",
+              "symbols": [
+                {
+                  "value": "SPXW  241230C05970000",
+                  "id": "SPXW YOQTO9MTVFWU|SPX 31",
+                  "permtick": "SPXW  241230C05970000",
+                  "underlying": {
+                    "value": "SPX",
+                    "id": "SPX 31",
+                    "permtick": "SPX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-30T14:31:00Z",
+              "entryPrice": 1.7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-31T06:00:00Z",
+              "exitPrice": 0,
+              "profitLoss": -170,
+              "totalFees": 0,
+              "mae": -170,
+              "mfe": 47.5,
+              "duration": "15:29:00",
+              "endTradeDrawdown": 217.5,
+              "isWin": false,
+              "orderIds": [
+                165,
+                166
+              ]
+            }
+          ]
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-20T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "OrderFillsDuringExtendedMarketHoursAnalysis",
+            "issue": "The algorithm filled orders during extended market hours.Filling orders during extended market hours can cause a lot of slippage since there is less liquidity than during regular trading hours.",
+            "sample": {
+              "id": "8d3120ea88579b04426fe7626d083d86-2-1",
+              "algorithmId": "8d3120ea88579b04426fe7626d083d86",
+              "orderId": 2,
+              "orderEventId": 1,
+              "symbol": "SPXW YLIMXVNR9V3I|SPX 31",
+              "symbolValue": "SPXW  240903C05645000",
+              "symbolPermtick": "SPXW",
+              "time": 1725426000,
+              "status": "filled",
+              "fillPrice": 0,
+              "fillPriceCurrency": "",
+              "fillQuantity": -1,
+              "direction": "sell",
+              "orderType": "optionExercise",
+              "message": "OTM. Underlying: 5529.11. Loss: -340.0",
+              "isAssignment": false,
+              "quantity": -1
+            },
+            "count": 83,
+            "solutions": [
+              "If you don't intend to trading during extended market hours, add a guard before you place orders.\n```\nif self.is_market_open(self._symbol):\n    self.market_order(self._symbol, quantity)\n```"
+            ]
+          },
+          {
+            "name": "PortfolioMarginUsageAnalysis",
+            "issue": "The algorithm sometimes only utilizes a small proportion of the margin available.",
+            "sample": "Number of days when the 3-day SMA of the margin usage drops below 50%: 85",
+            "solutions": [
+              "Adjust the strategy logic or position sizing to utilize more margin.",
+              "If the algorithm logic leads to periods of time when the portfolio sits in cash, consider holding a \"risk-free\" asset during these periods."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "397.1%",
+          "Used RAM (MB)": "1267",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-8d3120ea88579b04426fe7626d083d86",
+          "LEAN Version": "v2.5.0.0.18271",
+          "Up Time": "0d 00:00:14"
+        }
+      },
+      "success": true
+    },
+    "error": null,
+    "stacktrace": null,
+    "has_initialize_error": false,
+    "trade_statistics": {
+      "startDateTime": "2024-09-03T13:31:00Z",
+      "endDateTime": "2024-12-31T06:00:00Z",
+      "totalNumberOfTrades": 83,
+      "numberOfWinningTrades": 30,
+      "numberOfLosingTrades": 53,
+      "totalProfitLoss": "-174270.00",
+      "totalProfit": "0",
+      "totalLoss": "-174270.00",
+      "largestProfit": "0",
+      "largestLoss": "-11870.0",
+      "averageProfitLoss": "-2099.6386",
+      "averageProfit": "0",
+      "averageLoss": "-2099.6386",
+      "averageTradeDuration": "15:29:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "15:29:00",
+      "medianTradeDuration": "15:29:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "15:29:00",
+      "maxConsecutiveWinningTrades": 4,
+      "maxConsecutiveLosingTrades": 6,
+      "profitLossRatio": "0",
+      "winLossRatio": "0.5660",
+      "winRate": "0.3614",
+      "lossRate": "0.6386",
+      "averageMAE": "-2099.6386",
+      "averageMFE": "1412.8193",
+      "largestMAE": "-11870.0",
+      "largestMFE": "10610.00",
+      "maximumClosedTradeDrawdown": "-174270.00",
+      "maximumIntraTradeDrawdown": "-175855.00",
+      "profitLossStandardDeviation": "1878.5830",
+      "profitLossDownsideDeviation": "1878.5830",
+      "profitFactor": "0",
+      "sharpeRatio": "-1.1177",
+      "sortinoRatio": "-1.1177",
+      "profitToMaxDrawdownRatio": "-1",
+      "maximumEndTradeDrawdown": "15655.00",
+      "averageEndTradeDrawdown": "-3512.4578",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": "167",
+    "finished_at": "2026-11-18T20:38:46.462624+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "statistics": {
+    "Total Orders": "167",
+    "Average Win": "2.21%",
+    "Average Loss": "-1.38%",
+    "Compounding Annual Return": "-31.390%",
+    "Drawdown": "22.800%",
+    "Expectancy": "0.317",
+    "Start Equity": "100000",
+    "End Equity": "88161",
+    "Net Profit": "-11.839%",
+    "Sharpe Ratio": "-0.828",
+    "Sortino Ratio": "-1.272",
+    "Probabilistic Sharpe Ratio": "9.799%",
+    "Loss Rate": "49%",
+    "Win Rate": "51%",
+    "Profit-Loss Ratio": "1.60",
+    "Alpha": "-0.328",
+    "Beta": "1.522",
+    "Annual Standard Deviation": "0.295",
+    "Annual Variance": "0.087",
+    "Information Ratio": "-1.181",
+    "Tracking Error": "0.254",
+    "Treynor Ratio": "-0.161",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$2400000.00",
+    "Lowest Capacity Asset": "SPXW YOQTO9MTVFWU|SPX 31",
+    "Portfolio Turnover": "1.59%",
+    "Drawdown Recovery": "8"
+  },
+  "qc_note": "",
+  "total_orders": "167"
+}

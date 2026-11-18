@@ -1,0 +1,3241 @@
+{
+  "prompt_id": "warmup-template-consolidator_v04",
+  "model": "qwen_tuned_9b_final_nothink_insample",
+  "base_model": "qwen_tuned_9b_final_nothink_insample",
+  "model_id": "jared-309b/qwen9b-final-insample-sxz",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass WarmUpConsolidatorAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100_000)\n        self.settings.seed_initial_prices = True\n        self._equity = self.add_equity(\"SPY\", Resolution.MINUTE)\n        consolidation_minutes = 30\n        # Build and subscribe the 30-minute consolidator.\n        consolidator = self.consolidate(self._equity.symbol, timedelta(minutes=consolidation_minutes), self._consolidation_handler)\n        # Create 30-minute indicators for the scheduled trading signal.\n        self._ema = ExponentialMovingAverage(10)\n        self._rsi = RelativeStrengthIndex(12)\n        indicators = [self._ema, self._rsi]\n        for indicator in indicators:\n            self.register_indicator(self._equity, indicator, consolidator)\n        # Warm the consolidator and registered indicators with one history request.\n        warm_up_period = max(indicator.warm_up_period for indicator in indicators) * consolidation_minutes\n        for bar in self.history[TradeBar](self._equity, warm_up_period):\n            consolidator.update(bar)\n\n    def _consolidation_handler(self, consolidated_bar: TradeBar) -> None:\n        if self.is_warming_up or not (self.is_market_open(self._equity.symbol) and self._ema.is_ready and self._rsi.is_ready):\n            return\n        price = consolidated_bar.close\n        if not self._equity.invested and price > self._ema.current.value and self._rsi.current.value > 50:\n            self.set_holdings(self._equity, 1)\n        elif self._equity.invested and (price < self._ema.current.value or self._rsi.current.value < 50):\n            self.liquidate(self._equity)\n```",
+  "generated_at": "2026-11-18T19:51:05.898954+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "is_market_open"
+    }
+  ],
+  "note": "UNKNOWN_API: is_market_open",
+  "qc_evaluation": {
+    "status": "completed",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass WarmUpConsolidatorAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100_000)\n        self.settings.seed_initial_prices = True\n        self._equity = self.add_equity(\"SPY\", Resolution.MINUTE)\n        consolidation_minutes = 30\n        # Build and subscribe the 30-minute consolidator.\n        consolidator = self.consolidate(self._equity.symbol, timedelta(minutes=consolidation_minutes), self._consolidation_handler)\n        # Create 30-minute indicators for the scheduled trading signal.\n        self._ema = ExponentialMovingAverage(10)\n        self._rsi = RelativeStrengthIndex(12)\n        indicators = [self._ema, self._rsi]\n        for indicator in indicators:\n            self.register_indicator(self._equity, indicator, consolidator)\n        # Warm the consolidator and registered indicators with one history request.\n        warm_up_period = max(indicator.warm_up_period for indicator in indicators) * consolidation_minutes\n        for bar in self.history[TradeBar](self._equity, warm_up_period):\n            consolidator.update(bar)\n\n    def _consolidation_handler(self, consolidated_bar: TradeBar) -> None:\n        if self.is_warming_up or not (self.is_market_open(self._equity.symbol) and self._ema.is_ready and self._rsi.is_ready):\n            return\n        price = consolidated_bar.close\n        if not self._equity.invested and price > self._ema.current.value and self._rsi.current.value > 50:\n            self.set_holdings(self._equity, 1)\n        elif self._equity.invested and (price < self._ema.current.value or self._rsi.current.value < 50):\n            self.liquidate(self._equity)\n",
+    "source_sha256": "084ee70e7d804e66af947caf4718e35b4c278e7ee2db711dcd04696129fc5267",
+    "started_at": "2026-11-18T20:45:15.892587+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 0,
+    "statistics": {
+      "Total Orders": "118",
+      "Average Win": "0.67%",
+      "Average Loss": "-0.24%",
+      "Compounding Annual Return": "12.361%",
+      "Drawdown": "2.700%",
+      "Expectancy": "0.284",
+      "Start Equity": "100000",
+      "End Equity": "103962.67",
+      "Net Profit": "3.963%",
+      "Sharpe Ratio": "0.581",
+      "Sortino Ratio": "1.044",
+      "Probabilistic Sharpe Ratio": "36.698%",
+      "Loss Rate": "66%",
+      "Win Rate": "34%",
+      "Profit-Loss Ratio": "2.79",
+      "Alpha": "0.016",
+      "Beta": "0.38",
+      "Annual Standard Deviation": "0.064",
+      "Annual Variance": "0.004",
+      "Information Ratio": "-0.229",
+      "Tracking Error": "0.082",
+      "Treynor Ratio": "0.097",
+      "Total Fees": "$118.00",
+      "Estimated Strategy Capacity": "$16000000.00",
+      "Lowest Capacity Asset": "SPY R735QTJ8XC9X",
+      "Portfolio Turnover": "96.23%",
+      "Drawdown Recovery": "25"
+    },
+    "runtime_statistics": {
+      "Equity": "$103,962.67",
+      "Fees": "-$118.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$3,962.67",
+      "Probabilistic Sharpe Ratio": "36.698%",
+      "Return": "3.96 %",
+      "Unrealized": "$0.00",
+      "Volume": "$12,085,105.21"
+    },
+    "logs": [
+      "2024-09-01 00:00:00 Launching analysis for 46475003a3b4037f65b13efe5df4afc1 with LEAN Engine v2.5.0.0.18271",
+      "2024-12-31 16:00:00 Algorithm Id:(46475003a3b4037f65b13efe5df4afc1) completed in 1.22 seconds at 54k data points per second. Processing total of 65,792 data points."
+    ],
+    "qc_note": "",
+    "project_id": 39642638,
+    "compile_id": "8700928bf035585a1a506c0d4f866fd5-eab4c73812a282399f5c1180e6049c63",
+    "compile_created": {
+      "compileId": "8700928bf035585a1a506c0d4f866fd5-eab4c73812a282399f5c1180e6049c63",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39642638,
+      "signature": "eab4c73812a282399f5c1180e6049c63",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "8700928bf035585a1a506c0d4f866fd5-eab4c73812a282399f5c1180e6049c63",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39642638, with CompileID: 8700928bf035585a1a506c0d4f866fd5-eab4c73812a282399f5c1180e6049c63, Lean Version: 2.5.0.0.18271"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39642638, with CompileID: 8700928bf035585a1a506c0d4f866fd5-eab4c73812a282399f5c1180e6049c63, Lean Version: 2.5.0.0.18271"
+    ],
+    "backtest_id": "46475003a3b4037f65b13efe5df4afc1",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "warmup-template-consolidator_v04",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39642638,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "46475003a3b4037f65b13efe5df4afc1",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 12
+        },
+        "backtestStart": "2026-11-18 20:45:20",
+        "backtestEnd": "2026-11-18 20:45:20",
+        "created": "2026-11-18 20:45:20",
+        "snapshotId": 39642643,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 5591a6cc",
+        "outOfSampleMaxEndDate": "2026-08-20T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": "",
+        "name": "warmup-template-consolidator_v04",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39642638,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "46475003a3b4037f65b13efe5df4afc1",
+        "tradeableDates": 84,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 12
+        },
+        "backtestStart": "2024-09-01 00:00:00",
+        "backtestEnd": "2024-12-31 23:59:59",
+        "created": "2026-11-18 20:45:20",
+        "snapshotId": 39642643,
+        "status": "Completed.",
+        "error": null,
+        "stacktrace": null,
+        "progress": 1,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          },
+          "Drawdown": {
+            "name": "Drawdown"
+          },
+          "Portfolio Turnover": {
+            "name": "Portfolio Turnover"
+          },
+          "Exposure": {
+            "name": "Exposure"
+          },
+          "Capacity": {
+            "name": "Capacity"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": {
+          "M1_20240930": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-09T14:30:00Z",
+              "endDateTime": "2024-09-27T16:00:00Z",
+              "totalNumberOfTrades": 15,
+              "numberOfWinningTrades": 6,
+              "numberOfLosingTrades": 9,
+              "totalProfitLoss": "2142.77",
+              "totalProfit": "4451.05",
+              "totalLoss": "-2308.28",
+              "largestProfit": "2533.51",
+              "largestLoss": "-450.22",
+              "averageProfitLoss": "142.8513",
+              "averageProfit": "741.8417",
+              "averageLoss": "-256.4756",
+              "averageTradeDuration": "1.00:40:00.0000002",
+              "averageWinningTradeDuration": "1.22:15:00",
+              "averageLosingTradeDuration": "10:16:40",
+              "medianTradeDuration": "20:30:00",
+              "medianWinningTradeDuration": "1.00:00:00",
+              "medianLosingTradeDuration": "02:00:00",
+              "maxConsecutiveWinningTrades": 2,
+              "maxConsecutiveLosingTrades": 4,
+              "profitLossRatio": "2.8924",
+              "winLossRatio": "0.6667",
+              "winRate": "0.4",
+              "lossRate": "0.6",
+              "averageMAE": "-222.2867",
+              "averageMFE": "524.6187",
+              "largestMAE": "-450.22",
+              "largestMFE": "2802.46",
+              "maximumClosedTradeDrawdown": "-1132.90",
+              "maximumIntraTradeDrawdown": "-2802.46",
+              "profitLossStandardDeviation": "766.2149",
+              "profitLossDownsideDeviation": "136.3257",
+              "profitFactor": "1.9283",
+              "sharpeRatio": "0.1864",
+              "sortinoRatio": "1.0479",
+              "profitToMaxDrawdownRatio": "1.8914",
+              "maximumEndTradeDrawdown": "1102.70",
+              "averageEndTradeDrawdown": "-381.7673",
+              "maximumDrawdownDuration": "7.00:00:00",
+              "totalFees": "30"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0074",
+              "averageLossRate": "-0.0026",
+              "profitLossRatio": "2.8898",
+              "winRate": "0.4",
+              "lossRate": "0.6",
+              "expectancy": "0.5559",
+              "startEquity": "100000",
+              "endEquity": "102112.7681",
+              "compoundingAnnualReturn": "0.2936",
+              "drawdown": "0.012",
+              "totalNetProfit": "0.0211",
+              "sharpeRatio": "2.6386",
+              "probabilisticSharpeRatio": "0.6884",
+              "sortinoRatio": "4.4295",
+              "alpha": "0.1256",
+              "beta": "0.2596",
+              "annualStandardDeviation": "0.0591",
+              "annualVariance": "0.0035",
+              "informationRatio": "0.3909",
+              "trackingError": "0.0988",
+              "treynorRatio": "0.6012",
+              "portfolioTurnover": "1.0278",
+              "valueAtRisk99": "-0.008",
+              "valueAtRisk95": "-0.005",
+              "drawdownRecovery": "3"
+            },
+            "closedTrades": []
+          },
+          "M1_20241031": {
+            "tradeStatistics": {
+              "startDateTime": "2024-10-01T19:00:00Z",
+              "endDateTime": "2024-10-30T17:00:00Z",
+              "totalNumberOfTrades": 19,
+              "numberOfWinningTrades": 6,
+              "numberOfLosingTrades": 13,
+              "totalProfitLoss": "-443.68",
+              "totalProfit": "2419.07",
+              "totalLoss": "-2862.75",
+              "largestProfit": "1027.49",
+              "largestLoss": "-592.39",
+              "averageProfitLoss": "-23.3516",
+              "averageProfit": "403.1783",
+              "averageLoss": "-220.2115",
+              "averageTradeDuration": "21:25:15.7894739",
+              "averageWinningTradeDuration": "2.07:50:00",
+              "averageLosingTradeDuration": "05:32:18.4615385",
+              "medianTradeDuration": "03:30:00",
+              "medianWinningTradeDuration": "2.23:30:00",
+              "medianLosingTradeDuration": "01:30:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "1.8309",
+              "winLossRatio": "0.4615",
+              "winRate": "0.3158",
+              "lossRate": "0.6842",
+              "averageMAE": "-244.8695",
+              "averageMFE": "282.1968",
+              "largestMAE": "-900.15",
+              "largestMFE": "1361.78",
+              "maximumClosedTradeDrawdown": "-1640.28",
+              "maximumIntraTradeDrawdown": "-2314.56",
+              "profitLossStandardDeviation": "400.4042",
+              "profitLossDownsideDeviation": "197.0646",
+              "profitFactor": "0.8450",
+              "sharpeRatio": "-0.0583",
+              "sortinoRatio": "-0.1185",
+              "profitToMaxDrawdownRatio": "-0.2705",
+              "maximumEndTradeDrawdown": "905.49",
+              "averageEndTradeDrawdown": "-305.5484",
+              "maximumDrawdownDuration": "13.19:30:00",
+              "totalFees": "38"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0039",
+              "averageLossRate": "-0.0022",
+              "profitLossRatio": "1.8145",
+              "winRate": "0.3158",
+              "lossRate": "0.6842",
+              "expectancy": "-0.1112",
+              "startEquity": "102112.7681",
+              "endEquity": "101631.0864",
+              "compoundingAnnualReturn": "-0.0548",
+              "drawdown": "0.021",
+              "totalNetProfit": "-0.0047",
+              "sharpeRatio": "-1.1665",
+              "probabilisticSharpeRatio": "0.2389",
+              "sortinoRatio": "-1.9877",
+              "alpha": "-0.1375",
+              "beta": "0.5322",
+              "annualStandardDeviation": "0.0535",
+              "annualVariance": "0.0029",
+              "informationRatio": "-4.0618",
+              "trackingError": "0.0501",
+              "treynorRatio": "-0.1173",
+              "portfolioTurnover": "1.2198",
+              "valueAtRisk99": "-0.008",
+              "valueAtRisk95": "-0.006",
+              "drawdownRecovery": "7"
+            },
+            "closedTrades": []
+          },
+          "M1_20241130": {
+            "tradeStatistics": {
+              "startDateTime": "2024-11-01T15:00:00Z",
+              "endDateTime": "2024-11-27T15:30:00Z",
+              "totalNumberOfTrades": 14,
+              "numberOfWinningTrades": 5,
+              "numberOfLosingTrades": 9,
+              "totalProfitLoss": "2951.22",
+              "totalProfit": "4948.83",
+              "totalLoss": "-1997.61",
+              "largestProfit": "4356.28",
+              "largestLoss": "-560.23",
+              "averageProfitLoss": "210.8014",
+              "averageProfit": "989.7660",
+              "averageLoss": "-221.9567",
+              "averageTradeDuration": "19:08:34.2857143",
+              "averageWinningTradeDuration": "1.19:00:00",
+              "averageLosingTradeDuration": "05:53:20.0000001",
+              "medianTradeDuration": "02:30:00",
+              "medianWinningTradeDuration": "23:00:00",
+              "medianLosingTradeDuration": "02:30:00",
+              "maxConsecutiveWinningTrades": 2,
+              "maxConsecutiveLosingTrades": 3,
+              "profitLossRatio": "4.4593",
+              "winLossRatio": "0.5556",
+              "winRate": "0.3571",
+              "lossRate": "0.6429",
+              "averageMAE": "-218.1121",
+              "averageMFE": "497.8600",
+              "largestMAE": "-560.23",
+              "largestMFE": "4579.72",
+              "maximumClosedTradeDrawdown": "-1599.54",
+              "maximumIntraTradeDrawdown": "-4621.07",
+              "profitLossStandardDeviation": "1214.5118",
+              "profitLossDownsideDeviation": "157.8111",
+              "profitFactor": "2.4774",
+              "sharpeRatio": "0.1736",
+              "sortinoRatio": "1.3358",
+              "profitToMaxDrawdownRatio": "1.8450",
+              "maximumEndTradeDrawdown": "641.31",
+              "averageEndTradeDrawdown": "-287.0586",
+              "maximumDrawdownDuration": "10.02:30:00",
+              "totalFees": "28"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0097",
+              "averageLossRate": "-0.0021",
+              "profitLossRatio": "4.5413",
+              "winRate": "0.3571",
+              "lossRate": "0.6429",
+              "expectancy": "0.9790",
+              "startEquity": "101631.0864",
+              "endEquity": "104869.8991",
+              "compoundingAnnualReturn": "0.4833",
+              "drawdown": "0.018",
+              "totalNetProfit": "0.0319",
+              "sharpeRatio": "3.5654",
+              "probabilisticSharpeRatio": "0.8185",
+              "sortinoRatio": "15.0325",
+              "alpha": "-0.0715",
+              "beta": "0.6488",
+              "annualStandardDeviation": "0.0858",
+              "annualVariance": "0.0074",
+              "informationRatio": "-4.2228",
+              "trackingError": "0.0653",
+              "treynorRatio": "0.4714",
+              "portfolioTurnover": "0.9617",
+              "valueAtRisk99": "-0.011",
+              "valueAtRisk95": "-0.008",
+              "drawdownRecovery": "4"
+            },
+            "closedTrades": []
+          },
+          "M1_20241231": {
+            "tradeStatistics": {
+              "startDateTime": "2024-11-29T15:00:00Z",
+              "endDateTime": "2024-12-27T15:00:00Z",
+              "totalNumberOfTrades": 11,
+              "numberOfWinningTrades": 3,
+              "numberOfLosingTrades": 8,
+              "totalProfitLoss": "-569.62",
+              "totalProfit": "1888.51",
+              "totalLoss": "-2458.13",
+              "largestProfit": "812.40",
+              "largestLoss": "-939.29",
+              "averageProfitLoss": "-51.7836",
+              "averageProfit": "629.5033",
+              "averageLoss": "-307.2662",
+              "averageTradeDuration": "1.02:46:21.8181819",
+              "averageWinningTradeDuration": "3.07:20:00",
+              "averageLosingTradeDuration": "07:03:45.0000001",
+              "medianTradeDuration": "03:30:00",
+              "medianWinningTradeDuration": "3.21:30:00",
+              "medianLosingTradeDuration": "02:30:00",
+              "maxConsecutiveWinningTrades": 1,
+              "maxConsecutiveLosingTrades": 7,
+              "profitLossRatio": "2.0487",
+              "winLossRatio": "0.375",
+              "winRate": "0.2727",
+              "lossRate": "0.7273",
+              "averageMAE": "-265.6464",
+              "averageMFE": "365.1891",
+              "largestMAE": "-939.29",
+              "largestMFE": "1772.35",
+              "maximumClosedTradeDrawdown": "-2305.88",
+              "maximumIntraTradeDrawdown": "-2567.34",
+              "profitLossStandardDeviation": "505.0277",
+              "profitLossDownsideDeviation": "285.8405",
+              "profitFactor": "0.7683",
+              "sharpeRatio": "-0.1025",
+              "sortinoRatio": "-0.1812",
+              "profitToMaxDrawdownRatio": "-0.2470",
+              "maximumEndTradeDrawdown": "1007.69",
+              "averageEndTradeDrawdown": "-416.9727",
+              "maximumDrawdownDuration": "2.03:30:00",
+              "totalFees": "22"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0060",
+              "averageLossRate": "-0.0029",
+              "profitLossRatio": "2.0402",
+              "winRate": "0.2727",
+              "lossRate": "0.7273",
+              "expectancy": "-0.1709",
+              "startEquity": "104869.8991",
+              "endEquity": "103962.6744",
+              "compoundingAnnualReturn": "-0.0982",
+              "drawdown": "0.023",
+              "totalNetProfit": "-0.0087",
+              "sharpeRatio": "-1.9604",
+              "probabilisticSharpeRatio": "0.1589",
+              "sortinoRatio": "-2.2517",
+              "alpha": "-0.0393",
+              "beta": "0.3369",
+              "annualStandardDeviation": "0.0589",
+              "annualVariance": "0.0035",
+              "informationRatio": "1.2283",
+              "trackingError": "0.0900",
+              "treynorRatio": "-0.3425",
+              "portfolioTurnover": "0.6539",
+              "valueAtRisk99": "-0.009",
+              "valueAtRisk95": "-0.006",
+              "drawdownRecovery": "1"
+            },
+            "closedTrades": []
+          },
+          "M3_20240930": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-09T14:30:00Z",
+              "endDateTime": "2024-09-27T16:00:00Z",
+              "totalNumberOfTrades": 15,
+              "numberOfWinningTrades": 6,
+              "numberOfLosingTrades": 9,
+              "totalProfitLoss": "2142.77",
+              "totalProfit": "4451.05",
+              "totalLoss": "-2308.28",
+              "largestProfit": "2533.51",
+              "largestLoss": "-450.22",
+              "averageProfitLoss": "142.8513",
+              "averageProfit": "741.8417",
+              "averageLoss": "-256.4756",
+              "averageTradeDuration": "1.00:40:00.0000002",
+              "averageWinningTradeDuration": "1.22:15:00",
+              "averageLosingTradeDuration": "10:16:40",
+              "medianTradeDuration": "20:30:00",
+              "medianWinningTradeDuration": "1.00:00:00",
+              "medianLosingTradeDuration": "02:00:00",
+              "maxConsecutiveWinningTrades": 2,
+              "maxConsecutiveLosingTrades": 4,
+              "profitLossRatio": "2.8924",
+              "winLossRatio": "0.6667",
+              "winRate": "0.4",
+              "lossRate": "0.6",
+              "averageMAE": "-222.2867",
+              "averageMFE": "524.6187",
+              "largestMAE": "-450.22",
+              "largestMFE": "2802.46",
+              "maximumClosedTradeDrawdown": "-1132.90",
+              "maximumIntraTradeDrawdown": "-2802.46",
+              "profitLossStandardDeviation": "766.2149",
+              "profitLossDownsideDeviation": "136.3257",
+              "profitFactor": "1.9283",
+              "sharpeRatio": "0.1864",
+              "sortinoRatio": "1.0479",
+              "profitToMaxDrawdownRatio": "1.8914",
+              "maximumEndTradeDrawdown": "1102.70",
+              "averageEndTradeDrawdown": "-381.7673",
+              "maximumDrawdownDuration": "7.00:00:00",
+              "totalFees": "30"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0074",
+              "averageLossRate": "-0.0026",
+              "profitLossRatio": "2.8898",
+              "winRate": "0.4",
+              "lossRate": "0.6",
+              "expectancy": "0.5559",
+              "startEquity": "100000",
+              "endEquity": "102112.7681",
+              "compoundingAnnualReturn": "0.2936",
+              "drawdown": "0.012",
+              "totalNetProfit": "0.0211",
+              "sharpeRatio": "2.6386",
+              "probabilisticSharpeRatio": "0.6884",
+              "sortinoRatio": "4.4295",
+              "alpha": "0.1256",
+              "beta": "0.2596",
+              "annualStandardDeviation": "0.0591",
+              "annualVariance": "0.0035",
+              "informationRatio": "0.3909",
+              "trackingError": "0.0988",
+              "treynorRatio": "0.6012",
+              "portfolioTurnover": "1.0278",
+              "valueAtRisk99": "-0.008",
+              "valueAtRisk95": "-0.005",
+              "drawdownRecovery": "3"
+            },
+            "closedTrades": []
+          },
+          "M3_20241031": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-09T14:30:00Z",
+              "endDateTime": "2024-10-30T17:00:00Z",
+              "totalNumberOfTrades": 34,
+              "numberOfWinningTrades": 12,
+              "numberOfLosingTrades": 22,
+              "totalProfitLoss": "1699.09",
+              "totalProfit": "6870.12",
+              "totalLoss": "-5171.03",
+              "largestProfit": "2533.51",
+              "largestLoss": "-592.39",
+              "averageProfitLoss": "49.9732",
+              "averageProfit": "572.5100",
+              "averageLoss": "-235.0468",
+              "averageTradeDuration": "22:51:10.5882357",
+              "averageWinningTradeDuration": "2.03:02:30",
+              "averageLosingTradeDuration": "07:28:38.1818184",
+              "medianTradeDuration": "20:00:00",
+              "medianWinningTradeDuration": "1.23:30:00",
+              "medianLosingTradeDuration": "02:00:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "2.4357",
+              "winLossRatio": "0.5455",
+              "winRate": "0.3529",
+              "lossRate": "0.6471",
+              "averageMAE": "-234.9065",
+              "averageMFE": "389.1476",
+              "largestMAE": "-900.15",
+              "largestMFE": "2802.46",
+              "maximumClosedTradeDrawdown": "-1640.28",
+              "maximumIntraTradeDrawdown": "-2802.46",
+              "profitLossStandardDeviation": "586.1163",
+              "profitLossDownsideDeviation": "172.0583",
+              "profitFactor": "1.3286",
+              "sharpeRatio": "0.0853",
+              "sortinoRatio": "0.2904",
+              "profitToMaxDrawdownRatio": "1.0359",
+              "maximumEndTradeDrawdown": "1102.70",
+              "averageEndTradeDrawdown": "-339.1744",
+              "maximumDrawdownDuration": "26.00:30:00",
+              "totalFees": "68"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0057",
+              "averageLossRate": "-0.0023",
+              "profitLossRatio": "2.4322",
+              "winRate": "0.3529",
+              "lossRate": "0.6471",
+              "expectancy": "0.2113",
+              "startEquity": "100000",
+              "endEquity": "101631.0864",
+              "compoundingAnnualReturn": "0.1023",
+              "drawdown": "0.021",
+              "totalNetProfit": "0.0163",
+              "sharpeRatio": "0.3909",
+              "probabilisticSharpeRatio": "0.3751",
+              "sortinoRatio": "0.6919",
+              "alpha": "-0.0117",
+              "beta": "0.3399",
+              "annualStandardDeviation": "0.0557",
+              "annualVariance": "0.0031",
+              "informationRatio": "-0.9864",
+              "trackingError": "0.0776",
+              "treynorRatio": "0.0641",
+              "portfolioTurnover": "1.1270",
+              "valueAtRisk99": "-0.008",
+              "valueAtRisk95": "-0.005",
+              "drawdownRecovery": "25"
+            },
+            "closedTrades": []
+          },
+          "M3_20241130": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-09T14:30:00Z",
+              "endDateTime": "2024-11-27T15:30:00Z",
+              "totalNumberOfTrades": 48,
+              "numberOfWinningTrades": 17,
+              "numberOfLosingTrades": 31,
+              "totalProfitLoss": "4650.31",
+              "totalProfit": "11818.95",
+              "totalLoss": "-7168.64",
+              "largestProfit": "4356.28",
+              "largestLoss": "-592.39",
+              "averageProfitLoss": "96.8815",
+              "averageProfit": "695.2324",
+              "averageLoss": "-231.2465",
+              "averageTradeDuration": "21:46:15.0000007",
+              "averageWinningTradeDuration": "2.00:40:35.2941177",
+              "averageLosingTradeDuration": "07:00:58.0645164",
+              "medianTradeDuration": "18:30:00",
+              "medianWinningTradeDuration": "1.01:00:00",
+              "medianLosingTradeDuration": "02:00:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "3.0065",
+              "winLossRatio": "0.5484",
+              "winRate": "0.3542",
+              "lossRate": "0.6458",
+              "averageMAE": "-230.0081",
+              "averageMFE": "420.8554",
+              "largestMAE": "-900.15",
+              "largestMFE": "4579.72",
+              "maximumClosedTradeDrawdown": "-1818.13",
+              "maximumIntraTradeDrawdown": "-4621.07",
+              "profitLossStandardDeviation": "809.1047",
+              "profitLossDownsideDeviation": "165.5309",
+              "profitFactor": "1.6487",
+              "sharpeRatio": "0.1197",
+              "sortinoRatio": "0.5853",
+              "profitToMaxDrawdownRatio": "2.5577",
+              "maximumEndTradeDrawdown": "1102.70",
+              "averageEndTradeDrawdown": "-323.9740",
+              "maximumDrawdownDuration": "26.00:30:00",
+              "totalFees": "96"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0069",
+              "averageLossRate": "-0.0023",
+              "profitLossRatio": "3.0144",
+              "winRate": "0.3542",
+              "lossRate": "0.6458",
+              "expectancy": "0.4218",
+              "startEquity": "100000",
+              "endEquity": "104869.8991",
+              "compoundingAnnualReturn": "0.2126",
+              "drawdown": "0.022",
+              "totalNetProfit": "0.0487",
+              "sharpeRatio": "1.4559",
+              "probabilisticSharpeRatio": "0.5808",
+              "sortinoRatio": "3.3667",
+              "alpha": "0.0269",
+              "beta": "0.3976",
+              "annualStandardDeviation": "0.0661",
+              "annualVariance": "0.0044",
+              "informationRatio": "-0.9670",
+              "trackingError": "0.0808",
+              "treynorRatio": "0.2420",
+              "portfolioTurnover": "1.0719",
+              "valueAtRisk99": "-0.009",
+              "valueAtRisk95": "-0.006",
+              "drawdownRecovery": "25"
+            },
+            "closedTrades": []
+          },
+          "M3_20241231": {
+            "tradeStatistics": {
+              "startDateTime": "2024-10-01T19:00:00Z",
+              "endDateTime": "2024-12-27T15:00:00Z",
+              "totalNumberOfTrades": 44,
+              "numberOfWinningTrades": 14,
+              "numberOfLosingTrades": 30,
+              "totalProfitLoss": "1937.92",
+              "totalProfit": "9256.41",
+              "totalLoss": "-7318.49",
+              "largestProfit": "4356.28",
+              "largestLoss": "-939.29",
+              "averageProfitLoss": "44.0436",
+              "averageProfit": "661.1721",
+              "averageLoss": "-243.9497",
+              "averageTradeDuration": "22:02:02.7272732",
+              "averageWinningTradeDuration": "2.08:17:08.5714285",
+              "averageLosingTradeDuration": "06:03:00.0000004",
+              "medianTradeDuration": "03:30:00",
+              "medianWinningTradeDuration": "2.00:30:00",
+              "medianLosingTradeDuration": "01:30:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 7,
+              "profitLossRatio": "2.7103",
+              "winLossRatio": "0.4667",
+              "winRate": "0.3182",
+              "lossRate": "0.6818",
+              "averageMAE": "-241.5500",
+              "averageMFE": "371.5650",
+              "largestMAE": "-939.29",
+              "largestMFE": "4579.72",
+              "maximumClosedTradeDrawdown": "-2595.31",
+              "maximumIntraTradeDrawdown": "-4621.07",
+              "profitLossStandardDeviation": "765.3618",
+              "profitLossDownsideDeviation": "210.1668",
+              "profitFactor": "1.2648",
+              "sharpeRatio": "0.0575",
+              "sortinoRatio": "0.2096",
+              "profitToMaxDrawdownRatio": "0.7467",
+              "maximumEndTradeDrawdown": "1007.69",
+              "averageEndTradeDrawdown": "-327.5214",
+              "maximumDrawdownDuration": "21.03:30:00",
+              "totalFees": "88"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0064",
+              "averageLossRate": "-0.0024",
+              "profitLossRatio": "2.7197",
+              "winRate": "0.3182",
+              "lossRate": "0.6818",
+              "expectancy": "0.1836",
+              "startEquity": "102112.7681",
+              "endEquity": "103962.6744",
+              "compoundingAnnualReturn": "0.0741",
+              "drawdown": "0.027",
+              "totalNetProfit": "0.0181",
+              "sharpeRatio": "0.2144",
+              "probabilisticSharpeRatio": "0.3109",
+              "sortinoRatio": "0.3905",
+              "alpha": "-0.0094",
+              "beta": "0.4252",
+              "annualStandardDeviation": "0.0658",
+              "annualVariance": "0.0043",
+              "informationRatio": "-0.5321",
+              "trackingError": "0.0772",
+              "treynorRatio": "0.0332",
+              "portfolioTurnover": "0.9418",
+              "valueAtRisk99": "-0.009",
+              "valueAtRisk95": "-0.007",
+              "drawdownRecovery": "20"
+            },
+            "closedTrades": []
+          },
+          "M6_20240930": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-09T14:30:00Z",
+              "endDateTime": "2024-09-27T16:00:00Z",
+              "totalNumberOfTrades": 15,
+              "numberOfWinningTrades": 6,
+              "numberOfLosingTrades": 9,
+              "totalProfitLoss": "2142.77",
+              "totalProfit": "4451.05",
+              "totalLoss": "-2308.28",
+              "largestProfit": "2533.51",
+              "largestLoss": "-450.22",
+              "averageProfitLoss": "142.8513",
+              "averageProfit": "741.8417",
+              "averageLoss": "-256.4756",
+              "averageTradeDuration": "1.00:40:00.0000002",
+              "averageWinningTradeDuration": "1.22:15:00",
+              "averageLosingTradeDuration": "10:16:40",
+              "medianTradeDuration": "20:30:00",
+              "medianWinningTradeDuration": "1.00:00:00",
+              "medianLosingTradeDuration": "02:00:00",
+              "maxConsecutiveWinningTrades": 2,
+              "maxConsecutiveLosingTrades": 4,
+              "profitLossRatio": "2.8924",
+              "winLossRatio": "0.6667",
+              "winRate": "0.4",
+              "lossRate": "0.6",
+              "averageMAE": "-222.2867",
+              "averageMFE": "524.6187",
+              "largestMAE": "-450.22",
+              "largestMFE": "2802.46",
+              "maximumClosedTradeDrawdown": "-1132.90",
+              "maximumIntraTradeDrawdown": "-2802.46",
+              "profitLossStandardDeviation": "766.2149",
+              "profitLossDownsideDeviation": "136.3257",
+              "profitFactor": "1.9283",
+              "sharpeRatio": "0.1864",
+              "sortinoRatio": "1.0479",
+              "profitToMaxDrawdownRatio": "1.8914",
+              "maximumEndTradeDrawdown": "1102.70",
+              "averageEndTradeDrawdown": "-381.7673",
+              "maximumDrawdownDuration": "7.00:00:00",
+              "totalFees": "30"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0074",
+              "averageLossRate": "-0.0026",
+              "profitLossRatio": "2.8898",
+              "winRate": "0.4",
+              "lossRate": "0.6",
+              "expectancy": "0.5559",
+              "startEquity": "100000",
+              "endEquity": "102112.7681",
+              "compoundingAnnualReturn": "0.2936",
+              "drawdown": "0.012",
+              "totalNetProfit": "0.0211",
+              "sharpeRatio": "2.6386",
+              "probabilisticSharpeRatio": "0.6884",
+              "sortinoRatio": "4.4295",
+              "alpha": "0.1256",
+              "beta": "0.2596",
+              "annualStandardDeviation": "0.0591",
+              "annualVariance": "0.0035",
+              "informationRatio": "0.3909",
+              "trackingError": "0.0988",
+              "treynorRatio": "0.6012",
+              "portfolioTurnover": "1.0278",
+              "valueAtRisk99": "-0.008",
+              "valueAtRisk95": "-0.005",
+              "drawdownRecovery": "3"
+            },
+            "closedTrades": []
+          },
+          "M6_20241031": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-09T14:30:00Z",
+              "endDateTime": "2024-10-30T17:00:00Z",
+              "totalNumberOfTrades": 34,
+              "numberOfWinningTrades": 12,
+              "numberOfLosingTrades": 22,
+              "totalProfitLoss": "1699.09",
+              "totalProfit": "6870.12",
+              "totalLoss": "-5171.03",
+              "largestProfit": "2533.51",
+              "largestLoss": "-592.39",
+              "averageProfitLoss": "49.9732",
+              "averageProfit": "572.5100",
+              "averageLoss": "-235.0468",
+              "averageTradeDuration": "22:51:10.5882357",
+              "averageWinningTradeDuration": "2.03:02:30",
+              "averageLosingTradeDuration": "07:28:38.1818184",
+              "medianTradeDuration": "20:00:00",
+              "medianWinningTradeDuration": "1.23:30:00",
+              "medianLosingTradeDuration": "02:00:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "2.4357",
+              "winLossRatio": "0.5455",
+              "winRate": "0.3529",
+              "lossRate": "0.6471",
+              "averageMAE": "-234.9065",
+              "averageMFE": "389.1476",
+              "largestMAE": "-900.15",
+              "largestMFE": "2802.46",
+              "maximumClosedTradeDrawdown": "-1640.28",
+              "maximumIntraTradeDrawdown": "-2802.46",
+              "profitLossStandardDeviation": "586.1163",
+              "profitLossDownsideDeviation": "172.0583",
+              "profitFactor": "1.3286",
+              "sharpeRatio": "0.0853",
+              "sortinoRatio": "0.2904",
+              "profitToMaxDrawdownRatio": "1.0359",
+              "maximumEndTradeDrawdown": "1102.70",
+              "averageEndTradeDrawdown": "-339.1744",
+              "maximumDrawdownDuration": "26.00:30:00",
+              "totalFees": "68"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0057",
+              "averageLossRate": "-0.0023",
+              "profitLossRatio": "2.4322",
+              "winRate": "0.3529",
+              "lossRate": "0.6471",
+              "expectancy": "0.2113",
+              "startEquity": "100000",
+              "endEquity": "101631.0864",
+              "compoundingAnnualReturn": "0.1023",
+              "drawdown": "0.021",
+              "totalNetProfit": "0.0163",
+              "sharpeRatio": "0.3909",
+              "probabilisticSharpeRatio": "0.3751",
+              "sortinoRatio": "0.6919",
+              "alpha": "-0.0117",
+              "beta": "0.3399",
+              "annualStandardDeviation": "0.0557",
+              "annualVariance": "0.0031",
+              "informationRatio": "-0.9864",
+              "trackingError": "0.0776",
+              "treynorRatio": "0.0641",
+              "portfolioTurnover": "1.1270",
+              "valueAtRisk99": "-0.008",
+              "valueAtRisk95": "-0.005",
+              "drawdownRecovery": "25"
+            },
+            "closedTrades": []
+          },
+          "M6_20241130": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-09T14:30:00Z",
+              "endDateTime": "2024-11-27T15:30:00Z",
+              "totalNumberOfTrades": 48,
+              "numberOfWinningTrades": 17,
+              "numberOfLosingTrades": 31,
+              "totalProfitLoss": "4650.31",
+              "totalProfit": "11818.95",
+              "totalLoss": "-7168.64",
+              "largestProfit": "4356.28",
+              "largestLoss": "-592.39",
+              "averageProfitLoss": "96.8815",
+              "averageProfit": "695.2324",
+              "averageLoss": "-231.2465",
+              "averageTradeDuration": "21:46:15.0000007",
+              "averageWinningTradeDuration": "2.00:40:35.2941177",
+              "averageLosingTradeDuration": "07:00:58.0645164",
+              "medianTradeDuration": "18:30:00",
+              "medianWinningTradeDuration": "1.01:00:00",
+              "medianLosingTradeDuration": "02:00:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "3.0065",
+              "winLossRatio": "0.5484",
+              "winRate": "0.3542",
+              "lossRate": "0.6458",
+              "averageMAE": "-230.0081",
+              "averageMFE": "420.8554",
+              "largestMAE": "-900.15",
+              "largestMFE": "4579.72",
+              "maximumClosedTradeDrawdown": "-1818.13",
+              "maximumIntraTradeDrawdown": "-4621.07",
+              "profitLossStandardDeviation": "809.1047",
+              "profitLossDownsideDeviation": "165.5309",
+              "profitFactor": "1.6487",
+              "sharpeRatio": "0.1197",
+              "sortinoRatio": "0.5853",
+              "profitToMaxDrawdownRatio": "2.5577",
+              "maximumEndTradeDrawdown": "1102.70",
+              "averageEndTradeDrawdown": "-323.9740",
+              "maximumDrawdownDuration": "26.00:30:00",
+              "totalFees": "96"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0069",
+              "averageLossRate": "-0.0023",
+              "profitLossRatio": "3.0144",
+              "winRate": "0.3542",
+              "lossRate": "0.6458",
+              "expectancy": "0.4218",
+              "startEquity": "100000",
+              "endEquity": "104869.8991",
+              "compoundingAnnualReturn": "0.2126",
+              "drawdown": "0.022",
+              "totalNetProfit": "0.0487",
+              "sharpeRatio": "1.4559",
+              "probabilisticSharpeRatio": "0.5808",
+              "sortinoRatio": "3.3667",
+              "alpha": "0.0269",
+              "beta": "0.3976",
+              "annualStandardDeviation": "0.0661",
+              "annualVariance": "0.0044",
+              "informationRatio": "-0.9670",
+              "trackingError": "0.0808",
+              "treynorRatio": "0.2420",
+              "portfolioTurnover": "1.0719",
+              "valueAtRisk99": "-0.009",
+              "valueAtRisk95": "-0.006",
+              "drawdownRecovery": "25"
+            },
+            "closedTrades": []
+          },
+          "M6_20241231": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-09T14:30:00Z",
+              "endDateTime": "2024-12-27T15:00:00Z",
+              "totalNumberOfTrades": 59,
+              "numberOfWinningTrades": 20,
+              "numberOfLosingTrades": 39,
+              "totalProfitLoss": "4080.69",
+              "totalProfit": "13707.46",
+              "totalLoss": "-9626.77",
+              "largestProfit": "4356.28",
+              "largestLoss": "-939.29",
+              "averageProfitLoss": "69.1642",
+              "averageProfit": "685.3730",
+              "averageLoss": "-246.8403",
+              "averageTradeDuration": "22:42:12.2033905",
+              "averageWinningTradeDuration": "2.05:16:30",
+              "averageLosingTradeDuration": "07:01:32.3076927",
+              "medianTradeDuration": "03:30:00",
+              "medianWinningTradeDuration": "1.23:30:00",
+              "medianLosingTradeDuration": "02:00:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 7,
+              "profitLossRatio": "2.7766",
+              "winLossRatio": "0.5128",
+              "winRate": "0.3390",
+              "lossRate": "0.6610",
+              "averageMAE": "-236.6525",
+              "averageMFE": "410.4769",
+              "largestMAE": "-939.29",
+              "largestMFE": "4579.72",
+              "maximumClosedTradeDrawdown": "-2595.31",
+              "maximumIntraTradeDrawdown": "-4621.07",
+              "profitLossStandardDeviation": "760.1825",
+              "profitLossDownsideDeviation": "194.0358",
+              "profitFactor": "1.4239",
+              "sharpeRatio": "0.0910",
+              "sortinoRatio": "0.3565",
+              "profitToMaxDrawdownRatio": "1.5723",
+              "maximumEndTradeDrawdown": "1102.70",
+              "averageEndTradeDrawdown": "-341.3127",
+              "maximumDrawdownDuration": "26.00:30:00",
+              "totalFees": "118"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0067",
+              "averageLossRate": "-0.0024",
+              "profitLossRatio": "2.7884",
+              "winRate": "0.3390",
+              "lossRate": "0.6610",
+              "expectancy": "0.2842",
+              "startEquity": "100000",
+              "endEquity": "103962.6744",
+              "compoundingAnnualReturn": "0.1236",
+              "drawdown": "0.027",
+              "totalNetProfit": "0.0396",
+              "sharpeRatio": "0.5807",
+              "probabilisticSharpeRatio": "0.3670",
+              "sortinoRatio": "1.0438",
+              "alpha": "0.0158",
+              "beta": "0.3804",
+              "annualStandardDeviation": "0.0638",
+              "annualVariance": "0.0041",
+              "informationRatio": "-0.2291",
+              "trackingError": "0.0823",
+              "treynorRatio": "0.0974",
+              "portfolioTurnover": "0.9623",
+              "valueAtRisk99": "-0.009",
+              "valueAtRisk95": "-0.006",
+              "drawdownRecovery": "25"
+            },
+            "closedTrades": []
+          },
+          "M12_20240930": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-09T14:30:00Z",
+              "endDateTime": "2024-09-27T16:00:00Z",
+              "totalNumberOfTrades": 15,
+              "numberOfWinningTrades": 6,
+              "numberOfLosingTrades": 9,
+              "totalProfitLoss": "2142.77",
+              "totalProfit": "4451.05",
+              "totalLoss": "-2308.28",
+              "largestProfit": "2533.51",
+              "largestLoss": "-450.22",
+              "averageProfitLoss": "142.8513",
+              "averageProfit": "741.8417",
+              "averageLoss": "-256.4756",
+              "averageTradeDuration": "1.00:40:00.0000002",
+              "averageWinningTradeDuration": "1.22:15:00",
+              "averageLosingTradeDuration": "10:16:40",
+              "medianTradeDuration": "20:30:00",
+              "medianWinningTradeDuration": "1.00:00:00",
+              "medianLosingTradeDuration": "02:00:00",
+              "maxConsecutiveWinningTrades": 2,
+              "maxConsecutiveLosingTrades": 4,
+              "profitLossRatio": "2.8924",
+              "winLossRatio": "0.6667",
+              "winRate": "0.4",
+              "lossRate": "0.6",
+              "averageMAE": "-222.2867",
+              "averageMFE": "524.6187",
+              "largestMAE": "-450.22",
+              "largestMFE": "2802.46",
+              "maximumClosedTradeDrawdown": "-1132.90",
+              "maximumIntraTradeDrawdown": "-2802.46",
+              "profitLossStandardDeviation": "766.2149",
+              "profitLossDownsideDeviation": "136.3257",
+              "profitFactor": "1.9283",
+              "sharpeRatio": "0.1864",
+              "sortinoRatio": "1.0479",
+              "profitToMaxDrawdownRatio": "1.8914",
+              "maximumEndTradeDrawdown": "1102.70",
+              "averageEndTradeDrawdown": "-381.7673",
+              "maximumDrawdownDuration": "7.00:00:00",
+              "totalFees": "30"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0074",
+              "averageLossRate": "-0.0026",
+              "profitLossRatio": "2.8898",
+              "winRate": "0.4",
+              "lossRate": "0.6",
+              "expectancy": "0.5559",
+              "startEquity": "100000",
+              "endEquity": "102112.7681",
+              "compoundingAnnualReturn": "0.2936",
+              "drawdown": "0.012",
+              "totalNetProfit": "0.0211",
+              "sharpeRatio": "2.6386",
+              "probabilisticSharpeRatio": "0.6884",
+              "sortinoRatio": "4.4295",
+              "alpha": "0.1256",
+              "beta": "0.2596",
+              "annualStandardDeviation": "0.0591",
+              "annualVariance": "0.0035",
+              "informationRatio": "0.3909",
+              "trackingError": "0.0988",
+              "treynorRatio": "0.6012",
+              "portfolioTurnover": "1.0278",
+              "valueAtRisk99": "-0.008",
+              "valueAtRisk95": "-0.005",
+              "drawdownRecovery": "3"
+            },
+            "closedTrades": []
+          },
+          "M12_20241031": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-09T14:30:00Z",
+              "endDateTime": "2024-10-30T17:00:00Z",
+              "totalNumberOfTrades": 34,
+              "numberOfWinningTrades": 12,
+              "numberOfLosingTrades": 22,
+              "totalProfitLoss": "1699.09",
+              "totalProfit": "6870.12",
+              "totalLoss": "-5171.03",
+              "largestProfit": "2533.51",
+              "largestLoss": "-592.39",
+              "averageProfitLoss": "49.9732",
+              "averageProfit": "572.5100",
+              "averageLoss": "-235.0468",
+              "averageTradeDuration": "22:51:10.5882357",
+              "averageWinningTradeDuration": "2.03:02:30",
+              "averageLosingTradeDuration": "07:28:38.1818184",
+              "medianTradeDuration": "20:00:00",
+              "medianWinningTradeDuration": "1.23:30:00",
+              "medianLosingTradeDuration": "02:00:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "2.4357",
+              "winLossRatio": "0.5455",
+              "winRate": "0.3529",
+              "lossRate": "0.6471",
+              "averageMAE": "-234.9065",
+              "averageMFE": "389.1476",
+              "largestMAE": "-900.15",
+              "largestMFE": "2802.46",
+              "maximumClosedTradeDrawdown": "-1640.28",
+              "maximumIntraTradeDrawdown": "-2802.46",
+              "profitLossStandardDeviation": "586.1163",
+              "profitLossDownsideDeviation": "172.0583",
+              "profitFactor": "1.3286",
+              "sharpeRatio": "0.0853",
+              "sortinoRatio": "0.2904",
+              "profitToMaxDrawdownRatio": "1.0359",
+              "maximumEndTradeDrawdown": "1102.70",
+              "averageEndTradeDrawdown": "-339.1744",
+              "maximumDrawdownDuration": "26.00:30:00",
+              "totalFees": "68"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0057",
+              "averageLossRate": "-0.0023",
+              "profitLossRatio": "2.4322",
+              "winRate": "0.3529",
+              "lossRate": "0.6471",
+              "expectancy": "0.2113",
+              "startEquity": "100000",
+              "endEquity": "101631.0864",
+              "compoundingAnnualReturn": "0.1023",
+              "drawdown": "0.021",
+              "totalNetProfit": "0.0163",
+              "sharpeRatio": "0.3909",
+              "probabilisticSharpeRatio": "0.3751",
+              "sortinoRatio": "0.6919",
+              "alpha": "-0.0117",
+              "beta": "0.3399",
+              "annualStandardDeviation": "0.0557",
+              "annualVariance": "0.0031",
+              "informationRatio": "-0.9864",
+              "trackingError": "0.0776",
+              "treynorRatio": "0.0641",
+              "portfolioTurnover": "1.1270",
+              "valueAtRisk99": "-0.008",
+              "valueAtRisk95": "-0.005",
+              "drawdownRecovery": "25"
+            },
+            "closedTrades": []
+          },
+          "M12_20241130": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-09T14:30:00Z",
+              "endDateTime": "2024-11-27T15:30:00Z",
+              "totalNumberOfTrades": 48,
+              "numberOfWinningTrades": 17,
+              "numberOfLosingTrades": 31,
+              "totalProfitLoss": "4650.31",
+              "totalProfit": "11818.95",
+              "totalLoss": "-7168.64",
+              "largestProfit": "4356.28",
+              "largestLoss": "-592.39",
+              "averageProfitLoss": "96.8815",
+              "averageProfit": "695.2324",
+              "averageLoss": "-231.2465",
+              "averageTradeDuration": "21:46:15.0000007",
+              "averageWinningTradeDuration": "2.00:40:35.2941177",
+              "averageLosingTradeDuration": "07:00:58.0645164",
+              "medianTradeDuration": "18:30:00",
+              "medianWinningTradeDuration": "1.01:00:00",
+              "medianLosingTradeDuration": "02:00:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 6,
+              "profitLossRatio": "3.0065",
+              "winLossRatio": "0.5484",
+              "winRate": "0.3542",
+              "lossRate": "0.6458",
+              "averageMAE": "-230.0081",
+              "averageMFE": "420.8554",
+              "largestMAE": "-900.15",
+              "largestMFE": "4579.72",
+              "maximumClosedTradeDrawdown": "-1818.13",
+              "maximumIntraTradeDrawdown": "-4621.07",
+              "profitLossStandardDeviation": "809.1047",
+              "profitLossDownsideDeviation": "165.5309",
+              "profitFactor": "1.6487",
+              "sharpeRatio": "0.1197",
+              "sortinoRatio": "0.5853",
+              "profitToMaxDrawdownRatio": "2.5577",
+              "maximumEndTradeDrawdown": "1102.70",
+              "averageEndTradeDrawdown": "-323.9740",
+              "maximumDrawdownDuration": "26.00:30:00",
+              "totalFees": "96"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0069",
+              "averageLossRate": "-0.0023",
+              "profitLossRatio": "3.0144",
+              "winRate": "0.3542",
+              "lossRate": "0.6458",
+              "expectancy": "0.4218",
+              "startEquity": "100000",
+              "endEquity": "104869.8991",
+              "compoundingAnnualReturn": "0.2126",
+              "drawdown": "0.022",
+              "totalNetProfit": "0.0487",
+              "sharpeRatio": "1.4559",
+              "probabilisticSharpeRatio": "0.5808",
+              "sortinoRatio": "3.3667",
+              "alpha": "0.0269",
+              "beta": "0.3976",
+              "annualStandardDeviation": "0.0661",
+              "annualVariance": "0.0044",
+              "informationRatio": "-0.9670",
+              "trackingError": "0.0808",
+              "treynorRatio": "0.2420",
+              "portfolioTurnover": "1.0719",
+              "valueAtRisk99": "-0.009",
+              "valueAtRisk95": "-0.006",
+              "drawdownRecovery": "25"
+            },
+            "closedTrades": []
+          },
+          "M12_20241231": {
+            "tradeStatistics": {
+              "startDateTime": "2024-09-09T14:30:00Z",
+              "endDateTime": "2024-12-27T15:00:00Z",
+              "totalNumberOfTrades": 59,
+              "numberOfWinningTrades": 20,
+              "numberOfLosingTrades": 39,
+              "totalProfitLoss": "4080.69",
+              "totalProfit": "13707.46",
+              "totalLoss": "-9626.77",
+              "largestProfit": "4356.28",
+              "largestLoss": "-939.29",
+              "averageProfitLoss": "69.1642",
+              "averageProfit": "685.3730",
+              "averageLoss": "-246.8403",
+              "averageTradeDuration": "22:42:12.2033905",
+              "averageWinningTradeDuration": "2.05:16:30",
+              "averageLosingTradeDuration": "07:01:32.3076927",
+              "medianTradeDuration": "03:30:00",
+              "medianWinningTradeDuration": "1.23:30:00",
+              "medianLosingTradeDuration": "02:00:00",
+              "maxConsecutiveWinningTrades": 3,
+              "maxConsecutiveLosingTrades": 7,
+              "profitLossRatio": "2.7766",
+              "winLossRatio": "0.5128",
+              "winRate": "0.3390",
+              "lossRate": "0.6610",
+              "averageMAE": "-236.6525",
+              "averageMFE": "410.4769",
+              "largestMAE": "-939.29",
+              "largestMFE": "4579.72",
+              "maximumClosedTradeDrawdown": "-2595.31",
+              "maximumIntraTradeDrawdown": "-4621.07",
+              "profitLossStandardDeviation": "760.1825",
+              "profitLossDownsideDeviation": "194.0358",
+              "profitFactor": "1.4239",
+              "sharpeRatio": "0.0910",
+              "sortinoRatio": "0.3565",
+              "profitToMaxDrawdownRatio": "1.5723",
+              "maximumEndTradeDrawdown": "1102.70",
+              "averageEndTradeDrawdown": "-341.3127",
+              "maximumDrawdownDuration": "26.00:30:00",
+              "totalFees": "118"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0067",
+              "averageLossRate": "-0.0024",
+              "profitLossRatio": "2.7884",
+              "winRate": "0.3390",
+              "lossRate": "0.6610",
+              "expectancy": "0.2842",
+              "startEquity": "100000",
+              "endEquity": "103962.6744",
+              "compoundingAnnualReturn": "0.1236",
+              "drawdown": "0.027",
+              "totalNetProfit": "0.0396",
+              "sharpeRatio": "0.5807",
+              "probabilisticSharpeRatio": "0.3670",
+              "sortinoRatio": "1.0438",
+              "alpha": "0.0158",
+              "beta": "0.3804",
+              "annualStandardDeviation": "0.0638",
+              "annualVariance": "0.0041",
+              "informationRatio": "-0.2291",
+              "trackingError": "0.0823",
+              "treynorRatio": "0.0974",
+              "portfolioTurnover": "0.9623",
+              "valueAtRisk99": "-0.009",
+              "valueAtRisk95": "-0.006",
+              "drawdownRecovery": "25"
+            },
+            "closedTrades": []
+          }
+        },
+        "runtimeStatistics": {
+          "Equity": "$103,962.67",
+          "Fees": "-$118.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$3,962.67",
+          "Probabilistic Sharpe Ratio": "36.698%",
+          "Return": "3.96 %",
+          "Unrealized": "$0.00",
+          "Volume": "$12,085,105.21"
+        },
+        "statistics": {
+          "Total Orders": "118",
+          "Average Win": "0.67%",
+          "Average Loss": "-0.24%",
+          "Compounding Annual Return": "12.361%",
+          "Drawdown": "2.700%",
+          "Expectancy": "0.284",
+          "Start Equity": "100000",
+          "End Equity": "103962.67",
+          "Net Profit": "3.963%",
+          "Sharpe Ratio": "0.581",
+          "Sortino Ratio": "1.044",
+          "Probabilistic Sharpe Ratio": "36.698%",
+          "Loss Rate": "66%",
+          "Win Rate": "34%",
+          "Profit-Loss Ratio": "2.79",
+          "Alpha": "0.016",
+          "Beta": "0.38",
+          "Annual Standard Deviation": "0.064",
+          "Annual Variance": "0.004",
+          "Information Ratio": "-0.229",
+          "Tracking Error": "0.082",
+          "Treynor Ratio": "0.097",
+          "Total Fees": "$118.00",
+          "Estimated Strategy Capacity": "$16000000.00",
+          "Lowest Capacity Asset": "SPY R735QTJ8XC9X",
+          "Portfolio Turnover": "96.23%",
+          "Drawdown Recovery": "25"
+        },
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": "2024-09-09T14:30:00Z",
+            "endDateTime": "2024-12-27T15:00:00Z",
+            "totalNumberOfTrades": 59,
+            "numberOfWinningTrades": 20,
+            "numberOfLosingTrades": 39,
+            "totalProfitLoss": "4080.69",
+            "totalProfit": "13707.46",
+            "totalLoss": "-9626.77",
+            "largestProfit": "4356.28",
+            "largestLoss": "-939.29",
+            "averageProfitLoss": "69.1642",
+            "averageProfit": "685.3730",
+            "averageLoss": "-246.8403",
+            "averageTradeDuration": "22:42:12.2033905",
+            "averageWinningTradeDuration": "2.05:16:30",
+            "averageLosingTradeDuration": "07:01:32.3076927",
+            "medianTradeDuration": "03:30:00",
+            "medianWinningTradeDuration": "1.23:30:00",
+            "medianLosingTradeDuration": "02:00:00",
+            "maxConsecutiveWinningTrades": 3,
+            "maxConsecutiveLosingTrades": 7,
+            "profitLossRatio": "2.7766",
+            "winLossRatio": "0.5128",
+            "winRate": "0.3390",
+            "lossRate": "0.6610",
+            "averageMAE": "-236.6525",
+            "averageMFE": "410.4769",
+            "largestMAE": "-939.29",
+            "largestMFE": "4579.72",
+            "maximumClosedTradeDrawdown": "-2595.31",
+            "maximumIntraTradeDrawdown": "-4621.07",
+            "profitLossStandardDeviation": "760.1825",
+            "profitLossDownsideDeviation": "194.0358",
+            "profitFactor": "1.4239",
+            "sharpeRatio": "0.0910",
+            "sortinoRatio": "0.3565",
+            "profitToMaxDrawdownRatio": "1.5723",
+            "maximumEndTradeDrawdown": "1102.70",
+            "averageEndTradeDrawdown": "-341.3127",
+            "maximumDrawdownDuration": "26.00:30:00",
+            "totalFees": "118"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0067",
+            "averageLossRate": "-0.0024",
+            "profitLossRatio": "2.7884",
+            "winRate": "0.3390",
+            "lossRate": "0.6610",
+            "expectancy": "0.2842",
+            "startEquity": "100000",
+            "endEquity": "103962.6744",
+            "compoundingAnnualReturn": "0.1236",
+            "drawdown": "0.027",
+            "totalNetProfit": "0.0396",
+            "sharpeRatio": "0.5807",
+            "probabilisticSharpeRatio": "0.3670",
+            "sortinoRatio": "1.0438",
+            "alpha": "0.0158",
+            "beta": "0.3804",
+            "annualStandardDeviation": "0.0638",
+            "annualVariance": "0.0041",
+            "informationRatio": "-0.2291",
+            "trackingError": "0.0823",
+            "treynorRatio": "0.0974",
+            "portfolioTurnover": "0.9623",
+            "valueAtRisk99": "-0.009",
+            "valueAtRisk95": "-0.006",
+            "drawdownRecovery": "25"
+          },
+          "closedTrades": [
+            {
+              "id": "d5cc8dcb-aba4-44b3-b216-ff91f02c1113",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-09-09T14:30:00Z",
+              "entryPrice": 530.83523285,
+              "direction": 0,
+              "quantity": 187,
+              "exitTime": "2024-09-09T15:30:00Z",
+              "exitPrice": 530.29928172,
+              "profitLoss": -100.22,
+              "totalFees": 2,
+              "mae": -364.45,
+              "mfe": 0,
+              "duration": "01:00:00",
+              "endTradeDrawdown": 364.45,
+              "isWin": false,
+              "orderIds": [
+                1,
+                2
+              ]
+            },
+            {
+              "id": "05e83236-9386-4d8c-8077-0ecf4d9b3c32",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-09-09T16:30:00Z",
+              "entryPrice": 532.940059106,
+              "direction": 0,
+              "quantity": 186,
+              "exitTime": "2024-09-09T18:30:00Z",
+              "exitPrice": 531.039868736,
+              "profitLoss": -353.44,
+              "totalFees": 2,
+              "mae": -357.06,
+              "mfe": 141.37,
+              "duration": "02:00:00",
+              "endTradeDrawdown": 498.43,
+              "isWin": false,
+              "orderIds": [
+                3,
+                4
+              ]
+            },
+            {
+              "id": "c1155afe-98cf-4cb6-9044-76631da17a33",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-09-09T19:30:00Z",
+              "entryPrice": 531.653776394,
+              "direction": 0,
+              "quantity": 186,
+              "exitTime": "2024-09-10T16:00:00Z",
+              "exitPrice": 530.25055889,
+              "profitLoss": -261,
+              "totalFees": 2,
+              "mae": -261,
+              "mfe": 549.18,
+              "duration": "20:30:00",
+              "endTradeDrawdown": 810.18,
+              "isWin": false,
+              "orderIds": [
+                5,
+                6
+              ]
+            },
+            {
+              "id": "a262e34f-770a-4679-a58d-4b04a830b9df",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-09-10T18:00:00Z",
+              "entryPrice": 533.0277602,
+              "direction": 0,
+              "quantity": 185,
+              "exitTime": "2024-09-11T14:00:00Z",
+              "exitPrice": 530.767020888,
+              "profitLoss": -418.24,
+              "totalFees": 2,
+              "mae": -421.84,
+              "mfe": 355.14,
+              "duration": "20:00:00",
+              "endTradeDrawdown": 776.98,
+              "isWin": false,
+              "orderIds": [
+                7,
+                8
+              ]
+            },
+            {
+              "id": "86029dee-df49-49b4-b172-2e3396eabadd",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-09-11T17:00:00Z",
+              "entryPrice": 533.349330878,
+              "direction": 0,
+              "quantity": 184,
+              "exitTime": "2024-09-16T14:30:00Z",
+              "exitPrice": 547.118402636,
+              "profitLoss": 2533.51,
+              "totalFees": 2,
+              "mae": 0,
+              "mfe": 2802.46,
+              "duration": "4.21:30:00",
+              "endTradeDrawdown": 441.08,
+              "isWin": true,
+              "orderIds": [
+                9,
+                10
+              ]
+            },
+            {
+              "id": "b6bf270a-e78e-423f-af3e-b4b069ed3d65",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-09-16T16:30:00Z",
+              "entryPrice": 547.050190674,
+              "direction": 0,
+              "quantity": 184,
+              "exitTime": "2024-09-17T16:30:00Z",
+              "exitPrice": 549.320674552,
+              "profitLoss": 417.77,
+              "totalFees": 2,
+              "mae": -100.41,
+              "mfe": 901.88,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 606.93,
+              "isWin": true,
+              "orderIds": [
+                11,
+                12
+              ]
+            },
+            {
+              "id": "0a87ad7e-c46a-47d6-a9b4-851caf07424e",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-09-18T14:00:00Z",
+              "entryPrice": 548.638554932,
+              "direction": 0,
+              "quantity": 185,
+              "exitTime": "2024-09-18T15:00:00Z",
+              "exitPrice": 548.414429914,
+              "profitLoss": -41.46,
+              "totalFees": 2,
+              "mae": -118.98,
+              "mfe": 52.28,
+              "duration": "01:00:00",
+              "endTradeDrawdown": 149.63,
+              "isWin": false,
+              "orderIds": [
+                13,
+                14
+              ]
+            },
+            {
+              "id": "cbe52050-91da-43af-b556-5226769291a1",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-09-18T17:00:00Z",
+              "entryPrice": 549.232973458,
+              "direction": 0,
+              "quantity": 184,
+              "exitTime": "2024-09-19T14:00:00Z",
+              "exitPrice": 555.00175653,
+              "profitLoss": 1061.46,
+              "totalFees": 2,
+              "mae": -430.32,
+              "mfe": 1256.89,
+              "duration": "21:00:00",
+              "endTradeDrawdown": 1102.7,
+              "isWin": true,
+              "orderIds": [
+                15,
+                16
+              ]
+            },
+            {
+              "id": "4a54aad4-da2a-4f5f-9517-2463ec949881",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-09-19T14:30:00Z",
+              "entryPrice": 556.765522976,
+              "direction": 0,
+              "quantity": 184,
+              "exitTime": "2024-09-20T14:00:00Z",
+              "exitPrice": 554.318663817,
+              "profitLoss": -450.22,
+              "totalFees": 2,
+              "mae": -450.22,
+              "mfe": 258.19,
+              "duration": "23:30:00",
+              "endTradeDrawdown": 708.41,
+              "isWin": false,
+              "orderIds": [
+                17,
+                18
+              ]
+            },
+            {
+              "id": "0634db8d-6dcd-4ec8-9b4c-1d5dcbc1147a",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-09-20T16:30:00Z",
+              "entryPrice": 555.139717365,
+              "direction": 0,
+              "quantity": 183,
+              "exitTime": "2024-09-20T18:30:00Z",
+              "exitPrice": 553.810392573,
+              "profitLoss": -243.27,
+              "totalFees": 2,
+              "mae": -243.27,
+              "mfe": 118.06,
+              "duration": "02:00:00",
+              "endTradeDrawdown": 361.32,
+              "isWin": false,
+              "orderIds": [
+                19,
+                20
+              ]
+            },
+            {
+              "id": "021bead2-1c59-4459-9bf3-a5c147737863",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-09-20T19:30:00Z",
+              "entryPrice": 555.423176328,
+              "direction": 0,
+              "quantity": 183,
+              "exitTime": "2024-09-23T16:30:00Z",
+              "exitPrice": 556.107387618,
+              "profitLoss": 125.21,
+              "totalFees": 2,
+              "mae": -60.82,
+              "mfe": 330.91,
+              "duration": "2.21:00:00",
+              "endTradeDrawdown": 293.35,
+              "isWin": true,
+              "orderIds": [
+                21,
+                22
+              ]
+            },
+            {
+              "id": "63cd38c2-c8e8-432e-86b2-b391bd8080cd",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-09-23T18:00:00Z",
+              "entryPrice": 556.45926771,
+              "direction": 0,
+              "quantity": 183,
+              "exitTime": "2024-09-24T14:30:00Z",
+              "exitPrice": 555.432950775,
+              "profitLoss": -187.82,
+              "totalFees": 2,
+              "mae": -209.28,
+              "mfe": 157.41,
+              "duration": "20:30:00",
+              "endTradeDrawdown": 366.69,
+              "isWin": false,
+              "orderIds": [
+                23,
+                24
+              ]
+            },
+            {
+              "id": "847fb549-e8da-41fa-b1ef-47c81777d4dd",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-09-24T15:30:00Z",
+              "entryPrice": 557.016411189,
+              "direction": 0,
+              "quantity": 182,
+              "exitTime": "2024-09-25T15:30:00Z",
+              "exitPrice": 557.876562525,
+              "profitLoss": 156.55,
+              "totalFees": 2,
+              "mae": -19.57,
+              "mfe": 343.34,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 222.37,
+              "isWin": true,
+              "orderIds": [
+                25,
+                26
+              ]
+            },
+            {
+              "id": "8508e047-f4ac-4871-809e-464add495b50",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-09-26T14:30:00Z",
+              "entryPrice": 559.723933008,
+              "direction": 0,
+              "quantity": 182,
+              "exitTime": "2024-09-26T16:30:00Z",
+              "exitPrice": 558.335961534,
+              "profitLoss": -252.61,
+              "totalFees": 2,
+              "mae": -297.08,
+              "mfe": 130.75,
+              "duration": "02:00:00",
+              "endTradeDrawdown": 427.84,
+              "isWin": false,
+              "orderIds": [
+                27,
+                28
+              ]
+            },
+            {
+              "id": "7a38aa13-e595-4b8c-922c-d50959bfb5b1",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-09-26T18:00:00Z",
+              "entryPrice": 558.658518285,
+              "direction": 0,
+              "quantity": 182,
+              "exitTime": "2024-09-27T16:00:00Z",
+              "exitPrice": 559.518669621,
+              "profitLoss": 156.55,
+              "totalFees": 2,
+              "mae": 0,
+              "mfe": 471.42,
+              "duration": "22:00:00",
+              "endTradeDrawdown": 318.43,
+              "isWin": true,
+              "orderIds": [
+                29,
+                30
+              ]
+            },
+            {
+              "id": "e8e71aac-e9a9-40f9-a87c-30928730446e",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-01T19:00:00Z",
+              "entryPrice": 557.544231327,
+              "direction": 0,
+              "quantity": 182,
+              "exitTime": "2024-10-02T14:00:00Z",
+              "exitPrice": 554.289340476,
+              "profitLoss": -592.39,
+              "totalFees": 2,
+              "mae": -900.15,
+              "mfe": 5.34,
+              "duration": "19:00:00",
+              "endTradeDrawdown": 905.49,
+              "isWin": false,
+              "orderIds": [
+                31,
+                32
+              ]
+            },
+            {
+              "id": "d3dc67f3-9382-435d-a20e-df0c9b69eefb",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-02T16:00:00Z",
+              "entryPrice": 556.674305544,
+              "direction": 0,
+              "quantity": 181,
+              "exitTime": "2024-10-02T17:00:00Z",
+              "exitPrice": 555.051747342,
+              "profitLoss": -293.68,
+              "totalFees": 2,
+              "mae": -293.68,
+              "mfe": 33.61,
+              "duration": "01:00:00",
+              "endTradeDrawdown": 327.3,
+              "isWin": false,
+              "orderIds": [
+                33,
+                34
+              ]
+            },
+            {
+              "id": "c3a847ba-920c-4bb1-a229-cf9aa1ec245c",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-04T14:00:00Z",
+              "entryPrice": 557.280321258,
+              "direction": 0,
+              "quantity": 181,
+              "exitTime": "2024-10-07T14:00:00Z",
+              "exitPrice": 557.837464737,
+              "profitLoss": 100.84,
+              "totalFees": 2,
+              "mae": -309.61,
+              "mfe": 542.25,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 452.02,
+              "isWin": true,
+              "orderIds": [
+                35,
+                36
+              ]
+            },
+            {
+              "id": "ef5cd323-a499-4753-b87c-3169390d3898",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-07T14:30:00Z",
+              "entryPrice": 558.60964605,
+              "direction": 0,
+              "quantity": 180,
+              "exitTime": "2024-10-07T16:00:00Z",
+              "exitPrice": 558.238217064,
+              "profitLoss": -66.86,
+              "totalFees": 2,
+              "mae": -142.51,
+              "mfe": 40.47,
+              "duration": "01:30:00",
+              "endTradeDrawdown": 151.31,
+              "isWin": false,
+              "orderIds": [
+                37,
+                38
+              ]
+            },
+            {
+              "id": "8c7d7336-2a75-417c-bf7b-5d4c98b71958",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-08T14:30:00Z",
+              "entryPrice": 557.984081442,
+              "direction": 0,
+              "quantity": 181,
+              "exitTime": "2024-10-10T14:00:00Z",
+              "exitPrice": 562.402131486,
+              "profitLoss": 799.67,
+              "totalFees": 2,
+              "mae": -21.23,
+              "mfe": 1190.65,
+              "duration": "1.23:30:00",
+              "endTradeDrawdown": 516.6,
+              "isWin": true,
+              "orderIds": [
+                39,
+                40
+              ]
+            },
+            {
+              "id": "66c23b29-4731-4832-b5db-16fc46b8710e",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-10T14:30:00Z",
+              "entryPrice": 562.969049412,
+              "direction": 0,
+              "quantity": 180,
+              "exitTime": "2024-10-10T15:00:00Z",
+              "exitPrice": 562.441229274,
+              "profitLoss": -95.01,
+              "totalFees": 2,
+              "mae": -116.12,
+              "mfe": 43.99,
+              "duration": "00:30:00",
+              "endTradeDrawdown": 160.11,
+              "isWin": false,
+              "orderIds": [
+                41,
+                42
+              ]
+            },
+            {
+              "id": "fdb17d6d-57bb-4200-acd1-6dc9734b50f9",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-10T15:30:00Z",
+              "entryPrice": 563.320929504,
+              "direction": 0,
+              "quantity": 180,
+              "exitTime": "2024-10-10T17:00:00Z",
+              "exitPrice": 563.20363614,
+              "profitLoss": -21.11,
+              "totalFees": 2,
+              "mae": -70.38,
+              "mfe": 212.71,
+              "duration": "01:30:00",
+              "endTradeDrawdown": 261.97,
+              "isWin": false,
+              "orderIds": [
+                43,
+                44
+              ]
+            },
+            {
+              "id": "3c931ab1-3dbb-4426-9853-c348cbeb6b0b",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-10T17:30:00Z",
+              "entryPrice": 563.369801739,
+              "direction": 0,
+              "quantity": 180,
+              "exitTime": "2024-10-10T18:00:00Z",
+              "exitPrice": 563.213410587,
+              "profitLoss": -28.15,
+              "totalFees": 2,
+              "mae": -191.77,
+              "mfe": 45.74,
+              "duration": "00:30:00",
+              "endTradeDrawdown": 237.52,
+              "isWin": false,
+              "orderIds": [
+                45,
+                46
+              ]
+            },
+            {
+              "id": "2e48e416-8ec2-426f-8752-e1416a2845f9",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-11T14:00:00Z",
+              "entryPrice": 564.37656978,
+              "direction": 0,
+              "quantity": 180,
+              "exitTime": "2024-10-15T14:30:00Z",
+              "exitPrice": 570.084846828,
+              "profitLoss": 1027.49,
+              "totalFees": 2,
+              "mae": -51.9,
+              "mfe": 1361.78,
+              "duration": "4.00:30:00",
+              "endTradeDrawdown": 334.29,
+              "isWin": true,
+              "orderIds": [
+                47,
+                48
+              ]
+            },
+            {
+              "id": "a4d514e7-d774-48d0-b6fb-acead8f21d56",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-16T17:30:00Z",
+              "entryPrice": 568.071310746,
+              "direction": 0,
+              "quantity": 180,
+              "exitTime": "2024-10-17T18:30:00Z",
+              "exitPrice": 569.498380008,
+              "profitLoss": 256.87,
+              "totalFees": 2,
+              "mae": -2.64,
+              "mfe": 751.26,
+              "duration": "1.01:00:00",
+              "endTradeDrawdown": 536.62,
+              "isWin": true,
+              "orderIds": [
+                49,
+                50
+              ]
+            },
+            {
+              "id": "ea8647c5-550e-4045-8dd2-ac396bc477e0",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-18T14:30:00Z",
+              "entryPrice": 570.329208003,
+              "direction": 0,
+              "quantity": 180,
+              "exitTime": "2024-10-21T14:00:00Z",
+              "exitPrice": 570.857028141,
+              "profitLoss": 95.01,
+              "totalFees": 2,
+              "mae": -49.26,
+              "mfe": 320.21,
+              "duration": "2.23:30:00",
+              "endTradeDrawdown": 260.39,
+              "isWin": true,
+              "orderIds": [
+                51,
+                52
+              ]
+            },
+            {
+              "id": "7379dba8-e770-431b-9329-cef8541ffb5c",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-22T18:00:00Z",
+              "entryPrice": 570.808155906,
+              "direction": 0,
+              "quantity": 180,
+              "exitTime": "2024-10-23T14:00:00Z",
+              "exitPrice": 568.18860411,
+              "profitLoss": -471.52,
+              "totalFees": 2,
+              "mae": -513.74,
+              "mfe": 82.69,
+              "duration": "20:00:00",
+              "endTradeDrawdown": 596.44,
+              "isWin": false,
+              "orderIds": [
+                53,
+                54
+              ]
+            },
+            {
+              "id": "1ff91947-d906-4841-829f-7c219e83ee1b",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-25T14:00:00Z",
+              "entryPrice": 570.153267957,
+              "direction": 0,
+              "quantity": 179,
+              "exitTime": "2024-10-25T17:30:00Z",
+              "exitPrice": 567.348001668,
+              "profitLoss": -502.14,
+              "totalFees": 2,
+              "mae": -542.38,
+              "mfe": 185.46,
+              "duration": "03:30:00",
+              "endTradeDrawdown": 727.84,
+              "isWin": false,
+              "orderIds": [
+                55,
+                56
+              ]
+            },
+            {
+              "id": "91692f96-9219-4eee-a896-d06669a0394f",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-28T14:30:00Z",
+              "entryPrice": 569.273567727,
+              "direction": 0,
+              "quantity": 179,
+              "exitTime": "2024-10-28T16:00:00Z",
+              "exitPrice": 567.79762623,
+              "profitLoss": -264.19,
+              "totalFees": 2,
+              "mae": -267.69,
+              "mfe": 10.5,
+              "duration": "01:30:00",
+              "endTradeDrawdown": 278.19,
+              "isWin": false,
+              "orderIds": [
+                57,
+                58
+              ]
+            },
+            {
+              "id": "8d1ed16a-412b-4768-a409-133218df1c18",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-28T16:30:00Z",
+              "entryPrice": 568.423190838,
+              "direction": 0,
+              "quantity": 179,
+              "exitTime": "2024-10-28T17:00:00Z",
+              "exitPrice": 567.905145147,
+              "profitLoss": -92.73,
+              "totalFees": 2,
+              "mae": -127.72,
+              "mfe": 14,
+              "duration": "00:30:00",
+              "endTradeDrawdown": 127.72,
+              "isWin": false,
+              "orderIds": [
+                59,
+                60
+              ]
+            },
+            {
+              "id": "5f9944b0-0396-4117-9906-3896b7e16904",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-28T17:30:00Z",
+              "entryPrice": 568.237476345,
+              "direction": 0,
+              "quantity": 178,
+              "exitTime": "2024-10-28T19:00:00Z",
+              "exitPrice": 568.032212958,
+              "profitLoss": -36.54,
+              "totalFees": 2,
+              "mae": -77.42,
+              "mfe": 74.81,
+              "duration": "01:30:00",
+              "endTradeDrawdown": 152.24,
+              "isWin": false,
+              "orderIds": [
+                61,
+                62
+              ]
+            },
+            {
+              "id": "cfaa3d37-168f-4ab5-8aca-c8836593e049",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-28T19:30:00Z",
+              "entryPrice": 568.364544156,
+              "direction": 0,
+              "quantity": 178,
+              "exitTime": "2024-10-29T14:00:00Z",
+              "exitPrice": 566.829955977,
+              "profitLoss": -273.16,
+              "totalFees": 2,
+              "mae": -515,
+              "mfe": 37.41,
+              "duration": "18:30:00",
+              "endTradeDrawdown": 552.4,
+              "isWin": false,
+              "orderIds": [
+                63,
+                64
+              ]
+            },
+            {
+              "id": "d5c81ee2-0551-46e1-8fd9-a400fd8bc236",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-29T15:30:00Z",
+              "entryPrice": 567.934468488,
+              "direction": 0,
+              "quantity": 178,
+              "exitTime": "2024-10-30T14:00:00Z",
+              "exitPrice": 568.716424248,
+              "profitLoss": 139.19,
+              "totalFees": 2,
+              "mae": -274.9,
+              "mfe": 313.17,
+              "duration": "22:30:00",
+              "endTradeDrawdown": 588.07,
+              "isWin": true,
+              "orderIds": [
+                65,
+                66
+              ]
+            },
+            {
+              "id": "771c50f7-3166-4475-95e9-e44e60b6a4f6",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-10-30T14:30:00Z",
+              "entryPrice": 569.566801137,
+              "direction": 0,
+              "quantity": 178,
+              "exitTime": "2024-10-30T17:00:00Z",
+              "exitPrice": 568.863040953,
+              "profitLoss": -125.27,
+              "totalFees": 2,
+              "mae": -184.42,
+              "mfe": 95.69,
+              "duration": "02:30:00",
+              "endTradeDrawdown": 220.96,
+              "isWin": false,
+              "orderIds": [
+                67,
+                68
+              ]
+            },
+            {
+              "id": "7fd5cfd9-986b-4319-a6ec-861febf4766f",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-11-01T15:00:00Z",
+              "entryPrice": 561.493107915,
+              "direction": 0,
+              "quantity": 180,
+              "exitTime": "2024-11-01T16:30:00Z",
+              "exitPrice": 560.427693192,
+              "profitLoss": -191.77,
+              "totalFees": 2,
+              "mae": -191.77,
+              "mfe": 138.99,
+              "duration": "01:30:00",
+              "endTradeDrawdown": 330.77,
+              "isWin": false,
+              "orderIds": [
+                69,
+                70
+              ]
+            },
+            {
+              "id": "d5e32cb5-96db-4791-8253-63068cde59e4",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-11-05T15:30:00Z",
+              "entryPrice": 561.092355588,
+              "direction": 0,
+              "quantity": 180,
+              "exitTime": "2024-11-11T17:30:00Z",
+              "exitPrice": 585.29388636,
+              "profitLoss": 4356.28,
+              "totalFees": 2,
+              "mae": -41.35,
+              "mfe": 4579.72,
+              "duration": "6.02:00:00",
+              "endTradeDrawdown": 585.88,
+              "isWin": true,
+              "orderIds": [
+                71,
+                72
+              ]
+            },
+            {
+              "id": "48dcab8b-0539-4bc2-9f72-8e2ffa6e45c7",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-11-12T15:00:00Z",
+              "entryPrice": 585.440503065,
+              "direction": 0,
+              "quantity": 180,
+              "exitTime": "2024-11-12T15:30:00Z",
+              "exitPrice": 584.463058365,
+              "profitLoss": -175.94,
+              "totalFees": 2,
+              "mae": -195.29,
+              "mfe": 3.52,
+              "duration": "00:30:00",
+              "endTradeDrawdown": 198.81,
+              "isWin": false,
+              "orderIds": [
+                73,
+                74
+              ]
+            },
+            {
+              "id": "2a500728-ce71-4f7c-bdb3-d0231ff26b98",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-11-12T19:30:00Z",
+              "entryPrice": 584.502156153,
+              "direction": 0,
+              "quantity": 180,
+              "exitTime": "2024-11-13T15:00:00Z",
+              "exitPrice": 583.622455923,
+              "profitLoss": -158.35,
+              "totalFees": 2,
+              "mae": -249.83,
+              "mfe": 54.54,
+              "duration": "19:30:00",
+              "endTradeDrawdown": 304.38,
+              "isWin": false,
+              "orderIds": [
+                75,
+                76
+              ]
+            },
+            {
+              "id": "9e35c4af-79d7-4bcb-a44f-ca9622f894f7",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-11-13T17:00:00Z",
+              "entryPrice": 584.599900623,
+              "direction": 0,
+              "quantity": 179,
+              "exitTime": "2024-11-13T19:30:00Z",
+              "exitPrice": 584.433735024,
+              "profitLoss": -29.74,
+              "totalFees": 2,
+              "mae": -30.62,
+              "mfe": 188.96,
+              "duration": "02:30:00",
+              "endTradeDrawdown": 219.58,
+              "isWin": false,
+              "orderIds": [
+                77,
+                78
+              ]
+            },
+            {
+              "id": "36c144d5-7327-43cd-94d9-e4333de3858b",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-11-18T17:00:00Z",
+              "entryPrice": 575.040491457,
+              "direction": 0,
+              "quantity": 182,
+              "exitTime": "2024-11-18T17:30:00Z",
+              "exitPrice": 575.069814798,
+              "profitLoss": 5.34,
+              "totalFees": 2,
+              "mae": -80.05,
+              "mfe": 28.46,
+              "duration": "00:30:00",
+              "endTradeDrawdown": 99.62,
+              "isWin": true,
+              "orderIds": [
+                79,
+                80
+              ]
+            },
+            {
+              "id": "9b1e054a-9618-4121-8ad8-03a8438c7f04",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-11-18T18:30:00Z",
+              "entryPrice": 574.884100305,
+              "direction": 0,
+              "quantity": 182,
+              "exitTime": "2024-11-18T19:00:00Z",
+              "exitPrice": 575.079589245,
+              "profitLoss": 35.58,
+              "totalFees": 2,
+              "mae": -176.12,
+              "mfe": 39.14,
+              "duration": "00:30:00",
+              "endTradeDrawdown": 193.91,
+              "isWin": true,
+              "orderIds": [
+                81,
+                82
+              ]
+            },
+            {
+              "id": "b56397be-30cc-4c8d-b2b1-cdb1f8ac5c4c",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-11-19T17:00:00Z",
+              "entryPrice": 575.548762701,
+              "direction": 0,
+              "quantity": 182,
+              "exitTime": "2024-11-20T15:00:00Z",
+              "exitPrice": 574.170565674,
+              "profitLoss": -250.83,
+              "totalFees": 2,
+              "mae": -250.83,
+              "mfe": 390.48,
+              "duration": "22:00:00",
+              "endTradeDrawdown": 641.31,
+              "isWin": false,
+              "orderIds": [
+                83,
+                84
+              ]
+            },
+            {
+              "id": "cc8a40f1-7741-4146-8e9c-c45207992eba",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-11-21T15:00:00Z",
+              "entryPrice": 576.477335166,
+              "direction": 0,
+              "quantity": 182,
+              "exitTime": "2024-11-21T15:30:00Z",
+              "exitPrice": 574.434475743,
+              "profitLoss": -371.8,
+              "totalFees": 2,
+              "mae": -371.8,
+              "mfe": 227.71,
+              "duration": "00:30:00",
+              "endTradeDrawdown": 599.51,
+              "isWin": false,
+              "orderIds": [
+                85,
+                86
+              ]
+            },
+            {
+              "id": "5b142a1d-0a40-4c69-b461-ff20d807957f",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-11-21T16:30:00Z",
+              "entryPrice": 579.380345925,
+              "direction": 0,
+              "quantity": 180,
+              "exitTime": "2024-11-22T15:30:00Z",
+              "exitPrice": 580.299143943,
+              "profitLoss": 165.38,
+              "totalFees": 2,
+              "mae": -283.26,
+              "mfe": 578.84,
+              "duration": "23:00:00",
+              "endTradeDrawdown": 482.08,
+              "isWin": true,
+              "orderIds": [
+                87,
+                88
+              ]
+            },
+            {
+              "id": "56fbbf26-05a7-4505-a865-36126e045ef8",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-11-22T16:00:00Z",
+              "entryPrice": 582.36155226,
+              "direction": 0,
+              "quantity": 179,
+              "exitTime": "2024-11-22T19:30:00Z",
+              "exitPrice": 581.560047606,
+              "profitLoss": -143.47,
+              "totalFees": 2,
+              "mae": -342.93,
+              "mfe": 43.74,
+              "duration": "03:30:00",
+              "endTradeDrawdown": 346.43,
+              "isWin": false,
+              "orderIds": [
+                89,
+                90
+              ]
+            },
+            {
+              "id": "41dffeda-8299-4a18-9ecf-8d593b9efa58",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-11-22T20:00:00Z",
+              "entryPrice": 581.97057438,
+              "direction": 0,
+              "quantity": 179,
+              "exitTime": "2024-11-22T20:30:00Z",
+              "exitPrice": 581.325460878,
+              "profitLoss": -115.48,
+              "totalFees": 2,
+              "mae": -199.46,
+              "mfe": 0,
+              "duration": "00:30:00",
+              "endTradeDrawdown": 199.46,
+              "isWin": false,
+              "orderIds": [
+                91,
+                92
+              ]
+            },
+            {
+              "id": "f5448de5-fdda-4669-8464-386660344c0c",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-11-25T15:00:00Z",
+              "entryPrice": 585.743510922,
+              "direction": 0,
+              "quantity": 178,
+              "exitTime": "2024-11-25T17:30:00Z",
+              "exitPrice": 582.596138988,
+              "profitLoss": -560.23,
+              "totalFees": 2,
+              "mae": -560.23,
+              "mfe": 0,
+              "duration": "02:30:00",
+              "endTradeDrawdown": 560.23,
+              "isWin": false,
+              "orderIds": [
+                93,
+                94
+              ]
+            },
+            {
+              "id": "fc74226f-0c6d-4790-86ae-fef55ca034ac",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-11-25T18:30:00Z",
+              "entryPrice": 583.681102605,
+              "direction": 0,
+              "quantity": 178,
+              "exitTime": "2024-11-27T15:30:00Z",
+              "exitPrice": 585.851029839,
+              "profitLoss": 386.25,
+              "totalFees": 2,
+              "mae": -80.03,
+              "mfe": 695.94,
+              "duration": "1.21:00:00",
+              "endTradeDrawdown": 323.61,
+              "isWin": true,
+              "orderIds": [
+                95,
+                96
+              ]
+            },
+            {
+              "id": "81b244d1-5337-4ce3-9750-5992f892af75",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-11-29T15:00:00Z",
+              "entryPrice": 587.170580184,
+              "direction": 0,
+              "quantity": 177,
+              "exitTime": "2024-12-03T15:00:00Z",
+              "exitPrice": 589.741259745,
+              "profitLoss": 455.01,
+              "totalFees": 2,
+              "mae": 0,
+              "mfe": 612.45,
+              "duration": "4.00:00:00",
+              "endTradeDrawdown": 243.94,
+              "isWin": true,
+              "orderIds": [
+                97,
+                98
+              ]
+            },
+            {
+              "id": "6870981d-9aa4-49ee-8ef6-2270f0735d4f",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-12-03T16:30:00Z",
+              "entryPrice": 589.819455321,
+              "direction": 0,
+              "quantity": 177,
+              "exitTime": "2024-12-03T17:00:00Z",
+              "exitPrice": 588.959303985,
+              "profitLoss": -152.25,
+              "totalFees": 2,
+              "mae": -174.74,
+              "mfe": 12.11,
+              "duration": "00:30:00",
+              "endTradeDrawdown": 186.85,
+              "isWin": false,
+              "orderIds": [
+                99,
+                100
+              ]
+            },
+            {
+              "id": "000300f0-eddc-4795-9bc2-18a00060c1ca",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-12-03T18:00:00Z",
+              "entryPrice": 590.112688731,
+              "direction": 0,
+              "quantity": 177,
+              "exitTime": "2024-12-05T18:30:00Z",
+              "exitPrice": 593.621715204,
+              "profitLoss": 621.1,
+              "totalFees": 2,
+              "mae": -86.5,
+              "mfe": 816.6,
+              "duration": "2.00:30:00",
+              "endTradeDrawdown": 249.13,
+              "isWin": true,
+              "orderIds": [
+                101,
+                102
+              ]
+            },
+            {
+              "id": "bd37c495-691c-49e3-8eda-b49529514370",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-12-06T15:30:00Z",
+              "entryPrice": 595.156303383,
+              "direction": 0,
+              "quantity": 176,
+              "exitTime": "2024-12-06T17:00:00Z",
+              "exitPrice": 594.100663107,
+              "profitLoss": -185.79,
+              "totalFees": 2,
+              "mae": -213.32,
+              "mfe": 12.04,
+              "duration": "01:30:00",
+              "endTradeDrawdown": 225.36,
+              "isWin": false,
+              "orderIds": [
+                103,
+                104
+              ]
+            },
+            {
+              "id": "b7ad62b3-e78a-48fe-85e7-d81b404e0aff",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-12-06T18:30:00Z",
+              "entryPrice": 594.354798729,
+              "direction": 0,
+              "quantity": 176,
+              "exitTime": "2024-12-06T19:30:00Z",
+              "exitPrice": 593.426226264,
+              "profitLoss": -163.43,
+              "totalFees": 2,
+              "mae": -163.43,
+              "mfe": 0,
+              "duration": "01:00:00",
+              "endTradeDrawdown": 163.43,
+              "isWin": false,
+              "orderIds": [
+                105,
+                106
+              ]
+            },
+            {
+              "id": "0d6ab0d2-104f-48de-8c32-066fc6f32824",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-12-11T15:30:00Z",
+              "entryPrice": 592.888631679,
+              "direction": 0,
+              "quantity": 176,
+              "exitTime": "2024-12-12T15:00:00Z",
+              "exitPrice": 592.507428246,
+              "profitLoss": -67.09,
+              "totalFees": 2,
+              "mae": -141.06,
+              "mfe": 313.1,
+              "duration": "23:30:00",
+              "endTradeDrawdown": 454.16,
+              "isWin": false,
+              "orderIds": [
+                107,
+                108
+              ]
+            },
+            {
+              "id": "5d4751e6-909b-4c70-94f6-88d115c06cbb",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-12-16T15:30:00Z",
+              "entryPrice": 592.781112762,
+              "direction": 0,
+              "quantity": 176,
+              "exitTime": "2024-12-17T15:00:00Z",
+              "exitPrice": 590.748027786,
+              "profitLoss": -357.82,
+              "totalFees": 2,
+              "mae": -457.6,
+              "mfe": 221.92,
+              "duration": "23:30:00",
+              "endTradeDrawdown": 679.52,
+              "isWin": false,
+              "orderIds": [
+                109,
+                110
+              ]
+            },
+            {
+              "id": "b9817e23-f677-4443-a995-993643adeb66",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-12-18T16:00:00Z",
+              "entryPrice": 592.311939306,
+              "direction": 0,
+              "quantity": 176,
+              "exitTime": "2024-12-18T18:30:00Z",
+              "exitPrice": 591.54953244,
+              "profitLoss": -134.18,
+              "totalFees": 2,
+              "mae": -220.2,
+              "mfe": 44.73,
+              "duration": "02:30:00",
+              "endTradeDrawdown": 254.6,
+              "isWin": false,
+              "orderIds": [
+                111,
+                112
+              ]
+            },
+            {
+              "id": "0839519e-d7cf-49d8-aaef-aba48678b34f",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-12-18T19:00:00Z",
+              "entryPrice": 591.881863638,
+              "direction": 0,
+              "quantity": 176,
+              "exitTime": "2024-12-18T19:30:00Z",
+              "exitPrice": 586.545015576,
+              "profitLoss": -939.29,
+              "totalFees": 2,
+              "mae": -939.29,
+              "mfe": 0,
+              "duration": "00:30:00",
+              "endTradeDrawdown": 939.29,
+              "isWin": false,
+              "orderIds": [
+                113,
+                114
+              ]
+            },
+            {
+              "id": "ba8b1f64-3168-4e59-8d77-4bfa7f84bc18",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-12-20T17:00:00Z",
+              "entryPrice": 582.957918617,
+              "direction": 0,
+              "quantity": 177,
+              "exitTime": "2024-12-20T20:30:00Z",
+              "exitPrice": 580.368781649,
+              "profitLoss": -458.28,
+              "totalFees": 2,
+              "mae": -460.01,
+              "mfe": 211.78,
+              "duration": "03:30:00",
+              "endTradeDrawdown": 671.79,
+              "isWin": false,
+              "orderIds": [
+                115,
+                116
+              ]
+            },
+            {
+              "id": "1f42d0b4-fe9c-4799-b782-a5c8cce48955",
+              "symbols": [
+                {
+                  "value": "SPY",
+                  "id": "SPY R735QTJ8XC9X",
+                  "permtick": "SPY"
+                }
+              ],
+              "entryTime": "2024-12-23T17:30:00Z",
+              "entryPrice": 580.731653118,
+              "direction": 0,
+              "quantity": 177,
+              "exitTime": "2024-12-27T15:00:00Z",
+              "exitPrice": 585.321486834,
+              "profitLoss": 812.4,
+              "totalFees": 2,
+              "mae": -65.96,
+              "mfe": 1772.35,
+              "duration": "3.21:30:00",
+              "endTradeDrawdown": 1007.69,
+              "isWin": true,
+              "orderIds": [
+                117,
+                118
+              ]
+            }
+          ]
+        },
+        "nodeName": "B8-16 node 5591a6cc",
+        "outOfSampleMaxEndDate": "2026-08-20T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "FlatEquityCurveAnalysis",
+            "issue": "The equity curve is flat for several days in a row.",
+            "sample": [
+              {
+                "start": "2024-09-04T04:00:00",
+                "end": "2024-09-07T04:00:00",
+                "trading_days": 4
+              },
+              {
+                "start": "2024-09-28T04:00:00",
+                "end": "2024-10-01T04:00:00",
+                "trading_days": 2
+              },
+              {
+                "start": "2024-10-03T04:00:00",
+                "end": "2024-10-04T04:00:00",
+                "trading_days": 2
+              },
+              {
+                "start": "2024-10-24T04:00:00",
+                "end": "2024-10-25T04:00:00",
+                "trading_days": 2
+              },
+              {
+                "start": "2024-10-31T04:00:00",
+                "end": "2024-11-01T04:00:00",
+                "trading_days": 2
+              }
+            ],
+            "solutions": [
+              "Log how often each entry condition passes individually: when several conditions must align (trend, volume, indicator thresholds), it is common that they are never all true at the same time. Relax the single most restrictive condition and re-run, changing one condition per backtest instead of redesigning the strategy.",
+              "Check if you need to warm-up some data structures, including indicators, RollingWindow objects, and training data. Log how many assets pass IsReady or warm-up gates: they can silently exclude most of the universe.",
+              "Check if the algorithm subscribes to any assets. Is the universe selection actually selecting anything? Log the selection count on each rebalance.",
+              "Check custom data sources actually deliver data by logging the first points received: a reader or date-format error can silently produce no data and therefore no signals.",
+              "Check minimum-history or training-window requirements against the history the data source actually provides: if a model requires more history than exists, the trading logic may never activate.",
+              "Check if there is enough cash to satisfy the minimum order sizes."
+            ]
+          },
+          {
+            "name": "PortfolioMarginUsageAnalysis",
+            "issue": "The algorithm sometimes only utilizes a small proportion of the margin available.",
+            "sample": "Number of days when the 3-day SMA of the margin usage drops below 50%: 56",
+            "solutions": [
+              "Adjust the strategy logic or position sizing to utilize more margin.",
+              "If the algorithm logic leads to periods of time when the portfolio sits in cash, consider holding a \"risk-free\" asset during these periods."
+            ]
+          },
+          {
+            "name": "PerformanceRelativeToBenchmarkAnalysis",
+            "issue": "The strategy has a lower Sharpe ratio than the benchmark.",
+            "sample": {
+              "backtestSharpe": -12.319581196885991,
+              "benchmarkSharpe": -7.181009168482598
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.25172181978615404
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "0.0%",
+          "Used RAM (MB)": "238",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-46475003a3b4037f65b13efe5df4afc1",
+          "LEAN Version": "v2.5.0.0.18271",
+          "Up Time": "0d 00:00:05"
+        }
+      },
+      "success": true
+    },
+    "error": null,
+    "stacktrace": null,
+    "has_initialize_error": false,
+    "trade_statistics": {
+      "startDateTime": "2024-09-09T14:30:00Z",
+      "endDateTime": "2024-12-27T15:00:00Z",
+      "totalNumberOfTrades": 59,
+      "numberOfWinningTrades": 20,
+      "numberOfLosingTrades": 39,
+      "totalProfitLoss": "4080.69",
+      "totalProfit": "13707.46",
+      "totalLoss": "-9626.77",
+      "largestProfit": "4356.28",
+      "largestLoss": "-939.29",
+      "averageProfitLoss": "69.1642",
+      "averageProfit": "685.3730",
+      "averageLoss": "-246.8403",
+      "averageTradeDuration": "22:42:12.2033905",
+      "averageWinningTradeDuration": "2.05:16:30",
+      "averageLosingTradeDuration": "07:01:32.3076927",
+      "medianTradeDuration": "03:30:00",
+      "medianWinningTradeDuration": "1.23:30:00",
+      "medianLosingTradeDuration": "02:00:00",
+      "maxConsecutiveWinningTrades": 3,
+      "maxConsecutiveLosingTrades": 7,
+      "profitLossRatio": "2.7766",
+      "winLossRatio": "0.5128",
+      "winRate": "0.3390",
+      "lossRate": "0.6610",
+      "averageMAE": "-236.6525",
+      "averageMFE": "410.4769",
+      "largestMAE": "-939.29",
+      "largestMFE": "4579.72",
+      "maximumClosedTradeDrawdown": "-2595.31",
+      "maximumIntraTradeDrawdown": "-4621.07",
+      "profitLossStandardDeviation": "760.1825",
+      "profitLossDownsideDeviation": "194.0358",
+      "profitFactor": "1.4239",
+      "sharpeRatio": "0.0910",
+      "sortinoRatio": "0.3565",
+      "profitToMaxDrawdownRatio": "1.5723",
+      "maximumEndTradeDrawdown": "1102.70",
+      "averageEndTradeDrawdown": "-341.3127",
+      "maximumDrawdownDuration": "26.00:30:00",
+      "totalFees": "118"
+    },
+    "total_orders": "118",
+    "finished_at": "2026-11-18T20:45:33.785128+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "statistics": {
+    "Total Orders": "118",
+    "Average Win": "0.67%",
+    "Average Loss": "-0.24%",
+    "Compounding Annual Return": "12.361%",
+    "Drawdown": "2.700%",
+    "Expectancy": "0.284",
+    "Start Equity": "100000",
+    "End Equity": "103962.67",
+    "Net Profit": "3.963%",
+    "Sharpe Ratio": "0.581",
+    "Sortino Ratio": "1.044",
+    "Probabilistic Sharpe Ratio": "36.698%",
+    "Loss Rate": "66%",
+    "Win Rate": "34%",
+    "Profit-Loss Ratio": "2.79",
+    "Alpha": "0.016",
+    "Beta": "0.38",
+    "Annual Standard Deviation": "0.064",
+    "Annual Variance": "0.004",
+    "Information Ratio": "-0.229",
+    "Tracking Error": "0.082",
+    "Treynor Ratio": "0.097",
+    "Total Fees": "$118.00",
+    "Estimated Strategy Capacity": "$16000000.00",
+    "Lowest Capacity Asset": "SPY R735QTJ8XC9X",
+    "Portfolio Turnover": "96.23%",
+    "Drawdown Recovery": "25"
+  },
+  "qc_note": "",
+  "total_orders": "118"
+}

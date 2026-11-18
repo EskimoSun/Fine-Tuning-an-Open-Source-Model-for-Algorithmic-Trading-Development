@@ -1,0 +1,225 @@
+{
+  "prompt_id": "intraday-indicator-scans_v09",
+  "model": "qwen_tuned_9b_final_nothink_insample",
+  "base_model": "qwen_tuned_9b_final_nothink_insample",
+  "model_id": "jared-309b/qwen9b-final-insample-sxz",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass ETFUniverseAlgorithm(QCAlgorithm):\n    _weight_by_symbol: dict[Symbol, float] = {}\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        # Select QQQ constituents first, then by fundamental data.\n        self._universe = self.add_universe(self.universe.etf(\"QQQ\", self._etf_constituents_filter))\n        self.schedule.on(self.date_rules.every_day(\"QQQ\"), self.time_rules.every(timedelta(minutes=15)), self._place_orders)\n\n    def on_securities_changed(self, changes: SecurityChanges) -> None:\n        for security in changes.added_securities:\n            security.atr = self.atr(security, 60, resolution=Resolution.MINUTE)\n            # Alternatively, use a manual indicator.\n            # symbol = security.symbol\n            # security.atr = AverageTrueRange(60)\n            # self.warm_up_indicator(symbol, security.atr)\n            # self.register_indicator(symbol, security.atr)\n        for security in changes.removed_securities:\n            self.deregister_indicator(security.atr)\n\n    def _etf_constituents_filter(self, constituents: List[ETFConstituentUniverse]) -> List[Symbol]:\n        # Select all QQQ constituents.\n        self._weight_by_symbol = {c.symbol: c.weight or 0.0 for c in constituents}\n        return [c.symbol for c in constituents]\n\n    def _place_orders(self) -> None:\n        if not (self.is_market_open('QQQ') and self._universe.selected):\n            return\n        # Select the stocks with the greatest ATR.\n        securities = [self.securities[symbol] for symbol in self._universe.selected]\n        selected = sorted([s for s in securities if s.atr.is_ready], key=lambda security: security.atr)[-10:]\n        # We will keep the ETF weights by scale it up to sum 1\n        sum_of_weight = sum([self._weight_by_symbol[security.symbol] for security in selected])\n        self.plot(\"Universe\", \"Sum Of Weight (%)\", sum_of_weight * 100)\n        if not sum_of_weight:\n            return\n        targets = [PortfolioTarget(s, self._weight_by_symbol[s.symbol] / sum_of_weight) for s in selected]\n        # Remove securities that are not top ATR\n        self.set_holdings(targets, True)\n```",
+  "generated_at": "2026-11-18T19:51:09.870098+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "deregister_indicator, is_market_open"
+    }
+  ],
+  "note": "UNKNOWN_API: deregister_indicator, is_market_open",
+  "qc_evaluation": {
+    "status": "completed",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass ETFUniverseAlgorithm(QCAlgorithm):\n    _weight_by_symbol: dict[Symbol, float] = {}\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        # Select QQQ constituents first, then by fundamental data.\n        self._universe = self.add_universe(self.universe.etf(\"QQQ\", self._etf_constituents_filter))\n        self.schedule.on(self.date_rules.every_day(\"QQQ\"), self.time_rules.every(timedelta(minutes=15)), self._place_orders)\n\n    def on_securities_changed(self, changes: SecurityChanges) -> None:\n        for security in changes.added_securities:\n            security.atr = self.atr(security, 60, resolution=Resolution.MINUTE)\n            # Alternatively, use a manual indicator.\n            # symbol = security.symbol\n            # security.atr = AverageTrueRange(60)\n            # self.warm_up_indicator(symbol, security.atr)\n            # self.register_indicator(symbol, security.atr)\n        for security in changes.removed_securities:\n            self.deregister_indicator(security.atr)\n\n    def _etf_constituents_filter(self, constituents: List[ETFConstituentUniverse]) -> List[Symbol]:\n        # Select all QQQ constituents.\n        self._weight_by_symbol = {c.symbol: c.weight or 0.0 for c in constituents}\n        return [c.symbol for c in constituents]\n\n    def _place_orders(self) -> None:\n        if not (self.is_market_open('QQQ') and self._universe.selected):\n            return\n        # Select the stocks with the greatest ATR.\n        securities = [self.securities[symbol] for symbol in self._universe.selected]\n        selected = sorted([s for s in securities if s.atr.is_ready], key=lambda security: security.atr)[-10:]\n        # We will keep the ETF weights by scale it up to sum 1\n        sum_of_weight = sum([self._weight_by_symbol[security.symbol] for security in selected])\n        self.plot(\"Universe\", \"Sum Of Weight (%)\", sum_of_weight * 100)\n        if not sum_of_weight:\n            return\n        targets = [PortfolioTarget(s, self._weight_by_symbol[s.symbol] / sum_of_weight) for s in selected]\n        # Remove securities that are not top ATR\n        self.set_holdings(targets, True)\n",
+    "source_sha256": "b015ae83f50606f84dec2727d499e3cb25a10aa383de3a3b40f92adb264a317a",
+    "started_at": "2026-11-18T20:41:24.506318+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 0,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$95,009.79",
+      "Fees": "-$286.00",
+      "Holdings": "$91,200.90",
+      "Net Profit": "$-3,181.53",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "-4.99 %",
+      "Unrealized": "$-1,848.19",
+      "Volume": "$1,067,994.22"
+    },
+    "logs": [
+      "2024-09-01 00:00:00 Launching analysis for 1e56fdbeaa256beaaaf212f67c5a4562 with LEAN Engine v2.5.0.0.18271",
+      "2024-09-01 00:00:00 Warning: no existing symbol found for ticker QQQ, it will be created with Equity type.",
+      "2024-09-03 09:45:00 Warning: Portfolio rebalance result ignored as it resulted in a single share trade recommendation which can generate high fees. To disable minimum order size checks please set self.settings.minimum_order_margin_portfolio_percentage = 0.",
+      "2025-01-01 00:00:00 Algorithm Id:(1e56fdbeaa256beaaaf212f67c5a4562) completed in 23.44 seconds at 279k data points per second. Processing total of 6,531,545 data points."
+    ],
+    "qc_note": "",
+    "project_id": 39642452,
+    "compile_id": "1a034ae9de6d48a33cdd7d4357cdcdf8-45b6177216640b992fb2402cb9f991a8",
+    "compile_created": {
+      "compileId": "1a034ae9de6d48a33cdd7d4357cdcdf8-45b6177216640b992fb2402cb9f991a8",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39642452,
+      "signature": "45b6177216640b992fb2402cb9f991a8",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "1a034ae9de6d48a33cdd7d4357cdcdf8-45b6177216640b992fb2402cb9f991a8",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39642452, with CompileID: 1a034ae9de6d48a33cdd7d4357cdcdf8-45b6177216640b992fb2402cb9f991a8, Lean Version: 2.5.0.0.18271"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39642452, with CompileID: 1a034ae9de6d48a33cdd7d4357cdcdf8-45b6177216640b992fb2402cb9f991a8, Lean Version: 2.5.0.0.18271"
+    ],
+    "backtest_id": "1e56fdbeaa256beaaaf212f67c5a4562",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "intraday-indicator-scans_v09",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39642452,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "1e56fdbeaa256beaaaf212f67c5a4562",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 11
+        },
+        "backtestStart": "2026-11-18 20:41:29",
+        "backtestEnd": "2026-11-18 20:41:29",
+        "created": "2026-11-18 20:41:29",
+        "snapshotId": 39642457,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-20T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": "",
+        "name": "intraday-indicator-scans_v09",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39642452,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "1e56fdbeaa256beaaaf212f67c5a4562",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 11
+        },
+        "backtestStart": "2024-09-01 00:00:00",
+        "backtestEnd": "2024-12-31 23:59:59",
+        "created": "2026-11-18 20:41:29",
+        "snapshotId": 39642457,
+        "status": "Completed.",
+        "error": null,
+        "stacktrace": null,
+        "progress": 1,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          },
+          "Drawdown": {
+            "name": "Drawdown"
+          },
+          "Portfolio Turnover": {
+            "name": "Portfolio Turnover"
+          },
+          "Exposure": {
+            "name": "Exposure"
+          },
+          "Capacity": {
+            "name": "Capacity"
+          },
+          "Universe": {
+            "name": "Universe"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$95,009.79",
+          "Fees": "-$286.00",
+          "Holdings": "$91,200.90",
+          "Net Profit": "$-3,181.53",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "-4.99 %",
+          "Unrealized": "$-1,848.19",
+          "Volume": "$1,067,994.22"
+        },
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-20T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioMarginUsageAnalysis",
+            "issue": "The algorithm sometimes only utilizes a small proportion of the margin available.",
+            "sample": "Number of days when the 3-day SMA of the margin usage drops below 50%: 3",
+            "solutions": [
+              "Adjust the strategy logic or position sizing to utilize more margin.",
+              "If the algorithm logic leads to periods of time when the portfolio sits in cash, consider holding a \"risk-free\" asset during these periods."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "175.1%",
+          "Used RAM (MB)": "298",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-1e56fdbeaa256beaaaf212f67c5a4562",
+          "LEAN Version": "v2.5.0.0.18271",
+          "Up Time": "0d 00:00:08"
+        }
+      },
+      "success": true
+    },
+    "error": null,
+    "stacktrace": null,
+    "has_initialize_error": false,
+    "trade_statistics": {},
+    "total_orders": null,
+    "finished_at": "2026-11-18T20:42:00.204508+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "statistics": {},
+  "qc_note": "",
+  "total_orders": null
+}

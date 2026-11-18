@@ -1,0 +1,3574 @@
+{
+  "prompt_id": "alternative-data-universe_v05",
+  "model": "qwen_tuned_9b_final_nothink_insample",
+  "base_model": "qwen_tuned_9b_final_nothink_insample",
+  "model_id": "jared-309b/qwen9b-final-insample-sxz",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass UpcomingEarningsExampleAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 12, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # Seed the last price as price since we need to use the underlying price for option contract filtering when it join the universe.\n        self.settings.seed_initial_prices = True\n\n        # Trade on daily basis based on daily upcoming earnings signals.\n        self.universe_settings.resolution = Resolution.DAILY\n        # Option trading requires raw price for strike price comparison.\n        self.universe_settings.data_normalization_mode = DataNormalizationMode.RAW\n        # Universe consists of equities with upcoming earnings events.\n        self.add_universe(EODHDUpcomingEarnings, self._selection)\n\n    def _selection(self, earnings: List[EODHDUpcomingEarnings]) -> List[Symbol]:\n        # We do not want to lock our fund too early, so filter for stocks is in lower volatility but will go up.\n        # Assuming 5 days before the earnings report publish is less volatile.\n        # We do not want depository due to their low liquidity.\n        for i in range(5, 0, -1):\n            target_date = self.time + timedelta(i)\n            symbols = set(d.symbol for d in earnings if d.report_date == target_date)\n            if symbols:\n                self.plot('Universe', 'Count', len(symbols))\n                return list(symbols)\n        return []\n\n    def on_securities_changed(self, changes: SecurityChanges) -> None:\n        # Actions only based on the equity universe changes.\n        for security in changes.added_securities:\n            if security.type != SecurityType.EQUITY:\n                continue\n            # Select the option contracts to construct a straddle to trade the volatility.\n            call, put = self._select_option_contracts(security)\n            if not call or not put:\n                security.options = []\n                continue\n            security.options = (call, put)\n            # Request the option contract data for trading.\n            call = self.add_option_contract(call)\n            put = self.add_option_contract(put)\n            # Long a straddle by buying the selected ATM call and put.\n            self.combo_market_order([\n                    Leg.create(call, 1),\n                    Leg.create(put, 1)\n                ],\n                1\n            )\n\n        # Actions only based on the equity universe changes.\n        for security in changes.removed_securities:\n            if security.type != SecurityType.EQUITY:\n                continue\n            # Liquidate any assigned position.\n            self.liquidate(security)\n            # Liquidate the option positions and capitalize the volatility 1-day after the earnings announcement.\n            for contract in security.options:\n                self.remove_option_contract(contract)\n\n    def _select_option_contracts(self, underlying: Equity) -> tuple[Any, Any]:\n        # Get all tradable option contracts for filtering.\n        option_contract_list = self.option_chain(underlying)\n\n        # Expiry at least 30 days later to have a smaller theta to reduce time decay loss.\n        # Yet also be ensure liquidity over the volatility fluctuation hence we take the closet expiry after that.\n        long_expiries = [x for x in option_contract_list if x.expiry >= self.time + timedelta(30)]\n        if len(long_expiries) < 2:\n            return None, None\n        expiry = min(x.expiry for x in long_expiries)\n        filtered_contracts = [x for x in option_contract_list if x.expiry == expiry]\n\n        # Select ATM call and put to form a straddle for trading the volatility.\n        strike = sorted(filtered_contracts, \n            key=lambda x: abs(x.strike - underlying.price))[0].strike\n        atm_contracts = [x for x in filtered_contracts if x.strike == strike]\n        if len(atm_contracts) < 2:\n            return None, None\n        \n        atm_call = next(filter(lambda x: x.right == OptionRight.CALL, atm_contracts))\n        atm_put = next(filter(lambda x: x.right == OptionRight.PUT, atm_contracts))\n        return atm_call, atm_put\n```",
+  "generated_at": "2026-11-18T19:50:36.235287+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "add_option_contract, remove_option_contract"
+    }
+  ],
+  "note": "UNKNOWN_API: add_option_contract, remove_option_contract",
+  "qc_evaluation": {
+    "status": "completed",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass UpcomingEarningsExampleAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 12, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # Seed the last price as price since we need to use the underlying price for option contract filtering when it join the universe.\n        self.settings.seed_initial_prices = True\n\n        # Trade on daily basis based on daily upcoming earnings signals.\n        self.universe_settings.resolution = Resolution.DAILY\n        # Option trading requires raw price for strike price comparison.\n        self.universe_settings.data_normalization_mode = DataNormalizationMode.RAW\n        # Universe consists of equities with upcoming earnings events.\n        self.add_universe(EODHDUpcomingEarnings, self._selection)\n\n    def _selection(self, earnings: List[EODHDUpcomingEarnings]) -> List[Symbol]:\n        # We do not want to lock our fund too early, so filter for stocks is in lower volatility but will go up.\n        # Assuming 5 days before the earnings report publish is less volatile.\n        # We do not want depository due to their low liquidity.\n        for i in range(5, 0, -1):\n            target_date = self.time + timedelta(i)\n            symbols = set(d.symbol for d in earnings if d.report_date == target_date)\n            if symbols:\n                self.plot('Universe', 'Count', len(symbols))\n                return list(symbols)\n        return []\n\n    def on_securities_changed(self, changes: SecurityChanges) -> None:\n        # Actions only based on the equity universe changes.\n        for security in changes.added_securities:\n            if security.type != SecurityType.EQUITY:\n                continue\n            # Select the option contracts to construct a straddle to trade the volatility.\n            call, put = self._select_option_contracts(security)\n            if not call or not put:\n                security.options = []\n                continue\n            security.options = (call, put)\n            # Request the option contract data for trading.\n            call = self.add_option_contract(call)\n            put = self.add_option_contract(put)\n            # Long a straddle by buying the selected ATM call and put.\n            self.combo_market_order([\n                    Leg.create(call, 1),\n                    Leg.create(put, 1)\n                ],\n                1\n            )\n\n        # Actions only based on the equity universe changes.\n        for security in changes.removed_securities:\n            if security.type != SecurityType.EQUITY:\n                continue\n            # Liquidate any assigned position.\n            self.liquidate(security)\n            # Liquidate the option positions and capitalize the volatility 1-day after the earnings announcement.\n            for contract in security.options:\n                self.remove_option_contract(contract)\n\n    def _select_option_contracts(self, underlying: Equity) -> tuple[Any, Any]:\n        # Get all tradable option contracts for filtering.\n        option_contract_list = self.option_chain(underlying)\n\n        # Expiry at least 30 days later to have a smaller theta to reduce time decay loss.\n        # Yet also be ensure liquidity over the volatility fluctuation hence we take the closet expiry after that.\n        long_expiries = [x for x in option_contract_list if x.expiry >= self.time + timedelta(30)]\n        if len(long_expiries) < 2:\n            return None, None\n        expiry = min(x.expiry for x in long_expiries)\n        filtered_contracts = [x for x in option_contract_list if x.expiry == expiry]\n\n        # Select ATM call and put to form a straddle for trading the volatility.\n        strike = sorted(filtered_contracts, \n            key=lambda x: abs(x.strike - underlying.price))[0].strike\n        atm_contracts = [x for x in filtered_contracts if x.strike == strike]\n        if len(atm_contracts) < 2:\n            return None, None\n        \n        atm_call = next(filter(lambda x: x.right == OptionRight.CALL, atm_contracts))\n        atm_put = next(filter(lambda x: x.right == OptionRight.PUT, atm_contracts))\n        return atm_call, atm_put\n",
+    "source_sha256": "e3f493f5b761ca29b4a11c26c5242644be8a7924bda895bec2aa833e043ddcb1",
+    "started_at": "2026-11-18T20:02:04.368904+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 0,
+    "statistics": {
+      "Total Orders": "320",
+      "Average Win": "1.27%",
+      "Average Loss": "-2.44%",
+      "Compounding Annual Return": "0%",
+      "Drawdown": "100.300%",
+      "Expectancy": "-0.983",
+      "Start Equity": "100000",
+      "End Equity": "-289",
+      "Net Profit": "-100.289%",
+      "Sharpe Ratio": "-0.196",
+      "Sortino Ratio": "-0.196",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Loss Rate": "99%",
+      "Win Rate": "1%",
+      "Profit-Loss Ratio": "0.52",
+      "Alpha": "-1.478",
+      "Beta": "17.58",
+      "Annual Standard Deviation": "5.354",
+      "Annual Variance": "28.67",
+      "Information Ratio": "-0.201",
+      "Tracking Error": "5.341",
+      "Treynor Ratio": "-0.06",
+      "Total Fees": "$188.00",
+      "Estimated Strategy Capacity": "$1000.00",
+      "Lowest Capacity Asset": "CGNT 32OCGBPV0QRD2|CGNT XLPN75YI2XK5",
+      "Portfolio Turnover": "-142.26%",
+      "Drawdown Recovery": "0"
+    },
+    "runtime_statistics": {
+      "Equity": "$-289.00",
+      "Fees": "-$188.00",
+      "Holdings": "$3,795.00",
+      "Net Profit": "$-88,744.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "-100.29 %",
+      "Unrealized": "$-12,492.00",
+      "Volume": "$188,194.00"
+    },
+    "logs": [
+      "2024-12-01 00:00:00 Launching analysis for 5e762e7a1945887242c1bab7938633de with LEAN Engine v2.5.0.0.18270",
+      "2024-12-04 00:00:00 Warning: market orders submitted while the market is closed are automatically converted into MarketOnOpen orders to fill at the next market open.",
+      "2024-12-12 16:00:00 Order Error: ids: [305,306], Insufficient buying power to complete orders (Value:[85,265]), Reason: Id: 305,306, Maintenance Margin Delta: 350, Free Margin: -289.",
+      "2024-12-12 16:00:00 Order Error: ids: [307,308], Insufficient buying power to complete orders (Value:[95,55]), Reason: Id: 307,308, Maintenance Margin Delta: 150, Free Margin: -289.",
+      "2024-12-12 16:00:00 Order Error: ids: [315], Insufficient buying power to complete orders (Value:[-215]), Reason: Id: 315, Maintenance Margin Delta: 0, Free Margin: -289.",
+      "2024-12-12 16:00:00 Order Error: ids: [316], Insufficient buying power to complete orders (Value:[-65]), Reason: Id: 316, Maintenance Margin Delta: 0, Free Margin: -289.",
+      "2024-12-12 16:00:00 Order Error: ids: [317], Insufficient buying power to complete orders (Value:[-100]), Reason: Id: 317, Maintenance Margin Delta: 0, Free Margin: -289.",
+      "2024-12-12 16:00:00 Order Error: ids: [318], Insufficient buying power to complete orders (Value:[-292.5]), Reason: Id: 318, Maintenance Margin Delta: 0, Free Margin: -289.",
+      "2024-12-12 16:00:00 Order Error: ids: [319], Insufficient buying power to complete orders (Value:[-805]), Reason: Id: 319, Maintenance Margin Delta: 0, Free Margin: -289.",
+      "2024-12-12 16:00:00 Order Error: ids: [320], Insufficient buying power to complete orders (Value:[-1165]), Reason: Id: 320, Maintenance Margin Delta: 0, Free Margin: -289.",
+      "2024-12-12 16:00:00 AlgorithmManager.Run(): Portfolio value is less than or equal to zero, stopping algorithm.",
+      "2024-12-12 16:00:00 Algorithm Id:(5e762e7a1945887242c1bab7938633de) completed in 10.13 seconds at 1k data points per second. Processing total of 5,667 data points."
+    ],
+    "qc_note": "",
+    "project_id": 39640674,
+    "compile_id": "3a5284730a1829cc7687b33d0b8e03ee-773e2e6936c6c9533b0d8c1c3a5a864c",
+    "compile_created": {
+      "compileId": "3a5284730a1829cc7687b33d0b8e03ee-773e2e6936c6c9533b0d8c1c3a5a864c",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39640674,
+      "signature": "773e2e6936c6c9533b0d8c1c3a5a864c",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "3a5284730a1829cc7687b33d0b8e03ee-773e2e6936c6c9533b0d8c1c3a5a864c",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39640674, with CompileID: 3a5284730a1829cc7687b33d0b8e03ee-773e2e6936c6c9533b0d8c1c3a5a864c, Lean Version: 2.5.0.0.18270"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39640674, with CompileID: 3a5284730a1829cc7687b33d0b8e03ee-773e2e6936c6c9533b0d8c1c3a5a864c, Lean Version: 2.5.0.0.18270"
+    ],
+    "backtest_id": "5e762e7a1945887242c1bab7938633de",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "alternative-data-universe_v05",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39640674,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "5e762e7a1945887242c1bab7938633de",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 15
+        },
+        "backtestStart": "2026-11-18 20:02:09",
+        "backtestEnd": "2026-11-18 20:02:09",
+        "created": "2026-11-18 20:02:09",
+        "snapshotId": 39640677,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-20T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": "",
+        "name": "alternative-data-universe_v05",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39640674,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "5e762e7a1945887242c1bab7938633de",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 15
+        },
+        "backtestStart": "2024-12-01 00:00:00",
+        "backtestEnd": "2024-12-31 23:59:59",
+        "created": "2026-11-18 20:02:09",
+        "snapshotId": 39640677,
+        "status": "Completed.",
+        "error": null,
+        "stacktrace": null,
+        "progress": 1,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          },
+          "Drawdown": {
+            "name": "Drawdown"
+          },
+          "Portfolio Turnover": {
+            "name": "Portfolio Turnover"
+          },
+          "Exposure": {
+            "name": "Exposure"
+          },
+          "Capacity": {
+            "name": "Capacity"
+          },
+          "Universe": {
+            "name": "Universe"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": {
+          "M1_20241213": {
+            "tradeStatistics": {
+              "startDateTime": "2024-12-02T21:00:00Z",
+              "endDateTime": "2024-12-11T21:00:00Z",
+              "totalNumberOfTrades": 88,
+              "numberOfWinningTrades": 1,
+              "numberOfLosingTrades": 87,
+              "totalProfitLoss": "-88556.00",
+              "totalProfit": "395.00",
+              "totalLoss": "-88951.00",
+              "largestProfit": "395.00",
+              "largestLoss": "-7791.00",
+              "averageProfitLoss": "-1006.3182",
+              "averageProfit": "395.00",
+              "averageLoss": "-1022.4253",
+              "averageTradeDuration": "1.20:43:38.1818175",
+              "averageWinningTradeDuration": "3.00:00:00",
+              "averageLosingTradeDuration": "1.20:24:49.6551717",
+              "medianTradeDuration": "2.00:00:00",
+              "medianWinningTradeDuration": "3.00:00:00",
+              "medianLosingTradeDuration": "2.00:00:00",
+              "maxConsecutiveWinningTrades": 1,
+              "maxConsecutiveLosingTrades": 59,
+              "profitLossRatio": "0.3863",
+              "winLossRatio": "0.0115",
+              "winRate": "0.0114",
+              "lossRate": "0.9886",
+              "averageMAE": "-1055.7670",
+              "averageMFE": "51.5341",
+              "largestMAE": "-7791.00",
+              "largestMFE": "3880.00",
+              "maximumClosedTradeDrawdown": "-88556.00",
+              "maximumIntraTradeDrawdown": "-88556.00",
+              "profitLossStandardDeviation": "1441.0883",
+              "profitLossDownsideDeviation": "1441.4532",
+              "profitFactor": "0.0044",
+              "sharpeRatio": "-0.6983",
+              "sortinoRatio": "-0.6981",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "9260.00",
+              "averageEndTradeDrawdown": "-1057.8523",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "176"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0127",
+              "averageLossRate": "-0.0244",
+              "profitLossRatio": "0.5211",
+              "winRate": "0.0114",
+              "lossRate": "0.9886",
+              "expectancy": "-0.9827",
+              "startEquity": "100000",
+              "endEquity": "-289",
+              "compoundingAnnualReturn": "0",
+              "drawdown": "1.003",
+              "totalNetProfit": "-1.0029",
+              "sharpeRatio": "-0.1956",
+              "probabilisticSharpeRatio": "0",
+              "sortinoRatio": "-0.1958",
+              "alpha": "-1.4781",
+              "beta": "17.5804",
+              "annualStandardDeviation": "5.3545",
+              "annualVariance": "28.6704",
+              "informationRatio": "-0.2007",
+              "trackingError": "5.3408",
+              "treynorRatio": "-0.0596",
+              "portfolioTurnover": "-1.4226",
+              "valueAtRisk99": "-1.073",
+              "valueAtRisk95": "-0.843",
+              "drawdownRecovery": "0"
+            },
+            "closedTrades": []
+          },
+          "M3_20241213": {
+            "tradeStatistics": {
+              "startDateTime": "2024-12-02T21:00:00Z",
+              "endDateTime": "2024-12-11T21:00:00Z",
+              "totalNumberOfTrades": 88,
+              "numberOfWinningTrades": 1,
+              "numberOfLosingTrades": 87,
+              "totalProfitLoss": "-88556.00",
+              "totalProfit": "395.00",
+              "totalLoss": "-88951.00",
+              "largestProfit": "395.00",
+              "largestLoss": "-7791.00",
+              "averageProfitLoss": "-1006.3182",
+              "averageProfit": "395.00",
+              "averageLoss": "-1022.4253",
+              "averageTradeDuration": "1.20:43:38.1818175",
+              "averageWinningTradeDuration": "3.00:00:00",
+              "averageLosingTradeDuration": "1.20:24:49.6551717",
+              "medianTradeDuration": "2.00:00:00",
+              "medianWinningTradeDuration": "3.00:00:00",
+              "medianLosingTradeDuration": "2.00:00:00",
+              "maxConsecutiveWinningTrades": 1,
+              "maxConsecutiveLosingTrades": 59,
+              "profitLossRatio": "0.3863",
+              "winLossRatio": "0.0115",
+              "winRate": "0.0114",
+              "lossRate": "0.9886",
+              "averageMAE": "-1055.7670",
+              "averageMFE": "51.5341",
+              "largestMAE": "-7791.00",
+              "largestMFE": "3880.00",
+              "maximumClosedTradeDrawdown": "-88556.00",
+              "maximumIntraTradeDrawdown": "-88556.00",
+              "profitLossStandardDeviation": "1441.0883",
+              "profitLossDownsideDeviation": "1441.4532",
+              "profitFactor": "0.0044",
+              "sharpeRatio": "-0.6983",
+              "sortinoRatio": "-0.6981",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "9260.00",
+              "averageEndTradeDrawdown": "-1057.8523",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "176"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0127",
+              "averageLossRate": "-0.0244",
+              "profitLossRatio": "0.5211",
+              "winRate": "0.0114",
+              "lossRate": "0.9886",
+              "expectancy": "-0.9827",
+              "startEquity": "100000",
+              "endEquity": "-289",
+              "compoundingAnnualReturn": "0",
+              "drawdown": "1.003",
+              "totalNetProfit": "-1.0029",
+              "sharpeRatio": "-0.1956",
+              "probabilisticSharpeRatio": "0",
+              "sortinoRatio": "-0.1958",
+              "alpha": "-1.4781",
+              "beta": "17.5804",
+              "annualStandardDeviation": "5.3545",
+              "annualVariance": "28.6704",
+              "informationRatio": "-0.2007",
+              "trackingError": "5.3408",
+              "treynorRatio": "-0.0596",
+              "portfolioTurnover": "-1.4226",
+              "valueAtRisk99": "-1.073",
+              "valueAtRisk95": "-0.843",
+              "drawdownRecovery": "0"
+            },
+            "closedTrades": []
+          },
+          "M6_20241213": {
+            "tradeStatistics": {
+              "startDateTime": "2024-12-02T21:00:00Z",
+              "endDateTime": "2024-12-11T21:00:00Z",
+              "totalNumberOfTrades": 88,
+              "numberOfWinningTrades": 1,
+              "numberOfLosingTrades": 87,
+              "totalProfitLoss": "-88556.00",
+              "totalProfit": "395.00",
+              "totalLoss": "-88951.00",
+              "largestProfit": "395.00",
+              "largestLoss": "-7791.00",
+              "averageProfitLoss": "-1006.3182",
+              "averageProfit": "395.00",
+              "averageLoss": "-1022.4253",
+              "averageTradeDuration": "1.20:43:38.1818175",
+              "averageWinningTradeDuration": "3.00:00:00",
+              "averageLosingTradeDuration": "1.20:24:49.6551717",
+              "medianTradeDuration": "2.00:00:00",
+              "medianWinningTradeDuration": "3.00:00:00",
+              "medianLosingTradeDuration": "2.00:00:00",
+              "maxConsecutiveWinningTrades": 1,
+              "maxConsecutiveLosingTrades": 59,
+              "profitLossRatio": "0.3863",
+              "winLossRatio": "0.0115",
+              "winRate": "0.0114",
+              "lossRate": "0.9886",
+              "averageMAE": "-1055.7670",
+              "averageMFE": "51.5341",
+              "largestMAE": "-7791.00",
+              "largestMFE": "3880.00",
+              "maximumClosedTradeDrawdown": "-88556.00",
+              "maximumIntraTradeDrawdown": "-88556.00",
+              "profitLossStandardDeviation": "1441.0883",
+              "profitLossDownsideDeviation": "1441.4532",
+              "profitFactor": "0.0044",
+              "sharpeRatio": "-0.6983",
+              "sortinoRatio": "-0.6981",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "9260.00",
+              "averageEndTradeDrawdown": "-1057.8523",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "176"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0127",
+              "averageLossRate": "-0.0244",
+              "profitLossRatio": "0.5211",
+              "winRate": "0.0114",
+              "lossRate": "0.9886",
+              "expectancy": "-0.9827",
+              "startEquity": "100000",
+              "endEquity": "-289",
+              "compoundingAnnualReturn": "0",
+              "drawdown": "1.003",
+              "totalNetProfit": "-1.0029",
+              "sharpeRatio": "-0.1956",
+              "probabilisticSharpeRatio": "0",
+              "sortinoRatio": "-0.1958",
+              "alpha": "-1.4781",
+              "beta": "17.5804",
+              "annualStandardDeviation": "5.3545",
+              "annualVariance": "28.6704",
+              "informationRatio": "-0.2007",
+              "trackingError": "5.3408",
+              "treynorRatio": "-0.0596",
+              "portfolioTurnover": "-1.4226",
+              "valueAtRisk99": "-1.073",
+              "valueAtRisk95": "-0.843",
+              "drawdownRecovery": "0"
+            },
+            "closedTrades": []
+          },
+          "M12_20241213": {
+            "tradeStatistics": {
+              "startDateTime": "2024-12-02T21:00:00Z",
+              "endDateTime": "2024-12-11T21:00:00Z",
+              "totalNumberOfTrades": 88,
+              "numberOfWinningTrades": 1,
+              "numberOfLosingTrades": 87,
+              "totalProfitLoss": "-88556.00",
+              "totalProfit": "395.00",
+              "totalLoss": "-88951.00",
+              "largestProfit": "395.00",
+              "largestLoss": "-7791.00",
+              "averageProfitLoss": "-1006.3182",
+              "averageProfit": "395.00",
+              "averageLoss": "-1022.4253",
+              "averageTradeDuration": "1.20:43:38.1818175",
+              "averageWinningTradeDuration": "3.00:00:00",
+              "averageLosingTradeDuration": "1.20:24:49.6551717",
+              "medianTradeDuration": "2.00:00:00",
+              "medianWinningTradeDuration": "3.00:00:00",
+              "medianLosingTradeDuration": "2.00:00:00",
+              "maxConsecutiveWinningTrades": 1,
+              "maxConsecutiveLosingTrades": 59,
+              "profitLossRatio": "0.3863",
+              "winLossRatio": "0.0115",
+              "winRate": "0.0114",
+              "lossRate": "0.9886",
+              "averageMAE": "-1055.7670",
+              "averageMFE": "51.5341",
+              "largestMAE": "-7791.00",
+              "largestMFE": "3880.00",
+              "maximumClosedTradeDrawdown": "-88556.00",
+              "maximumIntraTradeDrawdown": "-88556.00",
+              "profitLossStandardDeviation": "1441.0883",
+              "profitLossDownsideDeviation": "1441.4532",
+              "profitFactor": "0.0044",
+              "sharpeRatio": "-0.6983",
+              "sortinoRatio": "-0.6981",
+              "profitToMaxDrawdownRatio": "-1",
+              "maximumEndTradeDrawdown": "9260.00",
+              "averageEndTradeDrawdown": "-1057.8523",
+              "maximumDrawdownDuration": "00:00:00",
+              "totalFees": "176"
+            },
+            "portfolioStatistics": {
+              "averageWinRate": "0.0127",
+              "averageLossRate": "-0.0244",
+              "profitLossRatio": "0.5211",
+              "winRate": "0.0114",
+              "lossRate": "0.9886",
+              "expectancy": "-0.9827",
+              "startEquity": "100000",
+              "endEquity": "-289",
+              "compoundingAnnualReturn": "0",
+              "drawdown": "1.003",
+              "totalNetProfit": "-1.0029",
+              "sharpeRatio": "-0.1956",
+              "probabilisticSharpeRatio": "0",
+              "sortinoRatio": "-0.1958",
+              "alpha": "-1.4781",
+              "beta": "17.5804",
+              "annualStandardDeviation": "5.3545",
+              "annualVariance": "28.6704",
+              "informationRatio": "-0.2007",
+              "trackingError": "5.3408",
+              "treynorRatio": "-0.0596",
+              "portfolioTurnover": "-1.4226",
+              "valueAtRisk99": "-1.073",
+              "valueAtRisk95": "-0.843",
+              "drawdownRecovery": "0"
+            },
+            "closedTrades": []
+          }
+        },
+        "runtimeStatistics": {
+          "Equity": "$-289.00",
+          "Fees": "-$188.00",
+          "Holdings": "$3,795.00",
+          "Net Profit": "$-88,744.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "-100.29 %",
+          "Unrealized": "$-12,492.00",
+          "Volume": "$188,194.00"
+        },
+        "statistics": {
+          "Total Orders": "320",
+          "Average Win": "1.27%",
+          "Average Loss": "-2.44%",
+          "Compounding Annual Return": "0%",
+          "Drawdown": "100.300%",
+          "Expectancy": "-0.983",
+          "Start Equity": "100000",
+          "End Equity": "-289",
+          "Net Profit": "-100.289%",
+          "Sharpe Ratio": "-0.196",
+          "Sortino Ratio": "-0.196",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Loss Rate": "99%",
+          "Win Rate": "1%",
+          "Profit-Loss Ratio": "0.52",
+          "Alpha": "-1.478",
+          "Beta": "17.58",
+          "Annual Standard Deviation": "5.354",
+          "Annual Variance": "28.67",
+          "Information Ratio": "-0.201",
+          "Tracking Error": "5.341",
+          "Treynor Ratio": "-0.06",
+          "Total Fees": "$188.00",
+          "Estimated Strategy Capacity": "$1000.00",
+          "Lowest Capacity Asset": "CGNT 32OCGBPV0QRD2|CGNT XLPN75YI2XK5",
+          "Portfolio Turnover": "-142.26%",
+          "Drawdown Recovery": "0"
+        },
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": "2024-12-02T21:00:00Z",
+            "endDateTime": "2024-12-11T21:00:00Z",
+            "totalNumberOfTrades": 88,
+            "numberOfWinningTrades": 1,
+            "numberOfLosingTrades": 87,
+            "totalProfitLoss": "-88556.00",
+            "totalProfit": "395.00",
+            "totalLoss": "-88951.00",
+            "largestProfit": "395.00",
+            "largestLoss": "-7791.00",
+            "averageProfitLoss": "-1006.3182",
+            "averageProfit": "395.00",
+            "averageLoss": "-1022.4253",
+            "averageTradeDuration": "1.20:43:38.1818175",
+            "averageWinningTradeDuration": "3.00:00:00",
+            "averageLosingTradeDuration": "1.20:24:49.6551717",
+            "medianTradeDuration": "2.00:00:00",
+            "medianWinningTradeDuration": "3.00:00:00",
+            "medianLosingTradeDuration": "2.00:00:00",
+            "maxConsecutiveWinningTrades": 1,
+            "maxConsecutiveLosingTrades": 59,
+            "profitLossRatio": "0.3863",
+            "winLossRatio": "0.0115",
+            "winRate": "0.0114",
+            "lossRate": "0.9886",
+            "averageMAE": "-1055.7670",
+            "averageMFE": "51.5341",
+            "largestMAE": "-7791.00",
+            "largestMFE": "3880.00",
+            "maximumClosedTradeDrawdown": "-88556.00",
+            "maximumIntraTradeDrawdown": "-88556.00",
+            "profitLossStandardDeviation": "1441.0883",
+            "profitLossDownsideDeviation": "1441.4532",
+            "profitFactor": "0.0044",
+            "sharpeRatio": "-0.6983",
+            "sortinoRatio": "-0.6981",
+            "profitToMaxDrawdownRatio": "-1",
+            "maximumEndTradeDrawdown": "9260.00",
+            "averageEndTradeDrawdown": "-1057.8523",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "176"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0127",
+            "averageLossRate": "-0.0244",
+            "profitLossRatio": "0.5211",
+            "winRate": "0.0114",
+            "lossRate": "0.9886",
+            "expectancy": "-0.9827",
+            "startEquity": "100000",
+            "endEquity": "-289",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "1.003",
+            "totalNetProfit": "-1.0029",
+            "sharpeRatio": "-0.1956",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "-0.1958",
+            "alpha": "-1.4781",
+            "beta": "17.5804",
+            "annualStandardDeviation": "5.3545",
+            "annualVariance": "28.6704",
+            "informationRatio": "-0.2007",
+            "trackingError": "5.3408",
+            "treynorRatio": "-0.0596",
+            "portfolioTurnover": "-1.4226",
+            "valueAtRisk99": "-1.073",
+            "valueAtRisk95": "-0.843",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": [
+            {
+              "id": "3eab1d11-2e03-4cea-9c19-6f9fc5741a49",
+              "symbols": [
+                {
+                  "value": "DOC   250117C00022500",
+                  "id": "HCP YP8G6AKMJ5DY|HCP R735QTJ8XC9X",
+                  "permtick": "DOC   250117C00022500",
+                  "underlying": {
+                    "value": "DOC",
+                    "id": "HCP R735QTJ8XC9X",
+                    "permtick": "DOC"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 10,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 0.15,
+              "profitLoss": -985,
+              "totalFees": 2,
+              "mae": -985,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 985,
+              "isWin": false,
+              "orderIds": [
+                1,
+                57
+              ]
+            },
+            {
+              "id": "8a513311-79f8-4d65-8a7f-6a20de911bfd",
+              "symbols": [
+                {
+                  "value": "DOC   250117P00022500",
+                  "id": "HCP 32OCGBQJTSYRQ|HCP R735QTJ8XC9X",
+                  "permtick": "DOC   250117P00022500",
+                  "underlying": {
+                    "value": "DOC",
+                    "id": "HCP R735QTJ8XC9X",
+                    "permtick": "DOC"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 10,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 0.55,
+              "profitLoss": -945,
+              "totalFees": 2,
+              "mae": -945,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 945,
+              "isWin": false,
+              "orderIds": [
+                2,
+                58
+              ]
+            },
+            {
+              "id": "a5cdb8c6-bd1c-49ad-9ad5-6f328fb97c3b",
+              "symbols": [
+                {
+                  "value": "IOT   250103C00053000",
+                  "id": "IOT YOUNWYNTH5T2|IOT XUCSGPJU9C9X",
+                  "permtick": "IOT   250103C00053000",
+                  "underlying": {
+                    "value": "IOT",
+                    "id": "IOT XUCSGPJU9C9X",
+                    "permtick": "IOT"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 6.7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 5.8,
+              "profitLoss": -90,
+              "totalFees": 2,
+              "mae": -180,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 180,
+              "isWin": false,
+              "orderIds": [
+                3,
+                59
+              ]
+            },
+            {
+              "id": "fa7c87b2-7c4a-4798-9c15-afb8cbecbb74",
+              "symbols": [
+                {
+                  "value": "IOT   250103P00053000",
+                  "id": "IOT 32NYO2EN0QZ6U|IOT XUCSGPJU9C9X",
+                  "permtick": "IOT   250103P00053000",
+                  "underlying": {
+                    "value": "IOT",
+                    "id": "IOT XUCSGPJU9C9X",
+                    "permtick": "IOT"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 2.8,
+              "profitLoss": -220,
+              "totalFees": 2,
+              "mae": -220,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 220,
+              "isWin": false,
+              "orderIds": [
+                4,
+                60
+              ]
+            },
+            {
+              "id": "fb13dfb1-32e3-4bb2-b971-99784e74829e",
+              "symbols": [
+                {
+                  "value": "MAXN  250117C00007500",
+                  "id": "MAXNV YP8G69VTGXZA|MAXNV XH0AB31GX5YD",
+                  "permtick": "MAXN  250117C00007500",
+                  "underlying": {
+                    "value": "MAXN",
+                    "id": "MAXNV XH0AB31GX5YD",
+                    "permtick": "MAXN"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 2.6,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 0.05,
+              "profitLoss": -255,
+              "totalFees": 2,
+              "mae": -255,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 255,
+              "isWin": false,
+              "orderIds": [
+                5,
+                61
+              ]
+            },
+            {
+              "id": "780a0d2d-6ad5-487d-bd0b-84015a9588bf",
+              "symbols": [
+                {
+                  "value": "MAXN  250117P00007500",
+                  "id": "MAXNV 32OCGBPV0QRD2|MAXNV XH0AB31GX5YD",
+                  "permtick": "MAXN  250117P00007500",
+                  "underlying": {
+                    "value": "MAXN",
+                    "id": "MAXNV XH0AB31GX5YD",
+                    "permtick": "MAXN"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 4,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 0.05,
+              "profitLoss": -395,
+              "totalFees": 2,
+              "mae": -395,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 395,
+              "isWin": false,
+              "orderIds": [
+                6,
+                62
+              ]
+            },
+            {
+              "id": "23b35fdf-5509-4151-b42c-9e29983be771",
+              "symbols": [
+                {
+                  "value": "PPIH  250117C00015000",
+                  "id": "MFRI YP8G69LWB06E|MFRI R735QTJ8XC9X",
+                  "permtick": "PPIH  250117C00015000",
+                  "underlying": {
+                    "value": "PPIH",
+                    "id": "MFRI R735QTJ8XC9X",
+                    "permtick": "PPIH"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 4.8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 0.05,
+              "profitLoss": -475,
+              "totalFees": 2,
+              "mae": -475,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 475,
+              "isWin": false,
+              "orderIds": [
+                7,
+                63
+              ]
+            },
+            {
+              "id": "478a80ff-1ea6-4145-833f-a0ac145d40d4",
+              "symbols": [
+                {
+                  "value": "PPIH  250117P00015000",
+                  "id": "MFRI 32OCGBPL3KTK6|MFRI R735QTJ8XC9X",
+                  "permtick": "PPIH  250117P00015000",
+                  "underlying": {
+                    "value": "PPIH",
+                    "id": "MFRI R735QTJ8XC9X",
+                    "permtick": "PPIH"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 4.8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 0.1,
+              "profitLoss": -470,
+              "totalFees": 2,
+              "mae": -470,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 470,
+              "isWin": false,
+              "orderIds": [
+                8,
+                64
+              ]
+            },
+            {
+              "id": "0f313a9b-13f5-48e1-96d0-8a53a132ac92",
+              "symbols": [
+                {
+                  "value": "RBRK  250117C00050000",
+                  "id": "RBRK YP8G69K8TSUE|RBRK YHXJTAVC7OMD",
+                  "permtick": "RBRK  250117C00050000",
+                  "underlying": {
+                    "value": "RBRK",
+                    "id": "RBRK YHXJTAVC7OMD",
+                    "permtick": "RBRK"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 11.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 1.4,
+              "profitLoss": -970,
+              "totalFees": 2,
+              "mae": -970,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 970,
+              "isWin": false,
+              "orderIds": [
+                9,
+                65
+              ]
+            },
+            {
+              "id": "dddd004a-03dd-423f-b920-c1bbd743ebb6",
+              "symbols": [
+                {
+                  "value": "RBRK  250117P00050000",
+                  "id": "RBRK 32OCGBPJG3M86|RBRK YHXJTAVC7OMD",
+                  "permtick": "RBRK  250117P00050000",
+                  "underlying": {
+                    "value": "RBRK",
+                    "id": "RBRK YHXJTAVC7OMD",
+                    "permtick": "RBRK"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 10.4,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 0.4,
+              "profitLoss": -1000,
+              "totalFees": 2,
+              "mae": -1000,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 1000,
+              "isWin": false,
+              "orderIds": [
+                10,
+                66
+              ]
+            },
+            {
+              "id": "9241687d-a8a9-4a3c-888c-55ab1b5b3f8b",
+              "symbols": [
+                {
+                  "value": "TLYS  250117C00005000",
+                  "id": "TLYS YP8G69K8RNOM|TLYS V6AQGCV1JOMD",
+                  "permtick": "TLYS  250117C00005000",
+                  "underlying": {
+                    "value": "TLYS",
+                    "id": "TLYS V6AQGCV1JOMD",
+                    "permtick": "TLYS"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 10,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 0.05,
+              "profitLoss": -995,
+              "totalFees": 2,
+              "mae": -995,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 995,
+              "isWin": false,
+              "orderIds": [
+                11,
+                67
+              ]
+            },
+            {
+              "id": "36dbaeb2-5d1e-4443-b420-f06b8fae8408",
+              "symbols": [
+                {
+                  "value": "TLYS  250117P00005000",
+                  "id": "TLYS 32OCGBPJG1H2E|TLYS V6AQGCV1JOMD",
+                  "permtick": "TLYS  250117P00005000",
+                  "underlying": {
+                    "value": "TLYS",
+                    "id": "TLYS V6AQGCV1JOMD",
+                    "permtick": "TLYS"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 10,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 0.35,
+              "profitLoss": -965,
+              "totalFees": 2,
+              "mae": -965,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 965,
+              "isWin": false,
+              "orderIds": [
+                12,
+                68
+              ]
+            },
+            {
+              "id": "da523f61-03d4-43a0-b2de-9f76a9edb790",
+              "symbols": [
+                {
+                  "value": "VIRC  250117C00017500",
+                  "id": "VIR YP8G6ACCUEX2|VIR R735QTJ8XC9X",
+                  "permtick": "VIRC  250117C00017500",
+                  "underlying": {
+                    "value": "VIRC",
+                    "id": "VIR R735QTJ8XC9X",
+                    "permtick": "VIRC"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 1.35,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 0.65,
+              "profitLoss": -70,
+              "totalFees": 2,
+              "mae": -70,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 70,
+              "isWin": false,
+              "orderIds": [
+                13,
+                69
+              ]
+            },
+            {
+              "id": "92e90459-6777-47cb-b207-c377f86a1ebb",
+              "symbols": [
+                {
+                  "value": "VIRC  250117P00017500",
+                  "id": "VIR 32OCGBQBK48AU|VIR R735QTJ8XC9X",
+                  "permtick": "VIRC  250117P00017500",
+                  "underlying": {
+                    "value": "VIRC",
+                    "id": "VIR R735QTJ8XC9X",
+                    "permtick": "VIRC"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 2.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 1.25,
+              "profitLoss": -95,
+              "totalFees": 2,
+              "mae": -95,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 95,
+              "isWin": false,
+              "orderIds": [
+                14,
+                70
+              ]
+            },
+            {
+              "id": "afe22b82-9eb0-4ae8-8c99-eed34890683a",
+              "symbols": [
+                {
+                  "value": "VSCO  250117C00039000",
+                  "id": "VSCOW YP8G69PV71D2|VSCOW XQC1QYS10FOL",
+                  "permtick": "VSCO  250117C00039000",
+                  "underlying": {
+                    "value": "VSCO",
+                    "id": "VSCOW XQC1QYS10FOL",
+                    "permtick": "VSCO"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 6.3,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 1.3,
+              "profitLoss": -500,
+              "totalFees": 2,
+              "mae": -500,
+              "mfe": 75,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 575,
+              "isWin": false,
+              "orderIds": [
+                15,
+                71
+              ]
+            },
+            {
+              "id": "dc76d5f0-588d-4b49-afa4-03fbc895ee5b",
+              "symbols": [
+                {
+                  "value": "VSCO  250117P00039000",
+                  "id": "VSCOW 32OCGBPP2GUQU|VSCOW XQC1QYS10FOL",
+                  "permtick": "VSCO  250117P00039000",
+                  "underlying": {
+                    "value": "VSCO",
+                    "id": "VSCOW XQC1QYS10FOL",
+                    "permtick": "VSCO"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 6.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 0.5,
+              "profitLoss": -570,
+              "totalFees": 2,
+              "mae": -570,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 570,
+              "isWin": false,
+              "orderIds": [
+                16,
+                72
+              ]
+            },
+            {
+              "id": "a7e857a3-3c6e-4e33-bd83-cad56e7fbc45",
+              "symbols": [
+                {
+                  "value": "ZUMZ  250117C00022500",
+                  "id": "ZUMZ YP8G6AKMJ5DY|ZUMZ T8EZ9H8S21K5",
+                  "permtick": "ZUMZ  250117C00022500",
+                  "underlying": {
+                    "value": "ZUMZ",
+                    "id": "ZUMZ T8EZ9H8S21K5",
+                    "permtick": "ZUMZ"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 0.1,
+              "profitLoss": -490,
+              "totalFees": 2,
+              "mae": -490,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 490,
+              "isWin": false,
+              "orderIds": [
+                17,
+                73
+              ]
+            },
+            {
+              "id": "0c83b550-027d-44b9-9386-d6b0666f8555",
+              "symbols": [
+                {
+                  "value": "ZUMZ  250117P00022500",
+                  "id": "ZUMZ 32OCGBQJTSYRQ|ZUMZ T8EZ9H8S21K5",
+                  "permtick": "ZUMZ  250117P00022500",
+                  "underlying": {
+                    "value": "ZUMZ",
+                    "id": "ZUMZ T8EZ9H8S21K5",
+                    "permtick": "ZUMZ"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-02T21:00:00Z",
+              "entryPrice": 5.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-04T21:00:00Z",
+              "exitPrice": 0.4,
+              "profitLoss": -470,
+              "totalFees": 2,
+              "mae": -470,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 470,
+              "isWin": false,
+              "orderIds": [
+                18,
+                74
+              ]
+            },
+            {
+              "id": "9428f796-d726-460c-95c3-0faf41f7873b",
+              "symbols": [
+                {
+                  "value": "AI    250103C00036500",
+                  "id": "AI YOUNX03EZG1Y|AI XK7HM0U7VFQD",
+                  "permtick": "AI    250103C00036500",
+                  "underlying": {
+                    "value": "AI",
+                    "id": "AI XK7HM0U7VFQD",
+                    "permtick": "AI"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 10,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 0.6,
+              "profitLoss": -940,
+              "totalFees": 2,
+              "mae": -940,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 940,
+              "isWin": false,
+              "orderIds": [
+                19,
+                111
+              ]
+            },
+            {
+              "id": "c5a17c66-3fc9-4e2c-a627-8688763e6b2e",
+              "symbols": [
+                {
+                  "value": "AI    250103P00036500",
+                  "id": "AI 32NYO2G2M99FQ|AI XK7HM0U7VFQD",
+                  "permtick": "AI    250103P00036500",
+                  "underlying": {
+                    "value": "AI",
+                    "id": "AI XK7HM0U7VFQD",
+                    "permtick": "AI"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 5.85,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 0.05,
+              "profitLoss": -580,
+              "totalFees": 2,
+              "mae": -580,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 580,
+              "isWin": false,
+              "orderIds": [
+                20,
+                112
+              ]
+            },
+            {
+              "id": "481d0665-1ce5-460d-a767-b7537f371a91",
+              "symbols": [
+                {
+                  "value": "BLBD  250117C00040000",
+                  "id": "HCAC YP8G69K2VGSM|HCAC VORD7GRZ6XYD",
+                  "permtick": "BLBD  250117C00040000",
+                  "underlying": {
+                    "value": "BLBD",
+                    "id": "HCAC VORD7GRZ6XYD",
+                    "permtick": "BLBD"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 5.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 3.6,
+              "profitLoss": -150,
+              "totalFees": 2,
+              "mae": -150,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 150,
+              "isWin": false,
+              "orderIds": [
+                21,
+                113
+              ]
+            },
+            {
+              "id": "cc1b5987-94a9-4926-9545-c3719ac6ba06",
+              "symbols": [
+                {
+                  "value": "BLBD  250117P00040000",
+                  "id": "HCAC 32OCGBPJA5A6E|HCAC VORD7GRZ6XYD",
+                  "permtick": "BLBD  250117P00040000",
+                  "underlying": {
+                    "value": "BLBD",
+                    "id": "HCAC VORD7GRZ6XYD",
+                    "permtick": "BLBD"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 2.7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 2,
+              "profitLoss": -70,
+              "totalFees": 2,
+              "mae": -70,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 70,
+              "isWin": false,
+              "orderIds": [
+                22,
+                114
+              ]
+            },
+            {
+              "id": "9fa3e089-40ce-410a-ad59-ec80f43cfda7",
+              "symbols": [
+                {
+                  "value": "CASY  250117C00420000",
+                  "id": "CASY YP8G69QD46O6|CASY R735QTJ8XC9X",
+                  "permtick": "CASY  250117C00420000",
+                  "underlying": {
+                    "value": "CASY",
+                    "id": "CASY R735QTJ8XC9X",
+                    "permtick": "CASY"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 20.6,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 7.1,
+              "profitLoss": -1350,
+              "totalFees": 2,
+              "mae": -1350,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 1350,
+              "isWin": false,
+              "orderIds": [
+                23,
+                115
+              ]
+            },
+            {
+              "id": "0dd41695-c2d3-4326-8c77-029a99b4d742",
+              "symbols": [
+                {
+                  "value": "CASY  250117P00420000",
+                  "id": "CASY 32OCGBPPKE01Y|CASY R735QTJ8XC9X",
+                  "permtick": "CASY  250117P00420000",
+                  "underlying": {
+                    "value": "CASY",
+                    "id": "CASY R735QTJ8XC9X",
+                    "permtick": "CASY"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 19.3,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 16.1,
+              "profitLoss": -320,
+              "totalFees": 2,
+              "mae": -355,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 355,
+              "isWin": false,
+              "orderIds": [
+                24,
+                116
+              ]
+            },
+            {
+              "id": "4be36e4c-2121-492f-88ef-295132f7b32f",
+              "symbols": [
+                {
+                  "value": "HQY   250117C00100000",
+                  "id": "HQY YP8G69JL2LT2|HQY VSM78NCRZBL1",
+                  "permtick": "HQY   250117C00100000",
+                  "underlying": {
+                    "value": "HQY",
+                    "id": "HQY VSM78NCRZBL1",
+                    "permtick": "HQY"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 5.2,
+              "profitLoss": -280,
+              "totalFees": 2,
+              "mae": -280,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 280,
+              "isWin": false,
+              "orderIds": [
+                25,
+                117
+              ]
+            },
+            {
+              "id": "e9d9f654-2ceb-46e0-bd79-865dffdb88f1",
+              "symbols": [
+                {
+                  "value": "HQY   250117P00100000",
+                  "id": "HQY 32OCGBPISCF6U|HQY VSM78NCRZBL1",
+                  "permtick": "HQY   250117P00100000",
+                  "underlying": {
+                    "value": "HQY",
+                    "id": "HQY VSM78NCRZBL1",
+                    "permtick": "HQY"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 20,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 1.4,
+              "profitLoss": -1860,
+              "totalFees": 2,
+              "mae": -1860,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 1860,
+              "isWin": false,
+              "orderIds": [
+                26,
+                118
+              ]
+            },
+            {
+              "id": "b42d99f0-57bd-4290-9a41-7d40b5a486fb",
+              "symbols": [
+                {
+                  "value": "MDB   250103C00325000",
+                  "id": "MDB YOUNWZWSW78M|MDB WOU3US9M42N9",
+                  "permtick": "MDB   250103C00325000",
+                  "underlying": {
+                    "value": "MDB",
+                    "id": "MDB WOU3US9M42N9",
+                    "permtick": "MDB"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 37,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 35.15,
+              "profitLoss": -185,
+              "totalFees": 2,
+              "mae": -312.5,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 312.5,
+              "isWin": false,
+              "orderIds": [
+                27,
+                119
+              ]
+            },
+            {
+              "id": "52bb5dc3-8006-42b0-a09f-710d54cefd64",
+              "symbols": [
+                {
+                  "value": "MDB   250103P00325000",
+                  "id": "MDB 32NYO2FW060ME|MDB WOU3US9M42N9",
+                  "permtick": "MDB   250103P00325000",
+                  "underlying": {
+                    "value": "MDB",
+                    "id": "MDB WOU3US9M42N9",
+                    "permtick": "MDB"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 23.25,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 16.2,
+              "profitLoss": -705,
+              "totalFees": 2,
+              "mae": -705,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 705,
+              "isWin": false,
+              "orderIds": [
+                28,
+                120
+              ]
+            },
+            {
+              "id": "d127d583-2318-49f1-80a2-3e6abfe06b0d",
+              "symbols": [
+                {
+                  "value": "NOTV  250117C00005000",
+                  "id": "BASI YP8G69K8RNOM|BASI R735QTJ8XC9X",
+                  "permtick": "NOTV  250117C00005000",
+                  "underlying": {
+                    "value": "NOTV",
+                    "id": "BASI R735QTJ8XC9X",
+                    "permtick": "NOTV"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 0.8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 0.05,
+              "profitLoss": -75,
+              "totalFees": 2,
+              "mae": -75,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 75,
+              "isWin": false,
+              "orderIds": [
+                29,
+                121
+              ]
+            },
+            {
+              "id": "b639908c-fb69-4cb0-acb6-c231c4672701",
+              "symbols": [
+                {
+                  "value": "NOTV  250117P00005000",
+                  "id": "BASI 32OCGBPJG1H2E|BASI R735QTJ8XC9X",
+                  "permtick": "NOTV  250117P00005000",
+                  "underlying": {
+                    "value": "NOTV",
+                    "id": "BASI R735QTJ8XC9X",
+                    "permtick": "NOTV"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 1.7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 1.05,
+              "profitLoss": -65,
+              "totalFees": 2,
+              "mae": -85,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 85,
+              "isWin": false,
+              "orderIds": [
+                30,
+                122
+              ]
+            },
+            {
+              "id": "81b46229-5a55-4486-811c-155072d6daba",
+              "symbols": [
+                {
+                  "value": "ORCL  250103C00185000",
+                  "id": "ORCL YOUNWZ9NDCBQ|ORCL R735QTJ8XC9X",
+                  "permtick": "ORCL  250103C00185000",
+                  "underlying": {
+                    "value": "ORCL",
+                    "id": "ORCL R735QTJ8XC9X",
+                    "permtick": "ORCL"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 15.85,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 6.5,
+              "profitLoss": -935,
+              "totalFees": 2,
+              "mae": -935,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 935,
+              "isWin": false,
+              "orderIds": [
+                31,
+                123
+              ]
+            },
+            {
+              "id": "24174111-89a0-49b6-9ad7-1276eefa3ab4",
+              "symbols": [
+                {
+                  "value": "ORCL  250103P00185000",
+                  "id": "ORCL 32NYO2F8UN5PI|ORCL R735QTJ8XC9X",
+                  "permtick": "ORCL  250103P00185000",
+                  "underlying": {
+                    "value": "ORCL",
+                    "id": "ORCL R735QTJ8XC9X",
+                    "permtick": "ORCL"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 12.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 1.8,
+              "profitLoss": -1030,
+              "totalFees": 2,
+              "mae": -1030,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 1030,
+              "isWin": false,
+              "orderIds": [
+                32,
+                124
+              ]
+            },
+            {
+              "id": "247fcc45-8130-4ed0-9f1e-15065009ae52",
+              "symbols": [
+                {
+                  "value": "PHR   250117C00020000",
+                  "id": "PHR YP8G69JQYSP2|PHR X69BMCA4UNVP",
+                  "permtick": "PHR   250117C00020000",
+                  "underlying": {
+                    "value": "PHR",
+                    "id": "PHR X69BMCA4UNVP",
+                    "permtick": "PHR"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 20,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 0.5,
+              "profitLoss": -1950,
+              "totalFees": 2,
+              "mae": -1950,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 1950,
+              "isWin": false,
+              "orderIds": [
+                33,
+                125
+              ]
+            },
+            {
+              "id": "5b976a2a-574c-4b5e-b317-c605e125925e",
+              "symbols": [
+                {
+                  "value": "PHR   250117P00020000",
+                  "id": "PHR 32OCGBPIY8M2U|PHR X69BMCA4UNVP",
+                  "permtick": "PHR   250117P00020000",
+                  "underlying": {
+                    "value": "PHR",
+                    "id": "PHR X69BMCA4UNVP",
+                    "permtick": "PHR"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 20,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 0.1,
+              "profitLoss": -1990,
+              "totalFees": 2,
+              "mae": -1990,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 1990,
+              "isWin": false,
+              "orderIds": [
+                34,
+                126
+              ]
+            },
+            {
+              "id": "41275e7e-4854-4e0b-a46f-b6f66469a925",
+              "symbols": [
+                {
+                  "value": "TOL   250103C00160000",
+                  "id": "TOL YOUNWYHP8X52|TOL R735QTJ8XC9X",
+                  "permtick": "TOL   250103C00160000",
+                  "underlying": {
+                    "value": "TOL",
+                    "id": "TOL R735QTJ8XC9X",
+                    "permtick": "TOL"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 13.5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 1.5,
+              "profitLoss": -1200,
+              "totalFees": 2,
+              "mae": -1200,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 1200,
+              "isWin": false,
+              "orderIds": [
+                35,
+                127
+              ]
+            },
+            {
+              "id": "b0c78aef-1d50-48d3-8340-0659824eb589",
+              "symbols": [
+                {
+                  "value": "TOL   250103P00160000",
+                  "id": "TOL 32NYO2EGWIQIU|TOL R735QTJ8XC9X",
+                  "permtick": "TOL   250103P00160000",
+                  "underlying": {
+                    "value": "TOL",
+                    "id": "TOL R735QTJ8XC9X",
+                    "permtick": "TOL"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 11.6,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 3.9,
+              "profitLoss": -770,
+              "totalFees": 2,
+              "mae": -770,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 770,
+              "isWin": false,
+              "orderIds": [
+                36,
+                128
+              ]
+            },
+            {
+              "id": "45f3e043-61c1-46f5-bf4a-625342a2b659",
+              "symbols": [
+                {
+                  "value": "UEC   250103C00008000",
+                  "id": "UEC YOUNWYGDK3L2|UEC TWCJFABH06ZP",
+                  "permtick": "UEC   250103C00008000",
+                  "underlying": {
+                    "value": "UEC",
+                    "id": "UEC TWCJFABH06ZP",
+                    "permtick": "UEC"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 1.05,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 0.25,
+              "profitLoss": -80,
+              "totalFees": 2,
+              "mae": -80,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 80,
+              "isWin": false,
+              "orderIds": [
+                37,
+                129
+              ]
+            },
+            {
+              "id": "33b554f4-ac59-4f3a-9717-3b1aa5b4f4f0",
+              "symbols": [
+                {
+                  "value": "UEC   250103P00008000",
+                  "id": "UEC 32NYO2EFKTWYU|UEC TWCJFABH06ZP",
+                  "permtick": "UEC   250103P00008000",
+                  "underlying": {
+                    "value": "UEC",
+                    "id": "UEC TWCJFABH06ZP",
+                    "permtick": "UEC"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-04T21:00:00Z",
+              "entryPrice": 0.85,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-05T21:00:00Z",
+              "exitPrice": 0.05,
+              "profitLoss": -80,
+              "totalFees": 2,
+              "mae": -80,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 80,
+              "isWin": false,
+              "orderIds": [
+                38,
+                130
+              ]
+            },
+            {
+              "id": "653e5662-b204-4811-8af0-80740774d3fa",
+              "symbols": [
+                {
+                  "value": "AZO   250117C03190000",
+                  "id": "AZO YP8G6B06AWCM|AZO R735QTJ8XC9X",
+                  "permtick": "AZO   250117C03190000",
+                  "underlying": {
+                    "value": "AZO",
+                    "id": "AZO R735QTJ8XC9X",
+                    "permtick": "AZO"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T21:00:00Z",
+              "entryPrice": 163.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T21:00:00Z",
+              "exitPrice": 109.4,
+              "profitLoss": -5380,
+              "totalFees": 2,
+              "mae": -5380,
+              "mfe": 3880,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 9260,
+              "isWin": false,
+              "orderIds": [
+                75,
+                171
+              ]
+            },
+            {
+              "id": "d7046cb8-5fd7-4527-8509-94e32e9686c5",
+              "symbols": [
+                {
+                  "value": "AZO   250117P03190000",
+                  "id": "AZO 32OCGBQZDKPQE|AZO R735QTJ8XC9X",
+                  "permtick": "AZO   250117P03190000",
+                  "underlying": {
+                    "value": "AZO",
+                    "id": "AZO R735QTJ8XC9X",
+                    "permtick": "AZO"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T21:00:00Z",
+              "entryPrice": 143.6,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T21:00:00Z",
+              "exitPrice": 76.1,
+              "profitLoss": -6750,
+              "totalFees": 2,
+              "mae": -7760,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 7760,
+              "isWin": false,
+              "orderIds": [
+                76,
+                172
+              ]
+            },
+            {
+              "id": "31984020-8331-4d53-877e-ea83769be43b",
+              "symbols": [
+                {
+                  "value": "BRZE  250117C00040000",
+                  "id": "BRZE YP8G69K2VGSM|BRZE XTK8HZXY1GMD",
+                  "permtick": "BRZE  250117C00040000",
+                  "underlying": {
+                    "value": "BRZE",
+                    "id": "BRZE XTK8HZXY1GMD",
+                    "permtick": "BRZE"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T21:00:00Z",
+              "entryPrice": 11,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T21:00:00Z",
+              "exitPrice": 4.1,
+              "profitLoss": -690,
+              "totalFees": 2,
+              "mae": -690,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 690,
+              "isWin": false,
+              "orderIds": [
+                77,
+                173
+              ]
+            },
+            {
+              "id": "0dda3ebe-8ee7-4504-91e3-3c4dbefeb3ab",
+              "symbols": [
+                {
+                  "value": "BRZE  250117P00040000",
+                  "id": "BRZE 32OCGBPJA5A6E|BRZE XTK8HZXY1GMD",
+                  "permtick": "BRZE  250117P00040000",
+                  "underlying": {
+                    "value": "BRZE",
+                    "id": "BRZE XTK8HZXY1GMD",
+                    "permtick": "BRZE"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T21:00:00Z",
+              "entryPrice": 10,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T21:00:00Z",
+              "exitPrice": 2.4,
+              "profitLoss": -760,
+              "totalFees": 2,
+              "mae": -760,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 760,
+              "isWin": false,
+              "orderIds": [
+                78,
+                174
+              ]
+            },
+            {
+              "id": "68711c3f-3820-4dc4-8ab7-2b77c8f3ac0d",
+              "symbols": [
+                {
+                  "value": "CSBR  250117C00005000",
+                  "id": "CSBR YP8G69K8RNOM|CSBR W388OXA9O1UT",
+                  "permtick": "CSBR  250117C00005000",
+                  "underlying": {
+                    "value": "CSBR",
+                    "id": "CSBR W388OXA9O1UT",
+                    "permtick": "CSBR"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T21:00:00Z",
+              "entryPrice": 10,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T21:00:00Z",
+              "exitPrice": 0.3,
+              "profitLoss": -970,
+              "totalFees": 2,
+              "mae": -970,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 970,
+              "isWin": false,
+              "orderIds": [
+                79,
+                175
+              ]
+            },
+            {
+              "id": "e7fcdba3-2ef9-41c3-838f-2e40049965c6",
+              "symbols": [
+                {
+                  "value": "CSBR  250117P00005000",
+                  "id": "CSBR 32OCGBPJG1H2E|CSBR W388OXA9O1UT",
+                  "permtick": "CSBR  250117P00005000",
+                  "underlying": {
+                    "value": "CSBR",
+                    "id": "CSBR W388OXA9O1UT",
+                    "permtick": "CSBR"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T21:00:00Z",
+              "entryPrice": 10,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T21:00:00Z",
+              "exitPrice": 0.8,
+              "profitLoss": -920,
+              "totalFees": 2,
+              "mae": -920,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 920,
+              "isWin": false,
+              "orderIds": [
+                80,
+                176
+              ]
+            },
+            {
+              "id": "ccd71ed7-f380-48d3-b168-eefa4143b9b9",
+              "symbols": [
+                {
+                  "value": "EMKR  250117C00002500",
+                  "id": "EMKR YP8G69NJS7IE|EMKR R735QTJ8XC9X",
+                  "permtick": "EMKR  250117C00002500",
+                  "underlying": {
+                    "value": "EMKR",
+                    "id": "EMKR R735QTJ8XC9X",
+                    "permtick": "EMKR"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T21:00:00Z",
+              "entryPrice": 0.6,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T21:00:00Z",
+              "exitPrice": 0.15,
+              "profitLoss": -45,
+              "totalFees": 2,
+              "mae": -45,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 45,
+              "isWin": false,
+              "orderIds": [
+                81,
+                177
+              ]
+            },
+            {
+              "id": "fae04621-2c1d-4bed-964a-8dfa5625bf87",
+              "symbols": [
+                {
+                  "value": "EMKR  250117P00002500",
+                  "id": "EMKR 32OCGBPMR20W6|EMKR R735QTJ8XC9X",
+                  "permtick": "EMKR  250117P00002500",
+                  "underlying": {
+                    "value": "EMKR",
+                    "id": "EMKR R735QTJ8XC9X",
+                    "permtick": "EMKR"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T21:00:00Z",
+              "entryPrice": 20,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T21:00:00Z",
+              "exitPrice": 20,
+              "profitLoss": 0,
+              "totalFees": 2,
+              "mae": -1995,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 1995,
+              "isWin": false,
+              "orderIds": [
+                82,
+                178
+              ]
+            },
+            {
+              "id": "078cb0bc-8641-4691-b115-57cc2811ef63",
+              "symbols": [
+                {
+                  "value": "EPIX  250117C00002500",
+                  "id": "EPIX YP8G69NJS7IE|EPIX W21WGWK0DLYD",
+                  "permtick": "EPIX  250117C00002500",
+                  "underlying": {
+                    "value": "EPIX",
+                    "id": "EPIX W21WGWK0DLYD",
+                    "permtick": "EPIX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T21:00:00Z",
+              "entryPrice": 0.75,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T21:00:00Z",
+              "exitPrice": 0.05,
+              "profitLoss": -70,
+              "totalFees": 2,
+              "mae": -70,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 70,
+              "isWin": false,
+              "orderIds": [
+                83,
+                179
+              ]
+            },
+            {
+              "id": "2617f5a6-bc5c-4eae-aeab-934e3891de8a",
+              "symbols": [
+                {
+                  "value": "EPIX  250117P00002500",
+                  "id": "EPIX 32OCGBPMR20W6|EPIX W21WGWK0DLYD",
+                  "permtick": "EPIX  250117P00002500",
+                  "underlying": {
+                    "value": "EPIX",
+                    "id": "EPIX W21WGWK0DLYD",
+                    "permtick": "EPIX"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T21:00:00Z",
+              "entryPrice": 1.2,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T21:00:00Z",
+              "exitPrice": 0.45,
+              "profitLoss": -75,
+              "totalFees": 2,
+              "mae": -75,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 75,
+              "isWin": false,
+              "orderIds": [
+                84,
+                180
+              ]
+            },
+            {
+              "id": "cdb1da52-0928-44e3-8d88-bcafb93cbade",
+              "symbols": [
+                {
+                  "value": "GME   250110C00027000",
+                  "id": "GME YP1K1M3P7QNA|GME SC72NCBXXAHX",
+                  "permtick": "GME   250110C00027000",
+                  "underlying": {
+                    "value": "GME",
+                    "id": "GME SC72NCBXXAHX",
+                    "permtick": "GME"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T21:00:00Z",
+              "entryPrice": 80,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T21:00:00Z",
+              "exitPrice": 4.05,
+              "profitLoss": -7595,
+              "totalFees": 2,
+              "mae": -7595,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 7595,
+              "isWin": false,
+              "orderIds": [
+                85,
+                181
+              ]
+            },
+            {
+              "id": "71a1028a-0551-49ee-b9b1-b115c90a7943",
+              "symbols": [
+                {
+                  "value": "GME   250110P00027000",
+                  "id": "GME 32O5K722WHK12|GME SC72NCBXXAHX",
+                  "permtick": "GME   250110P00027000",
+                  "underlying": {
+                    "value": "GME",
+                    "id": "GME SC72NCBXXAHX",
+                    "permtick": "GME"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T21:00:00Z",
+              "entryPrice": 80,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T21:00:00Z",
+              "exitPrice": 2.09,
+              "profitLoss": -7791,
+              "totalFees": 2,
+              "mae": -7791,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 7791,
+              "isWin": false,
+              "orderIds": [
+                86,
+                182
+              ]
+            },
+            {
+              "id": "755008cd-f1da-4c56-aa53-5c4b95acef34",
+              "symbols": [
+                {
+                  "value": "MAMA  250117C00010000",
+                  "id": "MMMB YP8G69JL0GNA|MMMB XQ652EL0JWPX",
+                  "permtick": "MAMA  250117C00010000",
+                  "underlying": {
+                    "value": "MAMA",
+                    "id": "MMMB XQ652EL0JWPX",
+                    "permtick": "MAMA"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T21:00:00Z",
+              "entryPrice": 20,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T21:00:00Z",
+              "exitPrice": 0.55,
+              "profitLoss": -1945,
+              "totalFees": 2,
+              "mae": -1950,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 1950,
+              "isWin": false,
+              "orderIds": [
+                87,
+                183
+              ]
+            },
+            {
+              "id": "478c509a-dfc3-4890-b1d5-2e2e72b689e9",
+              "symbols": [
+                {
+                  "value": "MAMA  250117P00010000",
+                  "id": "MMMB 32OCGBPISAA12|MMMB XQ652EL0JWPX",
+                  "permtick": "MAMA  250117P00010000",
+                  "underlying": {
+                    "value": "MAMA",
+                    "id": "MMMB XQ652EL0JWPX",
+                    "permtick": "MAMA"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T21:00:00Z",
+              "entryPrice": 20,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T21:00:00Z",
+              "exitPrice": 0.65,
+              "profitLoss": -1935,
+              "totalFees": 2,
+              "mae": -1935,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 1935,
+              "isWin": false,
+              "orderIds": [
+                88,
+                184
+              ]
+            },
+            {
+              "id": "3f83a068-f144-49e2-ad16-ec4070cc86e6",
+              "symbols": [
+                {
+                  "value": "MNY   250117C00001000",
+                  "id": "MNY YP8G69JKYBHI|MNY YCLJN2JFAKBP",
+                  "permtick": "MNY   250117C00001000",
+                  "underlying": {
+                    "value": "MNY",
+                    "id": "MNY YCLJN2JFAKBP",
+                    "permtick": "MNY"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T21:00:00Z",
+              "entryPrice": 20,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T21:00:00Z",
+              "exitPrice": 0.2,
+              "profitLoss": -1980,
+              "totalFees": 2,
+              "mae": -1980,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 1980,
+              "isWin": false,
+              "orderIds": [
+                89,
+                185
+              ]
+            },
+            {
+              "id": "19e00b37-1d70-4ba3-8eb3-521be91caee9",
+              "symbols": [
+                {
+                  "value": "MNY   250117P00001000",
+                  "id": "MNY 32OCGBPIS84VA|MNY YCLJN2JFAKBP",
+                  "permtick": "MNY   250117P00001000",
+                  "underlying": {
+                    "value": "MNY",
+                    "id": "MNY YCLJN2JFAKBP",
+                    "permtick": "MNY"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-05T21:00:00Z",
+              "entryPrice": 20,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-06T21:00:00Z",
+              "exitPrice": 0.15,
+              "profitLoss": -1985,
+              "totalFees": 2,
+              "mae": -1985,
+              "mfe": 0,
+              "duration": "1.00:00:00",
+              "endTradeDrawdown": 1985,
+              "isWin": false,
+              "orderIds": [
+                90,
+                186
+              ]
+            },
+            {
+              "id": "840e300c-cc18-44dc-9ba5-3423f3504f3e",
+              "symbols": [
+                {
+                  "value": "ABM   250117C00055000",
+                  "id": "ABM YP8G69SIGE5I|ABM R735QTJ8XC9X",
+                  "permtick": "ABM   250117C00055000",
+                  "underlying": {
+                    "value": "ABM",
+                    "id": "ABM R735QTJ8XC9X",
+                    "permtick": "ABM"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 20,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 0.6,
+              "profitLoss": -1940,
+              "totalFees": 2,
+              "mae": -1940,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 1940,
+              "isWin": false,
+              "orderIds": [
+                131,
+                239
+              ]
+            },
+            {
+              "id": "aafd6874-3963-444f-87f0-9ffbfad3687f",
+              "symbols": [
+                {
+                  "value": "ABM   250117P00055000",
+                  "id": "ABM 32OCGBPRPQ7JA|ABM R735QTJ8XC9X",
+                  "permtick": "ABM   250117P00055000",
+                  "underlying": {
+                    "value": "ABM",
+                    "id": "ABM R735QTJ8XC9X",
+                    "permtick": "ABM"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 20,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 0.1,
+              "profitLoss": -1990,
+              "totalFees": 2,
+              "mae": -1990,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 1990,
+              "isWin": false,
+              "orderIds": [
+                132,
+                240
+              ]
+            },
+            {
+              "id": "df251012-5051-40f9-8880-f4ce84696413",
+              "symbols": [
+                {
+                  "value": "ADBE  250110C00540000",
+                  "id": "ADBE YP1K1M860X52|ADBE R735QTJ8XC9X",
+                  "permtick": "ADBE  250110C00540000",
+                  "underlying": {
+                    "value": "ADBE",
+                    "id": "ADBE R735QTJ8XC9X",
+                    "permtick": "ADBE"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 36.9,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 35.8,
+              "profitLoss": -110,
+              "totalFees": 2,
+              "mae": -360,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 360,
+              "isWin": false,
+              "orderIds": [
+                133,
+                241
+              ]
+            },
+            {
+              "id": "333115ed-7e86-4d63-bf76-fcec26b86f1b",
+              "symbols": [
+                {
+                  "value": "ADBE  250110P00540000",
+                  "id": "ADBE 32O5K727DAQIU|ADBE R735QTJ8XC9X",
+                  "permtick": "ADBE  250110P00540000",
+                  "underlying": {
+                    "value": "ADBE",
+                    "id": "ADBE R735QTJ8XC9X",
+                    "permtick": "ADBE"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 30.95,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 17.8,
+              "profitLoss": -1315,
+              "totalFees": 2,
+              "mae": -1315,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 1315,
+              "isWin": false,
+              "orderIds": [
+                134,
+                242
+              ]
+            },
+            {
+              "id": "c8b17f79-597b-477a-92bd-32ce1212e3b4",
+              "symbols": [
+                {
+                  "value": "ASYS  250117C00005000",
+                  "id": "ASYS YP8G69K8RNOM|ASYS R735QTJ8XC9X",
+                  "permtick": "ASYS  250117C00005000",
+                  "underlying": {
+                    "value": "ASYS",
+                    "id": "ASYS R735QTJ8XC9X",
+                    "permtick": "ASYS"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 1.95,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 0.25,
+              "profitLoss": -170,
+              "totalFees": 2,
+              "mae": -170,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 170,
+              "isWin": false,
+              "orderIds": [
+                135,
+                243
+              ]
+            },
+            {
+              "id": "544a3c02-905c-450a-b6b0-f66c5678b24f",
+              "symbols": [
+                {
+                  "value": "ASYS  250117P00005000",
+                  "id": "ASYS 32OCGBPJG1H2E|ASYS R735QTJ8XC9X",
+                  "permtick": "ASYS  250117P00005000",
+                  "underlying": {
+                    "value": "ASYS",
+                    "id": "ASYS R735QTJ8XC9X",
+                    "permtick": "ASYS"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 1.05,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 5,
+              "profitLoss": 395,
+              "totalFees": 2,
+              "mae": -70,
+              "mfe": 395,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 70,
+              "isWin": true,
+              "orderIds": [
+                136,
+                244
+              ]
+            },
+            {
+              "id": "433a227c-754c-40ff-8e86-47f67bdf23e8",
+              "symbols": [
+                {
+                  "value": "CGNT  250117C00007500",
+                  "id": "CGNT YP8G69VTGXZA|CGNT XLPN75YI2XK5",
+                  "permtick": "CGNT  250117C00007500",
+                  "underlying": {
+                    "value": "CGNT",
+                    "id": "CGNT XLPN75YI2XK5",
+                    "permtick": "CGNT"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 5.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 1.45,
+              "profitLoss": -365,
+              "totalFees": 2,
+              "mae": -365,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 365,
+              "isWin": false,
+              "orderIds": [
+                137,
+                245
+              ]
+            },
+            {
+              "id": "b9d270b5-af68-45fb-9591-1caca4bd353f",
+              "symbols": [
+                {
+                  "value": "CGNT  250117P00007500",
+                  "id": "CGNT 32OCGBPV0QRD2|CGNT XLPN75YI2XK5",
+                  "permtick": "CGNT  250117P00007500",
+                  "underlying": {
+                    "value": "CGNT",
+                    "id": "CGNT XLPN75YI2XK5",
+                    "permtick": "CGNT"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 0.05,
+              "profitLoss": -495,
+              "totalFees": 2,
+              "mae": -495,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 495,
+              "isWin": false,
+              "orderIds": [
+                138,
+                246
+              ]
+            },
+            {
+              "id": "3b6f2ca7-d81e-4347-a65c-1cc08cbc9386",
+              "symbols": [
+                {
+                  "value": "KNOP  250117C00005000",
+                  "id": "KNOP YP8G69K8RNOM|KNOP VFMHW8LLMYCL",
+                  "permtick": "KNOP  250117C00005000",
+                  "underlying": {
+                    "value": "KNOP",
+                    "id": "KNOP VFMHW8LLMYCL",
+                    "permtick": "KNOP"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 10,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 0.3,
+              "profitLoss": -970,
+              "totalFees": 2,
+              "mae": -970,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 970,
+              "isWin": false,
+              "orderIds": [
+                139,
+                247
+              ]
+            },
+            {
+              "id": "9f429236-769f-42fc-ab55-354e8e03266c",
+              "symbols": [
+                {
+                  "value": "KNOP  250117P00005000",
+                  "id": "KNOP 32OCGBPJG1H2E|KNOP VFMHW8LLMYCL",
+                  "permtick": "KNOP  250117P00005000",
+                  "underlying": {
+                    "value": "KNOP",
+                    "id": "KNOP VFMHW8LLMYCL",
+                    "permtick": "KNOP"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 10,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 0.1,
+              "profitLoss": -990,
+              "totalFees": 2,
+              "mae": -990,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 990,
+              "isWin": false,
+              "orderIds": [
+                140,
+                248
+              ]
+            },
+            {
+              "id": "1a27a878-b1db-49f0-96a1-d7993a3b123a",
+              "symbols": [
+                {
+                  "value": "M     250110C00016500",
+                  "id": "FD YP1K1MQIRSAU|FD R735QTJ8XC9X",
+                  "permtick": "M     250110C00016500",
+                  "underlying": {
+                    "value": "M",
+                    "id": "FD R735QTJ8XC9X",
+                    "permtick": "M"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 20,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 1.03,
+              "profitLoss": -1897,
+              "totalFees": 2,
+              "mae": -1931,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 1931,
+              "isWin": false,
+              "orderIds": [
+                141,
+                249
+              ]
+            },
+            {
+              "id": "b0648ff8-6aa8-4d72-9005-947e8776577d",
+              "symbols": [
+                {
+                  "value": "M     250110P00016500",
+                  "id": "FD 32O5K72PQ1LOM|FD R735QTJ8XC9X",
+                  "permtick": "M     250110P00016500",
+                  "underlying": {
+                    "value": "M",
+                    "id": "FD R735QTJ8XC9X",
+                    "permtick": "M"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 20,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 0.56,
+              "profitLoss": -1944,
+              "totalFees": 2,
+              "mae": -1944,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 1944,
+              "isWin": false,
+              "orderIds": [
+                142,
+                250
+              ]
+            },
+            {
+              "id": "c62bf0e3-0ea2-4bb4-99dc-4b25516bd6ec",
+              "symbols": [
+                {
+                  "value": "NDSN  250117C00250000",
+                  "id": "NDSN YP8G69NJWHTY|NDSN R735QTJ8XC9X",
+                  "permtick": "NDSN  250117C00250000",
+                  "underlying": {
+                    "value": "NDSN",
+                    "id": "NDSN R735QTJ8XC9X",
+                    "permtick": "NDSN"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 14.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 2,
+              "profitLoss": -1210,
+              "totalFees": 2,
+              "mae": -1210,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 1210,
+              "isWin": false,
+              "orderIds": [
+                143,
+                251
+              ]
+            },
+            {
+              "id": "d1bc491b-6859-471e-8bd4-1bf073db5a62",
+              "symbols": [
+                {
+                  "value": "NDSN  250117P00250000",
+                  "id": "NDSN 32OCGBPMR6B7Q|NDSN R735QTJ8XC9X",
+                  "permtick": "NDSN  250117P00250000",
+                  "underlying": {
+                    "value": "NDSN",
+                    "id": "NDSN R735QTJ8XC9X",
+                    "permtick": "NDSN"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 5.7,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 2.2,
+              "profitLoss": -350,
+              "totalFees": 2,
+              "mae": -350,
+              "mfe": 165,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 515,
+              "isWin": false,
+              "orderIds": [
+                144,
+                252
+              ]
+            },
+            {
+              "id": "502aa0d1-7bdc-48fb-8368-3b4b1f6c41cd",
+              "symbols": [
+                {
+                  "value": "OPTT  250117C00000500",
+                  "id": "OPTT YP8G69K8PIIU|OPTT TS2XOP952HYD",
+                  "permtick": "OPTT  250117C00000500",
+                  "underlying": {
+                    "value": "OPTT",
+                    "id": "OPTT TS2XOP952HYD",
+                    "permtick": "OPTT"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 0.05,
+              "profitLoss": -95,
+              "totalFees": 2,
+              "mae": -95,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 95,
+              "isWin": false,
+              "orderIds": [
+                145,
+                253
+              ]
+            },
+            {
+              "id": "47ff459f-7108-4153-acbe-ac24cc8ba72b",
+              "symbols": [
+                {
+                  "value": "OPTT  250117P00000500",
+                  "id": "OPTT 32OCGBPJFZBWM|OPTT TS2XOP952HYD",
+                  "permtick": "OPTT  250117P00000500",
+                  "underlying": {
+                    "value": "OPTT",
+                    "id": "OPTT TS2XOP952HYD",
+                    "permtick": "OPTT"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 0.2,
+              "profitLoss": -80,
+              "totalFees": 2,
+              "mae": -80,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 80,
+              "isWin": false,
+              "orderIds": [
+                146,
+                254
+              ]
+            },
+            {
+              "id": "78576eac-5eff-4b08-8501-836280a7190d",
+              "symbols": [
+                {
+                  "value": "PLAB  250117C00025000",
+                  "id": "PLAB YP8G69NJUCO6|PLAB R735QTJ8XC9X",
+                  "permtick": "PLAB  250117C00025000",
+                  "underlying": {
+                    "value": "PLAB",
+                    "id": "PLAB R735QTJ8XC9X",
+                    "permtick": "PLAB"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 5.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 0.2,
+              "profitLoss": -490,
+              "totalFees": 2,
+              "mae": -490,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 490,
+              "isWin": false,
+              "orderIds": [
+                147,
+                255
+              ]
+            },
+            {
+              "id": "4f94c5a9-f7b4-4f1d-ae26-9b9f207aebac",
+              "symbols": [
+                {
+                  "value": "PLAB  250117P00025000",
+                  "id": "PLAB 32OCGBPMR461Y|PLAB R735QTJ8XC9X",
+                  "permtick": "PLAB  250117P00025000",
+                  "underlying": {
+                    "value": "PLAB",
+                    "id": "PLAB R735QTJ8XC9X",
+                    "permtick": "PLAB"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 5.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 1,
+              "profitLoss": -410,
+              "totalFees": 2,
+              "mae": -410,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 410,
+              "isWin": false,
+              "orderIds": [
+                148,
+                256
+              ]
+            },
+            {
+              "id": "f165be79-d104-422a-bfa6-c65bab0645a6",
+              "symbols": [
+                {
+                  "value": "REVG  250117C00030000",
+                  "id": "REVG YP8G69JWX4QU|REVG WHL6E0BVU545",
+                  "permtick": "REVG  250117C00030000",
+                  "underlying": {
+                    "value": "REVG",
+                    "id": "REVG WHL6E0BVU545",
+                    "permtick": "REVG"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 10.1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 0.1,
+              "profitLoss": -1000,
+              "totalFees": 2,
+              "mae": -1000,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 1000,
+              "isWin": false,
+              "orderIds": [
+                149,
+                257
+              ]
+            },
+            {
+              "id": "950ad801-c304-4b25-b2f9-f88881b241e0",
+              "symbols": [
+                {
+                  "value": "REVG  250117P00030000",
+                  "id": "REVG 32OCGBPJ46Y4M|REVG WHL6E0BVU545",
+                  "permtick": "REVG  250117P00030000",
+                  "underlying": {
+                    "value": "REVG",
+                    "id": "REVG WHL6E0BVU545",
+                    "permtick": "REVG"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 10,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 0.2,
+              "profitLoss": -980,
+              "totalFees": 2,
+              "mae": -980,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 980,
+              "isWin": false,
+              "orderIds": [
+                150,
+                258
+              ]
+            },
+            {
+              "id": "60919a00-488c-4f97-9bae-6cce2e570596",
+              "symbols": [
+                {
+                  "value": "UROY  250117C00002500",
+                  "id": "UROY YP8G69NJS7IE|UROY XO1C741UL279",
+                  "permtick": "UROY  250117C00002500",
+                  "underlying": {
+                    "value": "UROY",
+                    "id": "UROY XO1C741UL279",
+                    "permtick": "UROY"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 0.05,
+              "profitLoss": -495,
+              "totalFees": 2,
+              "mae": -495,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 495,
+              "isWin": false,
+              "orderIds": [
+                151,
+                259
+              ]
+            },
+            {
+              "id": "98183166-aa35-4711-b1db-c3e91544c78e",
+              "symbols": [
+                {
+                  "value": "UROY  250117P00002500",
+                  "id": "UROY 32OCGBPMR20W6|UROY XO1C741UL279",
+                  "permtick": "UROY  250117P00002500",
+                  "underlying": {
+                    "value": "UROY",
+                    "id": "UROY XO1C741UL279",
+                    "permtick": "UROY"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 0.05,
+              "profitLoss": -495,
+              "totalFees": 2,
+              "mae": -495,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 495,
+              "isWin": false,
+              "orderIds": [
+                152,
+                260
+              ]
+            },
+            {
+              "id": "24bdc7b7-dd93-436d-a1bc-6da1ead42814",
+              "symbols": [
+                {
+                  "value": "ZDGE  250117C00003000",
+                  "id": "ZDGE YP8G69JWUZL2|ZDGE WB1UJNWJJTR9",
+                  "permtick": "ZDGE  250117C00003000",
+                  "underlying": {
+                    "value": "ZDGE",
+                    "id": "ZDGE WB1UJNWJJTR9",
+                    "permtick": "ZDGE"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 0.21,
+              "profitLoss": -479,
+              "totalFees": 2,
+              "mae": -479,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 479,
+              "isWin": false,
+              "orderIds": [
+                153,
+                261
+              ]
+            },
+            {
+              "id": "d7bd85c9-93c4-4988-80d1-92a7778f5a03",
+              "symbols": [
+                {
+                  "value": "ZDGE  250117P00003000",
+                  "id": "ZDGE 32OCGBPJ44SYU|ZDGE WB1UJNWJJTR9",
+                  "permtick": "ZDGE  250117P00003000",
+                  "underlying": {
+                    "value": "ZDGE",
+                    "id": "ZDGE WB1UJNWJJTR9",
+                    "permtick": "ZDGE"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-06T21:00:00Z",
+              "entryPrice": 0.85,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-09T21:00:00Z",
+              "exitPrice": 0.1,
+              "profitLoss": -75,
+              "totalFees": 2,
+              "mae": -75,
+              "mfe": 0,
+              "duration": "3.00:00:00",
+              "endTradeDrawdown": 75,
+              "isWin": false,
+              "orderIds": [
+                154,
+                262
+              ]
+            },
+            {
+              "id": "0c38d957-1c03-4423-a6a3-829644847acc",
+              "symbols": [
+                {
+                  "value": "AZPN  250117C00250000",
+                  "id": "AZPN YP8G69NJWHTY|AZPN R735QTJ8XC9X",
+                  "permtick": "AZPN  250117C00250000",
+                  "underlying": {
+                    "value": "AZPN",
+                    "id": "AZPN R735QTJ8XC9X",
+                    "permtick": "AZPN"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-09T21:00:00Z",
+              "entryPrice": 8.5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-11T21:00:00Z",
+              "exitPrice": 1.5,
+              "profitLoss": -700,
+              "totalFees": 2,
+              "mae": -700,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 700,
+              "isWin": false,
+              "orderIds": [
+                263,
+                289
+              ]
+            },
+            {
+              "id": "0b6c6fc8-8355-4276-950e-28b48c6002e4",
+              "symbols": [
+                {
+                  "value": "AZPN  250117P00250000",
+                  "id": "AZPN 32OCGBPMR6B7Q|AZPN R735QTJ8XC9X",
+                  "permtick": "AZPN  250117P00250000",
+                  "underlying": {
+                    "value": "AZPN",
+                    "id": "AZPN R735QTJ8XC9X",
+                    "permtick": "AZPN"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-09T21:00:00Z",
+              "entryPrice": 7.4,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-11T21:00:00Z",
+              "exitPrice": 0.9,
+              "profitLoss": -650,
+              "totalFees": 2,
+              "mae": -650,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 650,
+              "isWin": false,
+              "orderIds": [
+                264,
+                290
+              ]
+            },
+            {
+              "id": "2744d912-df8d-42c2-a544-7eee09d0e45c",
+              "symbols": [
+                {
+                  "value": "DRI   250117C00170000",
+                  "id": "DRI YP8G69M89TFQ|DRI R735QTJ8XC9X",
+                  "permtick": "DRI   250117C00170000",
+                  "underlying": {
+                    "value": "DRI",
+                    "id": "DRI R735QTJ8XC9X",
+                    "permtick": "DRI"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-09T21:00:00Z",
+              "entryPrice": 11.5,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-11T21:00:00Z",
+              "exitPrice": 1.3,
+              "profitLoss": -1020,
+              "totalFees": 2,
+              "mae": -1020,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 1020,
+              "isWin": false,
+              "orderIds": [
+                265,
+                291
+              ]
+            },
+            {
+              "id": "4041e3af-ea73-46ce-9638-8498f3648cc1",
+              "symbols": [
+                {
+                  "value": "DRI   250117P00170000",
+                  "id": "DRI 32OCGBPLFJMTI|DRI R735QTJ8XC9X",
+                  "permtick": "DRI   250117P00170000",
+                  "underlying": {
+                    "value": "DRI",
+                    "id": "DRI R735QTJ8XC9X",
+                    "permtick": "DRI"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-09T21:00:00Z",
+              "entryPrice": 11.8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-11T21:00:00Z",
+              "exitPrice": 2,
+              "profitLoss": -980,
+              "totalFees": 2,
+              "mae": -980,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 980,
+              "isWin": false,
+              "orderIds": [
+                266,
+                292
+              ]
+            },
+            {
+              "id": "97917e20-8e15-4ade-917e-c71c3f0a2873",
+              "symbols": [
+                {
+                  "value": "PMCB  250117C00002500",
+                  "id": "PMCB YP8G69NJS7IE|PMCB XQVQOU3EJIW5",
+                  "permtick": "PMCB  250117C00002500",
+                  "underlying": {
+                    "value": "PMCB",
+                    "id": "PMCB XQVQOU3EJIW5",
+                    "permtick": "PMCB"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-09T21:00:00Z",
+              "entryPrice": 10,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-11T21:00:00Z",
+              "exitPrice": 5,
+              "profitLoss": -500,
+              "totalFees": 2,
+              "mae": -820,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 820,
+              "isWin": false,
+              "orderIds": [
+                267,
+                293
+              ]
+            },
+            {
+              "id": "8f273d9d-e96f-4e3d-b5c7-2b8fe428697e",
+              "symbols": [
+                {
+                  "value": "PMCB  250117P00002500",
+                  "id": "PMCB 32OCGBPMR20W6|PMCB XQVQOU3EJIW5",
+                  "permtick": "PMCB  250117P00002500",
+                  "underlying": {
+                    "value": "PMCB",
+                    "id": "PMCB XQVQOU3EJIW5",
+                    "permtick": "PMCB"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-09T21:00:00Z",
+              "entryPrice": 10,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-11T21:00:00Z",
+              "exitPrice": 0.1,
+              "profitLoss": -990,
+              "totalFees": 2,
+              "mae": -990,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 990,
+              "isWin": false,
+              "orderIds": [
+                268,
+                294
+              ]
+            },
+            {
+              "id": "41a19145-d67b-44a7-8206-54e3ec4e6c46",
+              "symbols": [
+                {
+                  "value": "RCAT  250117C00008000",
+                  "id": "RCAT YP8G69KQMNTY|RCAT XO3B3AS6QKIT",
+                  "permtick": "RCAT  250117C00008000",
+                  "underlying": {
+                    "value": "RCAT",
+                    "id": "RCAT XO3B3AS6QKIT",
+                    "permtick": "RCAT"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-09T21:00:00Z",
+              "entryPrice": 20,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-11T21:00:00Z",
+              "exitPrice": 0.1,
+              "profitLoss": -1990,
+              "totalFees": 2,
+              "mae": -1990,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 1990,
+              "isWin": false,
+              "orderIds": [
+                269,
+                295
+              ]
+            },
+            {
+              "id": "973f2d0e-468b-4950-a9bc-c0118b17101d",
+              "symbols": [
+                {
+                  "value": "RCAT  250117P00008000",
+                  "id": "RCAT 32OCGBPJXWH7Q|RCAT XO3B3AS6QKIT",
+                  "permtick": "RCAT  250117P00008000",
+                  "underlying": {
+                    "value": "RCAT",
+                    "id": "RCAT XO3B3AS6QKIT",
+                    "permtick": "RCAT"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-09T21:00:00Z",
+              "entryPrice": 1.8,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-11T21:00:00Z",
+              "exitPrice": 0.1,
+              "profitLoss": -170,
+              "totalFees": 2,
+              "mae": -170,
+              "mfe": 20,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 190,
+              "isWin": false,
+              "orderIds": [
+                270,
+                296
+              ]
+            },
+            {
+              "id": "3df37767-60a8-4451-acaf-de46d0eadc9c",
+              "symbols": [
+                {
+                  "value": "USAU  250117C00007500",
+                  "id": "DTM YP8G69VTGXZA|DTM R735QTJ8XC9X",
+                  "permtick": "USAU  250117C00007500",
+                  "underlying": {
+                    "value": "USAU",
+                    "id": "DTM R735QTJ8XC9X",
+                    "permtick": "USAU"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-09T21:00:00Z",
+              "entryPrice": 1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-11T21:00:00Z",
+              "exitPrice": 0.15,
+              "profitLoss": -85,
+              "totalFees": 2,
+              "mae": -85,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 85,
+              "isWin": false,
+              "orderIds": [
+                271,
+                297
+              ]
+            },
+            {
+              "id": "42e391dd-2ea6-47d9-8236-55fe6c63ced7",
+              "symbols": [
+                {
+                  "value": "USAU  250117P00007500",
+                  "id": "DTM 32OCGBPV0QRD2|DTM R735QTJ8XC9X",
+                  "permtick": "USAU  250117P00007500",
+                  "underlying": {
+                    "value": "USAU",
+                    "id": "DTM R735QTJ8XC9X",
+                    "permtick": "USAU"
+                  }
+                }
+              ],
+              "entryTime": "2024-12-09T21:00:00Z",
+              "entryPrice": 1,
+              "direction": 0,
+              "quantity": 1,
+              "exitTime": "2024-12-11T21:00:00Z",
+              "exitPrice": 0.45,
+              "profitLoss": -55,
+              "totalFees": 2,
+              "mae": -55,
+              "mfe": 0,
+              "duration": "2.00:00:00",
+              "endTradeDrawdown": 55,
+              "isWin": false,
+              "orderIds": [
+                272,
+                298
+              ]
+            }
+          ]
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-20T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "InsufficientBuyingPowerOrderResponseErrorAnalysis",
+            "issue": "One of the following cases occurred:\n - The algorithm tried to place an order but the buying power model determined you couldn't afford it\n - The algorithm tried to place a market on open order with daily data",
+            "sample": "Order Error: ids: [305,306], Insufficient buying power to complete orders (Value:[85,265]), Reason: Id: 305,306, Maintenance Margin Delta: 350, Free Margin: -289.",
+            "count": 10,
+            "solutions": [
+              "This error occurs when you place an order but the buying power model determines you can't afford it.\nTo avoid this order response error, ensure you have enough margin remaining to cover the initial margin requirements of the order before placing it.\nExample for regular orders:\n```\ndef on_data(self, slice: Slice) -> None:\n    security = self.securities[\"SPY\"]\n    quantity = 100\n    parameter = InitialMarginParameters(security, quantity)\n    initial_margin = security.buying_power_model.get_initial_margin_requirement(parameter)\n    if self.portfolio.margin_remaining >= initial_margin.value:\n        self.market_order(security.symbol, quantity)\n    else:\n        self.debug(\"You don't have sufficient margin for this order.\")\n```",
+              "This error also commonly occurs when you place a market on open order with daily data. If you place the order with `set_holdings` or use `calculate_order_quantity` to determine the order quantity, LEAN calculates the order quantity based on the market close price. If the open price on the following day makes your order more expensive, then you may have insufficient buying power. To avoid the order response error in this case, either use intraday data and place trades when the market is open or adjust your buying power buffer.\n```\n# Set the cash buffer to 5%\nself.settings.free_portfolio_value_percentage = 0.05\n\n# Set the cash buffer to $10,000\nself.settings.free_portfolio_value = 10000\n```\nIf you use `free_portfolio_value_percentage`, you must set it in the `initialize` or `post_initialize` event handler. If you use `free_portfolio_value`, you must set it after the `post_initialize` event handler."
+            ]
+          },
+          {
+            "name": "AlgorithmSpeedAnalysis / SlowExecution",
+            "issue": "The algorithm is running below 40k data points per second.",
+            "sample": "The algorithm executed at only 1k data points per second over the whole 10s run.",
+            "solutions": [
+              "Review the algorithm code for inefficiencies.",
+              "To see where the execution time is spent, set the `performance_sample_period` setting, like `self.settings.performance_sample_period = timedelta(days=1)`, and rerun to get a \"Performance\" time-breakdown chart.",
+              "If there is a universe, reduce its size.",
+              "Reduce the data resolution.",
+              "If the algorithm is training a model, reduce the amount of training data or reduce the number of epochs in the training process."
+            ]
+          },
+          {
+            "name": "PortfolioMarginUsageAnalysis",
+            "issue": "The algorithm sometimes only utilizes a small proportion of the margin available.",
+            "sample": "Number of days when the 3-day SMA of the margin usage drops below 50%: 11",
+            "solutions": [
+              "Adjust the strategy logic or position sizing to utilize more margin.",
+              "If the algorithm logic leads to periods of time when the portfolio sits in cash, consider holding a \"risk-free\" asset during these periods."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "216.9%",
+          "Used RAM (MB)": "526",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-5e762e7a1945887242c1bab7938633de",
+          "LEAN Version": "v2.5.0.0.18270",
+          "Up Time": "0d 00:00:14"
+        }
+      },
+      "success": true
+    },
+    "error": null,
+    "stacktrace": null,
+    "has_initialize_error": false,
+    "trade_statistics": {
+      "startDateTime": "2024-12-02T21:00:00Z",
+      "endDateTime": "2024-12-11T21:00:00Z",
+      "totalNumberOfTrades": 88,
+      "numberOfWinningTrades": 1,
+      "numberOfLosingTrades": 87,
+      "totalProfitLoss": "-88556.00",
+      "totalProfit": "395.00",
+      "totalLoss": "-88951.00",
+      "largestProfit": "395.00",
+      "largestLoss": "-7791.00",
+      "averageProfitLoss": "-1006.3182",
+      "averageProfit": "395.00",
+      "averageLoss": "-1022.4253",
+      "averageTradeDuration": "1.20:43:38.1818175",
+      "averageWinningTradeDuration": "3.00:00:00",
+      "averageLosingTradeDuration": "1.20:24:49.6551717",
+      "medianTradeDuration": "2.00:00:00",
+      "medianWinningTradeDuration": "3.00:00:00",
+      "medianLosingTradeDuration": "2.00:00:00",
+      "maxConsecutiveWinningTrades": 1,
+      "maxConsecutiveLosingTrades": 59,
+      "profitLossRatio": "0.3863",
+      "winLossRatio": "0.0115",
+      "winRate": "0.0114",
+      "lossRate": "0.9886",
+      "averageMAE": "-1055.7670",
+      "averageMFE": "51.5341",
+      "largestMAE": "-7791.00",
+      "largestMFE": "3880.00",
+      "maximumClosedTradeDrawdown": "-88556.00",
+      "maximumIntraTradeDrawdown": "-88556.00",
+      "profitLossStandardDeviation": "1441.0883",
+      "profitLossDownsideDeviation": "1441.4532",
+      "profitFactor": "0.0044",
+      "sharpeRatio": "-0.6983",
+      "sortinoRatio": "-0.6981",
+      "profitToMaxDrawdownRatio": "-1",
+      "maximumEndTradeDrawdown": "9260.00",
+      "averageEndTradeDrawdown": "-1057.8523",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "176"
+    },
+    "total_orders": "320",
+    "finished_at": "2026-11-18T20:02:30.045363+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "statistics": {
+    "Total Orders": "320",
+    "Average Win": "1.27%",
+    "Average Loss": "-2.44%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "100.300%",
+    "Expectancy": "-0.983",
+    "Start Equity": "100000",
+    "End Equity": "-289",
+    "Net Profit": "-100.289%",
+    "Sharpe Ratio": "-0.196",
+    "Sortino Ratio": "-0.196",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "99%",
+    "Win Rate": "1%",
+    "Profit-Loss Ratio": "0.52",
+    "Alpha": "-1.478",
+    "Beta": "17.58",
+    "Annual Standard Deviation": "5.354",
+    "Annual Variance": "28.67",
+    "Information Ratio": "-0.201",
+    "Tracking Error": "5.341",
+    "Treynor Ratio": "-0.06",
+    "Total Fees": "$188.00",
+    "Estimated Strategy Capacity": "$1000.00",
+    "Lowest Capacity Asset": "CGNT 32OCGBPV0QRD2|CGNT XLPN75YI2XK5",
+    "Portfolio Turnover": "-142.26%",
+    "Drawdown Recovery": "0"
+  },
+  "qc_note": "",
+  "total_orders": "320"
+}

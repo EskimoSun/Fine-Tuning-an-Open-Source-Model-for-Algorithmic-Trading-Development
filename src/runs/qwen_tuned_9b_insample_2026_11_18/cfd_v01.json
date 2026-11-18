@@ -1,0 +1,284 @@
+{
+  "prompt_id": "cfd_v01",
+  "model": "qwen_tuned_9b_final_nothink_insample",
+  "base_model": "qwen_tuned_9b_final_nothink_insample",
+  "model_id": "jared-309b/qwen9b-final-insample-sxz",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass CalendarConsolidatorExampleAlgorithm(QCAlgorithm):\n    \n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # Add the some trading pair.\n        index = self.add_index(\"SPY\")\n        # Create a CalendarConsolidator that fires at 9:30 AM every day.\n        calendar_consolidator = CalendarConsolidator(self._daily_open_etf_morning_trading_hours)\n        # You can also create a CalendarConsolidator with a start time and duration.\n        # calendar_consolidator = CalendarConsolidator(9, 30, timedelta(0))\n        # Attach a consolidation handler that will receive the consolidated bars.\n        calendar_consolidator.data_consolidated += self._consolidation_handler\n        # Subscribe the consolidator for automatic updates with the prices of the asset.\n        self.subscription_manager.add_consolidator(index, calendar_consolidator)\n        \n        self._index = index\n\n    def _consolidation_handler(self, sender: object, consolidated_bar: BaseConsolidatedBar) -> None:\n        # This example will buy the ETF if we are not already in a position\n        # It will sell the ETF if we are already in a position\n        # Therefore, it will trade daily to trade the same amount\n        if not self._index.invested:\n            self.set_holdings(self._index, 1)\n        else:\n            self.liquidate(self._index)\n\n    def _daily_open_etf_morning_trading_hours(self, time: datetime) -> bool:\n        # Open-trading-hours example: will return True 9:30-10:00 AM\n        # while the market is open, so the method is only\n        # active during the first 30 minutes of the trading day.\n        if time.hour != 9 or time.minute < 30:\n            return False\n        # Stop trading 30 seconds after the open to avoid stale data.\n        if self.utc_time % 300 < 30:\n            return False\n        return True\n```",
+  "generated_at": "2026-11-18T19:50:43.048436+00:00",
+  "has_code": true,
+  "static_findings": [],
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass CalendarConsolidatorExampleAlgorithm(QCAlgorithm):\n    \n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # Add the some trading pair.\n        index = self.add_index(\"SPY\")\n        # Create a CalendarConsolidator that fires at 9:30 AM every day.\n        calendar_consolidator = CalendarConsolidator(self._daily_open_etf_morning_trading_hours)\n        # You can also create a CalendarConsolidator with a start time and duration.\n        # calendar_consolidator = CalendarConsolidator(9, 30, timedelta(0))\n        # Attach a consolidation handler that will receive the consolidated bars.\n        calendar_consolidator.data_consolidated += self._consolidation_handler\n        # Subscribe the consolidator for automatic updates with the prices of the asset.\n        self.subscription_manager.add_consolidator(index, calendar_consolidator)\n        \n        self._index = index\n\n    def _consolidation_handler(self, sender: object, consolidated_bar: BaseConsolidatedBar) -> None:\n        # This example will buy the ETF if we are not already in a position\n        # It will sell the ETF if we are already in a position\n        # Therefore, it will trade daily to trade the same amount\n        if not self._index.invested:\n            self.set_holdings(self._index, 1)\n        else:\n            self.liquidate(self._index)\n\n    def _daily_open_etf_morning_trading_hours(self, time: datetime) -> bool:\n        # Open-trading-hours example: will return True 9:30-10:00 AM\n        # while the market is open, so the method is only\n        # active during the first 30 minutes of the trading day.\n        if time.hour != 9 or time.minute < 30:\n            return False\n        # Stop trading 30 seconds after the open to avoid stale data.\n        if self.utc_time % 300 < 30:\n            return False\n        return True\n",
+    "source_sha256": "04abc0b52bb540e9b36d382991d902fbdeb33d88e7bb176187587ffcf13e49b2",
+    "started_at": "2026-11-18T20:08:06.661967+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39640965,
+    "compile_id": "98bb317ab53dd064e929bd0ef78f4374-580ffbf1b363b91c2dc1dc619d38bcbb",
+    "compile_created": {
+      "compileId": "98bb317ab53dd064e929bd0ef78f4374-580ffbf1b363b91c2dc1dc619d38bcbb",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39640965,
+      "signature": "580ffbf1b363b91c2dc1dc619d38bcbb",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "98bb317ab53dd064e929bd0ef78f4374-580ffbf1b363b91c2dc1dc619d38bcbb",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39640965, with CompileID: 98bb317ab53dd064e929bd0ef78f4374-580ffbf1b363b91c2dc1dc619d38bcbb, Lean Version: 2.5.0.0.18270"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39640965, with CompileID: 98bb317ab53dd064e929bd0ef78f4374-580ffbf1b363b91c2dc1dc619d38bcbb, Lean Version: 2.5.0.0.18270"
+    ],
+    "backtest_id": "8139651c99549098e3bfbf7c16c237b7",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "cfd_v01",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39640965,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "8139651c99549098e3bfbf7c16c237b7",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 11
+        },
+        "backtestStart": "2026-11-18 20:08:11",
+        "backtestEnd": "2026-11-18 20:08:11",
+        "created": "2026-11-18 20:08:11",
+        "snapshotId": 39640972,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 5591a6cc",
+        "outOfSampleMaxEndDate": "2026-08-20T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "cfd_v01",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39640965,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "8139651c99549098e3bfbf7c16c237b7",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 11
+        },
+        "backtestStart": "2026-11-18 20:08:11",
+        "backtestEnd": "2026-11-18 20:08:11",
+        "created": "2026-11-18 20:08:11",
+        "snapshotId": 39640972,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;BaseConsolidatedBar&#039; is not defined\n  at CalendarConsolidatorExampleAlgorithm\n    def _consolidation_handler(self, sender: object, consolidated_bar: BaseConsolidatedBar) -&gt; None:\n                                                                       ^^^^^^^^^^^^^^^^^^^\n in main.py: line 23\n  at \n    class CalendarConsolidatorExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;BaseConsolidatedBar&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;BaseConsolidatedBar&#039; is not defined\n  at CalendarConsolidatorExampleAlgorithm\n    def _consolidation_handler(self, sender: object, consolidated_bar: BaseConsolidatedBar) -&gt; None:\n                                                                       ^^^^^^^^^^^^^^^^^^^\n in main.py: line 23\n  at \n    class CalendarConsolidatorExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;BaseConsolidatedBar&#039; is not defined",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'BaseConsolidatedBar' is not defined\n  at CalendarConsolidatorExampleAlgorithm\n    def _consolidation_handler(self, sender: object, consolidated_bar: BaseConsolidatedBar) -> None:\n                                                                       ^^^^^^^^^^^^^^^^^^^\n in main.py: line 23\n  at <module>\n    class CalendarConsolidatorExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'BaseConsolidatedBar' is not defined",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 5591a6cc",
+        "outOfSampleMaxEndDate": "2026-08-20T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "6.7%",
+          "Used RAM (MB)": "251",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-8139651c99549098e3bfbf7c16c237b7",
+          "LEAN Version": "v2.5.0.0.18270",
+          "Up Time": "0d 00:00:14"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;BaseConsolidatedBar&#039; is not defined\n  at CalendarConsolidatorExampleAlgorithm\n    def _consolidation_handler(self, sender: object, consolidated_bar: BaseConsolidatedBar) -&gt; None:\n                                                                       ^^^^^^^^^^^^^^^^^^^\n in main.py: line 23\n  at \n    class CalendarConsolidatorExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;BaseConsolidatedBar&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;BaseConsolidatedBar&#039; is not defined\n  at CalendarConsolidatorExampleAlgorithm\n    def _consolidation_handler(self, sender: object, consolidated_bar: BaseConsolidatedBar) -&gt; None:\n                                                                       ^^^^^^^^^^^^^^^^^^^\n in main.py: line 23\n  at \n    class CalendarConsolidatorExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;BaseConsolidatedBar&#039; is not defined",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'BaseConsolidatedBar' is not defined\n  at CalendarConsolidatorExampleAlgorithm\n    def _consolidation_handler(self, sender: object, consolidated_bar: BaseConsolidatedBar) -> None:\n                                                                       ^^^^^^^^^^^^^^^^^^^\n in main.py: line 23\n  at <module>\n    class CalendarConsolidatorExampleAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'BaseConsolidatedBar' is not defined",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-18T20:09:02.491513+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "total_orders": null
+}
