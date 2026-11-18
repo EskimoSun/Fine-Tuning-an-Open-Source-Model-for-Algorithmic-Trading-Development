@@ -1,0 +1,331 @@
+{
+  "prompt_id": "equity-pairs-trading-cointegration_v01",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass ColaPepsiPairsTradingAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(250000)\n\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        self._ko = self.add_equity(\"KO\", Resolution.MINUTE)\n        self._pep = self.add_equity(\"PEP\", Resolution.MINUTE)\n        self._spread = self.spread(self._ko.symbol, self._pep.symbol, True)\n        # Alternatively, use a manual indicator.\n        # self._spread = Spread(self._ko.symbol, self._pep.symbol, True)\n        # self.warm_up_indicator(self._spread)\n        # self.register_indicator(self._ko, self._spread)\n        # self.register_indicator(self._pep, self._spread)\n\n        self._spread_ma = SimpleMovingAverage(20)\n        # Alternatively, use a manual indicator.\n        # self._spread_ma = SimpleMovingAverage(20)\n        # self.warm_up_indicator(self._spread_ma)\n        # self.register_indicator(self._spread, self._spread_ma)\n\n        self.plot_indicator(\"Spread\", self._spread, self._spread_ma)\n\n        self.schedule.on(\n            self.date_rules.every_day(self._ko.symbol),\n            self.time_rules.after_market_open(self._ko.symbol, 30),\n            self._rebalance\n        )\n\n    def _rebalance(self) -> None:\n        if not self._spread.is_ready or not self._spread_ma.is_ready:\n            return\n\n        current_spread = self._spread.current.value\n        ma_spread = self._spread_ma.current.value\n\n        if not self._ko.invested and not self._pep.invested:\n            if abs(current_spread - ma_spread) > 2.0:\n                if current_spread > ma_spread:\n                    self.set_holdings(self._ko, 1.0, True)\n                else:\n                    self.set_holdings(self._pep, 1.0, True)\n        elif self._ko.invested and not self._pep.invested:\n            if current_spread < ma_spread:\n                self.liquidate(self._ko)\n                self.set_holdings(self._pep, 1.0, True)\n        elif self._pep.invested and not self._ko.invested:\n            if current_spread > ma_spread:\n                self.liquidate(self._pep)\n                self.set_holdings(self._ko, 1.0, True)\n```",
+  "generated_at": "2026-11-12T23:52:51.290745+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "spread"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass ColaPepsiPairsTradingAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(250000)\n\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        self._ko = self.add_equity(\"KO\", Resolution.MINUTE)\n        self._pep = self.add_equity(\"PEP\", Resolution.MINUTE)\n        self._spread = self.spread(self._ko.symbol, self._pep.symbol, True)\n        # Alternatively, use a manual indicator.\n        # self._spread = Spread(self._ko.symbol, self._pep.symbol, True)\n        # self.warm_up_indicator(self._spread)\n        # self.register_indicator(self._ko, self._spread)\n        # self.register_indicator(self._pep, self._spread)\n\n        self._spread_ma = SimpleMovingAverage(20)\n        # Alternatively, use a manual indicator.\n        # self._spread_ma = SimpleMovingAverage(20)\n        # self.warm_up_indicator(self._spread_ma)\n        # self.register_indicator(self._spread, self._spread_ma)\n\n        self.plot_indicator(\"Spread\", self._spread, self._spread_ma)\n\n        self.schedule.on(\n            self.date_rules.every_day(self._ko.symbol),\n            self.time_rules.after_market_open(self._ko.symbol, 30),\n            self._rebalance\n        )\n\n    def _rebalance(self) -> None:\n        if not self._spread.is_ready or not self._spread_ma.is_ready:\n            return\n\n        current_spread = self._spread.current.value\n        ma_spread = self._spread_ma.current.value\n\n        if not self._ko.invested and not self._pep.invested:\n            if abs(current_spread - ma_spread) > 2.0:\n                if current_spread > ma_spread:\n                    self.set_holdings(self._ko, 1.0, True)\n                else:\n                    self.set_holdings(self._pep, 1.0, True)\n        elif self._ko.invested and not self._pep.invested:\n            if current_spread < ma_spread:\n                self.liquidate(self._ko)\n                self.set_holdings(self._pep, 1.0, True)\n        elif self._pep.invested and not self._ko.invested:\n            if current_spread > ma_spread:\n                self.liquidate(self._pep)\n                self.set_holdings(self._ko, 1.0, True)\n",
+    "source_sha256": "400422212982f02b829b864f737a55bfc77f3dce2f3230701a6c68d9502434bf",
+    "started_at": "2026-11-12T23:52:51.293833+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$250,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Engine.Run(): During the algorithm initialization, the following exception has occurred: 'ColaPepsiPairsTradingAlgorithm' object has no attribute 'spread',  at initia",
+    "project_id": 39315080,
+    "compile_id": "19f2926a5209ae2841707360fb1a8769-55f5daeb3aafad180ba17f7be7d8ef2d",
+    "compile_created": {
+      "compileId": "19f2926a5209ae2841707360fb1a8769-55f5daeb3aafad180ba17f7be7d8ef2d",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39315080,
+      "signature": "55f5daeb3aafad180ba17f7be7d8ef2d",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "19f2926a5209ae2841707360fb1a8769-55f5daeb3aafad180ba17f7be7d8ef2d",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39315080, with CompileID: 19f2926a5209ae2841707360fb1a8769-55f5daeb3aafad180ba17f7be7d8ef2d, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39315080, with CompileID: 19f2926a5209ae2841707360fb1a8769-55f5daeb3aafad180ba17f7be7d8ef2d, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "b2b32a3ef356c96ae95b915b4b4bd4e2",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v01",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315080,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "b2b32a3ef356c96ae95b915b4b4bd4e2",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 12
+        },
+        "backtestStart": "2026-11-12 23:52:54",
+        "backtestEnd": "2026-11-12 23:52:54",
+        "created": "2026-11-12 23:52:54",
+        "snapshotId": 39315081,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v01",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315080,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "b2b32a3ef356c96ae95b915b4b4bd4e2",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 12
+        },
+        "backtestStart": "2026-11-12 23:52:54",
+        "backtestEnd": "2026-11-12 23:52:54",
+        "created": "2026-11-12 23:52:54",
+        "snapshotId": 39315081,
+        "status": "Runtime Error",
+        "error": "[ERROR] FATAL UNHANDLED EXCEPTION:Engine.Run(): During the algorithm initialization, the following exception has occurred: 'ColaPepsiPairsTradingAlgorithm' object has no attribute 'spread',  at initialize,    self._spread = self.spread(self._ko.symbol, self._pep.symbol, True),                   ^^^^^^^^^^^, in main.py: line 16, 'ColaPepsiPairsTradingAlgorithm' object has no attribute 'spread',Extensions.SetRuntimeError(): Extensions.SetRuntimeError(): RuntimeError at 01/01/2022 05:00:00 UTC. Context: RuntimeError System.Exception: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: 'ColaPepsiPairsTradingAlgorithm' object has no attribute 'spread',  at initialize,    self._spread = self.spread(self._ko.symbol, self._pep.symbol, True),                   ^^^^^^^^^^^, in main.py: line 16, 'ColaPepsiPairsTradingAlgorithm' object has no attribute 'spread',ApiConnection.TryRequest(https://www.quantconnect.com/api/v2/cloud/backtest/status/update): Error: request timed out, no response",
+        "stacktrace": "'ColaPepsiPairsTradingAlgorithm' object has no attribute 'spread'\n  at initialize\n    self._spread = self.spread(self._ko.symbol, self._pep.symbol, True)\n                   ^^^^^^^^^^^\n in main.py: line 16\n 'ColaPepsiPairsTradingAlgorithm' object has no attribute 'spread'",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$250,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "4.5%",
+          "Used RAM (MB)": "228",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-47-b2b32a3ef356c96ae95b915b4b4bd4e2",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:11"
+        }
+      },
+      "success": true
+    },
+    "error": "[ERROR] FATAL UNHANDLED EXCEPTION:Engine.Run(): During the algorithm initialization, the following exception has occurred: 'ColaPepsiPairsTradingAlgorithm' object has no attribute 'spread',  at initialize,    self._spread = self.spread(self._ko.symbol, self._pep.symbol, True),                   ^^^^^^^^^^^, in main.py: line 16, 'ColaPepsiPairsTradingAlgorithm' object has no attribute 'spread',Extensions.SetRuntimeError(): Extensions.SetRuntimeError(): RuntimeError at 01/01/2022 05:00:00 UTC. Context: RuntimeError System.Exception: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: 'ColaPepsiPairsTradingAlgorithm' object has no attribute 'spread',  at initialize,    self._spread = self.spread(self._ko.symbol, self._pep.symbol, True),                   ^^^^^^^^^^^, in main.py: line 16, 'ColaPepsiPairsTradingAlgorithm' object has no attribute 'spread',ApiConnection.TryRequest(https://www.quantconnect.com/api/v2/cloud/backtest/status/update): Error: request timed out, no response",
+    "stacktrace": "'ColaPepsiPairsTradingAlgorithm' object has no attribute 'spread'\n  at initialize\n    self._spread = self.spread(self._ko.symbol, self._pep.symbol, True)\n                   ^^^^^^^^^^^\n in main.py: line 16\n 'ColaPepsiPairsTradingAlgorithm' object has no attribute 'spread'",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:53:42.086145+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Engine.Run(): During the algorithm initialization, the following exception has occurred: 'ColaPepsiPairsTradingAlgorithm' object has no attribute 'spread',  at initia",
+  "note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Engine.Run(): During the algorithm initialization, the following exception has occurred: 'ColaPepsiPairsTradingAlgorithm' object has no attribute 'spread',  at initia; UNKNOWN_API: spread",
+  "total_orders": null
+}

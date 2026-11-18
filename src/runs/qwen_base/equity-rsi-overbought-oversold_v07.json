@@ -1,0 +1,297 @@
+{
+  "prompt_id": "equity-rsi-overbought-oversold_v07",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport QuantConnect as QC\n\n# Initialize the algorithm\nclass RSI_MeanReversion(QC.Algorithm.QuantConnect):\n    \"\"\"\n    A baseline two-sided RSI mean-reversion algorithm for QQQ.\n    \n    Strategy Logic:\n    - Asset: QQQ (Invesco QQQ Trust)\n    - Resolution: Hourly\n    - Window: September 1, 2024 to December 31, 2024\n    - Indicator: RSI (Relative Strength Index) with a 14-period lookback.\n    - Long Entry: RSI crosses above 30 (oversold).\n    - Short Entry: RSI crosses below 70 (overbought).\n    - Exit: RSI crosses back to the opposite side (e.g., Long exit when RSI > 70).\n    - Position Management: Flat when no signal, Long when RSI > 30, Short when RSI < 70.\n    \"\"\"\n\n    def Initialize(self):\n        \"\"\"\n        Set up the algorithm parameters, data feed, and indicators.\n        \"\"\"\n        # Set the resolution to hourly\n        self.SetResolution(QC.DataFeed.Resolution.Hourly)\n        \n        # Add the QQQ data feed\n        self.AddEquity(\"QQQ\", QC.DataFeed.Market.US30)\n        \n        # Define RSI parameters\n        self.rsi_period = 14\n        self.rsi_overbought = 70\n        self.rsi_oversold = 30\n        \n        # Add the RSI indicator\n        self.rsi = self.Indicators.RSI(self.rsi_period)\n        \n        # Paper account is the default, but we can explicitly set it if needed\n        # self.SetStartDate(2024, 9, 1)\n        # self.SetEndDate(2024, 12, 31)\n        \n        # Initialize variables to track state\n        self.current_rsi = 0\n        self.position = 0  # 0 = Flat, 1 = Long, -1 = Short\n        self.last_signal = 0  # To prevent multiple entries on the same bar\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data and execute trades based on RSI signals.\n        \"\"\"\n        if not data.ContainsKey(\"QQQ\"):\n            return\n\n        qqq = data[\"QQQ\"]\n        \n        # Update current RSI value\n        self.current_rsi = self.rsi.Value\n        \n        # Determine the intended action based on RSI thresholds\n        # Logic:\n        # 1. If RSI crosses above 30 from below -> Go Long\n        # 2. If RSI crosses below 70 from above -> Go Short\n        # 3. If Long and RSI crosses above 70 -> Close Long\n        # 4. If Short and RSI crosses below 30 -> Close Short\n        \n        # We use a simple state machine approach to avoid over-trading on the same bar\n        # Check for Long Entry\n        if self.position == 0:\n            if self.current_rsi > self.rsi_oversold and self.current_rsi > self.last_signal:\n                # Ensure we are actually crossing up, not just staying above\n                # A simple check: if previous was below and current is above\n                # Since we don't store 'previous' explicitly in a variable here, \n                # we rely on the fact that if we are flat, we haven't entered yet.\n                # To be robust, we check if the signal is new.\n                # However, a simpler approach for mean reversion is:\n                # If RSI < 30, we are oversold. If it crosses up, we buy.\n                # Let's implement a strict cross check.\n                \n                # We need to know if we were previously below 30.\n                # Since we don't have a 'previous_rsi' variable stored in the class scope \n                # for the cross check logic inside OnData without extra storage,\n                # we will assume a simple threshold trigger for the baseline.\n                # For a robust cross, we would store 'last_rsi'.\n                pass\n            \n            # Refined Logic for Baseline:\n            # If Flat and RSI < 30, we are waiting for a bounce. \n            # If Flat and RSI > 70, we are waiting for a drop.\n            # We enter when the condition is met AND we are flat.\n            # To avoid entering and exiting on the same bar, we check the direction.\n            \n            # Let's store the previous RSI in the class to handle crosses correctly\n            if not hasattr(self, 'last_rsi'):\n                self.last_rsi = self.current_rsi\n            \n            # Long Signal: RSI crosses above 30\n            if self.current_rsi > self.rsi_oversold and self.last_rsi <= self.rsi_oversold:\n                self.Log(f\"Long Signal: RSI crossed above {self.rsi_oversold} ({self.current_rsi:.2f})\")\n                self.SetHoldings(\"QQQ\", 1.0)\n                self.position = 1\n                self.last_signal = 1\n            \n            # Short Signal: RSI crosses below 70\n            elif self.current_rsi < self.rsi_overbought and self.last_rsi >= self.rsi_overbought:\n                self.Log(f\"Short Signal: RSI crossed below {self.rsi_overbought} ({self.current_rsi:.2f})\")\n                self.SetHoldings(\"QQQ\", -1.0)\n                self.position = -1\n                self.last_signal = -1\n                \n        # Check for Exits\n        elif self.position == 1:  # Long Position\n            # Exit Long if RSI crosses above 70\n            if self.current_rsi > self.rsi_overbought and self.last_rsi <= self.rsi_overbought:\n                self.Log(f\"Exit Long: RSI crossed above {self.rsi_overbought} ({self.current_rsi:.2f})\")\n                self.SetHoldings(\"QQQ\", 0.0)\n                self.position = 0\n                self.last_signal = 0\n                \n        elif self.position == -1:  # Short Position\n            # Exit Short if RSI crosses below 30\n            if self.current_rsi < self.rsi_oversold and self.last_rsi >= self.rsi_oversold:\n                self.Log(f\"Exit Short: RSI crossed below {self.rsi_oversold} ({self.current_rsi:.2f})\")\n                self.SetHoldings(\"QQQ\", 0.0)\n                self.position = 0\n                self.last_signal = 0\n        \n        # Update last RSI for next iteration\n        self.last_rsi = self.current_rsi\n\n    def OnEndOfAlgorithm(self):\n        \"\"\"\n        Log final summary statistics.\n        \"\"\"\n        self.Log(f\"Algorithm finished. Final Position: {self.position}\")\n        self.Log(f\"Final RSI: {self.current_rsi:.2f}\")\n```",
+  "generated_at": "2026-11-14T21:34:43.182164+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddEquity, Log, SetEndDate, SetHoldings, SetResolution, SetStartDate"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import QuantConnect as QC\n\n# Initialize the algorithm\nclass RSI_MeanReversion(QC.Algorithm.QuantConnect):\n    \"\"\"\n    A baseline two-sided RSI mean-reversion algorithm for QQQ.\n    \n    Strategy Logic:\n    - Asset: QQQ (Invesco QQQ Trust)\n    - Resolution: Hourly\n    - Window: September 1, 2024 to December 31, 2024\n    - Indicator: RSI (Relative Strength Index) with a 14-period lookback.\n    - Long Entry: RSI crosses above 30 (oversold).\n    - Short Entry: RSI crosses below 70 (overbought).\n    - Exit: RSI crosses back to the opposite side (e.g., Long exit when RSI > 70).\n    - Position Management: Flat when no signal, Long when RSI > 30, Short when RSI < 70.\n    \"\"\"\n\n    def Initialize(self):\n        \"\"\"\n        Set up the algorithm parameters, data feed, and indicators.\n        \"\"\"\n        # Set the resolution to hourly\n        self.SetResolution(QC.DataFeed.Resolution.Hourly)\n        \n        # Add the QQQ data feed\n        self.AddEquity(\"QQQ\", QC.DataFeed.Market.US30)\n        \n        # Define RSI parameters\n        self.rsi_period = 14\n        self.rsi_overbought = 70\n        self.rsi_oversold = 30\n        \n        # Add the RSI indicator\n        self.rsi = self.Indicators.RSI(self.rsi_period)\n        \n        # Paper account is the default, but we can explicitly set it if needed\n        # self.SetStartDate(2024, 9, 1)\n        # self.SetEndDate(2024, 12, 31)\n        \n        # Initialize variables to track state\n        self.current_rsi = 0\n        self.position = 0  # 0 = Flat, 1 = Long, -1 = Short\n        self.last_signal = 0  # To prevent multiple entries on the same bar\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data and execute trades based on RSI signals.\n        \"\"\"\n        if not data.ContainsKey(\"QQQ\"):\n            return\n\n        qqq = data[\"QQQ\"]\n        \n        # Update current RSI value\n        self.current_rsi = self.rsi.Value\n        \n        # Determine the intended action based on RSI thresholds\n        # Logic:\n        # 1. If RSI crosses above 30 from below -> Go Long\n        # 2. If RSI crosses below 70 from above -> Go Short\n        # 3. If Long and RSI crosses above 70 -> Close Long\n        # 4. If Short and RSI crosses below 30 -> Close Short\n        \n        # We use a simple state machine approach to avoid over-trading on the same bar\n        # Check for Long Entry\n        if self.position == 0:\n            if self.current_rsi > self.rsi_oversold and self.current_rsi > self.last_signal:\n                # Ensure we are actually crossing up, not just staying above\n                # A simple check: if previous was below and current is above\n                # Since we don't store 'previous' explicitly in a variable here, \n                # we rely on the fact that if we are flat, we haven't entered yet.\n                # To be robust, we check if the signal is new.\n                # However, a simpler approach for mean reversion is:\n                # If RSI < 30, we are oversold. If it crosses up, we buy.\n                # Let's implement a strict cross check.\n                \n                # We need to know if we were previously below 30.\n                # Since we don't have a 'previous_rsi' variable stored in the class scope \n                # for the cross check logic inside OnData without extra storage,\n                # we will assume a simple threshold trigger for the baseline.\n                # For a robust cross, we would store 'last_rsi'.\n                pass\n            \n            # Refined Logic for Baseline:\n            # If Flat and RSI < 30, we are waiting for a bounce. \n            # If Flat and RSI > 70, we are waiting for a drop.\n            # We enter when the condition is met AND we are flat.\n            # To avoid entering and exiting on the same bar, we check the direction.\n            \n            # Let's store the previous RSI in the class to handle crosses correctly\n            if not hasattr(self, 'last_rsi'):\n                self.last_rsi = self.current_rsi\n            \n            # Long Signal: RSI crosses above 30\n            if self.current_rsi > self.rsi_oversold and self.last_rsi <= self.rsi_oversold:\n                self.Log(f\"Long Signal: RSI crossed above {self.rsi_oversold} ({self.current_rsi:.2f})\")\n                self.SetHoldings(\"QQQ\", 1.0)\n                self.position = 1\n                self.last_signal = 1\n            \n            # Short Signal: RSI crosses below 70\n            elif self.current_rsi < self.rsi_overbought and self.last_rsi >= self.rsi_overbought:\n                self.Log(f\"Short Signal: RSI crossed below {self.rsi_overbought} ({self.current_rsi:.2f})\")\n                self.SetHoldings(\"QQQ\", -1.0)\n                self.position = -1\n                self.last_signal = -1\n                \n        # Check for Exits\n        elif self.position == 1:  # Long Position\n            # Exit Long if RSI crosses above 70\n            if self.current_rsi > self.rsi_overbought and self.last_rsi <= self.rsi_overbought:\n                self.Log(f\"Exit Long: RSI crossed above {self.rsi_overbought} ({self.current_rsi:.2f})\")\n                self.SetHoldings(\"QQQ\", 0.0)\n                self.position = 0\n                self.last_signal = 0\n                \n        elif self.position == -1:  # Short Position\n            # Exit Short if RSI crosses below 30\n            if self.current_rsi < self.rsi_oversold and self.last_rsi >= self.rsi_oversold:\n                self.Log(f\"Exit Short: RSI crossed below {self.rsi_oversold} ({self.current_rsi:.2f})\")\n                self.SetHoldings(\"QQQ\", 0.0)\n                self.position = 0\n                self.last_signal = 0\n        \n        # Update last RSI for next iteration\n        self.last_rsi = self.current_rsi\n\n    def OnEndOfAlgorithm(self):\n        \"\"\"\n        Log final summary statistics.\n        \"\"\"\n        self.Log(f\"Algorithm finished. Final Position: {self.position}\")\n        self.Log(f\"Final RSI: {self.current_rsi:.2f}\")\n",
+    "source_sha256": "d46b25e5cf37bf97b097d57d2d3043f629af414a2cfaaf2e8e7eb81d38b0468e",
+    "started_at": "2026-11-14T21:34:43.185091+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39411339,
+    "compile_id": "556dbb183996d1becbee4f3941a54319-e00b8966488643bccb5446fa89c108ab",
+    "compile_created": {
+      "compileId": "556dbb183996d1becbee4f3941a54319-e00b8966488643bccb5446fa89c108ab",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39411339,
+      "signature": "e00b8966488643bccb5446fa89c108ab",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "556dbb183996d1becbee4f3941a54319-e00b8966488643bccb5446fa89c108ab",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39411339, with CompileID: 556dbb183996d1becbee4f3941a54319-e00b8966488643bccb5446fa89c108ab, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39411339, with CompileID: 556dbb183996d1becbee4f3941a54319-e00b8966488643bccb5446fa89c108ab, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "5a4a924e67a948b871150b9b7a5e2af8",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-rsi-overbought-oversold_v07",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39411339,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "5a4a924e67a948b871150b9b7a5e2af8",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 22
+        },
+        "backtestStart": "2026-11-14 21:34:46",
+        "backtestEnd": "2026-11-14 21:34:46",
+        "created": "2026-11-14 21:34:46",
+        "snapshotId": 39411341,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-rsi-overbought-oversold_v07",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39411339,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "5a4a924e67a948b871150b9b7a5e2af8",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 22
+        },
+        "backtestStart": "2026-11-14 21:34:46",
+        "backtestEnd": "2026-11-14 21:34:46",
+        "created": "2026-11-14 21:34:46",
+        "snapshotId": 39411341,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): QuantConnect\n  at \n    class RSI_MeanReversion(QC.Algorithm.QuantConnect):\n                            ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n QuantConnect Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): QuantConnect\n  at \n    class RSI_MeanReversion(QC.Algorithm.QuantConnect):\n                            ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n QuantConnect",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): QuantConnect\n  at <module>\n    class RSI_MeanReversion(QC.Algorithm.QuantConnect):\n                            ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n QuantConnect",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.4%",
+          "Used RAM (MB)": "165",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-5a4a924e67a948b871150b9b7a5e2af8",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): QuantConnect\n  at \n    class RSI_MeanReversion(QC.Algorithm.QuantConnect):\n                            ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n QuantConnect Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): QuantConnect\n  at \n    class RSI_MeanReversion(QC.Algorithm.QuantConnect):\n                            ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n QuantConnect",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): QuantConnect\n  at <module>\n    class RSI_MeanReversion(QC.Algorithm.QuantConnect):\n                            ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n QuantConnect",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T21:35:33.306199+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS; LEGACY_API: AddEquity, Log, SetEndDate, SetHoldings, SetResolution, SetStartDate",
+  "total_orders": null
+}

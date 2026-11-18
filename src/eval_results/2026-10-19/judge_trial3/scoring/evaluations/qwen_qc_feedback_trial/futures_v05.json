@@ -1,0 +1,307 @@
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "source": "# QuantConnect LEAN Algorithm\n# ES (SP_500_E_MINI) continuous future with LAST_TRADING_DAY mapping\n# Strategy: Flat -> market order 1 of mapped contract\n# On symbol changed: liquidate old, re-enter same quantity on new\n# Period: 2024-09-01 to 2024-12-31\n\nfrom AlgorithmImports import *\nfrom datetime import datetime, timedelta\n\nclass EsContinuousLastTradingDayAlgorithm(QCAlgorithm):\n    def initialize(self):\n        # Set start and end dates\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # Add continuous future with LAST_TRADING_DAY mapping\n        # BACKWARDS_RATIO, depth 0, extended hours, filter 0-92 days\n        self._es = self.add_future(\n            Futures.Indices.SP_500_E_MINI,\n            extended_market_hours=True,\n            data_mapping_mode=DataMappingMode.LAST_TRADING_DAY,\n            data_normalization_mode=DataNormalizationMode.BACKWARDS_RATIO,\n            contract_depth_offset=0\n        )\n        \n        # Set filter for 0-92 days\n        self._es.set_filter(0, 92)\n        \n        # Track current position quantity\n        self._position_qty = 0\n        \n        # Subscribe to symbol changed events\n        self._es.on_symbol_changed_event += self.on_symbol_changed\n\n    def on_symbol_changed(self, sender, args):\n        \"\"\"\n        Handle symbol changed event:\n        - Liquidate old contract\n        - Re-enter same quantity on new contract\n        \"\"\"\n        old_symbol = args.old_symbol\n        new_symbol = args.new_symbol\n\n        # Liquidate old position\n        if self._position_qty != 0:\n            self.liquidate(old_symbol)\n            self.log(f\"Liquidated {self._position_qty} contracts of {old_symbol}\")\n\n        # Re-enter same quantity on new contract\n        if self._position_qty != 0:\n            self.market_order(new_symbol, self._position_qty)\n            self.log(f\"Entered {self._position_qty} contracts of {new_symbol}\")\n\n    def on_data(self, data: Slice):\n        \"\"\"\n        Main data handler:\n        - If flat, place market order for 1 contract of the mapped symbol\n        \"\"\"\n        # Check if we have data for our ES symbol\n        if not data.contains_key(self._es):\n            return\n\n        # Get the current mapped symbol (the actual contract)\n        current_symbol = self._es.mapped\n        \n        # Check if we are flat\n        if self._position_qty == 0:\n            # Place market order for 1 contract\n            self.market_order(current_symbol, 1)\n            self._position_qty = 1\n            self.log(f\"Entered 1 contract of {current_symbol}\")\n\n    def on_order_event(self, order_event: OrderEvent):\n        \"\"\"\n        Track position changes from order events\n        \"\"\"\n        if order_event.symbol == self._es.mapped:\n            if order_event.status == OrderStatus.FILLED:\n                self._position_qty += order_event.fill_quantity\n                self.log(f\"Order filled: {order_event.fill_quantity} contracts, total position: {self._position_qty}\")\n",
+  "source_sha256": "d3fd9a077dd6d44884dc13de3dc3c996b76c888b55459486790b6c899015e7b1",
+  "started_at": "2026-10-20T02:53:05.299416+00:00",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "runtime_statistics": {
+    "Equity": "$100,000.00",
+    "Fees": "-$0.00",
+    "Holdings": "$0.00",
+    "Net Profit": "$0.00",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Return": "0.00 %",
+    "Unrealized": "$0.00",
+    "Volume": "$0.00"
+  },
+  "logs": [],
+  "qc_note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Engine.Run(): During the algorithm initialization, the following exception has occurred: 'Future' object has no attribute 'on_symbol_changed_event',  at initialize,  ",
+  "project_id": 38141996,
+  "compile_id": "c31eab2e0d4563de0faf36e5ab52a88c-2c9a18bb1f2dc80f873a9ee326b46f27",
+  "compile_created": {
+    "compileId": "c31eab2e0d4563de0faf36e5ab52a88c-2c9a18bb1f2dc80f873a9ee326b46f27",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 38141996,
+    "signature": "2c9a18bb1f2dc80f873a9ee326b46f27",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "c31eab2e0d4563de0faf36e5ab52a88c-2c9a18bb1f2dc80f873a9ee326b46f27",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 38141996, with CompileID: c31eab2e0d4563de0faf36e5ab52a88c-2c9a18bb1f2dc80f873a9ee326b46f27, Lean Version: 2.5.0.0.18194"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 38141996, with CompileID: c31eab2e0d4563de0faf36e5ab52a88c-2c9a18bb1f2dc80f873a9ee326b46f27, Lean Version: 2.5.0.0.18194"
+  ],
+  "backtest_id": "092bece16e35fc361fe1eceb02488f5e",
+  "backtest_created": {
+    "backtest": {
+      "note": null,
+      "name": "repair-futures_v05-r3",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 38141996,
+      "completed": false,
+      "optimizationId": null,
+      "backtestId": "092bece16e35fc361fe1eceb02488f5e",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 1,
+        "backtestCount": 1,
+        "parameters": 13
+      },
+      "backtestStart": "2026-10-20 02:53:09",
+      "backtestEnd": "2026-10-20 02:53:09",
+      "created": "2026-10-20 02:53:09",
+      "snapshotId": 38142003,
+      "status": "In Queue...",
+      "error": null,
+      "stacktrace": null,
+      "progress": 0,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": null,
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-07-22T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null
+    },
+    "debugging": false,
+    "success": true
+  },
+  "raw_backtest": {
+    "backtest": {
+      "note": null,
+      "name": "repair-futures_v05-r3",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 38141996,
+      "completed": true,
+      "optimizationId": null,
+      "backtestId": "092bece16e35fc361fe1eceb02488f5e",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 1,
+        "backtestCount": 1,
+        "parameters": 13
+      },
+      "backtestStart": "2026-10-20 02:53:09",
+      "backtestEnd": "2026-10-20 02:53:09",
+      "created": "2026-10-20 02:53:09",
+      "snapshotId": 38142003,
+      "status": "Runtime Error",
+      "error": "[ERROR] FATAL UNHANDLED EXCEPTION:Engine.Run(): During the algorithm initialization, the following exception has occurred: 'Future' object has no attribute 'on_symbol_changed_event',  at initialize,    self._es.on_symbol_changed_event += self.on_symbol_changed,    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^, in main.py: line 34, 'Future' object has no attribute 'on_symbol_changed_event',Extensions.SetRuntimeError(): Extensions.SetRuntimeError(): RuntimeError at 09/01/2024 04:00:00 UTC. Context: RuntimeError System.Exception: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: 'Future' object has no attribute 'on_symbol_changed_event',  at initialize,    self._es.on_symbol_changed_event += self.on_symbol_changed,    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^, in main.py: line 34, 'Future' object has no attribute 'on_symbol_changed_event',ApiConnection.TryRequest(https://www.quantconnect.com/api/v2/cloud/backtest/status/update): Error: request timed out, no response received (timeout 10s) after 1001",
+      "stacktrace": "'Future' object has no attribute 'on_symbol_changed_event'\n  at initialize\n    self._es.on_symbol_changed_event += self.on_symbol_changed\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 34\n 'Future' object has no attribute 'on_symbol_changed_event'",
+      "progress": 1,
+      "hasInitializeError": true,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {
+        "Equity": "$100,000.00",
+        "Fees": "-$0.00",
+        "Holdings": "$0.00",
+        "Net Profit": "$0.00",
+        "Probabilistic Sharpe Ratio": "0%",
+        "Return": "0.00 %",
+        "Unrealized": "$0.00",
+        "Volume": "$0.00"
+      },
+      "statistics": {},
+      "totalPerformance": {
+        "tradeStatistics": {
+          "startDateTime": null,
+          "endDateTime": null,
+          "totalNumberOfTrades": 0,
+          "numberOfWinningTrades": 0,
+          "numberOfLosingTrades": 0,
+          "totalProfitLoss": "0",
+          "totalProfit": "0",
+          "totalLoss": "0",
+          "largestProfit": "0",
+          "largestLoss": "0",
+          "averageProfitLoss": "0",
+          "averageProfit": "0",
+          "averageLoss": "0",
+          "averageTradeDuration": "00:00:00",
+          "averageWinningTradeDuration": "00:00:00",
+          "averageLosingTradeDuration": "00:00:00",
+          "medianTradeDuration": "00:00:00",
+          "medianWinningTradeDuration": "00:00:00",
+          "medianLosingTradeDuration": "00:00:00",
+          "maxConsecutiveWinningTrades": 0,
+          "maxConsecutiveLosingTrades": 0,
+          "profitLossRatio": "0",
+          "winLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "averageMAE": "0",
+          "averageMFE": "0",
+          "largestMAE": "0",
+          "largestMFE": "0",
+          "maximumClosedTradeDrawdown": "0",
+          "maximumIntraTradeDrawdown": "0",
+          "profitLossStandardDeviation": "0",
+          "profitLossDownsideDeviation": "0",
+          "profitFactor": "0",
+          "sharpeRatio": "0",
+          "sortinoRatio": "0",
+          "profitToMaxDrawdownRatio": "0",
+          "maximumEndTradeDrawdown": "0",
+          "averageEndTradeDrawdown": "0",
+          "maximumDrawdownDuration": "00:00:00",
+          "totalFees": "0"
+        },
+        "portfolioStatistics": {
+          "averageWinRate": "0",
+          "averageLossRate": "0",
+          "profitLossRatio": "0",
+          "winRate": "0",
+          "lossRate": "0",
+          "expectancy": "0",
+          "startEquity": "0",
+          "endEquity": "0",
+          "compoundingAnnualReturn": "0",
+          "drawdown": "0",
+          "totalNetProfit": "0",
+          "sharpeRatio": "0",
+          "probabilisticSharpeRatio": "0",
+          "sortinoRatio": "0",
+          "alpha": "0",
+          "beta": "0",
+          "annualStandardDeviation": "0",
+          "annualVariance": "0",
+          "informationRatio": "0",
+          "trackingError": "0",
+          "treynorRatio": "0",
+          "portfolioTurnover": "0",
+          "valueAtRisk99": "0",
+          "valueAtRisk95": "0",
+          "drawdownRecovery": "0"
+        },
+        "closedTrades": []
+      },
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-07-22T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": [
+        {
+          "name": "PortfolioValueIsNotPositiveAnalysis",
+          "issue": "The portfolio equity dropped to zero or below.",
+          "sample": true,
+          "solutions": [
+            "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+            "Reduce position sizes.",
+            "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+            "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+          ]
+        },
+        {
+          "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+          "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+          "sample": {
+            "pValue": 0.5
+          },
+          "solutions": [
+            "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+          ]
+        }
+      ],
+      "serverStatistics": {
+        "CPU Usage": "14.3%",
+        "Used RAM (MB)": "206",
+        "Total RAM (MB)": "16384",
+        "Hostname": "BACKTESTING-com-092bece16e35fc361fe1eceb02488f5e",
+        "LEAN Version": "v2.5.0.0.18194",
+        "Up Time": "0d 00:00:14"
+      }
+    },
+    "success": true
+  },
+  "error": "[ERROR] FATAL UNHANDLED EXCEPTION:Engine.Run(): During the algorithm initialization, the following exception has occurred: 'Future' object has no attribute 'on_symbol_changed_event',  at initialize,    self._es.on_symbol_changed_event += self.on_symbol_changed,    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^, in main.py: line 34, 'Future' object has no attribute 'on_symbol_changed_event',Extensions.SetRuntimeError(): Extensions.SetRuntimeError(): RuntimeError at 09/01/2024 04:00:00 UTC. Context: RuntimeError System.Exception: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: 'Future' object has no attribute 'on_symbol_changed_event',  at initialize,    self._es.on_symbol_changed_event += self.on_symbol_changed,    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^, in main.py: line 34, 'Future' object has no attribute 'on_symbol_changed_event',ApiConnection.TryRequest(https://www.quantconnect.com/api/v2/cloud/backtest/status/update): Error: request timed out, no response received (timeout 10s) after 1001",
+  "stacktrace": "'Future' object has no attribute 'on_symbol_changed_event'\n  at initialize\n    self._es.on_symbol_changed_event += self.on_symbol_changed\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 34\n 'Future' object has no attribute 'on_symbol_changed_event'",
+  "has_initialize_error": true,
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "total_orders": null,
+  "finished_at": "2026-10-20T02:54:04.040436+00:00"
+}

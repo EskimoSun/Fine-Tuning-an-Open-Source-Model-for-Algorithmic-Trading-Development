@@ -1,0 +1,303 @@
+{
+  "prompt_id": "equity-momentum-cross-sectional-decile_v10",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass ETFUniverseAlgorithm(QCAlgorithm):\n    _universe: List[Symbol] = []\n    _momentum: List[MomentumIndicator] = []\n    _count = 100\n    _top_percent = 0.1\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(250000)\n        self.settings.seed_initial_prices = True\n        self.universe_settings.resolution = Resolution.MINUTE\n        self.universe_settings.minimum_order_margin_portfolio_percentage = 0\n\n        def _select(fundamental: List[Fundamental]) -> List[Symbol]:\n            # Select the top 100 most liquid ETF constituents by dollar volume\n            dollar_volume = {f.symbol: f.dollar_volume for f in fundamental if f.symbol.value.startswith(\"SPY\")}\n            self.plot(\"Universe\", \"Raw\", list(dollar_volume.keys()))\n            return [s for s, _ in sorted(dollar_volume.items(), key=lambda kv: kv[1])[-self._count:]]\n\n        def _rank(momentum_indicators: List[MomentumIndicator]) -> List[Symbol]:\n            # Select the top 10% of the ETF constituents by price momentum\n            momentum_by_symbol = {m.symbol: m.current.value for m in momentum_indicators}\n            self.plot(\"Universe\", \"Momentum\", list(momentum_by_symbol.items()))\n            return [s for s, _ in sorted(momentum_by_symbol.items(), key=lambda kv: kv[1])[-int(len(momentum_by_symbol) * self._top_percent):] ]\n\n        self._universe = _select(self._fundamental)\n        self._momentum = [self.momentum(s, 252) for s in self._universe]\n        # Warm up the momentum indicators\n        for i in range(0, 252):\n            self._momentum[i].update(0, 0)\n\n    def on_warmup_finished(self) -> None:\n        self._ranked_universe = _rank(self._momentum)\n        self.plot(\"Universe\", \"Selected\", self._ranked_universe)\n\n    def on_date_changed(self, sd: ScheduleDate) -> None:\n        if sd.day_of_month == 1 and sd.month == 9:\n            self._rebalance()\n\n    def _rebalance(self) -> None:\n        selected = [s for s in self._ranked_universe if self.securities[s].has_data]\n        if not selected:\n            return\n        weight = 1 / len(selected)\n        targets = [PortfolioTarget(symbol, weight) for symbol in selected]\n        self.set_holdings(targets, True)\n```",
+  "generated_at": "2026-11-12T23:44:03.330741+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "momentum"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "add_universe"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "month_start"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass ETFUniverseAlgorithm(QCAlgorithm):\n    _universe: List[Symbol] = []\n    _momentum: List[MomentumIndicator] = []\n    _count = 100\n    _top_percent = 0.1\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(250000)\n        self.settings.seed_initial_prices = True\n        self.universe_settings.resolution = Resolution.MINUTE\n        self.universe_settings.minimum_order_margin_portfolio_percentage = 0\n\n        def _select(fundamental: List[Fundamental]) -> List[Symbol]:\n            # Select the top 100 most liquid ETF constituents by dollar volume\n            dollar_volume = {f.symbol: f.dollar_volume for f in fundamental if f.symbol.value.startswith(\"SPY\")}\n            self.plot(\"Universe\", \"Raw\", list(dollar_volume.keys()))\n            return [s for s, _ in sorted(dollar_volume.items(), key=lambda kv: kv[1])[-self._count:]]\n\n        def _rank(momentum_indicators: List[MomentumIndicator]) -> List[Symbol]:\n            # Select the top 10% of the ETF constituents by price momentum\n            momentum_by_symbol = {m.symbol: m.current.value for m in momentum_indicators}\n            self.plot(\"Universe\", \"Momentum\", list(momentum_by_symbol.items()))\n            return [s for s, _ in sorted(momentum_by_symbol.items(), key=lambda kv: kv[1])[-int(len(momentum_by_symbol) * self._top_percent):] ]\n\n        self._universe = _select(self._fundamental)\n        self._momentum = [self.momentum(s, 252) for s in self._universe]\n        # Warm up the momentum indicators\n        for i in range(0, 252):\n            self._momentum[i].update(0, 0)\n\n    def on_warmup_finished(self) -> None:\n        self._ranked_universe = _rank(self._momentum)\n        self.plot(\"Universe\", \"Selected\", self._ranked_universe)\n\n    def on_date_changed(self, sd: ScheduleDate) -> None:\n        if sd.day_of_month == 1 and sd.month == 9:\n            self._rebalance()\n\n    def _rebalance(self) -> None:\n        selected = [s for s in self._ranked_universe if self.securities[s].has_data]\n        if not selected:\n            return\n        weight = 1 / len(selected)\n        targets = [PortfolioTarget(symbol, weight) for symbol in selected]\n        self.set_holdings(targets, True)\n",
+    "source_sha256": "14d51443020b5f5ff45936d335cd10cffc4672f7077a32902afd13fdf048e9a4",
+    "started_at": "2026-11-12T23:44:03.334767+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39314779,
+    "compile_id": "bc3d3546fef1cf752a2cb50a8d9861dd-a6077cc0405b363e9fc1492c17bc9b58",
+    "compile_created": {
+      "compileId": "bc3d3546fef1cf752a2cb50a8d9861dd-a6077cc0405b363e9fc1492c17bc9b58",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39314779,
+      "signature": "a6077cc0405b363e9fc1492c17bc9b58",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "bc3d3546fef1cf752a2cb50a8d9861dd-a6077cc0405b363e9fc1492c17bc9b58",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39314779, with CompileID: bc3d3546fef1cf752a2cb50a8d9861dd-a6077cc0405b363e9fc1492c17bc9b58, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39314779, with CompileID: bc3d3546fef1cf752a2cb50a8d9861dd-a6077cc0405b363e9fc1492c17bc9b58, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "712ce6ea28c12849a5d79359f09435c1",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v10",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314779,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "712ce6ea28c12849a5d79359f09435c1",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 17
+        },
+        "backtestStart": "2026-11-12 23:44:06",
+        "backtestEnd": "2026-11-12 23:44:06",
+        "created": "2026-11-12 23:44:06",
+        "snapshotId": 39314781,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v10",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314779,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "712ce6ea28c12849a5d79359f09435c1",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 17
+        },
+        "backtestStart": "2026-11-12 23:44:06",
+        "backtestEnd": "2026-11-12 23:44:06",
+        "created": "2026-11-12 23:44:06",
+        "snapshotId": 39314781,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;MomentumIndicator&#039; is not defined\n  at ETFUniverseAlgorithm\n    _momentum: List[MomentumIndicator] = []\n                    ^^^^^^^^^^^^^^^^^\n in main.py: line 7\n  at \n    class ETFUniverseAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;MomentumIndicator&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;MomentumIndicator&#039; is not defined\n  at ETFUniverseAlgorithm\n    _momentum: List[MomentumIndicator] = []\n                    ^^^^^^^^^^^^^^^^^\n in main.py: line 7\n  at \n    class ETFUniverseAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;MomentumIndicator&#039; is not defined",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'MomentumIndicator' is not defined\n  at ETFUniverseAlgorithm\n    _momentum: List[MomentumIndicator] = []\n                    ^^^^^^^^^^^^^^^^^\n in main.py: line 7\n  at <module>\n    class ETFUniverseAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'MomentumIndicator' is not defined",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "6.2%",
+          "Used RAM (MB)": "191",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-712ce6ea28c12849a5d79359f09435c1",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:13"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;MomentumIndicator&#039; is not defined\n  at ETFUniverseAlgorithm\n    _momentum: List[MomentumIndicator] = []\n                    ^^^^^^^^^^^^^^^^^\n in main.py: line 7\n  at \n    class ETFUniverseAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;MomentumIndicator&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;MomentumIndicator&#039; is not defined\n  at ETFUniverseAlgorithm\n    _momentum: List[MomentumIndicator] = []\n                    ^^^^^^^^^^^^^^^^^\n in main.py: line 7\n  at \n    class ETFUniverseAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;MomentumIndicator&#039; is not defined",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'MomentumIndicator' is not defined\n  at ETFUniverseAlgorithm\n    _momentum: List[MomentumIndicator] = []\n                    ^^^^^^^^^^^^^^^^^\n in main.py: line 7\n  at <module>\n    class ETFUniverseAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'MomentumIndicator' is not defined",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:44:56.285356+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; UNKNOWN_API: momentum; PROMPT_MISS: add_universe; PROMPT_MISS: month_start",
+  "total_orders": null
+}

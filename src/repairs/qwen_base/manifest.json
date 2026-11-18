@@ -1,0 +1,25 @@
+{
+  "source_model": "qwen_base",
+  "target_model": "qwen_repaired",
+  "intervention": "manual_code_repair",
+  "repairs": [
+    {
+      "prompt_id": "equity-rsi-overbought-oversold_v01",
+      "source_sha256": "a3dd47663dc4cbf78dc1bf6e032b9789c40c4e8ad69271c58209368327a94e73",
+      "file": "equity-rsi-overbought-oversold_v01.py",
+      "changes": ["Use snake_case API and Resolution.HOUR", "Avoid shadowing symbol/rsi methods", "Remove unused placeholder SMA", "Retain original dates, warm-up, extreme exits and reversal rules"]
+    },
+    {
+      "prompt_id": "equity-rsi-overbought-oversold_v02",
+      "source_sha256": "9df86d829b0865732e5a675b286f7e8125298348b9c398f04aa035cf841f0858",
+      "file": "equity-rsi-overbought-oversold_v02.py",
+      "changes": ["Use snake_case API", "Replace nonexistent Indicator call with rsi(symbol, 14, WILDERS, HOUR)", "Avoid shadowing symbol/rsi methods", "Retain original entry/exit thresholds and dates"]
+    },
+    {
+      "prompt_id": "equity-rsi-overbought-oversold_v04",
+      "source_sha256": "5865a622b8911e4aa671dc386dc8b643087729b99891cf6124265596145c05c8",
+      "file": "equity-rsi-overbought-oversold_v04.py",
+      "changes": ["Use snake_case API and Resolution.HOUR", "Use hourly on_data instead of invalid daily scheduled callback", "Read typed TradeBar history rather than iterating a DataFrame as Slices", "Use on_end_of_algorithm callback", "Retain simple-average RSI math, Q4 dates, sizing and thresholds"]
+    }
+  ]
+}

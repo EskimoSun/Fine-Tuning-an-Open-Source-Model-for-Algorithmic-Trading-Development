@@ -1,0 +1,151 @@
+{
+  "all": {
+    "requested_rows": 3,
+    "rows_with_fidelity": 3,
+    "fidelity_mean": 4.0,
+    "fidelity_distribution": {
+      "5": 1,
+      "4": 1,
+      "3": 1
+    },
+    "statuses": {
+      "scored": 3
+    },
+    "judge_statuses": {
+      "judged": 3
+    },
+    "reference_execution_statuses": {
+      "completed": 3
+    },
+    "candidate_execution_statuses": {
+      "completed": 2,
+      "runtime_error": 1
+    },
+    "behavior_statuses": {
+      "partial": 1,
+      "available": 1,
+      "unavailable": 1
+    },
+    "behavior_available": 1,
+    "human_review_rows": [
+      "equity-rsi-overbought-oversold_v04",
+      "futures_v05"
+    ]
+  },
+  "by_model": {
+    "qwen_qc_feedback_trial": {
+      "requested_rows": 3,
+      "rows_with_fidelity": 3,
+      "fidelity_mean": 4.0,
+      "fidelity_distribution": {
+        "5": 1,
+        "4": 1,
+        "3": 1
+      },
+      "statuses": {
+        "scored": 3
+      },
+      "judge_statuses": {
+        "judged": 3
+      },
+      "reference_execution_statuses": {
+        "completed": 3
+      },
+      "candidate_execution_statuses": {
+        "completed": 2,
+        "runtime_error": 1
+      },
+      "behavior_statuses": {
+        "partial": 1,
+        "available": 1,
+        "unavailable": 1
+      },
+      "behavior_available": 1,
+      "human_review_rows": [
+        "equity-rsi-overbought-oversold_v04",
+        "futures_v05"
+      ]
+    }
+  },
+  "by_specificity": {
+    "over_specified": {
+      "requested_rows": 1,
+      "rows_with_fidelity": 1,
+      "fidelity_mean": 4.0,
+      "fidelity_distribution": {
+        "4": 1
+      },
+      "statuses": {
+        "scored": 1
+      },
+      "judge_statuses": {
+        "judged": 1
+      },
+      "reference_execution_statuses": {
+        "completed": 1
+      },
+      "candidate_execution_statuses": {
+        "completed": 1
+      },
+      "behavior_statuses": {
+        "available": 1
+      },
+      "behavior_available": 1,
+      "human_review_rows": []
+    },
+    "precise": {
+      "requested_rows": 1,
+      "rows_with_fidelity": 1,
+      "fidelity_mean": 3.0,
+      "fidelity_distribution": {
+        "3": 1
+      },
+      "statuses": {
+        "scored": 1
+      },
+      "judge_statuses": {
+        "judged": 1
+      },
+      "reference_execution_statuses": {
+        "completed": 1
+      },
+      "candidate_execution_statuses": {
+        "runtime_error": 1
+      },
+      "behavior_statuses": {
+        "unavailable": 1
+      },
+      "behavior_available": 0,
+      "human_review_rows": [
+        "futures_v05"
+      ]
+    },
+    "vague": {
+      "requested_rows": 1,
+      "rows_with_fidelity": 1,
+      "fidelity_mean": 5.0,
+      "fidelity_distribution": {
+        "5": 1
+      },
+      "statuses": {
+        "scored": 1
+      },
+      "judge_statuses": {
+        "judged": 1
+      },
+      "reference_execution_statuses": {
+        "completed": 1
+      },
+      "candidate_execution_statuses": {
+        "completed": 1
+      },
+      "behavior_statuses": {
+        "partial": 1
+      },
+      "behavior_available": 0,
+      "human_review_rows": [
+        "equity-rsi-overbought-oversold_v04"
+      ]
+    }
+  }
+}

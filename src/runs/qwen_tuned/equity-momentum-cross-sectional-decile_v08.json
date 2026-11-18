@@ -1,0 +1,291 @@
+{
+  "prompt_id": "equity-momentum-cross-sectional-decile_v08",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass SP500MomentumUniverseAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(250_000)\n        self.settings.seed_initial_prices = True\n        self.universe_settings.resolution = Resolution.MINUTE\n        # First universe: store all US Equity fundamentals; emits Universe.UNCHANGED.\n        self.add_universe(self._fundamental_filter)\n        # Second universe: 252-day price momentum, ranked by dollar volume.\n        self._universe = self.add_universe(SP500MomentumUniverse, self._select_assets)\n        # Rebalance before market open to trade today's intersection.\n        self.schedule.on(\n            self.date_rules.month_start(),\n            self.time_rules.at(9, 31),\n            self._rebalance\n        )\n\n    def _fundamental_filter(self, fundamental: List[Fundamental]) -> Universe.UnchangedUniverse:\n        return Universe.UNCHANGED\n\n    def _select_assets(self, alt_coarse: List[SP500MomentumUniverse]) -> List[Symbol]:\n        # Keep names with both a liquid SP500 constituent status and a >1% 252-day momentum.\n        alt = {d.symbol for d in alt_coarse\n               if d.dollar_volume and d.end_time and d.momentum(252) and\n               d.symbol in self.securities_map and\n               self.securities_map[d.symbol].usd_sp500_constituent and\n               d.momentum(252) > 0.01}\n        self.plot('Universe', 'Raw', len(alt))\n        return [c.symbol for c in sorted(\n            [c for c in self._universe.constituents if c.symbol in alt],\n            key=lambda c: c.dollar_volume, reverse=True\n        )[:100]]\n\n    def _rebalance(self) -> None:\n        if not self._universe.selected:\n            return\n        weight = 1 / len(self._universe.selected)\n        targets = [PortfolioTarget(symbol, weight) for symbol in self._universe.selected]\n        self.set_holdings(targets, True)\n```",
+  "generated_at": "2026-11-12T23:42:32.230738+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "etf / spy"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass SP500MomentumUniverseAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(250_000)\n        self.settings.seed_initial_prices = True\n        self.universe_settings.resolution = Resolution.MINUTE\n        # First universe: store all US Equity fundamentals; emits Universe.UNCHANGED.\n        self.add_universe(self._fundamental_filter)\n        # Second universe: 252-day price momentum, ranked by dollar volume.\n        self._universe = self.add_universe(SP500MomentumUniverse, self._select_assets)\n        # Rebalance before market open to trade today's intersection.\n        self.schedule.on(\n            self.date_rules.month_start(),\n            self.time_rules.at(9, 31),\n            self._rebalance\n        )\n\n    def _fundamental_filter(self, fundamental: List[Fundamental]) -> Universe.UnchangedUniverse:\n        return Universe.UNCHANGED\n\n    def _select_assets(self, alt_coarse: List[SP500MomentumUniverse]) -> List[Symbol]:\n        # Keep names with both a liquid SP500 constituent status and a >1% 252-day momentum.\n        alt = {d.symbol for d in alt_coarse\n               if d.dollar_volume and d.end_time and d.momentum(252) and\n               d.symbol in self.securities_map and\n               self.securities_map[d.symbol].usd_sp500_constituent and\n               d.momentum(252) > 0.01}\n        self.plot('Universe', 'Raw', len(alt))\n        return [c.symbol for c in sorted(\n            [c for c in self._universe.constituents if c.symbol in alt],\n            key=lambda c: c.dollar_volume, reverse=True\n        )[:100]]\n\n    def _rebalance(self) -> None:\n        if not self._universe.selected:\n            return\n        weight = 1 / len(self._universe.selected)\n        targets = [PortfolioTarget(symbol, weight) for symbol in self._universe.selected]\n        self.set_holdings(targets, True)\n",
+    "source_sha256": "27537a58b4b94c2aa567081d1fcf64c24710ff66756163696f4badef120dc642",
+    "started_at": "2026-11-12T23:42:32.233125+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39314729,
+    "compile_id": "81ad8dd9e97a3a5f819d9caa02c6db35-7eb0b595702da21dc901d3ce11e0f86f",
+    "compile_created": {
+      "compileId": "81ad8dd9e97a3a5f819d9caa02c6db35-7eb0b595702da21dc901d3ce11e0f86f",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39314729,
+      "signature": "7eb0b595702da21dc901d3ce11e0f86f",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "81ad8dd9e97a3a5f819d9caa02c6db35-7eb0b595702da21dc901d3ce11e0f86f",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39314729, with CompileID: 81ad8dd9e97a3a5f819d9caa02c6db35-7eb0b595702da21dc901d3ce11e0f86f, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39314729, with CompileID: 81ad8dd9e97a3a5f819d9caa02c6db35-7eb0b595702da21dc901d3ce11e0f86f, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "71ec9aeec58ac691642859d3227027a0",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314729,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "71ec9aeec58ac691642859d3227027a0",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 13
+        },
+        "backtestStart": "2026-11-12 23:42:35",
+        "backtestEnd": "2026-11-12 23:42:35",
+        "created": "2026-11-12 23:42:35",
+        "snapshotId": 39314732,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314729,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "71ec9aeec58ac691642859d3227027a0",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 13
+        },
+        "backtestStart": "2026-11-12 23:42:35",
+        "backtestEnd": "2026-11-12 23:42:35",
+        "created": "2026-11-12 23:42:35",
+        "snapshotId": 39314732,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;SP500MomentumUniverse&#039; is not defined\n  at SP500MomentumUniverseAlgorithm\n    def _select_assets(self, alt_coarse: List[SP500MomentumUniverse]) -&gt; List[Symbol]:\n                                              ^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 28\n  at \n    class SP500MomentumUniverseAlgorithm(QCAlgorithm):\n in main.py: line 6\n name &#039;SP500MomentumUniverse&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;SP500MomentumUniverse&#039; is not defined\n  at SP500MomentumUniverseAlgorithm\n    def _select_assets(self, alt_coarse: List[SP500MomentumUniverse]) -&gt; List[Symbol]:\n                                              ^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 28\n  at \n    class SP500MomentumUniverseAlgorithm(QCAlgorithm):\n in main.py: line 6\n name &#039;SP500MomentumUniverse&#039; is not defined",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'SP500MomentumUniverse' is not defined\n  at SP500MomentumUniverseAlgorithm\n    def _select_assets(self, alt_coarse: List[SP500MomentumUniverse]) -> List[Symbol]:\n                                              ^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 28\n  at <module>\n    class SP500MomentumUniverseAlgorithm(QCAlgorithm):\n in main.py: line 6\n name 'SP500MomentumUniverse' is not defined",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "6.6%",
+          "Used RAM (MB)": "217",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-71ec9aeec58ac691642859d3227027a0",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:14"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;SP500MomentumUniverse&#039; is not defined\n  at SP500MomentumUniverseAlgorithm\n    def _select_assets(self, alt_coarse: List[SP500MomentumUniverse]) -&gt; List[Symbol]:\n                                              ^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 28\n  at \n    class SP500MomentumUniverseAlgorithm(QCAlgorithm):\n in main.py: line 6\n name &#039;SP500MomentumUniverse&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;SP500MomentumUniverse&#039; is not defined\n  at SP500MomentumUniverseAlgorithm\n    def _select_assets(self, alt_coarse: List[SP500MomentumUniverse]) -&gt; List[Symbol]:\n                                              ^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 28\n  at \n    class SP500MomentumUniverseAlgorithm(QCAlgorithm):\n in main.py: line 6\n name &#039;SP500MomentumUniverse&#039; is not defined",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'SP500MomentumUniverse' is not defined\n  at SP500MomentumUniverseAlgorithm\n    def _select_assets(self, alt_coarse: List[SP500MomentumUniverse]) -> List[Symbol]:\n                                              ^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 28\n  at <module>\n    class SP500MomentumUniverseAlgorithm(QCAlgorithm):\n in main.py: line 6\n name 'SP500MomentumUniverse' is not defined",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:43:27.401631+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; PROMPT_MISS: etf / spy",
+  "total_orders": null
+}

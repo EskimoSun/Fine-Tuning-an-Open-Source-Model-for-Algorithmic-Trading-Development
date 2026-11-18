@@ -1,0 +1,331 @@
+{
+  "prompt_id": "futures_v10",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass FutureIndexRolloverAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # Filter the Futures universe by contract depth and expiry.\n        self._future = self.add_future(Future.universe.Index(self._index, extended_market_hours=True))\n        self._future.set_filter(0, 92)\n        # Set the data mapping and normalization mode for the mapped future.\n        self._future.set_data_mapping_mode(DataMappingMode.LAST_TRADING_DAY)\n        self._future.set_data_normalization_mode(DataNormalizationMode.BACKWARDS_RATIO)\n        # Set the contract depth offset to select the contract with the closest expiry.\n        self._future.set_contract_depth_offset(0)\n        # Plot the mapped future's price.\n        self.plot(\"Future\", self._future.mapped.symbol.value)\n\n    def on_data(self, slice: Slice) -> None:\n        # Create order if the mapped future has changed.\n        if not self._future.mapped.invested and slice.bars.get(self._future.mapped):\n            self.set_holdings(self._future.mapped, 1.0)\n\n    def on_symbol_changed(self, symbol_changed_event: SymbolChangedEvent) -> None:\n        # Manage the mapped future's quantity on expiry.\n        old_symbol = symbol_changed_event.old_symbol\n        new_symbol = symbol_changed_event.new_symbol\n        tag = f\"Rollover - {old_symbol.value} -> {new_symbol.value}\"\n        self.liquidate(old_symbol, tag)\n        if self.portfolio.invested:\n            self.set_holdings(new_symbol, self.portfolio[self._future.mapped].quantity)\n```",
+  "generated_at": "2026-11-13T00:16:07.658320+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "sp_500_e_mini"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass FutureIndexRolloverAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # Filter the Futures universe by contract depth and expiry.\n        self._future = self.add_future(Future.universe.Index(self._index, extended_market_hours=True))\n        self._future.set_filter(0, 92)\n        # Set the data mapping and normalization mode for the mapped future.\n        self._future.set_data_mapping_mode(DataMappingMode.LAST_TRADING_DAY)\n        self._future.set_data_normalization_mode(DataNormalizationMode.BACKWARDS_RATIO)\n        # Set the contract depth offset to select the contract with the closest expiry.\n        self._future.set_contract_depth_offset(0)\n        # Plot the mapped future's price.\n        self.plot(\"Future\", self._future.mapped.symbol.value)\n\n    def on_data(self, slice: Slice) -> None:\n        # Create order if the mapped future has changed.\n        if not self._future.mapped.invested and slice.bars.get(self._future.mapped):\n            self.set_holdings(self._future.mapped, 1.0)\n\n    def on_symbol_changed(self, symbol_changed_event: SymbolChangedEvent) -> None:\n        # Manage the mapped future's quantity on expiry.\n        old_symbol = symbol_changed_event.old_symbol\n        new_symbol = symbol_changed_event.new_symbol\n        tag = f\"Rollover - {old_symbol.value} -> {new_symbol.value}\"\n        self.liquidate(old_symbol, tag)\n        if self.portfolio.invested:\n            self.set_holdings(new_symbol, self.portfolio[self._future.mapped].quantity)\n",
+    "source_sha256": "e2a781f0316b8f531cf24591416579355d83bbcd0beda0aee7b53257d6c96acc",
+    "started_at": "2026-11-13T00:16:07.660722+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Future&#039; has no attribute &#039;universe&#039;\n  at initialize\n    self._future = s",
+    "project_id": 39315980,
+    "compile_id": "102613d01f70829acb5b223b273610c4-de388bb545c2195080591531dba6cdfc",
+    "compile_created": {
+      "compileId": "102613d01f70829acb5b223b273610c4-de388bb545c2195080591531dba6cdfc",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39315980,
+      "signature": "de388bb545c2195080591531dba6cdfc",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "102613d01f70829acb5b223b273610c4-de388bb545c2195080591531dba6cdfc",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39315980, with CompileID: 102613d01f70829acb5b223b273610c4-de388bb545c2195080591531dba6cdfc, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39315980, with CompileID: 102613d01f70829acb5b223b273610c4-de388bb545c2195080591531dba6cdfc, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "9f33650e40717ce69f5694f2f2dbc136",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v10",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315980,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "9f33650e40717ce69f5694f2f2dbc136",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 9
+        },
+        "backtestStart": "2026-11-13 00:16:10",
+        "backtestEnd": "2026-11-13 00:16:10",
+        "created": "2026-11-13 00:16:10",
+        "snapshotId": 39315983,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-15T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v10",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315980,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "9f33650e40717ce69f5694f2f2dbc136",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 9
+        },
+        "backtestStart": "2026-11-13 00:16:10",
+        "backtestEnd": "2026-11-13 00:16:10",
+        "created": "2026-11-13 00:16:10",
+        "snapshotId": 39315983,
+        "status": "Runtime Error",
+        "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Future&#039; has no attribute &#039;universe&#039;\n  at initialize\n    self._future = self.add_future(Future.universe.Index(self._index, extended_market_hours=True))\n                                   ^^^^^^^^^^^^^^^\n in main.py: line 11\n type object &#039;Future&#039; has no attribute &#039;universe&#039;",
+        "stacktrace": "type object 'Future' has no attribute 'universe'\n  at initialize\n    self._future = self.add_future(Future.universe.Index(self._index, extended_market_hours=True))\n                                   ^^^^^^^^^^^^^^^\n in main.py: line 11\n type object 'Future' has no attribute 'universe'",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-15T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "11.7%",
+          "Used RAM (MB)": "255",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-9f33650e40717ce69f5694f2f2dbc136",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:14"
+        }
+      },
+      "success": true
+    },
+    "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Future&#039; has no attribute &#039;universe&#039;\n  at initialize\n    self._future = self.add_future(Future.universe.Index(self._index, extended_market_hours=True))\n                                   ^^^^^^^^^^^^^^^\n in main.py: line 11\n type object &#039;Future&#039; has no attribute &#039;universe&#039;",
+    "stacktrace": "type object 'Future' has no attribute 'universe'\n  at initialize\n    self._future = self.add_future(Future.universe.Index(self._index, extended_market_hours=True))\n                                   ^^^^^^^^^^^^^^^\n in main.py: line 11\n type object 'Future' has no attribute 'universe'",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-13T00:17:01.752178+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Future&#039; has no attribute &#039;universe&#039;\n  at initialize\n    self._future = s",
+  "note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Future&#039; has no attribute &#039;universe&#039;\n  at initialize\n    self._future = s; PROMPT_MISS: sp_500_e_mini",
+  "total_orders": null
+}

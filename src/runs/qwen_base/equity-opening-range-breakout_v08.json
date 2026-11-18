@@ -1,0 +1,297 @@
+{
+  "prompt_id": "equity-opening-range-breakout_v08",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\n# QuantConnect LEAN Algorithm - Opening Range Breakout on SPY\n# Resolution: Minute\n# Window: 2024-09-01 to 2024-12-31\n# Capital: $100,000\n# Strategy: Open Range Breakout (ORB)\n#   - Range: High/Low from 09:30 to 10:00\n#   - Entry: Close > Range High (Long) or Close < Range Low (Short) after 10:00\n#   - Exit: Liquidate at 15:55 daily\n\nfrom datetime import time\nfrom QuantConnect.Algorithm import QC\nfrom QuantConnect.Lean.Engine.Realtime.RealtimeBrokerageModel import RealtimeBrokerageModel\nfrom QuantConnect.Data.Market import Quote\n\nclass OrbStrategy(QC.Algorithm.Algorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        Sets the data feed, symbol, and initial capital.\n        \"\"\"\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        self.SetCash(100000)\n        \n        # Add SPY data at minute resolution\n        self.Add(Equity.SPY, Resolution.Minute)\n        \n        # State variables\n        self._range_high = 0.0\n        self._range_low = 0.0\n        self._in_range = True\n        self._position = 0\n        self._entry_price = 0.0\n        self._entry_time = None\n        \n        # Define time windows\n        self._range_start = time(9, 30)\n        self._range_end = time(10, 0)\n        self._exit_time = time(15, 55)\n        \n        # Log initialization\n        self.Log(\"Opening Range Breakout Strategy Initialized\")\n        self.Log(\"Symbol: SPY\")\n        self.Log(\"Range Period: 09:30 - 10:00\")\n        self.Log(\"Exit Time: 15:55\")\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        Updates the range during the 09:30-10:00 window.\n        Checks for breakout entries after 10:00.\n        Manages exits at 15:55.\n        \"\"\"\n        current_time = self.Time\n        \n        # Check if we are in the range building period (09:30 - 10:00)\n        if self._in_range:\n            if current_time >= self._range_start and current_time <= self._range_end:\n                # Update range based on current bar's high and low\n                current_bar = data[self.Symbol]\n                if current_bar.High > self._range_high:\n                    self._range_high = current_bar.High\n                if current_bar.Low < self._range_low:\n                    self._range_low = current_bar.Low\n            else:\n                # Range period ended, switch to monitoring mode\n                self._in_range = False\n                self.Log(f\"Range Established: High={self._range_high}, Low={self._range_low}\")\n\n        # Check for exit condition (Liquidate at 15:55)\n        if current_time >= self._exit_time:\n            if self._position != 0:\n                self.ClosePosition(self.Symbol)\n                self.Log(f\"Exited position at {current_time}. Price: {data[self.Symbol].Close}\")\n            \n            # Reset range for the next day\n            self._range_high = 0.0\n            self._range_low = 0.0\n            self._in_range = True\n            return\n\n        # Check for entry conditions (Breakout after 10:00)\n        if not self._in_range and self._position == 0:\n            current_bar = data[self.Symbol]\n            \n            # Ensure we are past the range end time\n            if current_time > self._range_end:\n                # Long Breakout: Close above Range High\n                if current_bar.Close > self._range_high:\n                    self.Log(f\"Long Breakout: Close ({current_bar.Close}) > Range High ({self._range_high})\")\n                    self.SetHoldings(self.Symbol, 1.0)  # Allocate 100% long\n                    self._entry_price = current_bar.Close\n                    self._entry_time = current_time\n                    self._position = 1\n                \n                # Short Breakout: Close below Range Low\n                elif current_bar.Close < self._range_low:\n                    self.Log(f\"Short Breakout: Close ({current_bar.Close}) < Range Low ({self._range_low})\")\n                    self.SetHoldings(self.Symbol, -1.0) # Allocate 100% short\n                    self._entry_price = current_bar.Close\n                    self._entry_time = current_time\n                    self._position = -1\n\n    def OnOrderEvent(self, order):\n        \"\"\"\n        Handle order events.\n        Logs order status for debugging.\n        \"\"\"\n        if order.Status == OrderStatus.Filled:\n            self.Log(f\"Order Filled: {order.Symbol} @ {order.FillPrice}\")\n        elif order.Status == OrderStatus.Canceled:\n            self.Log(f\"Order Canceled: {order.Symbol}\")\n\n    def OnEndOfAlgorithm(self):\n        \"\"\"\n        Called when the algorithm ends.\n        Summarizes performance.\n        \"\"\"\n        self.Log(\"Algorithm Ended\")\n        self.Log(f\"Final Portfolio Value: {self.Portfolio.TotalPortfolioValue:C}\")\n        self.Log(f\"Total Net Profit: {self.Portfolio.TotalNetProfit:C}\")\n        self.Log(f\"Total Net Loss: {self.Portfolio.TotalNetLoss:C}\")\n        self.Log(f\"Total Fees: {self.Portfolio.TotalFees:C}\")\n\n# This class is required by QuantConnect to run the algorithm\nif __name__ == \"__main__\":\n    # This block is just for local testing if needed, \n    # but typically QC runs this via the IDE or CLI.\n    pass\n```",
+  "generated_at": "2026-11-14T22:43:12.613980+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "Add, ClosePosition, Log, SetCash, SetEndDate, SetHoldings, SetStartDate"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# QuantConnect LEAN Algorithm - Opening Range Breakout on SPY\n# Resolution: Minute\n# Window: 2024-09-01 to 2024-12-31\n# Capital: $100,000\n# Strategy: Open Range Breakout (ORB)\n#   - Range: High/Low from 09:30 to 10:00\n#   - Entry: Close > Range High (Long) or Close < Range Low (Short) after 10:00\n#   - Exit: Liquidate at 15:55 daily\n\nfrom datetime import time\nfrom QuantConnect.Algorithm import QC\nfrom QuantConnect.Lean.Engine.Realtime.RealtimeBrokerageModel import RealtimeBrokerageModel\nfrom QuantConnect.Data.Market import Quote\n\nclass OrbStrategy(QC.Algorithm.Algorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        Sets the data feed, symbol, and initial capital.\n        \"\"\"\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        self.SetCash(100000)\n        \n        # Add SPY data at minute resolution\n        self.Add(Equity.SPY, Resolution.Minute)\n        \n        # State variables\n        self._range_high = 0.0\n        self._range_low = 0.0\n        self._in_range = True\n        self._position = 0\n        self._entry_price = 0.0\n        self._entry_time = None\n        \n        # Define time windows\n        self._range_start = time(9, 30)\n        self._range_end = time(10, 0)\n        self._exit_time = time(15, 55)\n        \n        # Log initialization\n        self.Log(\"Opening Range Breakout Strategy Initialized\")\n        self.Log(\"Symbol: SPY\")\n        self.Log(\"Range Period: 09:30 - 10:00\")\n        self.Log(\"Exit Time: 15:55\")\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        Updates the range during the 09:30-10:00 window.\n        Checks for breakout entries after 10:00.\n        Manages exits at 15:55.\n        \"\"\"\n        current_time = self.Time\n        \n        # Check if we are in the range building period (09:30 - 10:00)\n        if self._in_range:\n            if current_time >= self._range_start and current_time <= self._range_end:\n                # Update range based on current bar's high and low\n                current_bar = data[self.Symbol]\n                if current_bar.High > self._range_high:\n                    self._range_high = current_bar.High\n                if current_bar.Low < self._range_low:\n                    self._range_low = current_bar.Low\n            else:\n                # Range period ended, switch to monitoring mode\n                self._in_range = False\n                self.Log(f\"Range Established: High={self._range_high}, Low={self._range_low}\")\n\n        # Check for exit condition (Liquidate at 15:55)\n        if current_time >= self._exit_time:\n            if self._position != 0:\n                self.ClosePosition(self.Symbol)\n                self.Log(f\"Exited position at {current_time}. Price: {data[self.Symbol].Close}\")\n            \n            # Reset range for the next day\n            self._range_high = 0.0\n            self._range_low = 0.0\n            self._in_range = True\n            return\n\n        # Check for entry conditions (Breakout after 10:00)\n        if not self._in_range and self._position == 0:\n            current_bar = data[self.Symbol]\n            \n            # Ensure we are past the range end time\n            if current_time > self._range_end:\n                # Long Breakout: Close above Range High\n                if current_bar.Close > self._range_high:\n                    self.Log(f\"Long Breakout: Close ({current_bar.Close}) > Range High ({self._range_high})\")\n                    self.SetHoldings(self.Symbol, 1.0)  # Allocate 100% long\n                    self._entry_price = current_bar.Close\n                    self._entry_time = current_time\n                    self._position = 1\n                \n                # Short Breakout: Close below Range Low\n                elif current_bar.Close < self._range_low:\n                    self.Log(f\"Short Breakout: Close ({current_bar.Close}) < Range Low ({self._range_low})\")\n                    self.SetHoldings(self.Symbol, -1.0) # Allocate 100% short\n                    self._entry_price = current_bar.Close\n                    self._entry_time = current_time\n                    self._position = -1\n\n    def OnOrderEvent(self, order):\n        \"\"\"\n        Handle order events.\n        Logs order status for debugging.\n        \"\"\"\n        if order.Status == OrderStatus.Filled:\n            self.Log(f\"Order Filled: {order.Symbol} @ {order.FillPrice}\")\n        elif order.Status == OrderStatus.Canceled:\n            self.Log(f\"Order Canceled: {order.Symbol}\")\n\n    def OnEndOfAlgorithm(self):\n        \"\"\"\n        Called when the algorithm ends.\n        Summarizes performance.\n        \"\"\"\n        self.Log(\"Algorithm Ended\")\n        self.Log(f\"Final Portfolio Value: {self.Portfolio.TotalPortfolioValue:C}\")\n        self.Log(f\"Total Net Profit: {self.Portfolio.TotalNetProfit:C}\")\n        self.Log(f\"Total Net Loss: {self.Portfolio.TotalNetLoss:C}\")\n        self.Log(f\"Total Fees: {self.Portfolio.TotalFees:C}\")\n\n# This class is required by QuantConnect to run the algorithm\nif __name__ == \"__main__\":\n    # This block is just for local testing if needed, \n    # but typically QC runs this via the IDE or CLI.\n    pass\n",
+    "source_sha256": "9a902bf81748ecc51c29ef10c2c2c8c33478fbb2e64b87eae0920d6132b9f82c",
+    "started_at": "2026-11-14T22:43:12.617810+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39414171,
+    "compile_id": "97d69b98000d3a042bb240f8877a5658-2fc003792e5ec77f4140ef8421f54052",
+    "compile_created": {
+      "compileId": "97d69b98000d3a042bb240f8877a5658-2fc003792e5ec77f4140ef8421f54052",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39414171,
+      "signature": "2fc003792e5ec77f4140ef8421f54052",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "97d69b98000d3a042bb240f8877a5658-2fc003792e5ec77f4140ef8421f54052",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39414171, with CompileID: 97d69b98000d3a042bb240f8877a5658-2fc003792e5ec77f4140ef8421f54052, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39414171, with CompileID: 97d69b98000d3a042bb240f8877a5658-2fc003792e5ec77f4140ef8421f54052, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "51478c7bd01b358249232fd107b6ab94",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-opening-range-breakout_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39414171,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "51478c7bd01b358249232fd107b6ab94",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 22
+        },
+        "backtestStart": "2026-11-14 22:43:15",
+        "backtestEnd": "2026-11-14 22:43:15",
+        "created": "2026-11-14 22:43:15",
+        "snapshotId": 39414174,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-opening-range-breakout_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39414171,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "51478c7bd01b358249232fd107b6ab94",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 22
+        },
+        "backtestStart": "2026-11-14 22:43:15",
+        "backtestEnd": "2026-11-14 22:43:15",
+        "created": "2026-11-14 22:43:15",
+        "snapshotId": 39414174,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC\n in main.py: line 11\n cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC\n in main.py: line 11\n cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC\n in main.py: line 11\n cannot import name 'QC' from 'QuantConnect.Algorithm' (unknown location)",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "71.8%",
+          "Used RAM (MB)": "118",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-51478c7bd01b358249232fd107b6ab94",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC\n in main.py: line 11\n cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC\n in main.py: line 11\n cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC\n in main.py: line 11\n cannot import name 'QC' from 'QuantConnect.Algorithm' (unknown location)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:44:02.880542+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS; LEGACY_API: Add, ClosePosition, Log, SetCash, SetEndDate, SetHoldings, SetStartDate",
+  "total_orders": null
+}

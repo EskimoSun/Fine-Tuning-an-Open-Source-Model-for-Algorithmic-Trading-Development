@@ -1,0 +1,309 @@
+{
+  "prompt_id": "equity-sixty-forty-portfolio_v06",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport datetime\nimport QuantConnect as QC\n\n# Define configuration constants\nINITIAL_CAPITAL = 100000.0\nSTART_DATE = datetime.datetime(2022, 1, 1)\nEND_DATE = datetime.datetime(2024, 12, 31)\nDRIFT_THRESHOLD = 0.05  # 5% threshold for rebalancing\n\nclass SPY_TLT_Algorithm(QC.Algorithm.Algorithm):\n    \"\"\"\n    Algorithm implementing a 60/40 SPY/TLT portfolio with monthly rebalancing.\n    Rebalances only if the absolute difference between current weight and target weight exceeds DRIFT_THRESHOLD.\n    \"\"\"\n    \n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        Sets up the schedule for monthly rebalancing starting 1 minute after the first bar of the month.\n        \"\"\"\n        self.SetStartDate(START_DATE)\n        self.SetEndDate(END_DATE)\n        self.SetCash(INITIAL_CAPITAL)\n        \n        # Define the universe\n        self.AddEquity(\"SPY\", QC.DataNormalizationMode.RealTime)\n        self.AddEquity(\"TLT\", QC.DataNormalizationMode.RealTime)\n        \n        # Define the rebalance schedule\n        # We need to rebalance at the start of each month, 1 minute after the open.\n        # Since we are using minute bars, we schedule a rebalance event.\n        # The schedule will trigger on the first minute of every month.\n        self.Schedule = QC.Algorithm.Schedule.On(\n            QC.Algorithm.DateOffset.MonthStart(1),\n            QC.Algorithm.TimeOffset.Minute(1)\n        )\n        \n        # Store target weights\n        self._target_weights = {\n            \"SPY\": 0.6,\n            \"TLT\": 0.4\n        }\n        \n        # Store current holdings value to calculate weights\n        self._current_holdings_value = 0.0\n        \n        # Log initialization\n        self.Log(f\"Algorithm initialized. Start: {self.SetStartDate()}, End: {self.SetEndDate()}\")\n        self.Log(f\"Initial Capital: ${INITIAL_CAPITAL:,.2f}\")\n        self.Log(f\"Target Weights: {self._target_weights}\")\n        self.Log(f\"Rebalance Schedule: Monthly, 1 minute after open.\")\n        self.Log(f\"Drift Threshold: {DRIFT_THRESHOLD}\")\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        This method is primarily used for logging or if we needed to update holdings values dynamically,\n        but the rebalancing logic is handled in the Scheduled method.\n        \"\"\"\n        pass\n\n    def Scheduled(self, reason, timestamp):\n        \"\"\"\n        Execute the rebalancing logic when the schedule triggers.\n        This runs 1 minute after the first minute of every month.\n        \"\"\"\n        self.Log(f\"\\n{'='*40}\")\n        self.Log(f\"Scheduled Rebalance at {timestamp}\")\n        self.Log(f\"{'='*40}\")\n        \n        # Get current portfolio value\n        portfolio_value = self.Portfolio.TotalPortfolioValue\n        \n        if portfolio_value == 0:\n            self.Log(\"Error: Portfolio value is zero. Cannot rebalance.\")\n            return\n\n        # Calculate current weights based on holdings value\n        # Holdings Value = Sum of (Price * Quantity) for all positions\n        current_holdings_value = self.Portfolio.HoldingsValue\n        \n        # Calculate current weights\n        current_weights = {}\n        for symbol in self._target_weights.keys():\n            if symbol in self.Portfolio:\n                holding_value = self.Portfolio[symbol].MarketValue\n                weight = holding_value / portfolio_value\n                current_weights[symbol] = weight\n            else:\n                current_weights[symbol] = 0.0\n        \n        self.Log(f\"Current Portfolio Value: ${portfolio_value:,.2f}\")\n        self.Log(f\"Current Holdings Value: ${current_holdings_value:,.2f}\")\n        self.Log(f\"Current Weights: {current_weights}\")\n        \n        # Check if rebalancing is needed\n        needs_rebalance = False\n        symbols_to_rebalance = []\n        \n        for symbol, target_weight in self._target_weights.items():\n            current_weight = current_weights.get(symbol, 0.0)\n            weight_diff = abs(current_weight - target_weight)\n            \n            if weight_diff > DRIFT_THRESHOLD:\n                needs_rebalance = True\n                symbols_to_rebalance.append(symbol)\n                self.Log(f\"Symbol {symbol}: Current {current_weight:.4f}, Target {target_weight:.4f}, Diff {weight_diff:.4f} > {DRIFT_THRESHOLD}. Rebalance needed.\")\n            else:\n                self.Log(f\"Symbol {symbol}: Current {current_weight:.4f}, Target {target_weight:.4f}, Diff {weight_diff:.4f} <= {DRIFT_THRESHOLD}. No rebalance needed.\")\n        \n        if not needs_rebalance:\n            self.Log(\"No rebalancing required as all weights are within the drift threshold.\")\n            return\n\n        # Perform rebalancing using PortfolioTargets\n        # We will set the target weights for the symbols that need rebalancing\n        # and let the framework handle the execution.\n        \n        # Create a dictionary of targets for the symbols needing adjustment\n        # We set the target for all symbols to ensure the portfolio is balanced correctly\n        # even if one is slightly off, though the logic above filters strictly.\n        # To be safe and ensure the 60/40 split is maintained exactly:\n        \n        self.Portfolio.SetTargetWeights({\n            \"SPY\": self._target_weights[\"SPY\"],\n            \"TLT\": self._target_weights[\"TLT\"]\n        })\n        \n        self.Log(f\"Rebalancing initiated for symbols: {symbols_to_rebalance}\")\n        self.Log(f\"Setting Portfolio Targets: {self._target_weights}\")\n        \n        # Note: In LEAN, SetTargetWeights sets the desired state. \n        # The algorithm will attempt to reach these targets using available cash and existing positions.\n        # Since we are using minute bars and this is a scheduled event, \n        # the orders will be placed immediately in this tick.\n\n    def OnOrder(self, order):\n        \"\"\"\n        Handle order events.\n        Logs order status for monitoring purposes.\n        \"\"\"\n        if order.Status == QC.Algorithm.OrderStatus.Filled:\n            self.Log(f\"Order Filled: {order.Symbol} {order.Quantity} @ {order.FillPrice}\")\n        elif order.Status == QC.Algorithm.OrderStatus.Canceled:\n            self.Log(f\"Order Canceled: {order.Symbol} {order.Quantity}\")\n        elif order.Status == QC.Algorithm.OrderStatus.Pending:\n            self.Log(f\"Order Pending: {order.Symbol} {order.Quantity}\")\n```",
+  "generated_at": "2026-11-14T22:18:16.314499+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddEquity, Log, SetCash, SetEndDate, SetStartDate"
+    },
+    {
+      "code": "NO_ORDERS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "quarter_start / quarter"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import datetime\nimport QuantConnect as QC\n\n# Define configuration constants\nINITIAL_CAPITAL = 100000.0\nSTART_DATE = datetime.datetime(2022, 1, 1)\nEND_DATE = datetime.datetime(2024, 12, 31)\nDRIFT_THRESHOLD = 0.05  # 5% threshold for rebalancing\n\nclass SPY_TLT_Algorithm(QC.Algorithm.Algorithm):\n    \"\"\"\n    Algorithm implementing a 60/40 SPY/TLT portfolio with monthly rebalancing.\n    Rebalances only if the absolute difference between current weight and target weight exceeds DRIFT_THRESHOLD.\n    \"\"\"\n    \n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        Sets up the schedule for monthly rebalancing starting 1 minute after the first bar of the month.\n        \"\"\"\n        self.SetStartDate(START_DATE)\n        self.SetEndDate(END_DATE)\n        self.SetCash(INITIAL_CAPITAL)\n        \n        # Define the universe\n        self.AddEquity(\"SPY\", QC.DataNormalizationMode.RealTime)\n        self.AddEquity(\"TLT\", QC.DataNormalizationMode.RealTime)\n        \n        # Define the rebalance schedule\n        # We need to rebalance at the start of each month, 1 minute after the open.\n        # Since we are using minute bars, we schedule a rebalance event.\n        # The schedule will trigger on the first minute of every month.\n        self.Schedule = QC.Algorithm.Schedule.On(\n            QC.Algorithm.DateOffset.MonthStart(1),\n            QC.Algorithm.TimeOffset.Minute(1)\n        )\n        \n        # Store target weights\n        self._target_weights = {\n            \"SPY\": 0.6,\n            \"TLT\": 0.4\n        }\n        \n        # Store current holdings value to calculate weights\n        self._current_holdings_value = 0.0\n        \n        # Log initialization\n        self.Log(f\"Algorithm initialized. Start: {self.SetStartDate()}, End: {self.SetEndDate()}\")\n        self.Log(f\"Initial Capital: ${INITIAL_CAPITAL:,.2f}\")\n        self.Log(f\"Target Weights: {self._target_weights}\")\n        self.Log(f\"Rebalance Schedule: Monthly, 1 minute after open.\")\n        self.Log(f\"Drift Threshold: {DRIFT_THRESHOLD}\")\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        This method is primarily used for logging or if we needed to update holdings values dynamically,\n        but the rebalancing logic is handled in the Scheduled method.\n        \"\"\"\n        pass\n\n    def Scheduled(self, reason, timestamp):\n        \"\"\"\n        Execute the rebalancing logic when the schedule triggers.\n        This runs 1 minute after the first minute of every month.\n        \"\"\"\n        self.Log(f\"\\n{'='*40}\")\n        self.Log(f\"Scheduled Rebalance at {timestamp}\")\n        self.Log(f\"{'='*40}\")\n        \n        # Get current portfolio value\n        portfolio_value = self.Portfolio.TotalPortfolioValue\n        \n        if portfolio_value == 0:\n            self.Log(\"Error: Portfolio value is zero. Cannot rebalance.\")\n            return\n\n        # Calculate current weights based on holdings value\n        # Holdings Value = Sum of (Price * Quantity) for all positions\n        current_holdings_value = self.Portfolio.HoldingsValue\n        \n        # Calculate current weights\n        current_weights = {}\n        for symbol in self._target_weights.keys():\n            if symbol in self.Portfolio:\n                holding_value = self.Portfolio[symbol].MarketValue\n                weight = holding_value / portfolio_value\n                current_weights[symbol] = weight\n            else:\n                current_weights[symbol] = 0.0\n        \n        self.Log(f\"Current Portfolio Value: ${portfolio_value:,.2f}\")\n        self.Log(f\"Current Holdings Value: ${current_holdings_value:,.2f}\")\n        self.Log(f\"Current Weights: {current_weights}\")\n        \n        # Check if rebalancing is needed\n        needs_rebalance = False\n        symbols_to_rebalance = []\n        \n        for symbol, target_weight in self._target_weights.items():\n            current_weight = current_weights.get(symbol, 0.0)\n            weight_diff = abs(current_weight - target_weight)\n            \n            if weight_diff > DRIFT_THRESHOLD:\n                needs_rebalance = True\n                symbols_to_rebalance.append(symbol)\n                self.Log(f\"Symbol {symbol}: Current {current_weight:.4f}, Target {target_weight:.4f}, Diff {weight_diff:.4f} > {DRIFT_THRESHOLD}. Rebalance needed.\")\n            else:\n                self.Log(f\"Symbol {symbol}: Current {current_weight:.4f}, Target {target_weight:.4f}, Diff {weight_diff:.4f} <= {DRIFT_THRESHOLD}. No rebalance needed.\")\n        \n        if not needs_rebalance:\n            self.Log(\"No rebalancing required as all weights are within the drift threshold.\")\n            return\n\n        # Perform rebalancing using PortfolioTargets\n        # We will set the target weights for the symbols that need rebalancing\n        # and let the framework handle the execution.\n        \n        # Create a dictionary of targets for the symbols needing adjustment\n        # We set the target for all symbols to ensure the portfolio is balanced correctly\n        # even if one is slightly off, though the logic above filters strictly.\n        # To be safe and ensure the 60/40 split is maintained exactly:\n        \n        self.Portfolio.SetTargetWeights({\n            \"SPY\": self._target_weights[\"SPY\"],\n            \"TLT\": self._target_weights[\"TLT\"]\n        })\n        \n        self.Log(f\"Rebalancing initiated for symbols: {symbols_to_rebalance}\")\n        self.Log(f\"Setting Portfolio Targets: {self._target_weights}\")\n        \n        # Note: In LEAN, SetTargetWeights sets the desired state. \n        # The algorithm will attempt to reach these targets using available cash and existing positions.\n        # Since we are using minute bars and this is a scheduled event, \n        # the orders will be placed immediately in this tick.\n\n    def OnOrder(self, order):\n        \"\"\"\n        Handle order events.\n        Logs order status for monitoring purposes.\n        \"\"\"\n        if order.Status == QC.Algorithm.OrderStatus.Filled:\n            self.Log(f\"Order Filled: {order.Symbol} {order.Quantity} @ {order.FillPrice}\")\n        elif order.Status == QC.Algorithm.OrderStatus.Canceled:\n            self.Log(f\"Order Canceled: {order.Symbol} {order.Quantity}\")\n        elif order.Status == QC.Algorithm.OrderStatus.Pending:\n            self.Log(f\"Order Pending: {order.Symbol} {order.Quantity}\")\n",
+    "source_sha256": "4959fe71a1eede13920c288f6eae542d12e11c6fff4096094a2ae9b179cc9953",
+    "started_at": "2026-11-14T22:18:16.315595+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39413141,
+    "compile_id": "53d6fd758e3ba39c0af91eaa8f6dcfa9-008d34668b658e56e03ec5c9aba92cb4",
+    "compile_created": {
+      "compileId": "53d6fd758e3ba39c0af91eaa8f6dcfa9-008d34668b658e56e03ec5c9aba92cb4",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39413141,
+      "signature": "008d34668b658e56e03ec5c9aba92cb4",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "53d6fd758e3ba39c0af91eaa8f6dcfa9-008d34668b658e56e03ec5c9aba92cb4",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39413141, with CompileID: 53d6fd758e3ba39c0af91eaa8f6dcfa9-008d34668b658e56e03ec5c9aba92cb4, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39413141, with CompileID: 53d6fd758e3ba39c0af91eaa8f6dcfa9-008d34668b658e56e03ec5c9aba92cb4, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "1a676db82f2f4edb3b05450f0583b2a8",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-sixty-forty-portfolio_v06",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413141,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "1a676db82f2f4edb3b05450f0583b2a8",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 17
+        },
+        "backtestStart": "2026-11-14 22:18:19",
+        "backtestEnd": "2026-11-14 22:18:19",
+        "created": "2026-11-14 22:18:19",
+        "snapshotId": 39413143,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-sixty-forty-portfolio_v06",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413141,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "1a676db82f2f4edb3b05450f0583b2a8",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 17
+        },
+        "backtestStart": "2026-11-14 22:18:19",
+        "backtestEnd": "2026-11-14 22:18:19",
+        "created": "2026-11-14 22:18:19",
+        "snapshotId": 39413143,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at \n    class SPY_TLT_Algorithm(QC.Algorithm.Algorithm):\n                            ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 10\n Algorithm Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at \n    class SPY_TLT_Algorithm(QC.Algorithm.Algorithm):\n                            ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 10\n Algorithm",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at <module>\n    class SPY_TLT_Algorithm(QC.Algorithm.Algorithm):\n                            ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 10\n Algorithm",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.0%",
+          "Used RAM (MB)": "179",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-1a676db82f2f4edb3b05450f0583b2a8",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at \n    class SPY_TLT_Algorithm(QC.Algorithm.Algorithm):\n                            ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 10\n Algorithm Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at \n    class SPY_TLT_Algorithm(QC.Algorithm.Algorithm):\n                            ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 10\n Algorithm",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at <module>\n    class SPY_TLT_Algorithm(QC.Algorithm.Algorithm):\n                            ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 10\n Algorithm",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:19:07.884559+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS; LEGACY_API: AddEquity, Log, SetCash, SetEndDate, SetStartDate; NO_ORDERS; PROMPT_MISS: quarter_start / quarter",
+  "total_orders": null
+}

@@ -1,0 +1,331 @@
+{
+  "prompt_id": "equity-pairs-trading-cointegration_v03",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass KoPepPairsTradingAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100_000)\n        # Trade KO and PEP as a pair.\n        pairs = [CreatePair(\"KO\", \"PEP\")]\n        self._model = LinearRegression()\n        self._scaler = StandardScaler()\n        # Warm up the models with daily trade bars.\n        history = self.history[TradeBar](pairs, Resolution.DAILY)\n        for trade_bar in history:\n            self._update_model(trade_bar)\n        # Save the models so they can be re-used on rebalance.\n        self.object_store.save_key(\"pair_model\", self._model.get_bytes())\n        self.object_store.save_key(\"pair_scaler\", self._scaler.get_bytes())\n        # Set the universe to update daily so we can trade as soon as the model is ready.\n        self._universe = self.add_universe(pairs, Resolution.DAILY, self._select_assets)\n        # Add a Scheduled Event to rebalance the pair every week.\n        self.schedule.on(\n            self.date_rules.week_start(), \n            self.time_rules.at(9, 31), \n            self._rebalance\n        )\n\n    def _select_assets(self, data: List[TradeBar]) -> List[Symbol]:\n        # Select the stocks with the larger volume.\n        volume_by_symbol = {}\n        for trade_bar in data:\n            volume_by_symbol[trade_bar.symbol] = trade_bar.volume + trade_bar.ask_volume\n        return [Symbol.create_market_order_symbol(symbol, \"KO\")\n                for symbol in sorted(volume_by_symbol, key=lambda x: volume_by_symbol[x])[:2]]\n\n    def _update_model(self, trade_bar: TradeBar) -> None:\n        # Train the model with the closing prices of the two stocks.\n        prices = [trade_bar.close for bar in self._universe.selected]\n        if len(prices) < 2:\n            return\n        X = np.array([prices[:-1]])\n        Y = np.array([prices[-1]])\n        self._model.fit(X, Y)\n        # Scale the latest prices using the same scaler to get the z-score.\n        scaled_prices = self._scaler.transform([prices])\n        # The spread is the difference between the two scaled prices.\n        spread = scaled_prices[0][1] - scaled_prices[0][0]\n        # We trade when the z-score is greater than 2 standard deviations.\n        if abs(scaled_prices[0][0]) > 2 or abs(spread) > 2:\n            self.plot(\"Model\", \"Spread\", spread)\n\n    def _rebalance(self) -> None:\n        # Get the scaled prices to calculate the z-score.\n        scaled_prices = self._scaler.transform([self._universe.selected[s].close for s in self._universe.selected])\n        # We trade when the z-score is greater than 2 standard deviations.\n        if abs(scaled_prices[0][0]) > 2 or abs(scaled_prices[1]) > 2:\n            return\n        # Equal weight the two stocks.\n        weight = 0.5\n        targets = [PortfolioTarget(symbol, weight) for symbol in self._universe.selected]\n        self.set_holdings(targets, True)\n```",
+  "generated_at": "2026-11-12T23:54:17.768476+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "60"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass KoPepPairsTradingAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100_000)\n        # Trade KO and PEP as a pair.\n        pairs = [CreatePair(\"KO\", \"PEP\")]\n        self._model = LinearRegression()\n        self._scaler = StandardScaler()\n        # Warm up the models with daily trade bars.\n        history = self.history[TradeBar](pairs, Resolution.DAILY)\n        for trade_bar in history:\n            self._update_model(trade_bar)\n        # Save the models so they can be re-used on rebalance.\n        self.object_store.save_key(\"pair_model\", self._model.get_bytes())\n        self.object_store.save_key(\"pair_scaler\", self._scaler.get_bytes())\n        # Set the universe to update daily so we can trade as soon as the model is ready.\n        self._universe = self.add_universe(pairs, Resolution.DAILY, self._select_assets)\n        # Add a Scheduled Event to rebalance the pair every week.\n        self.schedule.on(\n            self.date_rules.week_start(), \n            self.time_rules.at(9, 31), \n            self._rebalance\n        )\n\n    def _select_assets(self, data: List[TradeBar]) -> List[Symbol]:\n        # Select the stocks with the larger volume.\n        volume_by_symbol = {}\n        for trade_bar in data:\n            volume_by_symbol[trade_bar.symbol] = trade_bar.volume + trade_bar.ask_volume\n        return [Symbol.create_market_order_symbol(symbol, \"KO\")\n                for symbol in sorted(volume_by_symbol, key=lambda x: volume_by_symbol[x])[:2]]\n\n    def _update_model(self, trade_bar: TradeBar) -> None:\n        # Train the model with the closing prices of the two stocks.\n        prices = [trade_bar.close for bar in self._universe.selected]\n        if len(prices) < 2:\n            return\n        X = np.array([prices[:-1]])\n        Y = np.array([prices[-1]])\n        self._model.fit(X, Y)\n        # Scale the latest prices using the same scaler to get the z-score.\n        scaled_prices = self._scaler.transform([prices])\n        # The spread is the difference between the two scaled prices.\n        spread = scaled_prices[0][1] - scaled_prices[0][0]\n        # We trade when the z-score is greater than 2 standard deviations.\n        if abs(scaled_prices[0][0]) > 2 or abs(spread) > 2:\n            self.plot(\"Model\", \"Spread\", spread)\n\n    def _rebalance(self) -> None:\n        # Get the scaled prices to calculate the z-score.\n        scaled_prices = self._scaler.transform([self._universe.selected[s].close for s in self._universe.selected])\n        # We trade when the z-score is greater than 2 standard deviations.\n        if abs(scaled_prices[0][0]) > 2 or abs(scaled_prices[1]) > 2:\n            return\n        # Equal weight the two stocks.\n        weight = 0.5\n        targets = [PortfolioTarget(symbol, weight) for symbol in self._universe.selected]\n        self.set_holdings(targets, True)\n",
+    "source_sha256": "dc3ce3b51bf9e03adab4bdda764eac2dd5bfe9de3cd9f83ca5683c3eecbc3a56",
+    "started_at": "2026-11-12T23:54:17.772614+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;CreatePair&#039; is not defined\n  at initialize\n    pairs = [CreatePair(&quot;KO&quot;, &quot;",
+    "project_id": 39315128,
+    "compile_id": "b2abf999180192b254adc9aa38a14286-979837e1c058971357a4ca6d2bb3a45d",
+    "compile_created": {
+      "compileId": "b2abf999180192b254adc9aa38a14286-979837e1c058971357a4ca6d2bb3a45d",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39315128,
+      "signature": "979837e1c058971357a4ca6d2bb3a45d",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "b2abf999180192b254adc9aa38a14286-979837e1c058971357a4ca6d2bb3a45d",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39315128, with CompileID: b2abf999180192b254adc9aa38a14286-979837e1c058971357a4ca6d2bb3a45d, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39315128, with CompileID: b2abf999180192b254adc9aa38a14286-979837e1c058971357a4ca6d2bb3a45d, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "3a95e491d8bf94ab49404b32078fe7f0",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315128,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "3a95e491d8bf94ab49404b32078fe7f0",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 22
+        },
+        "backtestStart": "2026-11-12 23:54:21",
+        "backtestEnd": "2026-11-12 23:54:21",
+        "created": "2026-11-12 23:54:21",
+        "snapshotId": 39315131,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315128,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "3a95e491d8bf94ab49404b32078fe7f0",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 22
+        },
+        "backtestStart": "2026-11-12 23:54:21",
+        "backtestEnd": "2026-11-12 23:54:21",
+        "created": "2026-11-12 23:54:21",
+        "snapshotId": 39315131,
+        "status": "Runtime Error",
+        "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;CreatePair&#039; is not defined\n  at initialize\n    pairs = [CreatePair(&quot;KO&quot;, &quot;PEP&quot;)]\n             ^^^^^^^^^^\n in main.py: line 13\n name &#039;CreatePair&#039; is not defined",
+        "stacktrace": "name 'CreatePair' is not defined\n  at initialize\n    pairs = [CreatePair(\"KO\", \"PEP\")]\n             ^^^^^^^^^^\n in main.py: line 13\n name 'CreatePair' is not defined",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "7.2%",
+          "Used RAM (MB)": "200",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-3a95e491d8bf94ab49404b32078fe7f0",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:13"
+        }
+      },
+      "success": true
+    },
+    "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;CreatePair&#039; is not defined\n  at initialize\n    pairs = [CreatePair(&quot;KO&quot;, &quot;PEP&quot;)]\n             ^^^^^^^^^^\n in main.py: line 13\n name &#039;CreatePair&#039; is not defined",
+    "stacktrace": "name 'CreatePair' is not defined\n  at initialize\n    pairs = [CreatePair(\"KO\", \"PEP\")]\n             ^^^^^^^^^^\n in main.py: line 13\n name 'CreatePair' is not defined",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:55:12.841510+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;CreatePair&#039; is not defined\n  at initialize\n    pairs = [CreatePair(&quot;KO&quot;, &quot;",
+  "note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: name &#039;CreatePair&#039; is not defined\n  at initialize\n    pairs = [CreatePair(&quot;KO&quot;, &quot;; PROMPT_MISS: 60",
+  "total_orders": null
+}

@@ -1,0 +1,297 @@
+{
+  "prompt_id": "equity-pairs-trading-cointegration_v10",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport numpy as np\nfrom datetime import datetime\nfrom QuantConnect import DateRules, TimeRules, Resolution, PortfolioTarget\nfrom QuantConnect.Algorithm import QC\nfrom QuantConnect.Data.UniverseSelection import CustomUniverseWriter\nfrom QuantConnect.Data.Market import EquityPrice\nfrom QuantConnect.Util import DateHelper\n\nclass MeanReversionStrategy(QC):\n    def __init__(self):\n        self._alpha = 0.0\n        self._beta = 0.0\n        self._spread_mean = 0.0\n        self._spread_std = 0.0\n        self._state = 0  # 0: Neutral, 1: Long KO/Short PEP, -1: Short KO/Long PEP\n        self._history_lookback = 60\n        self._warm_up_days = 60\n        self._ko = None\n        self._pep = None\n        self._data_buffer_ko = []\n        self._data_buffer_pep = []\n\n    def Initialize(self):\n        # Set initialization date range\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Set initial cash\n        self.SetCash(100_000)\n        \n        # Add equities with minute resolution\n        self._ko = self.AddEquity(\"KO\", Resolution.MINUTE)\n        self._pep = self.AddEquity(\"PEP\", Resolution.MINUTE)\n        \n        # Set session size to 60 minutes for both securities\n        self._ko.SetSession(9, 30, 10, 30)  # 9:30 AM to 10:30 AM\n        self._pep.SetSession(9, 30, 10, 30)\n        \n        # Schedule events\n        # Update model at 9:31 AM on week starts\n        self.Schedule.On(\n            self.Event(\n                DateRules.WeekStart(),\n                TimeRules.At(9, 31),\n                self._update_model\n            )\n        )\n        \n        # Trade logic at 10:00 AM every day\n        self.Schedule.On(\n            self.Event(\n                DateRules.EveryDay(),\n                TimeRules.At(10, 0),\n                self._trade_logic\n            )\n        )\n        \n        # Handle warm-up completion\n        self.SetWarmUp(self._warm_up_days, Resolution.DAILY)\n        self.Schedule.On(\n            self.Event(\n                self.WarmUpFinished,\n                self._on_warmup_finished\n            )\n        )\n\n    def _on_warmup_finished(self):\n        \"\"\"Called when the warm-up period is finished.\"\"\"\n        self._update_model()\n\n    def _update_model(self):\n        \"\"\"Pull 60 session closes, calculate alpha/beta/spread stats.\"\"\"\n        # Get the current date\n        current_date = self.GetDate()\n        \n        # We need to pull data from the last 60 trading days.\n        # Since we are in a minute bar algorithm, we need to aggregate or select daily closes.\n        # However, the prompt asks to \"pull 60 session closes\". \n        # In a minute bar context, a \"session close\" usually implies the last bar of the session.\n        # We will fetch minute bars and filter for the last bar of each day within the lookback.\n        \n        # Calculate start date for lookback (60 days ago)\n        lookback_start = current_date - DateHelper.Days(self._history_lookback)\n        \n        # Get KO data\n        ko_history = self.History(self._ko.Symbol, lookback_start, current_date, Resolution.MINUTE)\n        # Get PEP data\n        pep_history = self.History(self._pep.Symbol, lookback_start, current_date, Resolution.MINUTE)\n        \n        # Filter for the last bar of each session (assuming session ends at 10:30)\n        # We look for bars where the time is 10:30 or the last bar of the day if session is truncated.\n        # Given the session is 9:30-10:30, the last bar should be at 10:30.\n        \n        def get_session_closes(history):\n            closes = []\n            for bar in history:\n                # Check if this is the last bar of the session (10:30)\n                if bar.Time.hour == 10 and bar.Time.minute == 30:\n                    closes.append(bar.Close)\n            return closes\n\n        ko_closes = get_session_closes(ko_history)\n        pep_closes = get_session_closes(pep_history)\n        \n        # Ensure we have enough data\n        if len(ko_closes) < self._history_lookback or len(pep_closes) < self._history_lookback:\n            # If not enough data, try to use all available data or skip\n            # For robustness, we'll use whatever we have if it's > 0\n            pass\n            \n        # Use the last N closes available\n        n = min(len(ko_closes), len(pep_closes), self._history_lookback)\n        if n < 2:\n            return # Not enough data to calculate regression\n\n        x = np.array(pep_closes[-n:]).reshape(-1, 1)\n        y = np.array(ko_closes[-n:])\n        \n        # Calculate Beta and Alpha using np.linalg.lstsq\n        # y = alpha + beta * x\n        try:\n            result = np.linalg.lstsq(x, y, rcond=None)[0]\n            self._beta = result[0]\n            self._alpha = result[1]\n        except Exception:\n            # Fallback if calculation fails\n            self._beta = 0.0\n            self._alpha = 0.0\n\n        # Calculate Spread: ko - (beta * pep + alpha)\n        # We calculate the spread for the most recent data point to determine mean/std over time?\n        # The prompt says \"store mean/std\". Usually, this implies a rolling mean/std of the spread history.\n        # Let's calculate the spread for the last n points and compute mean/std of those spreads.\n        \n        spreads = []\n        for i in range(n):\n            spread_val = ko_closes[-(n-i)] - (self._beta * pep_closes[-(n-i)] + self._alpha)\n            spreads.append(spread_val)\n            \n        self._spread_mean = np.mean(spreads)\n        self._spread_std = np.std(spreads)\n\n    def _trade_logic(self):\n        \"\"\"Execute trading logic based on Z-score.\"\"\"\n        current_date = self.GetDate()\n        \n        # Get current prices\n        ko_price = self.Securities[self._ko.Symbol].Close\n        pep_price = self.Securities[self._pep.Symbol].Close\n        \n        # Calculate current spread\n        current_spread = ko_price - (self._beta * pep_price + self._alpha)\n        \n        # Calculate Z-score\n        if self._spread_std > 0:\n            z = (current_spread - self._spread_mean) / self._spread_std\n        else:\n            z = 0.0\n            \n        # Trading Rules\n        # z < -2 and state != 1 -> Long KO, Short PEP\n        if z < -2 and self._state != 1:\n            self.SetHoldings(\n                PortfolioTarget(self._ko.Symbol, 0.5),\n                PortfolioTarget(self._pep.Symbol, -0.5)\n            )\n            self._state = 1\n            \n        # z > 2 and state != -1 -> Short KO, Long PEP\n        elif z > 2 and self._state != -1:\n            self.SetHoldings(\n                PortfolioTarget(self._ko.Symbol, -0.5),\n                PortfolioTarget(self._pep.Symbol, 0.5)\n            )\n            self._state = -1\n            \n        # abs(z) < 0.5 and state != 0 -> Liquidate\n        elif abs(z) < 0.5 and self._state != 0:\n            self.SetHoldings(\n                PortfolioTarget(self._ko.Symbol, 0),\n                PortfolioTarget(self._pep.Symbol, 0)\n            )\n            self._state = 0\n\n    def OnData(self, data):\n        # Optional: Handle real-time data updates if needed, \n        # though the schedule handles the specific times.\n        pass\n```",
+  "generated_at": "2026-11-14T23:27:19.867583+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddEquity, Event, GetDate, History, SetCash, SetEndDate, SetHoldings, SetStartDate, SetWarmUp"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import numpy as np\nfrom datetime import datetime\nfrom QuantConnect import DateRules, TimeRules, Resolution, PortfolioTarget\nfrom QuantConnect.Algorithm import QC\nfrom QuantConnect.Data.UniverseSelection import CustomUniverseWriter\nfrom QuantConnect.Data.Market import EquityPrice\nfrom QuantConnect.Util import DateHelper\n\nclass MeanReversionStrategy(QC):\n    def __init__(self):\n        self._alpha = 0.0\n        self._beta = 0.0\n        self._spread_mean = 0.0\n        self._spread_std = 0.0\n        self._state = 0  # 0: Neutral, 1: Long KO/Short PEP, -1: Short KO/Long PEP\n        self._history_lookback = 60\n        self._warm_up_days = 60\n        self._ko = None\n        self._pep = None\n        self._data_buffer_ko = []\n        self._data_buffer_pep = []\n\n    def Initialize(self):\n        # Set initialization date range\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Set initial cash\n        self.SetCash(100_000)\n        \n        # Add equities with minute resolution\n        self._ko = self.AddEquity(\"KO\", Resolution.MINUTE)\n        self._pep = self.AddEquity(\"PEP\", Resolution.MINUTE)\n        \n        # Set session size to 60 minutes for both securities\n        self._ko.SetSession(9, 30, 10, 30)  # 9:30 AM to 10:30 AM\n        self._pep.SetSession(9, 30, 10, 30)\n        \n        # Schedule events\n        # Update model at 9:31 AM on week starts\n        self.Schedule.On(\n            self.Event(\n                DateRules.WeekStart(),\n                TimeRules.At(9, 31),\n                self._update_model\n            )\n        )\n        \n        # Trade logic at 10:00 AM every day\n        self.Schedule.On(\n            self.Event(\n                DateRules.EveryDay(),\n                TimeRules.At(10, 0),\n                self._trade_logic\n            )\n        )\n        \n        # Handle warm-up completion\n        self.SetWarmUp(self._warm_up_days, Resolution.DAILY)\n        self.Schedule.On(\n            self.Event(\n                self.WarmUpFinished,\n                self._on_warmup_finished\n            )\n        )\n\n    def _on_warmup_finished(self):\n        \"\"\"Called when the warm-up period is finished.\"\"\"\n        self._update_model()\n\n    def _update_model(self):\n        \"\"\"Pull 60 session closes, calculate alpha/beta/spread stats.\"\"\"\n        # Get the current date\n        current_date = self.GetDate()\n        \n        # We need to pull data from the last 60 trading days.\n        # Since we are in a minute bar algorithm, we need to aggregate or select daily closes.\n        # However, the prompt asks to \"pull 60 session closes\". \n        # In a minute bar context, a \"session close\" usually implies the last bar of the session.\n        # We will fetch minute bars and filter for the last bar of each day within the lookback.\n        \n        # Calculate start date for lookback (60 days ago)\n        lookback_start = current_date - DateHelper.Days(self._history_lookback)\n        \n        # Get KO data\n        ko_history = self.History(self._ko.Symbol, lookback_start, current_date, Resolution.MINUTE)\n        # Get PEP data\n        pep_history = self.History(self._pep.Symbol, lookback_start, current_date, Resolution.MINUTE)\n        \n        # Filter for the last bar of each session (assuming session ends at 10:30)\n        # We look for bars where the time is 10:30 or the last bar of the day if session is truncated.\n        # Given the session is 9:30-10:30, the last bar should be at 10:30.\n        \n        def get_session_closes(history):\n            closes = []\n            for bar in history:\n                # Check if this is the last bar of the session (10:30)\n                if bar.Time.hour == 10 and bar.Time.minute == 30:\n                    closes.append(bar.Close)\n            return closes\n\n        ko_closes = get_session_closes(ko_history)\n        pep_closes = get_session_closes(pep_history)\n        \n        # Ensure we have enough data\n        if len(ko_closes) < self._history_lookback or len(pep_closes) < self._history_lookback:\n            # If not enough data, try to use all available data or skip\n            # For robustness, we'll use whatever we have if it's > 0\n            pass\n            \n        # Use the last N closes available\n        n = min(len(ko_closes), len(pep_closes), self._history_lookback)\n        if n < 2:\n            return # Not enough data to calculate regression\n\n        x = np.array(pep_closes[-n:]).reshape(-1, 1)\n        y = np.array(ko_closes[-n:])\n        \n        # Calculate Beta and Alpha using np.linalg.lstsq\n        # y = alpha + beta * x\n        try:\n            result = np.linalg.lstsq(x, y, rcond=None)[0]\n            self._beta = result[0]\n            self._alpha = result[1]\n        except Exception:\n            # Fallback if calculation fails\n            self._beta = 0.0\n            self._alpha = 0.0\n\n        # Calculate Spread: ko - (beta * pep + alpha)\n        # We calculate the spread for the most recent data point to determine mean/std over time?\n        # The prompt says \"store mean/std\". Usually, this implies a rolling mean/std of the spread history.\n        # Let's calculate the spread for the last n points and compute mean/std of those spreads.\n        \n        spreads = []\n        for i in range(n):\n            spread_val = ko_closes[-(n-i)] - (self._beta * pep_closes[-(n-i)] + self._alpha)\n            spreads.append(spread_val)\n            \n        self._spread_mean = np.mean(spreads)\n        self._spread_std = np.std(spreads)\n\n    def _trade_logic(self):\n        \"\"\"Execute trading logic based on Z-score.\"\"\"\n        current_date = self.GetDate()\n        \n        # Get current prices\n        ko_price = self.Securities[self._ko.Symbol].Close\n        pep_price = self.Securities[self._pep.Symbol].Close\n        \n        # Calculate current spread\n        current_spread = ko_price - (self._beta * pep_price + self._alpha)\n        \n        # Calculate Z-score\n        if self._spread_std > 0:\n            z = (current_spread - self._spread_mean) / self._spread_std\n        else:\n            z = 0.0\n            \n        # Trading Rules\n        # z < -2 and state != 1 -> Long KO, Short PEP\n        if z < -2 and self._state != 1:\n            self.SetHoldings(\n                PortfolioTarget(self._ko.Symbol, 0.5),\n                PortfolioTarget(self._pep.Symbol, -0.5)\n            )\n            self._state = 1\n            \n        # z > 2 and state != -1 -> Short KO, Long PEP\n        elif z > 2 and self._state != -1:\n            self.SetHoldings(\n                PortfolioTarget(self._ko.Symbol, -0.5),\n                PortfolioTarget(self._pep.Symbol, 0.5)\n            )\n            self._state = -1\n            \n        # abs(z) < 0.5 and state != 0 -> Liquidate\n        elif abs(z) < 0.5 and self._state != 0:\n            self.SetHoldings(\n                PortfolioTarget(self._ko.Symbol, 0),\n                PortfolioTarget(self._pep.Symbol, 0)\n            )\n            self._state = 0\n\n    def OnData(self, data):\n        # Optional: Handle real-time data updates if needed, \n        # though the schedule handles the specific times.\n        pass\n",
+    "source_sha256": "d06744ffb1eda9d396d3cb3a2d6488043963e8ff105eb48bf79e6289e47aa1ed",
+    "started_at": "2026-11-14T23:27:19.872209+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39415942,
+    "compile_id": "bd425f541d4c427fc465ce70523c9855-5b795d89eb55869236a582724198048a",
+    "compile_created": {
+      "compileId": "bd425f541d4c427fc465ce70523c9855-5b795d89eb55869236a582724198048a",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39415942,
+      "signature": "5b795d89eb55869236a582724198048a",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "bd425f541d4c427fc465ce70523c9855-5b795d89eb55869236a582724198048a",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39415942, with CompileID: bd425f541d4c427fc465ce70523c9855-5b795d89eb55869236a582724198048a, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39415942, with CompileID: bd425f541d4c427fc465ce70523c9855-5b795d89eb55869236a582724198048a, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "42f05ee3669d0eb0633bfb98e7f9162b",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v10",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39415942,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "42f05ee3669d0eb0633bfb98e7f9162b",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 43
+        },
+        "backtestStart": "2026-11-14 23:27:23",
+        "backtestEnd": "2026-11-14 23:27:23",
+        "created": "2026-11-14 23:27:23",
+        "snapshotId": 39415946,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v10",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39415942,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "42f05ee3669d0eb0633bfb98e7f9162b",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 43
+        },
+        "backtestStart": "2026-11-14 23:27:23",
+        "backtestEnd": "2026-11-14 23:27:23",
+        "created": "2026-11-14 23:27:23",
+        "snapshotId": 39415946,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;DateRules&#039; from &#039;QuantConnect&#039; (unknown location)\n  at \n    from QuantConnect import DateRules, TimeRules, Resolution, PortfolioTarget\n in main.py: line 3\n cannot import name &#039;DateRules&#039; from &#039;QuantConnect&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;DateRules&#039; from &#039;QuantConnect&#039; (unknown location)\n  at \n    from QuantConnect import DateRules, TimeRules, Resolution, PortfolioTarget\n in main.py: line 3\n cannot import name &#039;DateRules&#039; from &#039;QuantConnect&#039; (unknown location)",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'DateRules' from 'QuantConnect' (unknown location)\n  at <module>\n    from QuantConnect import DateRules, TimeRules, Resolution, PortfolioTarget\n in main.py: line 3\n cannot import name 'DateRules' from 'QuantConnect' (unknown location)",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.5%",
+          "Used RAM (MB)": "149",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-42f05ee3669d0eb0633bfb98e7f9162b",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;DateRules&#039; from &#039;QuantConnect&#039; (unknown location)\n  at \n    from QuantConnect import DateRules, TimeRules, Resolution, PortfolioTarget\n in main.py: line 3\n cannot import name &#039;DateRules&#039; from &#039;QuantConnect&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;DateRules&#039; from &#039;QuantConnect&#039; (unknown location)\n  at \n    from QuantConnect import DateRules, TimeRules, Resolution, PortfolioTarget\n in main.py: line 3\n cannot import name &#039;DateRules&#039; from &#039;QuantConnect&#039; (unknown location)",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'DateRules' from 'QuantConnect' (unknown location)\n  at <module>\n    from QuantConnect import DateRules, TimeRules, Resolution, PortfolioTarget\n in main.py: line 3\n cannot import name 'DateRules' from 'QuantConnect' (unknown location)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T23:28:10.716532+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS; LEGACY_API: AddEquity, Event, GetDate, History, SetCash, SetEndDate, SetHoldings, SetStartDate, SetWarmUp",
+  "total_orders": null
+}

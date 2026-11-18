@@ -1,0 +1,315 @@
+{
+  "prompt_id": "equity-momentum-cross-sectional-decile_v10",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport datetime\nimport QuantConnect as QC\nfrom QuantConnect import *\nfrom QuantConnect.Algorithm import QC_Algorithm\nfrom QuantConnect.Data.UniverseSelection import *\nfrom QuantConnect.Data.Market import *\nfrom QuantConnect.Util import *\n\nclass MomentumETFStrategy(QC_Algorithm):\n    \"\"\"\n    A QuantConnect LEAN algorithm implementing a momentum-based ETF selection strategy.\n    It selects the top decile of assets based on adjusted price momentum over a 252-day lookback.\n    \"\"\"\n\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm with specific settings, date ranges, and universe definitions.\n        \"\"\"\n        # Set the trading period\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n\n        # Set initial cash\n        self.SetCash(250_000)\n\n        # Configure settings\n        settings = self.Settings\n        settings.seed_initial_prices = True\n        settings.minimum_order_margin_portfolio_percentage = 0\n\n        # Define lookback period for momentum calculation (252 trading days)\n        self._lookback = 252\n\n        # Define universe cap\n        self._universe_cap = 100\n\n        # Define top decile percentage\n        self._top_decile_pct = 0.1\n\n        # Initialize the momentum dictionary to store calculated values\n        self._momentum_percent = {}\n\n        # Set universe resolution to minute\n        self._universe_settings = UniverseSettings()\n        self._universe_settings.resolution = Resolution.MINUTE\n\n        # Add the SPY ETF to the universe and attach the selection logic\n        self.AddUniverse(self._select_assets)\n\n        # Set warm-up period to 253 days at Daily resolution\n        self.SetWarmUp(253, Resolution.DAILY)\n\n        # Schedule rebalancing on the first day of each month at 9:31 AM\n        self.Schedule.On(\n            self.DateRules.MonthStart(\"SPY\"),\n            self.TimeRules.At(9, 31),\n            self._rebalance\n        )\n\n    def _select_assets(self, universe):\n        \"\"\"\n        Select assets for the universe based on momentum.\n        \n        Args:\n            universe (Universe): The current universe object.\n            \n        Returns:\n            Universe: The updated universe with selected assets.\n        \"\"\"\n        # Get all symbols in the universe\n        symbols = universe.Symbols\n        \n        # Filter out symbols that are not ready (during warm-up or insufficient data)\n        ready_symbols = []\n        for symbol in symbols:\n            if symbol.Data is None:\n                continue\n            \n            # Get the latest bar for the symbol\n            bars = symbol.Data\n            if len(bars) == 0:\n                continue\n                \n            latest_bar = bars[-1]\n            \n            # Update MomentumPercent for the symbol\n            # Calculate momentum as percentage change over the lookback period\n            # We use the adjusted price from the latest bar and the bar at the lookback period\n            if len(bars) >= self._lookback:\n                lookback_bar = bars[-self._lookback]\n                current_price = latest_bar.AdjustedPrice\n                lookback_price = lookback_bar.AdjustedPrice\n                \n                if lookback_price > 0:\n                    momentum_value = (current_price - lookback_price) / lookback_price\n                    self._momentum_percent[symbol.Symbol] = momentum_value\n                else:\n                    self._momentum_percent[symbol.Symbol] = 0.0\n            else:\n                # Not enough data for full lookback, set to 0 or skip\n                self._momentum_percent[symbol.Symbol] = 0.0\n            \n            ready_symbols.append(symbol)\n        \n        # If we are still warming up or have no ready symbols, return unchanged\n        if len(ready_symbols) == 0:\n            return Universe.UNCHANGED\n        \n        # Sort ready symbols by dollar volume descending\n        # We need to get the latest volume for each symbol\n        ready_symbols.sort(key=lambda s: s.Data[-1].Volume if s.Data else 0, reverse=True)\n        \n        # Cap the number of symbols to _universe_cap\n        ready_symbols = ready_symbols[:self._universe_cap]\n        \n        # Rank by momentum descending\n        ready_symbols.sort(key=lambda s: self._momentum_percent.get(s.Symbol, 0), reverse=True)\n        \n        # Calculate the number of symbols to select (top decile)\n        n = len(ready_symbols)\n        num_to_select = max(1, int(n * self._top_decile_pct))\n        \n        # Select the top symbols\n        selected_symbols = ready_symbols[:num_to_select]\n        \n        # Add selected symbols to the universe\n        for symbol in selected_symbols:\n            universe.Add(symbol)\n            \n        return Universe.UNCHANGED\n\n    def _rebalance(self):\n        \"\"\"\n        Rebalance the portfolio by setting target holdings and liquidating existing positions.\n        \"\"\"\n        # Get the currently selected symbols from the universe\n        selected_symbols = list(self._universe.selected)\n        \n        if len(selected_symbols) == 0:\n            return\n\n        # Calculate the equal weight for each holding\n        weight_per_symbol = 1 / len(selected_symbols)\n        \n        # Create target holdings for each selected symbol\n        target_holdings = []\n        for symbol in selected_symbols:\n            target_holdings.append(PortfolioTarget(symbol, weight_per_symbol))\n        \n        # Set the new holdings and liquidate existing ones\n        self.SetHoldings(target_holdings, liquidate_existing_holdings=True)\n\n    def OnData(self, data):\n        \"\"\"\n        Handle incoming data. This method is called for every bar received.\n        In this strategy, the main logic is handled by the scheduled rebalance and universe selection.\n        \"\"\"\n        pass\n```",
+  "generated_at": "2026-11-14T22:35:31.113604+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddUniverse, SetCash, SetEndDate, SetHoldings, SetStartDate, SetWarmUp"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "add_universe"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "month_start"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "dollar_volume"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import datetime\nimport QuantConnect as QC\nfrom QuantConnect import *\nfrom QuantConnect.Algorithm import QC_Algorithm\nfrom QuantConnect.Data.UniverseSelection import *\nfrom QuantConnect.Data.Market import *\nfrom QuantConnect.Util import *\n\nclass MomentumETFStrategy(QC_Algorithm):\n    \"\"\"\n    A QuantConnect LEAN algorithm implementing a momentum-based ETF selection strategy.\n    It selects the top decile of assets based on adjusted price momentum over a 252-day lookback.\n    \"\"\"\n\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm with specific settings, date ranges, and universe definitions.\n        \"\"\"\n        # Set the trading period\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n\n        # Set initial cash\n        self.SetCash(250_000)\n\n        # Configure settings\n        settings = self.Settings\n        settings.seed_initial_prices = True\n        settings.minimum_order_margin_portfolio_percentage = 0\n\n        # Define lookback period for momentum calculation (252 trading days)\n        self._lookback = 252\n\n        # Define universe cap\n        self._universe_cap = 100\n\n        # Define top decile percentage\n        self._top_decile_pct = 0.1\n\n        # Initialize the momentum dictionary to store calculated values\n        self._momentum_percent = {}\n\n        # Set universe resolution to minute\n        self._universe_settings = UniverseSettings()\n        self._universe_settings.resolution = Resolution.MINUTE\n\n        # Add the SPY ETF to the universe and attach the selection logic\n        self.AddUniverse(self._select_assets)\n\n        # Set warm-up period to 253 days at Daily resolution\n        self.SetWarmUp(253, Resolution.DAILY)\n\n        # Schedule rebalancing on the first day of each month at 9:31 AM\n        self.Schedule.On(\n            self.DateRules.MonthStart(\"SPY\"),\n            self.TimeRules.At(9, 31),\n            self._rebalance\n        )\n\n    def _select_assets(self, universe):\n        \"\"\"\n        Select assets for the universe based on momentum.\n        \n        Args:\n            universe (Universe): The current universe object.\n            \n        Returns:\n            Universe: The updated universe with selected assets.\n        \"\"\"\n        # Get all symbols in the universe\n        symbols = universe.Symbols\n        \n        # Filter out symbols that are not ready (during warm-up or insufficient data)\n        ready_symbols = []\n        for symbol in symbols:\n            if symbol.Data is None:\n                continue\n            \n            # Get the latest bar for the symbol\n            bars = symbol.Data\n            if len(bars) == 0:\n                continue\n                \n            latest_bar = bars[-1]\n            \n            # Update MomentumPercent for the symbol\n            # Calculate momentum as percentage change over the lookback period\n            # We use the adjusted price from the latest bar and the bar at the lookback period\n            if len(bars) >= self._lookback:\n                lookback_bar = bars[-self._lookback]\n                current_price = latest_bar.AdjustedPrice\n                lookback_price = lookback_bar.AdjustedPrice\n                \n                if lookback_price > 0:\n                    momentum_value = (current_price - lookback_price) / lookback_price\n                    self._momentum_percent[symbol.Symbol] = momentum_value\n                else:\n                    self._momentum_percent[symbol.Symbol] = 0.0\n            else:\n                # Not enough data for full lookback, set to 0 or skip\n                self._momentum_percent[symbol.Symbol] = 0.0\n            \n            ready_symbols.append(symbol)\n        \n        # If we are still warming up or have no ready symbols, return unchanged\n        if len(ready_symbols) == 0:\n            return Universe.UNCHANGED\n        \n        # Sort ready symbols by dollar volume descending\n        # We need to get the latest volume for each symbol\n        ready_symbols.sort(key=lambda s: s.Data[-1].Volume if s.Data else 0, reverse=True)\n        \n        # Cap the number of symbols to _universe_cap\n        ready_symbols = ready_symbols[:self._universe_cap]\n        \n        # Rank by momentum descending\n        ready_symbols.sort(key=lambda s: self._momentum_percent.get(s.Symbol, 0), reverse=True)\n        \n        # Calculate the number of symbols to select (top decile)\n        n = len(ready_symbols)\n        num_to_select = max(1, int(n * self._top_decile_pct))\n        \n        # Select the top symbols\n        selected_symbols = ready_symbols[:num_to_select]\n        \n        # Add selected symbols to the universe\n        for symbol in selected_symbols:\n            universe.Add(symbol)\n            \n        return Universe.UNCHANGED\n\n    def _rebalance(self):\n        \"\"\"\n        Rebalance the portfolio by setting target holdings and liquidating existing positions.\n        \"\"\"\n        # Get the currently selected symbols from the universe\n        selected_symbols = list(self._universe.selected)\n        \n        if len(selected_symbols) == 0:\n            return\n\n        # Calculate the equal weight for each holding\n        weight_per_symbol = 1 / len(selected_symbols)\n        \n        # Create target holdings for each selected symbol\n        target_holdings = []\n        for symbol in selected_symbols:\n            target_holdings.append(PortfolioTarget(symbol, weight_per_symbol))\n        \n        # Set the new holdings and liquidate existing ones\n        self.SetHoldings(target_holdings, liquidate_existing_holdings=True)\n\n    def OnData(self, data):\n        \"\"\"\n        Handle incoming data. This method is called for every bar received.\n        In this strategy, the main logic is handled by the scheduled rebalance and universe selection.\n        \"\"\"\n        pass\n",
+    "source_sha256": "c46e203ef4ecf31f781614c5132ff33bfacfb5a388a3494284e6056344fe7b52",
+    "started_at": "2026-11-14T22:35:31.115764+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39413872,
+    "compile_id": "ab454f18b5153f8acbef23651b36a6f6-f2a3f3e4810de6a0e5a24859dde60e39",
+    "compile_created": {
+      "compileId": "ab454f18b5153f8acbef23651b36a6f6-f2a3f3e4810de6a0e5a24859dde60e39",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39413872,
+      "signature": "f2a3f3e4810de6a0e5a24859dde60e39",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "ab454f18b5153f8acbef23651b36a6f6-f2a3f3e4810de6a0e5a24859dde60e39",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39413872, with CompileID: ab454f18b5153f8acbef23651b36a6f6-f2a3f3e4810de6a0e5a24859dde60e39, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39413872, with CompileID: ab454f18b5153f8acbef23651b36a6f6-f2a3f3e4810de6a0e5a24859dde60e39, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "2a94562c7ff6db77182bf5fd90a4b4f0",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v10",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413872,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "2a94562c7ff6db77182bf5fd90a4b4f0",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 15
+        },
+        "backtestStart": "2026-11-14 22:35:36",
+        "backtestEnd": "2026-11-14 22:35:36",
+        "created": "2026-11-14 22:35:36",
+        "snapshotId": 39413876,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v10",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413872,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "2a94562c7ff6db77182bf5fd90a4b4f0",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 15
+        },
+        "backtestStart": "2026-11-14 22:35:36",
+        "backtestEnd": "2026-11-14 22:35:36",
+        "created": "2026-11-14 22:35:36",
+        "snapshotId": 39413876,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 4\n cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 4\n cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 4\n cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.6%",
+          "Used RAM (MB)": "184",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-2a94562c7ff6db77182bf5fd90a4b4f0",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 4\n cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 4\n cannot import name &#039;QC_Algorithm&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 4\n cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:36:25.111961+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS; LEGACY_API: AddUniverse, SetCash, SetEndDate, SetHoldings, SetStartDate, SetWarmUp; PROMPT_MISS: add_universe; PROMPT_MISS: month_start; PROMPT_MISS: dollar_volume",
+  "total_orders": null
+}

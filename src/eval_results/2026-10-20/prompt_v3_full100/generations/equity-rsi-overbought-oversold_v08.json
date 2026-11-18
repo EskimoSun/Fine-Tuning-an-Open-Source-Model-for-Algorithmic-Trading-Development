@@ -1,0 +1,9 @@
+{
+  "prompt_id": "equity-rsi-overbought-oversold_v08",
+  "model": "qwen_base_prompt_v3",
+  "base_model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "system_prompt": "v3",
+  "output": "```python\nfrom AlgorithmImports import *\n\n\nclass RsiMeanReversionAlgorithm(QCAlgorithm):\n    \"\"\"Two-sided RSI mean-reversion reference on QQQ at hourly resolution.\"\"\"\n\n    def initialize(self):\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100_000)\n\n        self._symbol = self.add_equity(\"QQQ\", resolution=Resolution.HOUR).symbol\n\n        self._rsi = rsi(self._symbol, 14, moving_average_type=MovingAverageType.WILDERS, resolution=Resolution.HOUR)\n\n        self._rsi_ready = False\n\n    def on_data(self, slice: Slice):\n        if not self._rsi.is_ready:\n            return\n\n        if not self._rsi_ready:\n            self._rsi_ready = True\n\n        rsi_value = self._rsi.current.value\n        position = self.portfolio[self._symbol].quantity\n\n        if position <= 0 and rsi_value < 30:\n            self.set_holdings(self._symbol, 1.0)\n        elif position > 0 and rsi_value > 50:\n            self.liquidate(self._symbol)\n        elif position >= 0 and rsi_value > 70:\n            self.set_holdings(self._symbol, -1.0)\n        elif position < 0 and rsi_value < 50:\n            self.liquidate(self._symbol)\n```",
+  "generated_at": "2026-10-20T22:00:22.353041+00:00"
+}

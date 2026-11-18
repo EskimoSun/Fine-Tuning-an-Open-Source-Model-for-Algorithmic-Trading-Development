@@ -1,0 +1,1709 @@
+QC authenticated; real cloud feedback repair enabled
+[QC repair-equity-rsi-overbought-oversold_v04-r0] reusing saved execution status=runtime_error backtest=dc9675597f308c40d4993d5ade33c7dd
+
+=== QC RESULT repair-equity-rsi-overbought-oversold_v04-r0 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38187804,
+  "compile_id": "c58d1622c65393716cb9e2cc1663b2a1-a6a65561de8f72fdb7cce920719814f2",
+  "backtest_id": "dc9675597f308c40d4993d5ade33c7dd",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "0",
+  "statistics": {
+    "Total Orders": "0",
+    "Average Win": "0%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "0%",
+    "Expectancy": "0",
+    "Start Equity": "100000",
+    "End Equity": "100000",
+    "Net Profit": "0%",
+    "Sharpe Ratio": "0",
+    "Sortino Ratio": "0",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "0%",
+    "Win Rate": "0%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0",
+    "Annual Variance": "0",
+    "Information Ratio": "0",
+    "Tracking Error": "0",
+    "Treynor Ratio": "0",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$0",
+    "Lowest Capacity Asset": "",
+    "Portfolio Turnover": "0%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "[ERROR] FATAL UNHANDLED EXCEPTION:Extensions.SetRuntimeError(): Extensions.SetRuntimeError(): RuntimeError at 10/01/2024 14:00:00 UTC. Context: OnData Python.Runtime.PythonException: No method matches given arguments for update: (<class 'QuantConnect.Symbol'>, <class 'clr_datetime.datetime'>, <class 'float'>). The following overloads are available:,  update(input: IBaseData),  update(time: datetime, value: float),Argument mismatch: argument 1 ('input') expected IBaseData, got Symbol.,  File \"/QuantConnect/backtesting/./cache/algorithm/project/main.py\", line 81, in on_data,    self._rsi.update(self._qqq.symbol, data[self._qqq.symbol].end_time, data[self._qqq.symbol].close),   at Python.Runtime.PythonException.ThrowLastAsClrException() in src\\runtime\\PythonException.cs:line 52,   at Python.Runtime.PyObject.Invoke(PyTuple args, PyDict kw) in src\\runtime\\PythonTypes\\PyObject.cs:line 982,   at Python.Runtime.PyObject.TryInvoke(InvokeBinder binder, Object[] args, Object& result) in src\\runtime\\PythonTypes\\PyObject.cs:line 14",
+  "qc_note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Extensions.SetRuntimeError(): Extensions.SetRuntimeError(): RuntimeError at 10/01/2024 14:00:00 UTC. Context: OnData Python.Runtime.PythonException: No method matches"
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 38187804, with CompileID: c58d1622c65393716cb9e2cc1663b2a1-a6a65561de8f72fdb7cce920719814f2, Lean Version: 2.5.0.0.18198
+logs (last 20 of 3):
+2024-10-01 00:00:00 Launching analysis for dc9675597f308c40d4993d5ade33c7dd with LEAN Engine v2.5.0.0.18198
+2024-10-01 10:00:00 Runtime Error: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the update method. Please checkout the API documentation. The following overloads are available:
+  update(input: IBaseData)
+  update(time: datetime, value: float)
+Argument mismatch: argument 1 ('input') expected IBaseData, got Symbol.
+  at on_data
+    self._rsi.update(self._qqq.symbol, data[self._qqq.symbol].end_time, data[self._qqq.symbol].close)
+ in main.py: line 81
+
+2024-10-01 10:00:00 Algorithm Id:(dc9675597f308c40d4993d5ade33c7dd) completed in 10.40 seconds at 0k data points per second. Processing total of 10 data points.
+=== END QC RESULT ===
+
+[repair equity-rsi-overbought-oversold_v04] round=0 status=runtime_error backtest=dc9675597f308c40d4993d5ade33c7dd
+[repair equity-rsi-overbought-oversold_v04] requesting model correction 1/3
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 2.0s (1/2)
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 4.0s (2/2)
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=upload status=running compile=None cloud=None progress=pending project=38188153 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=compile status=running compile=None cloud=None progress=pending project=38188153 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=compile status=running compile=InQueue cloud=None progress=pending project=38188153 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38188153 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38188153 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38188153 backtest=469ccfd41fb40c8b17dcb05ac82f74f3
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188153 backtest=469ccfd41fb40c8b17dcb05ac82f74f3
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188153 backtest=469ccfd41fb40c8b17dcb05ac82f74f3
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188153 backtest=469ccfd41fb40c8b17dcb05ac82f74f3
+[QC repair-equity-rsi-overbought-oversold_v04-r1] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188153 backtest=469ccfd41fb40c8b17dcb05ac82f74f3
+
+=== QC RESULT repair-equity-rsi-overbought-oversold_v04-r1 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38188153,
+  "compile_id": "3e599c17ec3d182163df9d798c12895d-f96248f64372369259ed6c75501da6c1",
+  "backtest_id": "469ccfd41fb40c8b17dcb05ac82f74f3",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "34",
+  "statistics": {
+    "Total Orders": "34",
+    "Average Win": "0.76%",
+    "Average Loss": "-1.25%",
+    "Compounding Annual Return": "3.357%",
+    "Drawdown": "6.000%",
+    "Expectancy": "0.041",
+    "Start Equity": "100000",
+    "End Equity": "100754.05",
+    "Net Profit": "0.754%",
+    "Sharpe Ratio": "-0.206",
+    "Sortino Ratio": "-0.217",
+    "Probabilistic Sharpe Ratio": "24.605%",
+    "Loss Rate": "35%",
+    "Win Rate": "65%",
+    "Profit-Loss Ratio": "0.61",
+    "Alpha": "-0.001",
+    "Beta": "-0.206",
+    "Annual Standard Deviation": "0.099",
+    "Annual Variance": "0.01",
+    "Information Ratio": "-0.737",
+    "Tracking Error": "0.158",
+    "Treynor Ratio": "0.099",
+    "Total Fees": "$34.59",
+    "Estimated Strategy Capacity": "$110000000.00",
+    "Lowest Capacity Asset": "QQQ RIWIV7K5Z9LX",
+    "Portfolio Turnover": "40.81%",
+    "Drawdown Recovery": "7"
+  },
+  "trade_statistics": {
+    "startDateTime": "2024-10-07T14:00:00Z",
+    "endDateTime": "2024-12-20T18:00:00Z",
+    "totalNumberOfTrades": 17,
+    "numberOfWinningTrades": 11,
+    "numberOfLosingTrades": 6,
+    "totalProfitLoss": "788.65",
+    "totalProfit": "8407.73",
+    "totalLoss": "-7619.08",
+    "largestProfit": "1587.88",
+    "largestLoss": "-2379.91",
+    "averageProfitLoss": "46.3912",
+    "averageProfit": "764.3391",
+    "averageLoss": "-1269.8467",
+    "averageTradeDuration": "2.07:28:14.1176473",
+    "averageWinningTradeDuration": "1.17:49:05.4545455",
+    "averageLosingTradeDuration": "3.08:30:00",
+    "medianTradeDuration": "1.23:00:00",
+    "medianWinningTradeDuration": "1.22:00:00",
+    "medianLosingTradeDuration": "4.22:00:00",
+    "maxConsecutiveWinningTrades": 7,
+    "maxConsecutiveLosingTrades": 3,
+    "profitLossRatio": "0.6019",
+    "winLossRatio": "1.8333",
+    "winRate": "0.6471",
+    "lossRate": "0.3529",
+    "averageMAE": "-835.8659",
+    "averageMFE": "600.9371",
+    "largestMAE": "-3064.98",
+    "largestMFE": "1587.88",
+    "maximumClosedTradeDrawdown": "-5520.66",
+    "maximumIntraTradeDrawdown": "-6172.10",
+    "profitLossStandardDeviation": "1211.2596",
+    "profitLossDownsideDeviation": "1026.3123",
+    "profitFactor": "1.1035",
+    "sharpeRatio": "0.0383",
+    "sortinoRatio": "0.0452",
+    "profitToMaxDrawdownRatio": "0.1429",
+    "maximumEndTradeDrawdown": "3064.98",
+    "averageEndTradeDrawdown": "-554.5459",
+    "maximumDrawdownDuration": "8.02:00:00",
+    "totalFees": "34.590"
+  },
+  "error": "2024-12-23 00:00:00 Runtime Error: Object reference not set to an instance of an object.\n  at on_data\n    self._rsi.update(data[self._qqq.symbol])\n in main.py: line 81\n",
+  "qc_note": "runtime: 2024-12-23 00:00:00 Runtime Error: Object reference not set to an instance of an object.\n  at on_data\n    self._rsi.update(data[self._qqq.symbol])\n in main.py: line 81\n"
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 38188153, with CompileID: 3e599c17ec3d182163df9d798c12895d-f96248f64372369259ed6c75501da6c1, Lean Version: 2.5.0.0.18198
+logs (last 20 of 37):
+2024-11-06 11:00:00 Short entry at RSI=82.88, Price=496.46
+2024-11-11 14:00:00 Short exit at RSI=49.36, Price=507.74
+2024-11-14 15:00:00 Long entry at RSI=28.51, Price=505.05
+2024-11-19 13:00:00 Long exit at RSI=53.87, Price=496.57
+2024-11-25 11:00:00 Short entry at RSI=76.45, Price=501.99
+2024-11-27 11:00:00 Short exit at RSI=41.17, Price=498.53
+2024-11-27 12:00:00 Long entry at RSI=29.17, Price=497.88
+2024-11-29 11:00:00 Long exit at RSI=62.81, Price=503.79
+2024-11-29 13:00:00 Short entry at RSI=70.84, Price=504.63
+2024-12-09 12:00:00 Short exit at RSI=39.12, Price=517.79
+2024-12-11 11:00:00 Short entry at RSI=73.32, Price=522.33
+2024-12-13 09:30:00 Short exit at RSI=43.55, Price=521.22
+2024-12-13 11:00:00 Short entry at RSI=71.00, Price=522.52
+2024-12-13 12:00:00 Short exit at RSI=49.26, Price=522.81
+2024-12-16 11:00:00 Short entry at RSI=73.26, Price=529.91
+2024-12-18 15:00:00 Short exit at RSI=49.75, Price=521.32
+2024-12-19 09:30:00 Long entry at RSI=7.52, Price=511.30
+2024-12-20 13:00:00 Long exit at RSI=56.33, Price=518.29
+2024-12-23 00:00:00 Runtime Error: Object reference not set to an instance of an object.
+  at on_data
+    self._rsi.update(data[self._qqq.symbol])
+ in main.py: line 81
+
+2024-12-23 00:00:00 Algorithm Id:(469ccfd41fb40c8b17dcb05ac82f74f3) completed in 0.52 seconds at 2k data points per second. Processing total of 815 data points.
+=== END QC RESULT ===
+
+[repair equity-rsi-overbought-oversold_v04] round=1 status=runtime_error backtest=469ccfd41fb40c8b17dcb05ac82f74f3
+[repair equity-rsi-overbought-oversold_v04] requesting model correction 2/3
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=upload status=running compile=None cloud=None progress=pending project=38188171 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=compile status=running compile=None cloud=None progress=pending project=38188171 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=compile status=running compile=InQueue cloud=None progress=pending project=38188171 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38188171 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38188171 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38188171 backtest=e1c547a06788703bd3551b4e904bc6f3
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188171 backtest=e1c547a06788703bd3551b4e904bc6f3
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188171 backtest=e1c547a06788703bd3551b4e904bc6f3
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188171 backtest=e1c547a06788703bd3551b4e904bc6f3
+[QC repair-equity-rsi-overbought-oversold_v04-r2] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188171 backtest=e1c547a06788703bd3551b4e904bc6f3
+
+=== QC RESULT repair-equity-rsi-overbought-oversold_v04-r2 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38188171,
+  "compile_id": "dccfc2f332fe456ed7de634ae30f9e7a-425bbd383138d63d267cde2535e547d4",
+  "backtest_id": "e1c547a06788703bd3551b4e904bc6f3",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "0",
+  "statistics": {
+    "Total Orders": "0",
+    "Average Win": "0%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "0%",
+    "Expectancy": "0",
+    "Start Equity": "100000",
+    "End Equity": "100000",
+    "Net Profit": "0%",
+    "Sharpe Ratio": "0",
+    "Sortino Ratio": "0",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "0%",
+    "Win Rate": "0%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0",
+    "Annual Variance": "0",
+    "Information Ratio": "0",
+    "Tracking Error": "0",
+    "Treynor Ratio": "0",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$0",
+    "Lowest Capacity Asset": "",
+    "Portfolio Turnover": "0%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2024-10-01 10:00:00 Runtime Error: 'TradeBar' object has no attribute 'is_stale'\n  at on_data\n    if bar is not None and not bar.is_stale:\n                               ^^^^^^^^^^^^\n in main.py: line 82\n",
+  "qc_note": "runtime: 2024-10-01 10:00:00 Runtime Error: 'TradeBar' object has no attribute 'is_stale'\n  at on_data\n    if bar is not None and not bar.is_stale:\n                               ^^^^^^^^^^"
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 38188171, with CompileID: dccfc2f332fe456ed7de634ae30f9e7a-425bbd383138d63d267cde2535e547d4, Lean Version: 2.5.0.0.18198
+logs (last 20 of 3):
+2024-10-01 00:00:00 Launching analysis for e1c547a06788703bd3551b4e904bc6f3 with LEAN Engine v2.5.0.0.18198
+2024-10-01 10:00:00 Runtime Error: 'TradeBar' object has no attribute 'is_stale'
+  at on_data
+    if bar is not None and not bar.is_stale:
+                               ^^^^^^^^^^^^
+ in main.py: line 82
+
+2024-10-01 10:00:00 Algorithm Id:(e1c547a06788703bd3551b4e904bc6f3) completed in 0.42 seconds at 0k data points per second. Processing total of 10 data points.
+=== END QC RESULT ===
+
+[repair equity-rsi-overbought-oversold_v04] round=2 status=runtime_error backtest=e1c547a06788703bd3551b4e904bc6f3
+[repair equity-rsi-overbought-oversold_v04] requesting model correction 3/3
+[QC repair-equity-rsi-overbought-oversold_v04-r3] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r3] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r3] stage=upload status=running compile=None cloud=None progress=pending project=38188190 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r3] stage=compile status=running compile=None cloud=None progress=pending project=38188190 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r3] stage=compile status=running compile=InQueue cloud=None progress=pending project=38188190 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r3] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38188190 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r3] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38188190 backtest=None
+[QC repair-equity-rsi-overbought-oversold_v04-r3] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38188190 backtest=c066eace7ed8f7e067b046d873347af6
+[QC repair-equity-rsi-overbought-oversold_v04-r3] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=38188190 backtest=c066eace7ed8f7e067b046d873347af6
+[QC repair-equity-rsi-overbought-oversold_v04-r3] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38188190 backtest=c066eace7ed8f7e067b046d873347af6
+[QC repair-equity-rsi-overbought-oversold_v04-r3] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38188190 backtest=c066eace7ed8f7e067b046d873347af6
+[QC repair-equity-rsi-overbought-oversold_v04-r3] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38188190 backtest=c066eace7ed8f7e067b046d873347af6
+[QC repair-equity-rsi-overbought-oversold_v04-r3] downloading orders
+[QC repair-equity-rsi-overbought-oversold_v04-r3] downloading equity_chart
+
+=== QC RESULT repair-equity-rsi-overbought-oversold_v04-r3 ===
+{
+  "status": "completed",
+  "stage": "finished",
+  "project_id": 38188190,
+  "compile_id": "38f8725511560f4aa4a2031bc311d3ff-c9cdbd81e74fa5eeb9a8c8e72aafb84f",
+  "backtest_id": "c066eace7ed8f7e067b046d873347af6",
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "total_orders": "37",
+  "statistics": {
+    "Total Orders": "37",
+    "Average Win": "0.82%",
+    "Average Loss": "-1.25%",
+    "Compounding Annual Return": "2.808%",
+    "Drawdown": "6.000%",
+    "Expectancy": "0.104",
+    "Start Equity": "100000",
+    "End Equity": "100698.32",
+    "Net Profit": "0.698%",
+    "Sharpe Ratio": "-0.22",
+    "Sortino Ratio": "-0.255",
+    "Probabilistic Sharpe Ratio": "23.290%",
+    "Loss Rate": "33%",
+    "Win Rate": "67%",
+    "Profit-Loss Ratio": "0.66",
+    "Alpha": "-0.011",
+    "Beta": "-0.212",
+    "Annual Standard Deviation": "0.106",
+    "Annual Variance": "0.011",
+    "Information Ratio": "-0.48",
+    "Tracking Error": "0.163",
+    "Treynor Ratio": "0.109",
+    "Total Fees": "$37.59",
+    "Estimated Strategy Capacity": "$94000000.00",
+    "Lowest Capacity Asset": "QQQ RIWIV7K5Z9LX",
+    "Portfolio Turnover": "40.02%",
+    "Drawdown Recovery": "7"
+  },
+  "trade_statistics": {
+    "startDateTime": "2024-10-07T14:00:00Z",
+    "endDateTime": "2024-12-27T16:00:00Z",
+    "totalNumberOfTrades": 18,
+    "numberOfWinningTrades": 12,
+    "numberOfLosingTrades": 6,
+    "totalProfitLoss": "2281.05",
+    "totalProfit": "9900.13",
+    "totalLoss": "-7619.08",
+    "largestProfit": "1587.88",
+    "largestLoss": "-2379.91",
+    "averageProfitLoss": "126.7250",
+    "averageProfit": "825.0108",
+    "averageLoss": "-1269.8467",
+    "averageTradeDuration": "2.08:20:00.0000002",
+    "averageWinningTradeDuration": "1.20:15:00",
+    "averageLosingTradeDuration": "3.08:30:00",
+    "medianTradeDuration": "1.23:00:00",
+    "medianWinningTradeDuration": "1.23:00:00",
+    "medianLosingTradeDuration": "4.22:00:00",
+    "maxConsecutiveWinningTrades": 7,
+    "maxConsecutiveLosingTrades": 3,
+    "profitLossRatio": "0.6497",
+    "winLossRatio": "2",
+    "winRate": "0.6667",
+    "lossRate": "0.3333",
+    "averageMAE": "-814.6811",
+    "averageMFE": "650.4628",
+    "largestMAE": "-3064.98",
+    "largestMFE": "1587.88",
+    "maximumClosedTradeDrawdown": "-5520.66",
+    "maximumIntraTradeDrawdown": "-6172.10",
+    "profitLossStandardDeviation": "1223.5237",
+    "profitLossDownsideDeviation": "1026.3123",
+    "profitFactor": "1.2994",
+    "sharpeRatio": "0.1036",
+    "sortinoRatio": "0.1235",
+    "profitToMaxDrawdownRatio": "0.4132",
+    "maximumEndTradeDrawdown": "3064.98",
+    "averageEndTradeDrawdown": "-523.7378",
+    "maximumDrawdownDuration": "8.02:00:00",
+    "totalFees": "36.590"
+  },
+  "error": null,
+  "qc_note": ""
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 38188190, with CompileID: 38f8725511560f4aa4a2031bc311d3ff-c9cdbd81e74fa5eeb9a8c8e72aafb84f, Lean Version: 2.5.0.0.18198
+logs (last 20 of 39):
+2024-11-14 15:00:00 Long entry at RSI=28.51, Price=505.05
+2024-11-19 13:00:00 Long exit at RSI=53.87, Price=496.57
+2024-11-25 11:00:00 Short entry at RSI=76.45, Price=501.99
+2024-11-27 11:00:00 Short exit at RSI=41.17, Price=498.53
+2024-11-27 12:00:00 Long entry at RSI=29.17, Price=497.88
+2024-11-29 11:00:00 Long exit at RSI=62.81, Price=503.79
+2024-11-29 13:00:00 Short entry at RSI=70.84, Price=504.63
+2024-12-09 12:00:00 Short exit at RSI=39.12, Price=517.79
+2024-12-11 11:00:00 Short entry at RSI=73.32, Price=522.33
+2024-12-13 09:30:00 Short exit at RSI=43.55, Price=521.22
+2024-12-13 11:00:00 Short entry at RSI=71.00, Price=522.52
+2024-12-13 12:00:00 Short exit at RSI=49.26, Price=522.81
+2024-12-16 11:00:00 Short entry at RSI=73.26, Price=529.91
+2024-12-18 15:00:00 Short exit at RSI=49.75, Price=521.32
+2024-12-19 09:30:00 Long entry at RSI=7.52, Price=511.30
+2024-12-20 13:00:00 Long exit at RSI=56.33, Price=518.29
+2024-12-24 12:00:00 Short entry at RSI=71.93, Price=523.70
+2024-12-27 11:00:00 Short exit at RSI=31.53, Price=515.89
+2024-12-27 12:00:00 Long entry at RSI=26.48, Price=514.73
+2024-12-31 16:00:00 Algorithm Id:(c066eace7ed8f7e067b046d873347af6) completed in 0.89 seconds at 1k data points per second. Processing total of 893 data points.
+=== END QC RESULT ===
+
+[repair equity-rsi-overbought-oversold_v04] round=3 status=completed backtest=c066eace7ed8f7e067b046d873347af6
+[QC repair-equity-atr-volatility-stop_v09-r0] reusing saved execution status=runtime_error backtest=1f8230b1bee12e99464645cf705b9958
+
+=== QC RESULT repair-equity-atr-volatility-stop_v09-r0 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38187904,
+  "compile_id": "999ca90116927626ff3da7e3eb988390-bbb7458172f7f2ed7b9617471ed44e52",
+  "backtest_id": "1f8230b1bee12e99464645cf705b9958",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "1",
+  "statistics": {
+    "Total Orders": "1",
+    "Average Win": "0%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "0%",
+    "Expectancy": "0",
+    "Start Equity": "100000",
+    "End Equity": "100000.98",
+    "Net Profit": "0%",
+    "Sharpe Ratio": "0",
+    "Sortino Ratio": "0",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "0%",
+    "Win Rate": "0%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0",
+    "Annual Variance": "0",
+    "Information Ratio": "0",
+    "Tracking Error": "0",
+    "Treynor Ratio": "0",
+    "Total Fees": "$1.12",
+    "Estimated Strategy Capacity": "$71000000.00",
+    "Lowest Capacity Asset": "SPY R735QTJ8XC9X",
+    "Portfolio Turnover": "0%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2022-01-03 09:31:00 Runtime Error: 'TradeBar' object has no attribute 'is_trade'\n  at on_data\n    if bar.is_trade:\n       ^^^^^^^^^^^^\n in main.py: line 46\n",
+  "qc_note": "runtime: 2022-01-03 09:31:00 Runtime Error: 'TradeBar' object has no attribute 'is_trade'\n  at on_data\n    if bar.is_trade:\n       ^^^^^^^^^^^^\n in main.py: line 46\n"
+}
+compile_logs (last 20 of 12):
+Warning main.py Line: 22 Column: 20 - Name "ATR" is not defined; maybe "self._spy = self.add_equity("SPY", resolution=Resolution.MINUTE).symbol"?
+Warning main.py Line: 30 Column: 44 - Name "PlotSeries" is not defined; maybe "self._trailing_high: float = 0.0"?
+Warning main.py Line: 31 Column: 41 - Name "PlotSeries" is not defined
+Warning main.py Line: 76 Column: 38 - Use of getattr is discouraged as it prevents the syntax checker from alerting to type errors. Use typed objects when possible.
+Warning main.py Line: 81 Column: 12 - Use of getattr is discouraged as it prevents the syntax checker from alerting to type errors. Use typed objects when possible.
+Warning main.py Line: 87 Column: 28 - Argument 1 to "_update_plots" of "AtrChandelierStopAlgorithm" has incompatible type "TradeBar | QuoteBar | System.Collections.Generic.List[Tick] | Any"; expected "Bar"
+Warning main.py Line: 103 Column: 16 - Use of getattr is discouraged as it prevents the syntax checker from alerting to type errors. Use typed objects when possible.
+Warning main.py Line: 111 Column: 40 - "AtrChandelierStopAlgorithm" has no attribute "add_plot"; maybe "self._trailing_high = 0.0"?
+Warning main.py Line: 112 Column: 37 - "AtrChandelierStopAlgorithm" has no attribute "add_plot"
+Warning main.py Line: 115 Column: 43 - "Bar" has no attribute "end_time"; maybe "self.plot("Stop", "Trailing High", self._trailing_high)"?
+Warning main.py Line: 117 Column: 40 - "Bar" has no attribute "end_time"; maybe "self.plot("Stop", "ATR Stop", stop_level)"?
+Build Request Successful for Project ID: 38187904, with CompileID: 999ca90116927626ff3da7e3eb988390-bbb7458172f7f2ed7b9617471ed44e52, Lean Version: 2.5.0.0.18198
+logs (last 20 of 3):
+2022-01-01 00:00:00 Launching analysis for 1f8230b1bee12e99464645cf705b9958 with LEAN Engine v2.5.0.0.18198
+2022-01-03 09:31:00 Runtime Error: 'TradeBar' object has no attribute 'is_trade'
+  at on_data
+    if bar.is_trade:
+       ^^^^^^^^^^^^
+ in main.py: line 46
+
+2022-01-03 09:31:00 Algorithm Id:(1f8230b1bee12e99464645cf705b9958) completed in 4.10 seconds at 0k data points per second. Processing total of 31 data points.
+=== END QC RESULT ===
+
+[repair equity-atr-volatility-stop_v09] round=0 status=runtime_error backtest=1f8230b1bee12e99464645cf705b9958
+[repair equity-atr-volatility-stop_v09] requesting model correction 1/3
+[QC repair-equity-atr-volatility-stop_v09-r1] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r1] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r1] stage=upload status=running compile=None cloud=None progress=pending project=38188210 backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r1] stage=compile status=running compile=None cloud=None progress=pending project=38188210 backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r1] stage=compile status=running compile=InQueue cloud=None progress=pending project=38188210 backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r1] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38188210 backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r1] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38188210 backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r1] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38188210 backtest=c794dd9db95d064276ca410d7c39e05b
+[QC repair-equity-atr-volatility-stop_v09-r1] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188210 backtest=c794dd9db95d064276ca410d7c39e05b
+[QC repair-equity-atr-volatility-stop_v09-r1] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188210 backtest=c794dd9db95d064276ca410d7c39e05b
+[QC repair-equity-atr-volatility-stop_v09-r1] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188210 backtest=c794dd9db95d064276ca410d7c39e05b
+[QC repair-equity-atr-volatility-stop_v09-r1] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188210 backtest=c794dd9db95d064276ca410d7c39e05b
+
+=== QC RESULT repair-equity-atr-volatility-stop_v09-r1 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38188210,
+  "compile_id": "1008ee5359bc758d9b68854ea595f476-ecf613c7a15f4ecf63bab11a34bdd958",
+  "backtest_id": "c794dd9db95d064276ca410d7c39e05b",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "1",
+  "statistics": {
+    "Total Orders": "1",
+    "Average Win": "0%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "0%",
+    "Expectancy": "0",
+    "Start Equity": "100000",
+    "End Equity": "100000.98",
+    "Net Profit": "0%",
+    "Sharpe Ratio": "0",
+    "Sortino Ratio": "0",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "0%",
+    "Win Rate": "0%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0",
+    "Annual Variance": "0",
+    "Information Ratio": "0",
+    "Tracking Error": "0",
+    "Treynor Ratio": "0",
+    "Total Fees": "$1.12",
+    "Estimated Strategy Capacity": "$71000000.00",
+    "Lowest Capacity Asset": "SPY R735QTJ8XC9X",
+    "Portfolio Turnover": "0%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2022-01-03 09:31:00 Runtime Error: 'AtrChandelierStopAlgorithm' object has no attribute 'add_plot_series' Did you mean: 'add_series'?\n  at _update_plots\n    self._plot_trailing_high = self.add_plot_series("Trailing High")\n                               ^^^^^^^^^^^^^^^^^^^^\n in main.py: line 111\n  at on_data\n    self._update_plots(bar, close)\n in main.py: line 87\n",
+  "qc_note": "runtime: 2022-01-03 09:31:00 Runtime Error: 'AtrChandelierStopAlgorithm' object has no attribute 'add_plot_series' Did you mean: 'add_series'?\n  at _update_plots\n    self._plot_tr"
+}
+compile_logs (last 20 of 6):
+Warning main.py Line: 22 Column: 20 - Name "ATR" is not defined; maybe "self._spy = self.add_equity("SPY", resolution=Resolution.MINUTE).symbol"?
+Warning main.py Line: 31 Column: 44 - Name "PlotSeries" is not defined; maybe "self._trailing_high: float = 0.0"?
+Warning main.py Line: 32 Column: 41 - Name "PlotSeries" is not defined
+Warning main.py Line: 111 Column: 40 - "AtrChandelierStopAlgorithm" has no attribute "add_plot_series"; maybe "self._trailing_high = 0.0"?
+Warning main.py Line: 112 Column: 37 - "AtrChandelierStopAlgorithm" has no attribute "add_plot_series"
+Build Request Successful for Project ID: 38188210, with CompileID: 1008ee5359bc758d9b68854ea595f476-ecf613c7a15f4ecf63bab11a34bdd958, Lean Version: 2.5.0.0.18198
+logs (last 20 of 3):
+2022-01-01 00:00:00 Launching analysis for c794dd9db95d064276ca410d7c39e05b with LEAN Engine v2.5.0.0.18198
+2022-01-03 09:31:00 Runtime Error: 'AtrChandelierStopAlgorithm' object has no attribute 'add_plot_series' Did you mean: 'add_series'?
+  at _update_plots
+    self._plot_trailing_high = self.add_plot_series("Trailing High")
+                               ^^^^^^^^^^^^^^^^^^^^
+ in main.py: line 111
+  at on_data
+    self._update_plots(bar, close)
+ in main.py: line 87
+
+2022-01-03 09:31:00 Algorithm Id:(c794dd9db95d064276ca410d7c39e05b) completed in 4.24 seconds at 0k data points per second. Processing total of 31 data points.
+=== END QC RESULT ===
+
+[repair equity-atr-volatility-stop_v09] round=1 status=runtime_error backtest=c794dd9db95d064276ca410d7c39e05b
+[repair equity-atr-volatility-stop_v09] requesting model correction 2/3
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 2.0s (1/2)
+[QC repair-equity-atr-volatility-stop_v09-r2] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r2] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r2] stage=upload status=running compile=None cloud=None progress=pending project=38188238 backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r2] stage=compile status=running compile=None cloud=None progress=pending project=38188238 backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r2] stage=compile status=running compile=InQueue cloud=None progress=pending project=38188238 backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r2] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38188238 backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r2] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38188238 backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r2] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38188238 backtest=b49cf59241e6ab8f01daf14465f3a813
+[QC repair-equity-atr-volatility-stop_v09-r2] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188238 backtest=b49cf59241e6ab8f01daf14465f3a813
+[QC repair-equity-atr-volatility-stop_v09-r2] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188238 backtest=b49cf59241e6ab8f01daf14465f3a813
+[QC repair-equity-atr-volatility-stop_v09-r2] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188238 backtest=b49cf59241e6ab8f01daf14465f3a813
+[QC repair-equity-atr-volatility-stop_v09-r2] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188238 backtest=b49cf59241e6ab8f01daf14465f3a813
+
+=== QC RESULT repair-equity-atr-volatility-stop_v09-r2 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38188238,
+  "compile_id": "d3b466f1f7f39c585596d68adf70b7fd-ce438562d72eabb74236e66e1e834e9c",
+  "backtest_id": "b49cf59241e6ab8f01daf14465f3a813",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "1",
+  "statistics": {
+    "Total Orders": "1",
+    "Average Win": "0%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "0%",
+    "Expectancy": "0",
+    "Start Equity": "100000",
+    "End Equity": "100000.98",
+    "Net Profit": "0%",
+    "Sharpe Ratio": "0",
+    "Sortino Ratio": "0",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "0%",
+    "Win Rate": "0%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0",
+    "Annual Variance": "0",
+    "Information Ratio": "0",
+    "Tracking Error": "0",
+    "Treynor Ratio": "0",
+    "Total Fees": "$1.12",
+    "Estimated Strategy Capacity": "$71000000.00",
+    "Lowest Capacity Asset": "SPY R735QTJ8XC9X",
+    "Portfolio Turnover": "0%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2022-01-03 09:31:00 Runtime Error: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the add_series method. Please checkout the API documentation. The expected signature is:\n  add_series(chart: str, series: str, series_type: SeriesType, unit: str = "$")\n  at _update_plots\n    self._plot_trailing_high = self.add_series("Trailing High")\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 111\n  at on_data\n    self._update_plots(bar, close)\n in main.py: line 87\n",
+  "qc_note": "runtime: 2022-01-03 09:31:00 Runtime Error: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required b"
+}
+compile_logs (last 20 of 8):
+Warning main.py Line: 22 Column: 20 - Name "ATR" is not defined; maybe "self._spy = self.add_equity("SPY", resolution=Resolution.MINUTE).symbol"?
+Warning main.py Line: 31 Column: 44 - Name "PlotSeries" is not defined; maybe "self._trailing_high: float = 0.0"?
+Warning main.py Line: 32 Column: 41 - Name "PlotSeries" is not defined
+Warning main.py Line: 111 Column: 40 - Missing positional arguments "series", "series_type" in call to "add_series" of "QCAlgorithm"; maybe "self._trailing_high = 0.0"?
+Warning main.py Line: 111 Column: 40 - "add_series" of "QCAlgorithm" does not return a value (it only ever returns None)
+Warning main.py Line: 112 Column: 37 - Missing positional arguments "series", "series_type" in call to "add_series" of "QCAlgorithm"
+Warning main.py Line: 112 Column: 37 - "add_series" of "QCAlgorithm" does not return a value (it only ever returns None)
+Build Request Successful for Project ID: 38188238, with CompileID: d3b466f1f7f39c585596d68adf70b7fd-ce438562d72eabb74236e66e1e834e9c, Lean Version: 2.5.0.0.18198
+logs (last 20 of 3):
+2022-01-01 00:00:00 Launching analysis for b49cf59241e6ab8f01daf14465f3a813 with LEAN Engine v2.5.0.0.18198
+2022-01-03 09:31:00 Runtime Error: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the add_series method. Please checkout the API documentation. The expected signature is:
+  add_series(chart: str, series: str, series_type: SeriesType, unit: str = "$")
+  at _update_plots
+    self._plot_trailing_high = self.add_series("Trailing High")
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ in main.py: line 111
+  at on_data
+    self._update_plots(bar, close)
+ in main.py: line 87
+
+2022-01-03 09:31:00 Algorithm Id:(b49cf59241e6ab8f01daf14465f3a813) completed in 4.25 seconds at 0k data points per second. Processing total of 31 data points.
+=== END QC RESULT ===
+
+[repair equity-atr-volatility-stop_v09] round=2 status=runtime_error backtest=b49cf59241e6ab8f01daf14465f3a813
+[repair equity-atr-volatility-stop_v09] requesting model correction 3/3
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 28.0s (1/2)
+[QC repair-equity-atr-volatility-stop_v09-r3] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r3] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r3] stage=upload status=running compile=None cloud=None progress=pending project=38188285 backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r3] stage=compile status=running compile=None cloud=None progress=pending project=38188285 backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r3] stage=compile status=running compile=InQueue cloud=None progress=pending project=38188285 backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r3] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38188285 backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r3] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38188285 backtest=None
+[QC repair-equity-atr-volatility-stop_v09-r3] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38188285 backtest=bf8f048d5afcaab4ad9ebf77db1497ea
+[QC repair-equity-atr-volatility-stop_v09-r3] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188285 backtest=bf8f048d5afcaab4ad9ebf77db1497ea
+[QC repair-equity-atr-volatility-stop_v09-r3] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188285 backtest=bf8f048d5afcaab4ad9ebf77db1497ea
+[QC repair-equity-atr-volatility-stop_v09-r3] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188285 backtest=bf8f048d5afcaab4ad9ebf77db1497ea
+[QC repair-equity-atr-volatility-stop_v09-r3] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188285 backtest=bf8f048d5afcaab4ad9ebf77db1497ea
+
+=== QC RESULT repair-equity-atr-volatility-stop_v09-r3 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38188285,
+  "compile_id": "ace63e278f2b4efecba0c3ee05c7f65d-a8d5fc9702773a498358511e59e76921",
+  "backtest_id": "bf8f048d5afcaab4ad9ebf77db1497ea",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "1",
+  "statistics": {
+    "Total Orders": "1",
+    "Average Win": "0%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "0%",
+    "Expectancy": "0",
+    "Start Equity": "100000",
+    "End Equity": "100050.16",
+    "Net Profit": "0%",
+    "Sharpe Ratio": "0",
+    "Sortino Ratio": "0",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "0%",
+    "Win Rate": "0%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0",
+    "Annual Variance": "0",
+    "Information Ratio": "0",
+    "Tracking Error": "0",
+    "Treynor Ratio": "0",
+    "Total Fees": "$1.12",
+    "Estimated Strategy Capacity": "$100000000.00",
+    "Lowest Capacity Asset": "SPY R735QTJ8XC9X",
+    "Portfolio Turnover": "0%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2022-01-03 09:32:00 Runtime Error: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the plot method. Please checkout the API documentation. The following overloads are available:\n  plot(series: str, value: float)\n  plot(series: str, open: float, high: float, low: float, close: float)\n  plot(series: str, value: int)\n  plot(series: str, bar: TradeBar)\n  plot(chart: str, series: str, value: float)\n  plot(chart: str, series: str, open: float, high: float, low: float, close: float)\n  plot(chart: str, series: str, value: int)\n  plot(series: str, open: int, high: int, low: int, close: int)\n  plot(chart: str, series: str, bar: TradeBar)\n  plot(chart: str, series: str, open: int, high: int, low: int, close: int)\n  ... and 4 more\nArgument mismatch: argument 3 ('value') expected float, got datetime.\n  at _update_plots\n    self.plot("Chandelier Stop", "Trailing High", bar.end_time, self._trailing_high)\n in main.py: line 92\n  at on_data\n    self._update_plots(bar, close)\n in main.py: line 80\n",
+  "qc_note": "runtime: 2022-01-03 09:32:00 Runtime Error: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required b"
+}
+compile_logs (last 20 of 4):
+Warning main.py Line: 22 Column: 20 - Name "ATR" is not defined; maybe "self._spy = self.add_equity("SPY", resolution=Resolution.MINUTE).symbol"?
+Warning main.py Line: 92 Column: 13 - No overload variant of "plot" of "QCAlgorithm" matches argument types "str", "str", "datetime", "float"; maybe "self.plot("Stop", "Trailing High", self._trailing_high)"?
+Warning main.py Line: 94 Column: 13 - No overload variant of "plot" of "QCAlgorithm" matches argument types "str", "str", "datetime", "float"; maybe "self.plot("Stop", "ATR Stop", stop_level)"?
+Build Request Successful for Project ID: 38188285, with CompileID: ace63e278f2b4efecba0c3ee05c7f65d-a8d5fc9702773a498358511e59e76921, Lean Version: 2.5.0.0.18198
+logs (last 20 of 3):
+2022-01-01 00:00:00 Launching analysis for bf8f048d5afcaab4ad9ebf77db1497ea with LEAN Engine v2.5.0.0.18198
+2022-01-03 09:32:00 Runtime Error: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the plot method. Please checkout the API documentation. The following overloads are available:
+  plot(series: str, value: float)
+  plot(series: str, open: float, high: float, low: float, close: float)
+  plot(series: str, value: int)
+  plot(series: str, bar: TradeBar)
+  plot(chart: str, series: str, value: float)
+  plot(chart: str, series: str, open: float, high: float, low: float, close: float)
+  plot(chart: str, series: str, value: int)
+  plot(series: str, open: int, high: int, low: int, close: int)
+  plot(chart: str, series: str, bar: TradeBar)
+  plot(chart: str, series: str, open: int, high: int, low: int, close: int)
+  ... and 4 more
+Argument mismatch: argument 3 ('value') expected float, got datetime.
+  at _update_plots
+    self.plot("Chandelier Stop", "Trailing High", bar.end_time, self._trailing_high)
+ in main.py: line 92
+  at on_data
+    self._update_plots(bar, close)
+ in main.py: line 80
+
+2022-01-03 09:32:00 Algorithm Id:(bf8f048d5afcaab4ad9ebf77db1497ea) completed in 4.27 seconds at 0k data points per second. Processing total of 33 data points.
+=== END QC RESULT ===
+
+[repair equity-atr-volatility-stop_v09] round=3 status=runtime_error backtest=bf8f048d5afcaab4ad9ebf77db1497ea
+[QC repair-equity-monthly-roc-rotation_v06-r0] reusing saved execution status=runtime_error backtest=23b7174f0c7227a6ea3dcef9916293c3
+
+=== QC RESULT repair-equity-monthly-roc-rotation_v06-r0 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38187963,
+  "compile_id": "b4bf476f3ba97a1c6356cd06bee2bc51-1f1b4b91e766f59ed9a978862afe55ca",
+  "backtest_id": "23b7174f0c7227a6ea3dcef9916293c3",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": null,
+  "statistics": {},
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: 'Equity' object has no attribute 'attach'\n  at initialize\n    equity.attach(roc)\n    ^^^^^^^^^^^^^\n in main.py: line 22\n 'Equity' object has no attribute 'attach'",
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: 'Equity' object has no attribute 'attach'\n  at initialize\n    equity.attach(roc)\n    "
+}
+compile_logs (last 20 of 2):
+Warning main.py Line: 41 Column: 35 - Argument "key" to "sorted" has incompatible type overloaded function; expected "Callable[[str], SupportsDunderLT[Any] | SupportsDunderGT[Any]]"; maybe "top = sorted(securities, key=lambda s: s.roc.current.value, reverse=True)[:self._top_n]"?
+Build Request Successful for Project ID: 38187963, with CompileID: b4bf476f3ba97a1c6356cd06bee2bc51-1f1b4b91e766f59ed9a978862afe55ca, Lean Version: 2.5.0.0.18198
+=== END QC RESULT ===
+
+[repair equity-monthly-roc-rotation_v06] round=0 status=runtime_error backtest=23b7174f0c7227a6ea3dcef9916293c3
+[repair equity-monthly-roc-rotation_v06] requesting model correction 1/3
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 2.0s (1/2)
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 4.0s (2/2)
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/shaoyuzhe/Projects/Fine-Tuning-an-Open-Source-Model-for-Algorithmic-Trading-Development/src/qc_eval/pipeline.py", line 430, in <module>
+    main()
+    ~~~~^^
+  File "/Users/shaoyuzhe/Projects/Fine-Tuning-an-Open-Source-Model-for-Algorithmic-Trading-Development/src/qc_eval/pipeline.py", line 389, in main
+    run_batch(todo, [run_label(m, args.system) for m in models], args.repair_attempts,
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              args.verbose, args.print_output)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyuzhe/Projects/Fine-Tuning-an-Open-Source-Model-for-Algorithmic-Trading-Development/src/qc_eval/auto_repair.py", line 189, in run_batch
+    results.append(repair_one(model, spec, qc, max_repairs, verbose, print_output))
+                   ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyuzhe/Projects/Fine-Tuning-an-Open-Source-Model-for-Algorithmic-Trading-Development/src/qc_eval/auto_repair.py", line 127, in repair_one
+    output, model_id = generate(model, request, system=REPAIR_SYSTEM)
+                       ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyuzhe/Projects/Fine-Tuning-an-Open-Source-Model-for-Algorithmic-Trading-Development/src/qc_eval/pipeline.py", line 180, in generate
+    return call_openai_compatible(prompt, mid, system=system), mid
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyuzhe/Projects/Fine-Tuning-an-Open-Source-Model-for-Algorithmic-Trading-Development/src/qc_eval/pipeline.py", line 157, in call_openai_compatible
+    r.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/Users/shaoyuzhe/Projects/Fine-Tuning-an-Open-Source-Model-for-Algorithmic-Trading-Development/.venv/lib/python3.13/site-packages/requests/models.py", line 1167, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 429 Client Error: Too Many Requests for url: https://api.groq.com/openai/v1/chat/completions
+QC authenticated; real cloud feedback repair enabled
+[repair equity-monthly-roc-rotation_v06] requesting model correction 1/3
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 9.0s (1/2)
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=upload status=running compile=None cloud=None progress=pending project=38188332 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=compile status=running compile=None cloud=None progress=pending project=38188332 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=compile status=running compile=InQueue cloud=None progress=pending project=38188332 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38188332 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38188332 backtest=None
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38188332 backtest=668d5fa6e40799dfe9b710b4fb3632ce
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=backtest status=running compile=BuildSuccess cloud=Completed. progress=100.0% project=38188332 backtest=668d5fa6e40799dfe9b710b4fb3632ce
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=backtest status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38188332 backtest=668d5fa6e40799dfe9b710b4fb3632ce
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=logs status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38188332 backtest=668d5fa6e40799dfe9b710b4fb3632ce
+[QC repair-equity-monthly-roc-rotation_v06-r1] stage=finished status=completed compile=BuildSuccess cloud=Completed. progress=100.0% project=38188332 backtest=668d5fa6e40799dfe9b710b4fb3632ce
+[QC repair-equity-monthly-roc-rotation_v06-r1] downloading orders
+[QC repair-equity-monthly-roc-rotation_v06-r1] downloading equity_chart
+
+=== QC RESULT repair-equity-monthly-roc-rotation_v06-r1 ===
+{
+  "status": "completed",
+  "stage": "finished",
+  "project_id": 38188332,
+  "compile_id": "5809cded9a0d6d42ed66e5f0d46900cb-35c4d6eaed6b15c718306d2bb0cc55b2",
+  "backtest_id": "668d5fa6e40799dfe9b710b4fb3632ce",
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "total_orders": "30",
+  "statistics": {
+    "Total Orders": "30",
+    "Average Win": "1.45%",
+    "Average Loss": "-1.03%",
+    "Compounding Annual Return": "2.701%",
+    "Drawdown": "6.700%",
+    "Expectancy": "0.505",
+    "Start Equity": "100000",
+    "End Equity": "108327.91",
+    "Net Profit": "8.328%",
+    "Sharpe Ratio": "-0.557",
+    "Sortino Ratio": "-0.335",
+    "Probabilistic Sharpe Ratio": "0.059%",
+    "Loss Rate": "38%",
+    "Win Rate": "62%",
+    "Profit-Loss Ratio": "1.41",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0.039",
+    "Annual Variance": "0.002",
+    "Information Ratio": "0.493",
+    "Tracking Error": "0.039",
+    "Treynor Ratio": "0",
+    "Total Fees": "$58.65",
+    "Estimated Strategy Capacity": "$8000000.00",
+    "Lowest Capacity Asset": "AGG SSC0EI5J2F6T",
+    "Portfolio Turnover": "0.73%",
+    "Drawdown Recovery": "385"
+  },
+  "trade_statistics": {
+    "startDateTime": "2023-02-01T14:31:00Z",
+    "endDateTime": "2024-11-01T13:31:00Z",
+    "totalNumberOfTrades": 18,
+    "numberOfWinningTrades": 11,
+    "numberOfLosingTrades": 7,
+    "totalProfitLoss": "8386.56",
+    "totalProfit": "14541.77",
+    "totalLoss": "-6155.21",
+    "largestProfit": "5753.58",
+    "largestLoss": "-1949.89",
+    "averageProfitLoss": "465.9200",
+    "averageProfit": "1321.9791",
+    "averageLoss": "-879.3157",
+    "averageTradeDuration": "59.03:59:59.9999999",
+    "averageWinningTradeDuration": "78.02:10:54.5454545",
+    "averageLosingTradeDuration": "29.10:17:08.5714285",
+    "medianTradeDuration": "62.00:00:00",
+    "medianWinningTradeDuration": "91.00:00:00",
+    "medianLosingTradeDuration": "29.00:00:00",
+    "maxConsecutiveWinningTrades": 5,
+    "maxConsecutiveLosingTrades": 3,
+    "profitLossRatio": "1.5034",
+    "winLossRatio": "1.5714",
+    "winRate": "0.6111",
+    "lossRate": "0.3889",
+    "averageMAE": "-711.5028",
+    "averageMFE": "1141.7150",
+    "largestMAE": "-2753.03",
+    "largestMFE": "6233.54",
+    "maximumClosedTradeDrawdown": "-4301.16",
+    "maximumIntraTradeDrawdown": "-6346.73",
+    "profitLossStandardDeviation": "1915.8383",
+    "profitLossDownsideDeviation": "720.8430",
+    "profitFactor": "2.3625",
+    "sharpeRatio": "0.2432",
+    "sortinoRatio": "0.6464",
+    "profitToMaxDrawdownRatio": "1.9498",
+    "maximumEndTradeDrawdown": "3331.06",
+    "averageEndTradeDrawdown": "-675.7950",
+    "maximumDrawdownDuration": "394.00:00:00",
+    "totalFees": "58.650"
+  },
+  "error": null,
+  "qc_note": ""
+}
+compile_logs (last 20 of 1):
+Build Request Successful for Project ID: 38188332, with CompileID: 5809cded9a0d6d42ed66e5f0d46900cb-35c4d6eaed6b15c718306d2bb0cc55b2, Lean Version: 2.5.0.0.18198
+logs (last 20 of 27):
+2022-09-01 09:31:00 Rebalance: all ROC < 0, liquidated all. Values: {'SPY': -0.03619095084279014, 'EFA': -0.09881978006982933, 'EEM': -0.06655035022234997, 'AGG': -0.010774654897998032, 'GLD': -0.07304155511581888}
+2022-11-01 09:31:00 Rebalance: all ROC < 0, liquidated all. Values: {'SPY': -0.062091864067939866, 'EFA': -0.08767881864328565, 'EEM': -0.14653020469296058, 'AGG': -0.07213108231139857, 'GLD': -0.08094863573113921}
+2022-12-01 09:31:00 Rebalance: all ROC < 0, liquidated all. Values: {'SPY': 0.04758699422264846, 'EFA': 0.11273209549071618, 'EEM': 0.03185378590078329, 'AGG': -0.006939056565101181, 'GLD': 0.040927177414261356}
+2023-02-01 09:31:00 Rebalance: top 3 = ['EFA', 'EEM', 'GLD']. Values: {'SPY': 0.0893029189129214, 'EFA': 0.2194422351076909, 'EEM': 0.21606572418756792, 'AGG': 0.06313859431197866, 'GLD': 0.1773082223242995}
+2023-03-01 09:31:00 Rebalance: all ROC < 0, liquidated all. Values: {'SPY': -0.023547772308320784, 'EFA': 0.03737346475162996, 'EEM': -0.0178892651675029, 'AGG': -0.0029933578244403054, 'GLD': 0.030155937139736667}
+2023-05-01 09:31:00 Rebalance: all ROC < 0, liquidated all. Values: {'SPY': 0.01635247803291111, 'EFA': 0.019808837789167477, 'EEM': -0.06544064962980654, 'AGG': -0.002237070156858331, 'GLD': 0.017229041668960204}
+2023-06-01 09:31:00 Rebalance: all ROC < 0, liquidated all. Values: {'SPY': 0.037023577977038265, 'EFA': -0.00042432814710042436, 'EEM': -0.03071065989847716, 'AGG': 0.02299674605393475, 'GLD': 0.06234704579885794}
+2023-08-01 09:31:00 Rebalance: all ROC < 0, liquidated all. Values: {'SPY': 0.12614799329616883, 'EFA': 0.039272051495866905, 'EEM': 0.09644178808243295, 'AGG': -0.018968419522337854, 'GLD': -0.03574639098937126}
+2023-09-01 09:31:00 Rebalance: all ROC < 0, liquidated all. Values: {'SPY': 0.05605509226149235, 'EFA': 0.00015879140682302853, 'EEM': -0.010105158264349705, 'AGG': -0.009001786084211809, 'GLD': -0.012723483602062081}
+2023-11-01 09:31:00 Rebalance: all ROC < 0, liquidated all. Values: {'SPY': -0.06885736407356423, 'EFA': -0.08039027071595438, 'EEM': -0.09337944664031621, 'AGG': -0.04019672798088319, 'GLD': 0.023973745689175662}
+2023-12-01 09:31:00 Rebalance: top 3 = ['GLD', 'SPY', 'EFA']. Values: {'SPY': 0.026422071608469676, 'EFA': 0.024038461538461536, 'EEM': 0.012023535431056536, 'AGG': 0.014504684582536898, 'GLD': 0.06140696170499916}
+2024-02-01 09:31:00 Rebalance: top 3 = ['SPY', 'EFA', 'AGG']. Values: {'SPY': 0.12554055241625564, 'EFA': 0.1018513826254483, 'EEM': 0.03783555934192236, 'AGG': 0.06472026270240991, 'GLD': 0.02351727134477515}
+2024-03-01 09:31:00 Rebalance: all ROC < 0, liquidated all. Values: {'SPY': 0.11117408484795348, 'EFA': 0.06885358182318856, 'EEM': 0.02557968884497985, 'AGG': 0.011255939890130816, 'GLD': -0.014061767616269986}
+2024-04-01 09:31:00 Rebalance: all ROC < 0, liquidated all. Values: {'SPY': 0.11011350846990445, 'EFA': 0.071802442625151, 'EEM': 0.033719174635128336, 'AGG': -0.0026283520320692436, 'GLD': 0.07864932885906041}
+2024-05-01 09:31:00 Rebalance: all ROC < 0, liquidated all. Values: {'SPY': 0.018589307789918182, 'EFA': 0.02821024617431803, 'EEM': 0.06054333764553687, 'AGG': -0.027070179844908556, 'GLD': 0.12332325963628651}
+2024-07-01 09:31:00 Rebalance: top 3 = ['SPY', 'EEM', 'GLD']. Values: {'SPY': 0.05114594727345443, 'EFA': 0.003738913295102194, 'EEM': 0.038100360115448866, 'AGG': 0.007704938941923468, 'GLD': 0.010670301776816772}
+2024-08-01 09:31:00 Rebalance: top 3 = ['SPY', 'GLD', 'AGG']. Values: {'SPY': 0.08077016286880118, 'EFA': 0.03601486956785821, 'EEM': 0.018281383099176908, 'AGG': 0.03680222512668014, 'GLD': 0.06381480090157778}
+2024-10-01 09:31:00 Rebalance: top 3 = ['GLD', 'EEM', 'AGG']. Values: {'SPY': 0.03764494652152576, 'EFA': 0.04420027469097265, 'EEM': 0.051111620444648176, 'AGG': 0.04425482018390103, 'GLD': 0.1001674738604988}
+2024-11-01 09:31:00 Rebalance: all ROC < 0, liquidated all. Values: {'SPY': 0.09972562571358723, 'EFA': 0.04498087323572088, 'EEM': 0.08679706601466992, 'AGG': -0.003243937907118005, 'GLD': 0.14944457039220133}
+2024-12-31 16:00:00 Algorithm Id:(668d5fa6e40799dfe9b710b4fb3632ce) completed in 9.27 seconds at 316k data points per second. Processing total of 2,926,266 data points.
+=== END QC RESULT ===
+
+[repair equity-monthly-roc-rotation_v06] round=1 status=completed backtest=668d5fa6e40799dfe9b710b4fb3632ce
+[QC repair-option-iron-condor-spy_v02-r0] reusing saved execution status=runtime_error backtest=ffa544e77d69791c80772346a53eb47c
+
+=== QC RESULT repair-option-iron-condor-spy_v02-r0 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38188016,
+  "compile_id": "1347eeb17212b1ba04c4560fcf5e0472-b1ea4980690ac828296aba77af8fde10",
+  "backtest_id": "ffa544e77d69791c80772346a53eb47c",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "0",
+  "statistics": {
+    "Total Orders": "0",
+    "Average Win": "0%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "0%",
+    "Expectancy": "0",
+    "Start Equity": "100000",
+    "End Equity": "100000",
+    "Net Profit": "0%",
+    "Sharpe Ratio": "0",
+    "Sortino Ratio": "0",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "0%",
+    "Win Rate": "0%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0",
+    "Annual Variance": "0",
+    "Information Ratio": "0",
+    "Tracking Error": "0",
+    "Treynor Ratio": "0",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$0",
+    "Lowest Capacity Asset": "",
+    "Portfolio Turnover": "0%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'\n  at open_iron_condor\n    chain = self.option_chains.get(self.option.symbol)\n            ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 45\n",
+  "qc_note": "runtime: 2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'\n  at open_iron_condor\n    chain = self.option_chains.get(self.option.symbol)\n            ^^^^^^^^^^"
+}
+compile_logs (last 20 of 11):
+Warning main.py Line: 37 Column: 25 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 45 Column: 17 - overloaded function has no attribute "get"; maybe "chain = slice.option_chains.get(self._option_chain_symbol)"?
+Warning main.py Line: 47 Column: 13 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 51 Column: 17 - "IronCondorAlgorithm" has no attribute "Time"; maybe "current_time = self.time.time()"?
+Warning main.py Line: 61 Column: 13 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFeeModel: {fee}")"?
+Warning main.py Line: 85 Column: 13 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 103 Column: 13 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 109 Column: 17 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomSlippageModel: {slippage}")"?
+Warning main.py Line: 120 Column: 9 - "IronCondorAlgorithm" has no attribute "Log"
+Warning main.py Line: 134 Column: 21 - "IronCondorAlgorithm" has no attribute "Log"
+Build Request Successful for Project ID: 38188016, with CompileID: 1347eeb17212b1ba04c4560fcf5e0472-b1ea4980690ac828296aba77af8fde10, Lean Version: 2.5.0.0.18198
+logs (last 20 of 4):
+2024-09-01 00:00:00 Launching analysis for ffa544e77d69791c80772346a53eb47c with LEAN Engine v2.5.0.0.18198
+2024-09-01 00:00:00 Warning: The following securities were set to raw price normalization mode to work with options: SPY...
+2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'
+  at open_iron_condor
+    chain = self.option_chains.get(self.option.symbol)
+            ^^^^^^^^^^^^^^^^^^^^^^
+ in main.py: line 45
+
+2024-09-03 00:00:00 Algorithm Id:(ffa544e77d69791c80772346a53eb47c) completed in 1.64 seconds at 6k data points per second. Processing total of 9,048 data points.
+=== END QC RESULT ===
+
+[repair option-iron-condor-spy_v02] round=0 status=runtime_error backtest=ffa544e77d69791c80772346a53eb47c
+[repair option-iron-condor-spy_v02] requesting model correction 1/3
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 7.0s (1/2)
+[QC repair-option-iron-condor-spy_v02-r1] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-option-iron-condor-spy_v02-r1] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-option-iron-condor-spy_v02-r1] stage=upload status=running compile=None cloud=None progress=pending project=38188373 backtest=None
+[QC repair-option-iron-condor-spy_v02-r1] stage=compile status=running compile=None cloud=None progress=pending project=38188373 backtest=None
+[QC repair-option-iron-condor-spy_v02-r1] stage=compile status=running compile=InQueue cloud=None progress=pending project=38188373 backtest=None
+[QC repair-option-iron-condor-spy_v02-r1] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38188373 backtest=None
+[QC repair-option-iron-condor-spy_v02-r1] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38188373 backtest=None
+[QC repair-option-iron-condor-spy_v02-r1] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38188373 backtest=12e5316412b5896e77bacd610e363b80
+[QC repair-option-iron-condor-spy_v02-r1] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188373 backtest=12e5316412b5896e77bacd610e363b80
+[QC repair-option-iron-condor-spy_v02-r1] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188373 backtest=12e5316412b5896e77bacd610e363b80
+[QC repair-option-iron-condor-spy_v02-r1] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188373 backtest=12e5316412b5896e77bacd610e363b80
+[QC repair-option-iron-condor-spy_v02-r1] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188373 backtest=12e5316412b5896e77bacd610e363b80
+
+=== QC RESULT repair-option-iron-condor-spy_v02-r1 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38188373,
+  "compile_id": "c318a754c15d3cbdb8863d066dbed106-aa07793c1e7bab43eb7cdb41bb592f66",
+  "backtest_id": "12e5316412b5896e77bacd610e363b80",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "0",
+  "statistics": {
+    "Total Orders": "0",
+    "Average Win": "0%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "0%",
+    "Expectancy": "0",
+    "Start Equity": "100000",
+    "End Equity": "100000",
+    "Net Profit": "0%",
+    "Sharpe Ratio": "0",
+    "Sortino Ratio": "0",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "0%",
+    "Win Rate": "0%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0",
+    "Annual Variance": "0",
+    "Information Ratio": "0",
+    "Tracking Error": "0",
+    "Treynor Ratio": "0",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$0",
+    "Lowest Capacity Asset": "",
+    "Portfolio Turnover": "0%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'\n  at open_iron_condor\n    chain = self.option_chains.get(self.option.symbol)\n            ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 47\n",
+  "qc_note": "runtime: 2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'\n  at open_iron_condor\n    chain = self.option_chains.get(self.option.symbol)\n            ^^^^^^^^^^"
+}
+compile_logs (last 20 of 11):
+Warning main.py Line: 38 Column: 25 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 47 Column: 17 - overloaded function has no attribute "get"; maybe "chain = slice.option_chains.get(self._option_chain_symbol)"?
+Warning main.py Line: 49 Column: 13 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 53 Column: 17 - "IronCondorAlgorithm" has no attribute "Time"; maybe "current_time = self.time.time()"?
+Warning main.py Line: 63 Column: 13 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFeeModel: {fee}")"?
+Warning main.py Line: 87 Column: 13 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 105 Column: 13 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 111 Column: 17 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomSlippageModel: {slippage}")"?
+Warning main.py Line: 122 Column: 9 - "IronCondorAlgorithm" has no attribute "Log"
+Warning main.py Line: 136 Column: 21 - "IronCondorAlgorithm" has no attribute "Log"
+Build Request Successful for Project ID: 38188373, with CompileID: c318a754c15d3cbdb8863d066dbed106-aa07793c1e7bab43eb7cdb41bb592f66, Lean Version: 2.5.0.0.18198
+logs (last 20 of 4):
+2024-09-01 00:00:00 Launching analysis for 12e5316412b5896e77bacd610e363b80 with LEAN Engine v2.5.0.0.18198
+2024-09-01 00:00:00 Warning: The following securities were set to raw price normalization mode to work with options: SPY...
+2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'
+  at open_iron_condor
+    chain = self.option_chains.get(self.option.symbol)
+            ^^^^^^^^^^^^^^^^^^^^^^
+ in main.py: line 47
+
+2024-09-03 00:00:00 Algorithm Id:(12e5316412b5896e77bacd610e363b80) completed in 4.94 seconds at 2k data points per second. Processing total of 9,048 data points.
+=== END QC RESULT ===
+
+[repair option-iron-condor-spy_v02] round=1 status=runtime_error backtest=12e5316412b5896e77bacd610e363b80
+[repair option-iron-condor-spy_v02] requesting model correction 2/3
+[QC repair-option-iron-condor-spy_v02-r2] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-option-iron-condor-spy_v02-r2] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-option-iron-condor-spy_v02-r2] stage=upload status=running compile=None cloud=None progress=pending project=38188394 backtest=None
+[QC repair-option-iron-condor-spy_v02-r2] stage=compile status=running compile=None cloud=None progress=pending project=38188394 backtest=None
+[QC repair-option-iron-condor-spy_v02-r2] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38188394 backtest=None
+[QC repair-option-iron-condor-spy_v02-r2] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38188394 backtest=None
+[QC repair-option-iron-condor-spy_v02-r2] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38188394 backtest=c27cde07ddf51d58a97ef6bff9e515d1
+[QC repair-option-iron-condor-spy_v02-r2] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188394 backtest=c27cde07ddf51d58a97ef6bff9e515d1
+[QC repair-option-iron-condor-spy_v02-r2] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188394 backtest=c27cde07ddf51d58a97ef6bff9e515d1
+[QC repair-option-iron-condor-spy_v02-r2] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188394 backtest=c27cde07ddf51d58a97ef6bff9e515d1
+[QC repair-option-iron-condor-spy_v02-r2] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188394 backtest=c27cde07ddf51d58a97ef6bff9e515d1
+
+=== QC RESULT repair-option-iron-condor-spy_v02-r2 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38188394,
+  "compile_id": "e5864fd3e488ad28088ec49dd2e459b5-aa07793c1e7bab43eb7cdb41bb592f66",
+  "backtest_id": "c27cde07ddf51d58a97ef6bff9e515d1",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "0",
+  "statistics": {
+    "Total Orders": "0",
+    "Average Win": "0%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "0%",
+    "Expectancy": "0",
+    "Start Equity": "100000",
+    "End Equity": "100000",
+    "Net Profit": "0%",
+    "Sharpe Ratio": "0",
+    "Sortino Ratio": "0",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "0%",
+    "Win Rate": "0%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0",
+    "Annual Variance": "0",
+    "Information Ratio": "0",
+    "Tracking Error": "0",
+    "Treynor Ratio": "0",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$0",
+    "Lowest Capacity Asset": "",
+    "Portfolio Turnover": "0%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'\n  at open_iron_condor\n    chain = self.option_chains.get(self.option.symbol)\n            ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 47\n",
+  "qc_note": "runtime: 2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'\n  at open_iron_condor\n    chain = self.option_chains.get(self.option.symbol)\n            ^^^^^^^^^^"
+}
+compile_logs (last 20 of 11):
+Warning main.py Line: 38 Column: 25 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 47 Column: 17 - overloaded function has no attribute "get"; maybe "chain = slice.option_chains.get(self._option_chain_symbol)"?
+Warning main.py Line: 49 Column: 13 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 53 Column: 17 - "IronCondorAlgorithm" has no attribute "Time"; maybe "current_time = self.time.time()"?
+Warning main.py Line: 63 Column: 13 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFeeModel: {fee}")"?
+Warning main.py Line: 87 Column: 13 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 105 Column: 13 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 111 Column: 17 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomSlippageModel: {slippage}")"?
+Warning main.py Line: 122 Column: 9 - "IronCondorAlgorithm" has no attribute "Log"
+Warning main.py Line: 136 Column: 21 - "IronCondorAlgorithm" has no attribute "Log"
+Build Request Successful for Project ID: 38188394, with CompileID: e5864fd3e488ad28088ec49dd2e459b5-aa07793c1e7bab43eb7cdb41bb592f66, Lean Version: 2.5.0.0.18198
+logs (last 20 of 4):
+2024-09-01 00:00:00 Launching analysis for c27cde07ddf51d58a97ef6bff9e515d1 with LEAN Engine v2.5.0.0.18198
+2024-09-01 00:00:00 Warning: The following securities were set to raw price normalization mode to work with options: SPY...
+2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'
+  at open_iron_condor
+    chain = self.option_chains.get(self.option.symbol)
+            ^^^^^^^^^^^^^^^^^^^^^^
+ in main.py: line 47
+
+2024-09-03 00:00:00 Algorithm Id:(c27cde07ddf51d58a97ef6bff9e515d1) completed in 1.40 seconds at 6k data points per second. Processing total of 9,048 data points.
+=== END QC RESULT ===
+
+[repair option-iron-condor-spy_v02] round=2 status=runtime_error backtest=c27cde07ddf51d58a97ef6bff9e515d1
+[repair option-iron-condor-spy_v02] requesting model correction 3/3
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 2.0s (1/2)
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 4.0s (2/2)
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/shaoyuzhe/Projects/Fine-Tuning-an-Open-Source-Model-for-Algorithmic-Trading-Development/src/qc_eval/pipeline.py", line 430, in <module>
+    main()
+    ~~~~^^
+  File "/Users/shaoyuzhe/Projects/Fine-Tuning-an-Open-Source-Model-for-Algorithmic-Trading-Development/src/qc_eval/pipeline.py", line 389, in main
+    run_batch(todo, [run_label(m, args.system) for m in models], args.repair_attempts,
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              args.verbose, args.print_output)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyuzhe/Projects/Fine-Tuning-an-Open-Source-Model-for-Algorithmic-Trading-Development/src/qc_eval/auto_repair.py", line 189, in run_batch
+    results.append(repair_one(model, spec, qc, max_repairs, verbose, print_output))
+                   ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyuzhe/Projects/Fine-Tuning-an-Open-Source-Model-for-Algorithmic-Trading-Development/src/qc_eval/auto_repair.py", line 127, in repair_one
+    output, model_id = generate(model, request, system=REPAIR_SYSTEM)
+                       ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyuzhe/Projects/Fine-Tuning-an-Open-Source-Model-for-Algorithmic-Trading-Development/src/qc_eval/pipeline.py", line 180, in generate
+    return call_openai_compatible(prompt, mid, system=system), mid
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shaoyuzhe/Projects/Fine-Tuning-an-Open-Source-Model-for-Algorithmic-Trading-Development/src/qc_eval/pipeline.py", line 157, in call_openai_compatible
+    r.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/Users/shaoyuzhe/Projects/Fine-Tuning-an-Open-Source-Model-for-Algorithmic-Trading-Development/.venv/lib/python3.13/site-packages/requests/models.py", line 1167, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 429 Client Error: Too Many Requests for url: https://api.groq.com/openai/v1/chat/completions
+QC authenticated; real cloud feedback repair enabled
+[repair option-iron-condor-spy_v02] requesting model correction 3/3
+[qwen/qwen3.8-27b] HTTP 429; retrying the failed request in 2.0s (1/2)
+[QC repair-option-iron-condor-spy_v02-r3] stage=syntax status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-option-iron-condor-spy_v02-r3] stage=create_project status=running compile=None cloud=None progress=pending project=None backtest=None
+[QC repair-option-iron-condor-spy_v02-r3] stage=upload status=running compile=None cloud=None progress=pending project=38188436 backtest=None
+[QC repair-option-iron-condor-spy_v02-r3] stage=compile status=running compile=None cloud=None progress=pending project=38188436 backtest=None
+[QC repair-option-iron-condor-spy_v02-r3] stage=compile status=running compile=BuildSuccess cloud=None progress=pending project=38188436 backtest=None
+[QC repair-option-iron-condor-spy_v02-r3] stage=backtest status=running compile=BuildSuccess cloud=None progress=pending project=38188436 backtest=None
+[QC repair-option-iron-condor-spy_v02-r3] stage=backtest status=running compile=BuildSuccess cloud=In Queue... progress=0.0% project=38188436 backtest=dea88fda98b25fdb9c92cb2083b7da3f
+[QC repair-option-iron-condor-spy_v02-r3] stage=backtest status=running compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188436 backtest=dea88fda98b25fdb9c92cb2083b7da3f
+[QC repair-option-iron-condor-spy_v02-r3] stage=backtest status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188436 backtest=dea88fda98b25fdb9c92cb2083b7da3f
+[QC repair-option-iron-condor-spy_v02-r3] stage=logs status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188436 backtest=dea88fda98b25fdb9c92cb2083b7da3f
+[QC repair-option-iron-condor-spy_v02-r3] stage=finished status=runtime_error compile=BuildSuccess cloud=Runtime Error progress=100.0% project=38188436 backtest=dea88fda98b25fdb9c92cb2083b7da3f
+
+=== QC RESULT repair-option-iron-condor-spy_v02-r3 ===
+{
+  "status": "runtime_error",
+  "stage": "finished",
+  "project_id": 38188436,
+  "compile_id": "f97f712882f5590911684d9dff6f2432-aa07793c1e7bab43eb7cdb41bb592f66",
+  "backtest_id": "dea88fda98b25fdb9c92cb2083b7da3f",
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "total_orders": "0",
+  "statistics": {
+    "Total Orders": "0",
+    "Average Win": "0%",
+    "Average Loss": "0%",
+    "Compounding Annual Return": "0%",
+    "Drawdown": "0%",
+    "Expectancy": "0",
+    "Start Equity": "100000",
+    "End Equity": "100000",
+    "Net Profit": "0%",
+    "Sharpe Ratio": "0",
+    "Sortino Ratio": "0",
+    "Probabilistic Sharpe Ratio": "0%",
+    "Loss Rate": "0%",
+    "Win Rate": "0%",
+    "Profit-Loss Ratio": "0",
+    "Alpha": "0",
+    "Beta": "0",
+    "Annual Standard Deviation": "0",
+    "Annual Variance": "0",
+    "Information Ratio": "0",
+    "Tracking Error": "0",
+    "Treynor Ratio": "0",
+    "Total Fees": "$0.00",
+    "Estimated Strategy Capacity": "$0",
+    "Lowest Capacity Asset": "",
+    "Portfolio Turnover": "0%",
+    "Drawdown Recovery": "0"
+  },
+  "trade_statistics": {
+    "startDateTime": null,
+    "endDateTime": null,
+    "totalNumberOfTrades": 0,
+    "numberOfWinningTrades": 0,
+    "numberOfLosingTrades": 0,
+    "totalProfitLoss": "0",
+    "totalProfit": "0",
+    "totalLoss": "0",
+    "largestProfit": "0",
+    "largestLoss": "0",
+    "averageProfitLoss": "0",
+    "averageProfit": "0",
+    "averageLoss": "0",
+    "averageTradeDuration": "00:00:00",
+    "averageWinningTradeDuration": "00:00:00",
+    "averageLosingTradeDuration": "00:00:00",
+    "medianTradeDuration": "00:00:00",
+    "medianWinningTradeDuration": "00:00:00",
+    "medianLosingTradeDuration": "00:00:00",
+    "maxConsecutiveWinningTrades": 0,
+    "maxConsecutiveLosingTrades": 0,
+    "profitLossRatio": "0",
+    "winLossRatio": "0",
+    "winRate": "0",
+    "lossRate": "0",
+    "averageMAE": "0",
+    "averageMFE": "0",
+    "largestMAE": "0",
+    "largestMFE": "0",
+    "maximumClosedTradeDrawdown": "0",
+    "maximumIntraTradeDrawdown": "0",
+    "profitLossStandardDeviation": "0",
+    "profitLossDownsideDeviation": "0",
+    "profitFactor": "0",
+    "sharpeRatio": "0",
+    "sortinoRatio": "0",
+    "profitToMaxDrawdownRatio": "0",
+    "maximumEndTradeDrawdown": "0",
+    "averageEndTradeDrawdown": "0",
+    "maximumDrawdownDuration": "00:00:00",
+    "totalFees": "0"
+  },
+  "error": "2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'\n  at open_iron_condor\n    chain = self.option_chains.get(self.option.symbol)\n            ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 47\n",
+  "qc_note": "runtime: 2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'\n  at open_iron_condor\n    chain = self.option_chains.get(self.option.symbol)\n            ^^^^^^^^^^"
+}
+compile_logs (last 20 of 11):
+Warning main.py Line: 38 Column: 25 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 47 Column: 17 - overloaded function has no attribute "get"; maybe "chain = slice.option_chains.get(self._option_chain_symbol)"?
+Warning main.py Line: 49 Column: 13 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 53 Column: 17 - "IronCondorAlgorithm" has no attribute "Time"; maybe "current_time = self.time.time()"?
+Warning main.py Line: 63 Column: 13 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFeeModel: {fee}")"?
+Warning main.py Line: 87 Column: 13 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 105 Column: 13 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomFillModel: {fill}")"?
+Warning main.py Line: 111 Column: 17 - "IronCondorAlgorithm" has no attribute "Log"; maybe "self._algorithm.log(f"CustomSlippageModel: {slippage}")"?
+Warning main.py Line: 122 Column: 9 - "IronCondorAlgorithm" has no attribute "Log"
+Warning main.py Line: 136 Column: 21 - "IronCondorAlgorithm" has no attribute "Log"
+Build Request Successful for Project ID: 38188436, with CompileID: f97f712882f5590911684d9dff6f2432-aa07793c1e7bab43eb7cdb41bb592f66, Lean Version: 2.5.0.0.18198
+logs (last 20 of 4):
+2024-09-01 00:00:00 Launching analysis for dea88fda98b25fdb9c92cb2083b7da3f with LEAN Engine v2.5.0.0.18198
+2024-09-01 00:00:00 Warning: The following securities were set to raw price normalization mode to work with options: SPY...
+2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'
+  at open_iron_condor
+    chain = self.option_chains.get(self.option.symbol)
+            ^^^^^^^^^^^^^^^^^^^^^^
+ in main.py: line 47
+
+2024-09-03 00:00:00 Algorithm Id:(dea88fda98b25fdb9c92cb2083b7da3f) completed in 3.72 seconds at 2k data points per second. Processing total of 9,048 data points.
+=== END QC RESULT ===
+
+[repair option-iron-condor-spy_v02] round=3 status=runtime_error backtest=dea88fda98b25fdb9c92cb2083b7da3f
+[
+  {
+    "model": "qwen_base_prompt_v3",
+    "prompt_id": "option-iron-condor-spy_v02",
+    "status": "runtime_error",
+    "repairs_used": 3
+  }
+]

@@ -1,0 +1,321 @@
+{
+  "prompt_id": "futures_v02",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport QuantConnect as QC\n\n# Initialize the algorithm\nclass EminiSP500RollingAlgorithm(QC.Algorithm.QuantConnect):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Adds the E-mini S&P 500 continuous future.\n        - Sets the trading period from Sept 1, 2024 to Dec 31, 2024.\n        - Sets the initial cash balance.\n        \"\"\"\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Add the E-mini S&P 500 continuous future. \n        # Symbol ID: SP500!E!CME (Continuous contract)\n        # Note: In LEAN, continuous contracts are often handled automatically by the \n        # data provider, but we explicitly reference the symbol.\n        self.Symbol = QC.Symbol(\"SP500!E!CME\")\n        \n        # Set initial cash\n        self.SetInitialCash(100000)\n        \n        # Logging\n        self.Log(\"Algorithm initialized. Trading E-mini S&P 500 Continuous Future.\")\n        self.Log(\"Strategy: Buy 1 contract whenever no position is held.\")\n\n    def OnData(self, data):\n        \"\"\"\n        OnData event is the main entry point for your algorithm.\n        It is called every time a new bar is received.\n        \n        Logic:\n        1. Check if we have no position.\n        2. If no position, buy 1 contract.\n        3. The continuous contract symbol in LEAN typically handles the roll automatically \n           if using the 'Continuous' symbol type, but the prompt specifically asks to \n           \"sell the old contract and buy the new one\" upon roll.\n        \n        Important Note on Continuous Contracts in LEAN:\n        When using a Continuous symbol (like SP500!E!CME), LEAN's data provider (like IQFeed or Polygon)\n        usually provides a single stream that switches to the next month's contract automatically.\n        However, if the data provider provides separate monthly symbols or if you are strictly \n        required to manage the roll manually based on specific contract months, the logic would differ.\n        \n        Given the standard QuantConnect setup for futures:\n        - The 'Continuous' symbol abstracts the roll. You do not manually sell the old and buy the new \n          for the *same* continuous symbol because the symbol itself represents the rolling series.\n        - However, if the user specifically wants to track the underlying contract months (e.g., switching \n          from ZWZ to ZWN manually), we would need to know the specific contract months available in the data.\n        \n        Since the prompt asks to \"sell the old contract and buy the same number of the new one\" when the \n        continuous contract rolls, this implies a manual roll strategy. \n        BUT, in the standard QuantConnect API, the Continuous symbol *is* the mechanism for this. \n        If we try to manually trade the continuous symbol, we are just trading the same logical instrument.\n        \n        Interpretation for this specific request:\n        The user likely wants to ensure they are always long 1 contract. \n        If the data provider switches the underlying data source (the actual month) automatically, \n        we simply hold the position. \n        If the user implies they want to see the log of the roll or manage specific contract codes, \n        that requires a different symbol setup (e.g., adding specific monthly symbols).\n        \n        Given the constraint \"Add the E-mini S&P 500 continuous future\", we stick to the Continuous symbol.\n        The \"sell old, buy new\" logic is inherently handled by the Continuous symbol's data feed switching.\n        Therefore, the strategy simplifies to: \"If no position, Buy 1\". The position remains open \n        through the roll because the Continuous symbol persists.\n        \n        However, to strictly adhere to the \"sell old, buy new\" instruction in a way that might be \n        interpreted as ensuring we are always in the current month's contract (if the continuous symbol \n        were to break or if we were tracking specific months), we would need to detect the roll.\n        Detecting a roll on a Continuous symbol is non-trivial without specific contract month data.\n        \n        Standard Best Practice for this request in QuantConnect:\n        Use the Continuous symbol. It automatically rolls. The instruction \"sell old, buy new\" \n        describes *what happens* to the position, not necessarily an action we must take manually \n        on the Continuous symbol (which would be redundant).\n        \n        We will implement the \"Buy 1 if no position\" logic. \n        If the data feed switches months, the Continuous symbol updates, and our position \n        effectively moves to the new month without needing a manual sell/buy order on the same symbol.\n        \n        If the user intended to trade specific monthly symbols (e.g., ZWZ, ZWN), they would need to \n        add those specific symbols. Since they asked for the \"continuous future\", we use the continuous one.\n        \n        Let's add a check to ensure we are long 1 contract.\n        \"\"\"\n        \n        # Check if we have a position\n        if self.Portfolio[self.Symbol].Quantity == 0:\n            # Buy 1 contract\n            self.SetHoldings(self.Symbol, 1)\n            self.Log(f\"Position opened. Quantity: {self.Portfolio[self.Symbol].Quantity}\")\n        else:\n            # We already have a position. \n            # In a Continuous contract setup, the roll is automatic. \n            # We do not need to sell and buy again on the same symbol.\n            # If the data provider switches the underlying month, our position \n            # continues to exist on the Continuous symbol.\n            self.Log(f\"Position held. Quantity: {self.Portfolio[self.Symbol].Quantity}\")\n\n# Run the algorithm\nif __name__ == \"__main__\":\n    # This block is for local testing if running outside the QuantConnect platform\n    # In the QuantConnect IDE, you simply click \"Run\" or \"Debug\".\n    print(\"To run this algorithm, please use the QuantConnect IDE or CLI.\")\n    print(\"Ensure you have a subscription to a data provider that supports E-mini Futures (e.g., IQFeed, Polygon).\")\n```",
+  "generated_at": "2026-11-14T23:37:47.663791+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "Log, SetEndDate, SetHoldings, SetInitialCash, SetStartDate"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "add_future"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "sp_500_e_mini"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "mapped"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "symbol_changed / symbolchanged"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import QuantConnect as QC\n\n# Initialize the algorithm\nclass EminiSP500RollingAlgorithm(QC.Algorithm.QuantConnect):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Adds the E-mini S&P 500 continuous future.\n        - Sets the trading period from Sept 1, 2024 to Dec 31, 2024.\n        - Sets the initial cash balance.\n        \"\"\"\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Add the E-mini S&P 500 continuous future. \n        # Symbol ID: SP500!E!CME (Continuous contract)\n        # Note: In LEAN, continuous contracts are often handled automatically by the \n        # data provider, but we explicitly reference the symbol.\n        self.Symbol = QC.Symbol(\"SP500!E!CME\")\n        \n        # Set initial cash\n        self.SetInitialCash(100000)\n        \n        # Logging\n        self.Log(\"Algorithm initialized. Trading E-mini S&P 500 Continuous Future.\")\n        self.Log(\"Strategy: Buy 1 contract whenever no position is held.\")\n\n    def OnData(self, data):\n        \"\"\"\n        OnData event is the main entry point for your algorithm.\n        It is called every time a new bar is received.\n        \n        Logic:\n        1. Check if we have no position.\n        2. If no position, buy 1 contract.\n        3. The continuous contract symbol in LEAN typically handles the roll automatically \n           if using the 'Continuous' symbol type, but the prompt specifically asks to \n           \"sell the old contract and buy the new one\" upon roll.\n        \n        Important Note on Continuous Contracts in LEAN:\n        When using a Continuous symbol (like SP500!E!CME), LEAN's data provider (like IQFeed or Polygon)\n        usually provides a single stream that switches to the next month's contract automatically.\n        However, if the data provider provides separate monthly symbols or if you are strictly \n        required to manage the roll manually based on specific contract months, the logic would differ.\n        \n        Given the standard QuantConnect setup for futures:\n        - The 'Continuous' symbol abstracts the roll. You do not manually sell the old and buy the new \n          for the *same* continuous symbol because the symbol itself represents the rolling series.\n        - However, if the user specifically wants to track the underlying contract months (e.g., switching \n          from ZWZ to ZWN manually), we would need to know the specific contract months available in the data.\n        \n        Since the prompt asks to \"sell the old contract and buy the same number of the new one\" when the \n        continuous contract rolls, this implies a manual roll strategy. \n        BUT, in the standard QuantConnect API, the Continuous symbol *is* the mechanism for this. \n        If we try to manually trade the continuous symbol, we are just trading the same logical instrument.\n        \n        Interpretation for this specific request:\n        The user likely wants to ensure they are always long 1 contract. \n        If the data provider switches the underlying data source (the actual month) automatically, \n        we simply hold the position. \n        If the user implies they want to see the log of the roll or manage specific contract codes, \n        that requires a different symbol setup (e.g., adding specific monthly symbols).\n        \n        Given the constraint \"Add the E-mini S&P 500 continuous future\", we stick to the Continuous symbol.\n        The \"sell old, buy new\" logic is inherently handled by the Continuous symbol's data feed switching.\n        Therefore, the strategy simplifies to: \"If no position, Buy 1\". The position remains open \n        through the roll because the Continuous symbol persists.\n        \n        However, to strictly adhere to the \"sell old, buy new\" instruction in a way that might be \n        interpreted as ensuring we are always in the current month's contract (if the continuous symbol \n        were to break or if we were tracking specific months), we would need to detect the roll.\n        Detecting a roll on a Continuous symbol is non-trivial without specific contract month data.\n        \n        Standard Best Practice for this request in QuantConnect:\n        Use the Continuous symbol. It automatically rolls. The instruction \"sell old, buy new\" \n        describes *what happens* to the position, not necessarily an action we must take manually \n        on the Continuous symbol (which would be redundant).\n        \n        We will implement the \"Buy 1 if no position\" logic. \n        If the data feed switches months, the Continuous symbol updates, and our position \n        effectively moves to the new month without needing a manual sell/buy order on the same symbol.\n        \n        If the user intended to trade specific monthly symbols (e.g., ZWZ, ZWN), they would need to \n        add those specific symbols. Since they asked for the \"continuous future\", we use the continuous one.\n        \n        Let's add a check to ensure we are long 1 contract.\n        \"\"\"\n        \n        # Check if we have a position\n        if self.Portfolio[self.Symbol].Quantity == 0:\n            # Buy 1 contract\n            self.SetHoldings(self.Symbol, 1)\n            self.Log(f\"Position opened. Quantity: {self.Portfolio[self.Symbol].Quantity}\")\n        else:\n            # We already have a position. \n            # In a Continuous contract setup, the roll is automatic. \n            # We do not need to sell and buy again on the same symbol.\n            # If the data provider switches the underlying month, our position \n            # continues to exist on the Continuous symbol.\n            self.Log(f\"Position held. Quantity: {self.Portfolio[self.Symbol].Quantity}\")\n\n# Run the algorithm\nif __name__ == \"__main__\":\n    # This block is for local testing if running outside the QuantConnect platform\n    # In the QuantConnect IDE, you simply click \"Run\" or \"Debug\".\n    print(\"To run this algorithm, please use the QuantConnect IDE or CLI.\")\n    print(\"Ensure you have a subscription to a data provider that supports E-mini Futures (e.g., IQFeed, Polygon).\")\n",
+    "source_sha256": "ca9c6f95a4ab6833d478cd5a59ad22161617de4b3521c64ae7dc5ff2a372343f",
+    "started_at": "2026-11-14T23:37:47.665166+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39416434,
+    "compile_id": "1574be7b2ad558cc3ca50c0a48f99e48-70fe4e04a16582b65c77706f2a8e8414",
+    "compile_created": {
+      "compileId": "1574be7b2ad558cc3ca50c0a48f99e48-70fe4e04a16582b65c77706f2a8e8414",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39416434,
+      "signature": "70fe4e04a16582b65c77706f2a8e8414",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "1574be7b2ad558cc3ca50c0a48f99e48-70fe4e04a16582b65c77706f2a8e8414",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39416434, with CompileID: 1574be7b2ad558cc3ca50c0a48f99e48-70fe4e04a16582b65c77706f2a8e8414, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39416434, with CompileID: 1574be7b2ad558cc3ca50c0a48f99e48-70fe4e04a16582b65c77706f2a8e8414, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "2e17c7f9868d2758337fd0e066e695b6",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v02",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39416434,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "2e17c7f9868d2758337fd0e066e695b6",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 0
+        },
+        "backtestStart": "2026-11-14 23:37:51",
+        "backtestEnd": "2026-11-14 23:37:51",
+        "created": "2026-11-14 23:37:51",
+        "snapshotId": 39416437,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v02",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39416434,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "2e17c7f9868d2758337fd0e066e695b6",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 0
+        },
+        "backtestStart": "2026-11-14 23:37:51",
+        "backtestEnd": "2026-11-14 23:37:51",
+        "created": "2026-11-14 23:37:51",
+        "snapshotId": 39416437,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): QuantConnect\n  at \n    class EminiSP500RollingAlgorithm(QC.Algorithm.QuantConnect):\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n QuantConnect Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): QuantConnect\n  at \n    class EminiSP500RollingAlgorithm(QC.Algorithm.QuantConnect):\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n QuantConnect",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): QuantConnect\n  at <module>\n    class EminiSP500RollingAlgorithm(QC.Algorithm.QuantConnect):\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n QuantConnect",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "0.7%",
+          "Used RAM (MB)": "163",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-47-2e17c7f9868d2758337fd0e066e695b6",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): QuantConnect\n  at \n    class EminiSP500RollingAlgorithm(QC.Algorithm.QuantConnect):\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n QuantConnect Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): QuantConnect\n  at \n    class EminiSP500RollingAlgorithm(QC.Algorithm.QuantConnect):\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n QuantConnect",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): QuantConnect\n  at <module>\n    class EminiSP500RollingAlgorithm(QC.Algorithm.QuantConnect):\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 4\n QuantConnect",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T23:38:37.263798+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS; LEGACY_API: Log, SetEndDate, SetHoldings, SetInitialCash, SetStartDate; PROMPT_MISS: add_future; PROMPT_MISS: sp_500_e_mini; PROMPT_MISS: mapped; PROMPT_MISS: symbol_changed / symbolchanged",
+  "total_orders": null
+}

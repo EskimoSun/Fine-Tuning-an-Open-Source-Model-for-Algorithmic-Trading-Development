@@ -1,0 +1,63 @@
+{
+  "prompt_id": "equity-rsi-overbought-oversold_v04",
+  "source_model": "qwen_base_prompt_v3",
+  "model_id": "qwen/qwen3.8-27b",
+  "intervention": "model_qc_feedback_repair",
+  "status": "completed",
+  "repairs_used": 3,
+  "source_output_sha256": "154bcdab25bba88dc0467738f12d3a8872cc7ae0cfe8f04e65574588bd4000f4",
+  "attempts": [
+    {
+      "round": 0,
+      "model_id": "qwen/qwen3.8-27b",
+      "generated_at": "2026-10-20T21:44:48.100867+00:00",
+      "source_sha256": "11b146bdd8f533906074dc0272762fe1b20628849319b3297bbccf9b2520b86d",
+      "status": "runtime_error",
+      "project_id": 38187804,
+      "backtest_id": "dc9675597f308c40d4993d5ade33c7dd",
+      "total_orders": "0",
+      "closed_trades": null,
+      "net_profit": "0%",
+      "error": "[ERROR] FATAL UNHANDLED EXCEPTION:Extensions.SetRuntimeError(): Extensions.SetRuntimeError(): RuntimeError at 10/01/2024 14:00:00 UTC. Context: OnData Python.Runtime.PythonException: No method matches given arguments for update: (<class 'QuantConnect.Symbol'>, <class 'clr_datetime.datetime'>, <class 'float'>). The following overloads are available:,  update(input: IBaseData),  update(time: datetime, value: float),Argument mismatch: argument 1 ('input') expected IBaseData, got Symbol.,  File \"/QuantConnect/backtesting/./cache/algorithm/project/main.py\", line 81, in on_data,    self._rsi.update(self._qqq.symbol, data[self._qqq.symbol].end_time, data[self._qqq.symbol].close),   at Python.Runtime.PythonException.ThrowLastAsClrException() in src\\runtime\\PythonException.cs:line 52,   at Python.Runtime.PyObject.Invoke(PyTuple args, PyDict kw) in src\\runtime\\PythonTypes\\PyObject.cs:line 982,   at Python.Runtime.PyObject.TryInvoke(InvokeBinder binder, Object[] args, Object& result) in src\\runtime\\PythonTypes\\PyObject.cs:line 14"
+    },
+    {
+      "round": 1,
+      "model_id": "qwen/qwen3.8-27b",
+      "generated_at": "2026-10-20T21:44:56.874860+00:00",
+      "source_sha256": "0f265fbbab81bfdf01f195f35aa8a83e8b0e79877e943fe100965b0fb87d5912",
+      "status": "runtime_error",
+      "project_id": 38188153,
+      "backtest_id": "469ccfd41fb40c8b17dcb05ac82f74f3",
+      "total_orders": "34",
+      "closed_trades": null,
+      "net_profit": "0.754%",
+      "error": "2024-12-23 00:00:00 Runtime Error: Object reference not set to an instance of an object.\n  at on_data\n    self._rsi.update(data[self._qqq.symbol])\n in main.py: line 81\n"
+    },
+    {
+      "round": 2,
+      "model_id": "qwen/qwen3.8-27b",
+      "generated_at": "2026-10-20T21:45:19.041799+00:00",
+      "source_sha256": "0a6066787e8b7f35eb95868bb136d8ee62b7beba97442f561ba3315a4e11ea00",
+      "status": "runtime_error",
+      "project_id": 38188171,
+      "backtest_id": "e1c547a06788703bd3551b4e904bc6f3",
+      "total_orders": "0",
+      "closed_trades": null,
+      "net_profit": "0%",
+      "error": "2024-10-01 10:00:00 Runtime Error: 'TradeBar' object has no attribute 'is_stale'\n  at on_data\n    if bar is not None and not bar.is_stale:\n                               ^^^^^^^^^^^^\n in main.py: line 82\n"
+    },
+    {
+      "round": 3,
+      "model_id": "qwen/qwen3.8-27b",
+      "generated_at": "2026-10-20T21:45:40.755328+00:00",
+      "source_sha256": "58ce6c96f9ba8070a8beeeb486c281c34147fc788336c94ad7f862d9f7a60c7a",
+      "status": "completed",
+      "project_id": 38188190,
+      "backtest_id": "c066eace7ed8f7e067b046d873347af6",
+      "total_orders": "37",
+      "closed_trades": 18,
+      "net_profit": "0.698%",
+      "error": null
+    }
+  ]
+}

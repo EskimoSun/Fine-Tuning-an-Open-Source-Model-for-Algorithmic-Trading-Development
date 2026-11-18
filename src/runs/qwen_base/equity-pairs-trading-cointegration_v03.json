@@ -1,0 +1,291 @@
+{
+  "prompt_id": "equity-pairs-trading-cointegration_v03",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport numpy as np\nimport pandas as pd\nfrom datetime import datetime, timedelta\nfrom quantconnect import QCAlgorithm\nfrom quantconnect.data import Data\nfrom quantconnect.order import Order\nfrom quantconnect.portfolio import Portfolio\nfrom quantconnect.logging import Log\n\nclass KoPepPairs(QCAlgorithm):\n    \"\"\"\n    Pairs Trading Algorithm for KO (Coca-Cola) and PEP (PepsiCo).\n    \n    Strategy Logic:\n    1. Weekly Calibration (9:31 AM):\n       - Fits a linear regression (KO = slope * PEP + intercept) using the last 60 daily closes.\n       - Calculates the mean and standard deviation of the residuals (spread).\n    2. Daily Signal (10:00 AM):\n       - Computes the Z-score of the current spread.\n       - If Z < -2: Buy KO, Short PEP (Long the pair).\n       - If Z > 2: Short KO, Buy PEP (Short the pair).\n       - If -0.5 <= Z <= 0.5: Close all positions (Mean Reversion).\n    3. State Management:\n       - Tracks position status to prevent re-entering the same side immediately.\n    \"\"\"\n\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm with data settings and initial state variables.\n        \"\"\"\n        # Set the start and end dates\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Set cash and initial capital\n        self.SetCash(100000)\n        \n        # Define the tickers\n        self.ko_symbol = self.AddEquity(\"KO\", Resolution.Minute)\n        self.pep_symbol = self.AddEquity(\"PEP\", Resolution.Minute)\n        \n        # Initialize state variables\n        self.state = {\n            'last_calibration_date': None,\n            'slope': 0.0,\n            'intercept': 0.0,\n            'spread_mean': 0.0,\n            'spread_std': 0.0,\n            'position_status': 'FLAT', # Options: FLAT, LONG_PAIR (KO/Short PEP), SHORT_PAIR (Short KO/PEP)\n            'last_z_score': 0.0\n        }\n        \n        # Initialize numpy arrays for storing historical close prices (last 60 days)\n        # We store (date, ko_close, pep_close)\n        self.historical_data = []\n        \n        # Initialize the helper class\n        self.pairs_engine = KoPepPairsEngine()\n\n    def OnData(self, data):\n        \"\"\"\n        Main data processing loop.\n        Handles weekly calibration at 9:31 and daily signals at 10:00.\n        \"\"\"\n        current_time = self.GetTime()\n        \n        # Check if we have data for both symbols\n        if not data.ContainsKey(self.ko_symbol) or not data.ContainsKey(self.pep_symbol):\n            return\n\n        ko_price = data[self.ko_symbol].Close\n        pep_price = data[self.pep_symbol].Close\n        \n        # Store historical data for regression\n        self.historical_data.append({\n            'date': current_time,\n            'ko_close': ko_price,\n            'pep_close': pep_price\n        })\n        \n        # Keep only the last 60 data points for the regression window\n        if len(self.historical_data) > 60:\n            self.historical_data.pop(0)\n        \n        # --- Weekly Calibration Rule (9:31 AM) ---\n        # We check if the current time is 9:31 AM. \n        # Note: In a real production environment, we might use a calendar or specific time check.\n        # Here we assume the data feed provides minute bars and we check the time component.\n        hour = current_time.hour\n        minute = current_time.minute\n        \n        if hour == 9 and minute == 31:\n            self._perform_weekly_calibration()\n        \n        # --- Daily Signal Rule (10:00 AM) ---\n        # We check if the current time is 10:00 AM.\n        if hour == 10 and minute == 0:\n            self._compute_daily_signal(ko_price, pep_price)\n\n    def _perform_weekly_calibration(self):\n        \"\"\"\n        Fits a linear regression of KO on PEP using the last 60 daily closes.\n        Calculates the mean and standard deviation of the spread (residuals).\n        \"\"\"\n        if len(self.historical_data) < 60:\n            self.Log(\"Insufficient data for weekly calibration.\")\n            return\n\n        # Extract data\n        dates = [d['date'] for d in self.historical_data]\n        ko_prices = np.array([d['ko_close'] for d in self.historical_data])\n        pep_prices = np.array([d['pep_close'] for d in self.historical_data])\n        \n        # Perform Linear Regression: KO = slope * PEP + intercept\n        # Using numpy polyfit with degree 1\n        slope, intercept = np.polyfit(pep_prices, ko_prices, 1)\n        \n        # Calculate the theoretical KO price based on regression\n        predicted_ko = slope * pep_prices + intercept\n        \n        # Calculate the spread (residuals): Actual KO - Predicted KO\n        spread = ko_prices - predicted_ko\n        \n        # Calculate mean and standard deviation of the spread\n        spread_mean = np.mean(spread)\n        spread_std = np.std(spread)\n        \n        # Update state\n        self.state['slope'] = slope\n        self.state['intercept'] = intercept\n        self.state['spread_mean'] = spread_mean\n        self.state['spread_std'] = spread_std\n        \n        self.Log(f\"Weekly Calibration Complete. Slope: {slope:.4f}, Intercept: {intercept:.4f}, \"\n                 f\"Spread Mean: {spread_mean:.4f}, Spread Std: {spread_std:.4f}\")\n\n    def _compute_daily_signal(self, current_ko_price, current_pep_price):\n        \"\"\"\n        Computes the Z-score of the spread and executes trades based on thresholds.\n        \"\"\"\n        # Retrieve parameters from state\n        slope = self.state['slope']\n        intercept = self.state['intercept']\n        spread_mean = self.state['spread_mean']\n        spread_std = self.state['spread_std']\n        current_status = self.state['position_status']\n        \n        # Calculate predicted KO price\n        predicted_ko = slope * current_pep_price + intercept\n        \n        # Calculate current spread\n        current_spread = current_ko_price - predicted_ko\n        \n        # Calculate Z-score\n        # Z = (Current Spread - Mean Spread) / Std Dev\n        if spread_std == 0:\n            z_score = 0\n        else:\n            z_score = (current_spread - spread_mean) / spread_std\n            \n        self.state['last_z_score'] = z_score\n        \n        # --- Trading Rules ---\n        \n        # Rule 1: Close everything if Z is between -0.5 and 0.5\n        if -0.5 <= z_score <= 0.5:\n            if current_status != 'FLAT':\n                self._close_all_positions()\n                self.state['position_status'] = 'FLAT'\n                self.Log(f\"Z-Score: {z_score:.2f}. Closing positions due to mean reversion.\")\n            return\n\n        # Rule 2: Long KO / Short PEP if Z < -2\n        if z_score < -2:\n            if current_status == 'FLAT':\n                self._enter_long_pair()\n                self.state['position_status'] = 'LONG_PAIR'\n                self.Log(f\"Z-Score: {z_score:.2f}. Entering Long KO / Short PEP.\")\n            elif current_status == 'SHORT_PAIR':\n                # Switch from Short Pair to Long Pair (Close shorts, open longs)\n                self._close_all_positions()\n                self._enter_long_pair()\n                self.state['position_status'] = 'LONG_PAIR'\n                self.Log(f\"Z-Score: {z_score:.2f}. Switching to Long KO / Short PEP.\")\n            return\n\n        # Rule 3: Short KO / Long PEP if Z > 2\n        if z_score > 2:\n            if current_status == 'FLAT':\n                self._enter_short_pair()\n                self.state['position_status'] = 'SHORT_PAIR'\n                self.Log(f\"Z-Score: {z_score:.2f}. Entering Short KO / Long PEP.\")\n            elif current_status == 'LONG_PAIR':\n                # Switch from Long Pair to Short Pair\n                self._close_all_positions()\n                self._enter_short_pair()\n                self.state['position_status'] = 'SHORT_PAIR'\n                self.Log(f\"Z-Score: {z_score:.2f}. Switching to Short KO / Long PEP.\")\n\n    def _enter_long_pair(self):\n        \"\"\"\n        Buy KO and Short PEP with half the money each.\n        \"\"\"\n        cash = self.Portfolio.CashBalance\n        order_amount = cash / 2\n        \n        # Buy KO\n        self.order(self.ko_symbol, order_amount, MarketOrder)\n        # Short PEP\n        self.order(self.pep_symbol, -order_amount, MarketOrder)\n\n    def _enter_short_pair(self):\n        \"\"\"\n        Short KO and Buy PEP with half the money each.\n        \"\"\"\n        cash = self.Portfolio.CashBalance\n        order_amount = cash / 2\n        \n        # Short KO\n        self.order(self.ko_symbol, -order_amount, MarketOrder)\n        # Buy PEP\n        self.order(self.pep_symbol, order_amount, MarketOrder)\n\n    def _close_all_positions(self):\n        \"\"\"\n        Close all open positions for both symbols.\n        \"\"\"\n        # Get current positions\n        ko_pos = self.Portfolio.Position[self.ko_symbol]\n        pep_pos = self.Portfolio.Position[self.pep_symbol]\n        \n        if ko_pos != 0:\n            self.order(self.ko_symbol, -ko_pos, MarketOrder)\n        if pep_pos != 0:\n            self.order(self.pep_symbol, -pep_pos, MarketOrder)\n\nclass KoPepPairsEngine:\n    \"\"\"\n    Helper class to encapsulate the logic for pairs trading calculations.\n    \"\"\"\n    def __init__(self):\n        pass\n\n    def calculate_regression(self, pep_prices, ko_prices):\n        \"\"\"\n        Calculates slope and intercept for KO = slope * PEP + intercept.\n        \"\"\"\n        return np.polyfit(pep_prices, ko_prices, 1)\n\n    def calculate_z_score(self, current_spread, spread_mean, spread_std):\n        \"\"\"\n        Calculates the Z-score of the spread.\n        \"\"\"\n        if spread_std == 0:\n            return 0\n        return (current_spread - spread_mean) / spread_std\n```",
+  "generated_at": "2026-11-14T22:47:42.749888+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddEquity, GetTime, Log, SetCash, SetEndDate, SetStartDate"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import numpy as np\nimport pandas as pd\nfrom datetime import datetime, timedelta\nfrom quantconnect import QCAlgorithm\nfrom quantconnect.data import Data\nfrom quantconnect.order import Order\nfrom quantconnect.portfolio import Portfolio\nfrom quantconnect.logging import Log\n\nclass KoPepPairs(QCAlgorithm):\n    \"\"\"\n    Pairs Trading Algorithm for KO (Coca-Cola) and PEP (PepsiCo).\n    \n    Strategy Logic:\n    1. Weekly Calibration (9:31 AM):\n       - Fits a linear regression (KO = slope * PEP + intercept) using the last 60 daily closes.\n       - Calculates the mean and standard deviation of the residuals (spread).\n    2. Daily Signal (10:00 AM):\n       - Computes the Z-score of the current spread.\n       - If Z < -2: Buy KO, Short PEP (Long the pair).\n       - If Z > 2: Short KO, Buy PEP (Short the pair).\n       - If -0.5 <= Z <= 0.5: Close all positions (Mean Reversion).\n    3. State Management:\n       - Tracks position status to prevent re-entering the same side immediately.\n    \"\"\"\n\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm with data settings and initial state variables.\n        \"\"\"\n        # Set the start and end dates\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Set cash and initial capital\n        self.SetCash(100000)\n        \n        # Define the tickers\n        self.ko_symbol = self.AddEquity(\"KO\", Resolution.Minute)\n        self.pep_symbol = self.AddEquity(\"PEP\", Resolution.Minute)\n        \n        # Initialize state variables\n        self.state = {\n            'last_calibration_date': None,\n            'slope': 0.0,\n            'intercept': 0.0,\n            'spread_mean': 0.0,\n            'spread_std': 0.0,\n            'position_status': 'FLAT', # Options: FLAT, LONG_PAIR (KO/Short PEP), SHORT_PAIR (Short KO/PEP)\n            'last_z_score': 0.0\n        }\n        \n        # Initialize numpy arrays for storing historical close prices (last 60 days)\n        # We store (date, ko_close, pep_close)\n        self.historical_data = []\n        \n        # Initialize the helper class\n        self.pairs_engine = KoPepPairsEngine()\n\n    def OnData(self, data):\n        \"\"\"\n        Main data processing loop.\n        Handles weekly calibration at 9:31 and daily signals at 10:00.\n        \"\"\"\n        current_time = self.GetTime()\n        \n        # Check if we have data for both symbols\n        if not data.ContainsKey(self.ko_symbol) or not data.ContainsKey(self.pep_symbol):\n            return\n\n        ko_price = data[self.ko_symbol].Close\n        pep_price = data[self.pep_symbol].Close\n        \n        # Store historical data for regression\n        self.historical_data.append({\n            'date': current_time,\n            'ko_close': ko_price,\n            'pep_close': pep_price\n        })\n        \n        # Keep only the last 60 data points for the regression window\n        if len(self.historical_data) > 60:\n            self.historical_data.pop(0)\n        \n        # --- Weekly Calibration Rule (9:31 AM) ---\n        # We check if the current time is 9:31 AM. \n        # Note: In a real production environment, we might use a calendar or specific time check.\n        # Here we assume the data feed provides minute bars and we check the time component.\n        hour = current_time.hour\n        minute = current_time.minute\n        \n        if hour == 9 and minute == 31:\n            self._perform_weekly_calibration()\n        \n        # --- Daily Signal Rule (10:00 AM) ---\n        # We check if the current time is 10:00 AM.\n        if hour == 10 and minute == 0:\n            self._compute_daily_signal(ko_price, pep_price)\n\n    def _perform_weekly_calibration(self):\n        \"\"\"\n        Fits a linear regression of KO on PEP using the last 60 daily closes.\n        Calculates the mean and standard deviation of the spread (residuals).\n        \"\"\"\n        if len(self.historical_data) < 60:\n            self.Log(\"Insufficient data for weekly calibration.\")\n            return\n\n        # Extract data\n        dates = [d['date'] for d in self.historical_data]\n        ko_prices = np.array([d['ko_close'] for d in self.historical_data])\n        pep_prices = np.array([d['pep_close'] for d in self.historical_data])\n        \n        # Perform Linear Regression: KO = slope * PEP + intercept\n        # Using numpy polyfit with degree 1\n        slope, intercept = np.polyfit(pep_prices, ko_prices, 1)\n        \n        # Calculate the theoretical KO price based on regression\n        predicted_ko = slope * pep_prices + intercept\n        \n        # Calculate the spread (residuals): Actual KO - Predicted KO\n        spread = ko_prices - predicted_ko\n        \n        # Calculate mean and standard deviation of the spread\n        spread_mean = np.mean(spread)\n        spread_std = np.std(spread)\n        \n        # Update state\n        self.state['slope'] = slope\n        self.state['intercept'] = intercept\n        self.state['spread_mean'] = spread_mean\n        self.state['spread_std'] = spread_std\n        \n        self.Log(f\"Weekly Calibration Complete. Slope: {slope:.4f}, Intercept: {intercept:.4f}, \"\n                 f\"Spread Mean: {spread_mean:.4f}, Spread Std: {spread_std:.4f}\")\n\n    def _compute_daily_signal(self, current_ko_price, current_pep_price):\n        \"\"\"\n        Computes the Z-score of the spread and executes trades based on thresholds.\n        \"\"\"\n        # Retrieve parameters from state\n        slope = self.state['slope']\n        intercept = self.state['intercept']\n        spread_mean = self.state['spread_mean']\n        spread_std = self.state['spread_std']\n        current_status = self.state['position_status']\n        \n        # Calculate predicted KO price\n        predicted_ko = slope * current_pep_price + intercept\n        \n        # Calculate current spread\n        current_spread = current_ko_price - predicted_ko\n        \n        # Calculate Z-score\n        # Z = (Current Spread - Mean Spread) / Std Dev\n        if spread_std == 0:\n            z_score = 0\n        else:\n            z_score = (current_spread - spread_mean) / spread_std\n            \n        self.state['last_z_score'] = z_score\n        \n        # --- Trading Rules ---\n        \n        # Rule 1: Close everything if Z is between -0.5 and 0.5\n        if -0.5 <= z_score <= 0.5:\n            if current_status != 'FLAT':\n                self._close_all_positions()\n                self.state['position_status'] = 'FLAT'\n                self.Log(f\"Z-Score: {z_score:.2f}. Closing positions due to mean reversion.\")\n            return\n\n        # Rule 2: Long KO / Short PEP if Z < -2\n        if z_score < -2:\n            if current_status == 'FLAT':\n                self._enter_long_pair()\n                self.state['position_status'] = 'LONG_PAIR'\n                self.Log(f\"Z-Score: {z_score:.2f}. Entering Long KO / Short PEP.\")\n            elif current_status == 'SHORT_PAIR':\n                # Switch from Short Pair to Long Pair (Close shorts, open longs)\n                self._close_all_positions()\n                self._enter_long_pair()\n                self.state['position_status'] = 'LONG_PAIR'\n                self.Log(f\"Z-Score: {z_score:.2f}. Switching to Long KO / Short PEP.\")\n            return\n\n        # Rule 3: Short KO / Long PEP if Z > 2\n        if z_score > 2:\n            if current_status == 'FLAT':\n                self._enter_short_pair()\n                self.state['position_status'] = 'SHORT_PAIR'\n                self.Log(f\"Z-Score: {z_score:.2f}. Entering Short KO / Long PEP.\")\n            elif current_status == 'LONG_PAIR':\n                # Switch from Long Pair to Short Pair\n                self._close_all_positions()\n                self._enter_short_pair()\n                self.state['position_status'] = 'SHORT_PAIR'\n                self.Log(f\"Z-Score: {z_score:.2f}. Switching to Short KO / Long PEP.\")\n\n    def _enter_long_pair(self):\n        \"\"\"\n        Buy KO and Short PEP with half the money each.\n        \"\"\"\n        cash = self.Portfolio.CashBalance\n        order_amount = cash / 2\n        \n        # Buy KO\n        self.order(self.ko_symbol, order_amount, MarketOrder)\n        # Short PEP\n        self.order(self.pep_symbol, -order_amount, MarketOrder)\n\n    def _enter_short_pair(self):\n        \"\"\"\n        Short KO and Buy PEP with half the money each.\n        \"\"\"\n        cash = self.Portfolio.CashBalance\n        order_amount = cash / 2\n        \n        # Short KO\n        self.order(self.ko_symbol, -order_amount, MarketOrder)\n        # Buy PEP\n        self.order(self.pep_symbol, order_amount, MarketOrder)\n\n    def _close_all_positions(self):\n        \"\"\"\n        Close all open positions for both symbols.\n        \"\"\"\n        # Get current positions\n        ko_pos = self.Portfolio.Position[self.ko_symbol]\n        pep_pos = self.Portfolio.Position[self.pep_symbol]\n        \n        if ko_pos != 0:\n            self.order(self.ko_symbol, -ko_pos, MarketOrder)\n        if pep_pos != 0:\n            self.order(self.pep_symbol, -pep_pos, MarketOrder)\n\nclass KoPepPairsEngine:\n    \"\"\"\n    Helper class to encapsulate the logic for pairs trading calculations.\n    \"\"\"\n    def __init__(self):\n        pass\n\n    def calculate_regression(self, pep_prices, ko_prices):\n        \"\"\"\n        Calculates slope and intercept for KO = slope * PEP + intercept.\n        \"\"\"\n        return np.polyfit(pep_prices, ko_prices, 1)\n\n    def calculate_z_score(self, current_spread, spread_mean, spread_std):\n        \"\"\"\n        Calculates the Z-score of the spread.\n        \"\"\"\n        if spread_std == 0:\n            return 0\n        return (current_spread - spread_mean) / spread_std\n",
+    "source_sha256": "e99efd33cc2d28405ca6edb59177a95a30486ebad9ae75711314148c80e1a80c",
+    "started_at": "2026-11-14T22:47:42.754743+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39414349,
+    "compile_id": "640e5617e998a40ca7e225e12d806633-34d05aa05cc8921020d79af717a09b7a",
+    "compile_created": {
+      "compileId": "640e5617e998a40ca7e225e12d806633-34d05aa05cc8921020d79af717a09b7a",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39414349,
+      "signature": "34d05aa05cc8921020d79af717a09b7a",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "640e5617e998a40ca7e225e12d806633-34d05aa05cc8921020d79af717a09b7a",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39414349, with CompileID: 640e5617e998a40ca7e225e12d806633-34d05aa05cc8921020d79af717a09b7a, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39414349, with CompileID: 640e5617e998a40ca7e225e12d806633-34d05aa05cc8921020d79af717a09b7a, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "c15a833d107bd92a8aae76e69653b3ec",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39414349,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "c15a833d107bd92a8aae76e69653b3ec",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 19
+        },
+        "backtestStart": "2026-11-14 22:47:46",
+        "backtestEnd": "2026-11-14 22:47:46",
+        "created": "2026-11-14 22:47:46",
+        "snapshotId": 39414353,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39414349,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "c15a833d107bd92a8aae76e69653b3ec",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 19
+        },
+        "backtestStart": "2026-11-14 22:47:46",
+        "backtestEnd": "2026-11-14 22:47:46",
+        "created": "2026-11-14 22:47:46",
+        "snapshotId": 39414353,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): No module named &#039;quantconnect&#039;. If it is a Python package, ensure it is installed in the environment.\n  at \n    from quantconnect import QCAlgorithm\n in main.py: line 4\n No module named &#039;quantconnect&#039; Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): No module named &#039;quantconnect&#039;. If it is a Python package, ensure it is installed in the environment.\n  at \n    from quantconnect import QCAlgorithm\n in main.py: line 4\n No module named &#039;quantconnect&#039;",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): No module named 'quantconnect'. If it is a Python package, ensure it is installed in the environment.\n  at <module>\n    from quantconnect import QCAlgorithm\n in main.py: line 4\n No module named 'quantconnect'",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.5%",
+          "Used RAM (MB)": "146",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-c15a833d107bd92a8aae76e69653b3ec",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:11"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): No module named &#039;quantconnect&#039;. If it is a Python package, ensure it is installed in the environment.\n  at \n    from quantconnect import QCAlgorithm\n in main.py: line 4\n No module named &#039;quantconnect&#039; Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): No module named &#039;quantconnect&#039;. If it is a Python package, ensure it is installed in the environment.\n  at \n    from quantconnect import QCAlgorithm\n in main.py: line 4\n No module named &#039;quantconnect&#039;",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): No module named 'quantconnect'. If it is a Python package, ensure it is installed in the environment.\n  at <module>\n    from quantconnect import QCAlgorithm\n in main.py: line 4\n No module named 'quantconnect'",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:48:35.537883+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; LEGACY_API: AddEquity, GetTime, Log, SetCash, SetEndDate, SetStartDate",
+  "total_orders": null
+}

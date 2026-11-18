@@ -1,0 +1,337 @@
+{
+  "prompt_id": "equity-opening-range-breakout_v10",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityOptionAlgorithm(QCAlgorithm):\n    _interest: float = 0\n    _max_interest: float = 0\n    _min_interest: float = 0\n    \n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n        \n        # Trade SPY options.\n        self._option = self.add_option(\"SPY\")\n        # Create a Scheduled Event to liquidate the position before market open.\n        expiry = self._option.get_nearest_expiry_date()\n        self.schedule.on(\n            self.date_rules.every_day(\"SPY\"),\n            self.time_rules.at(15, 55),\n            self._liquidate\n        )\n        \n        # Warm up the option contract universe.\n        for i in range(20):\n            contract = self.add_option_contract(self._option.symbol, expiry + timedelta(i))\n            if contract:\n                self.plot(\"Contracts\", \"Open Interest\", contract.open_interest)\n                \n    def on_data(self, slice: Slice) -> None:\n        # Only trade during regular trading hours.\n        bar = slice.bars.get(self._option.symbol)\n        if not bar:\n            return\n        if bar.end_time.hour < 9 or bar.end_time.hour >= 17:\n            return\n            \n        # Get the open interest of the mapped option contract.\n        contract = self.option_chain(self._option.symbol).get_contract(bar.time)\n        if not contract:\n            return\n            \n        # We will trade the open interest of the mapped option contract.\n        interest = contract.open_interest\n        self.plot(\"Open Interest\", \"Current\", interest)\n        \n        # We will trade if the open interest is increasing by more than 0.5%.\n        if interest > self._max_interest * 1.005:\n            self.set_holdings(self._option, 1)\n            self._max_interest = 0\n            self._min_interest = 0\n        # We will trade if the open interest is decreasing by more than 0.5%.\n        elif interest < self._min_interest * 0.995:\n            self.set_holdings(self._option, -1)\n            self._max_interest = 0\n            self._min_interest = 0\n            \n    def _liquidate(self) -> None:\n        # Liquidate the position before market open.\n        if self.portfolio[self._option].is_long:\n            self.liquidate(self._option)\n        self._interest = 0\n        self._max_interest = 0\n        self._min_interest = 0\n```",
+  "generated_at": "2026-11-12T23:51:52.130214+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "add_option_contract"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "minute"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityOptionAlgorithm(QCAlgorithm):\n    _interest: float = 0\n    _max_interest: float = 0\n    _min_interest: float = 0\n    \n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n        \n        # Trade SPY options.\n        self._option = self.add_option(\"SPY\")\n        # Create a Scheduled Event to liquidate the position before market open.\n        expiry = self._option.get_nearest_expiry_date()\n        self.schedule.on(\n            self.date_rules.every_day(\"SPY\"),\n            self.time_rules.at(15, 55),\n            self._liquidate\n        )\n        \n        # Warm up the option contract universe.\n        for i in range(20):\n            contract = self.add_option_contract(self._option.symbol, expiry + timedelta(i))\n            if contract:\n                self.plot(\"Contracts\", \"Open Interest\", contract.open_interest)\n                \n    def on_data(self, slice: Slice) -> None:\n        # Only trade during regular trading hours.\n        bar = slice.bars.get(self._option.symbol)\n        if not bar:\n            return\n        if bar.end_time.hour < 9 or bar.end_time.hour >= 17:\n            return\n            \n        # Get the open interest of the mapped option contract.\n        contract = self.option_chain(self._option.symbol).get_contract(bar.time)\n        if not contract:\n            return\n            \n        # We will trade the open interest of the mapped option contract.\n        interest = contract.open_interest\n        self.plot(\"Open Interest\", \"Current\", interest)\n        \n        # We will trade if the open interest is increasing by more than 0.5%.\n        if interest > self._max_interest * 1.005:\n            self.set_holdings(self._option, 1)\n            self._max_interest = 0\n            self._min_interest = 0\n        # We will trade if the open interest is decreasing by more than 0.5%.\n        elif interest < self._min_interest * 0.995:\n            self.set_holdings(self._option, -1)\n            self._max_interest = 0\n            self._min_interest = 0\n            \n    def _liquidate(self) -> None:\n        # Liquidate the position before market open.\n        if self.portfolio[self._option].is_long:\n            self.liquidate(self._option)\n        self._interest = 0\n        self._max_interest = 0\n        self._min_interest = 0\n",
+    "source_sha256": "7cc297d6139d26bc58d0a6503520494254968ebbe9e19f724c15c733323a6eaf",
+    "started_at": "2026-11-12T23:51:52.132503+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;Option&#039; object has no attribute &#039;get_nearest_expiry_date&#039;\n  at initialize\n    expiry",
+    "project_id": 39315043,
+    "compile_id": "b5332963b542efac3a96590e00df3a55-53caa481f5fb0ef5b528c8494153b344",
+    "compile_created": {
+      "compileId": "b5332963b542efac3a96590e00df3a55-53caa481f5fb0ef5b528c8494153b344",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39315043,
+      "signature": "53caa481f5fb0ef5b528c8494153b344",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "b5332963b542efac3a96590e00df3a55-53caa481f5fb0ef5b528c8494153b344",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39315043, with CompileID: b5332963b542efac3a96590e00df3a55-53caa481f5fb0ef5b528c8494153b344, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39315043, with CompileID: b5332963b542efac3a96590e00df3a55-53caa481f5fb0ef5b528c8494153b344, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "3c32b466cb9ec6c64b92214a5e22eee8",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-opening-range-breakout_v10",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315043,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "3c32b466cb9ec6c64b92214a5e22eee8",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 21
+        },
+        "backtestStart": "2026-11-12 23:51:55",
+        "backtestEnd": "2026-11-12 23:51:55",
+        "created": "2026-11-12 23:51:55",
+        "snapshotId": 39315045,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-opening-range-breakout_v10",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315043,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "3c32b466cb9ec6c64b92214a5e22eee8",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 21
+        },
+        "backtestStart": "2026-11-12 23:51:55",
+        "backtestEnd": "2026-11-12 23:51:55",
+        "created": "2026-11-12 23:51:55",
+        "snapshotId": 39315045,
+        "status": "Runtime Error",
+        "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;Option&#039; object has no attribute &#039;get_nearest_expiry_date&#039;\n  at initialize\n    expiry = self._option.get_nearest_expiry_date()\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 19\n &#039;Option&#039; object has no attribute &#039;get_nearest_expiry_date&#039;",
+        "stacktrace": "'Option' object has no attribute 'get_nearest_expiry_date'\n  at initialize\n    expiry = self._option.get_nearest_expiry_date()\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 19\n 'Option' object has no attribute 'get_nearest_expiry_date'",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "12.6%",
+          "Used RAM (MB)": "253",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-3c32b466cb9ec6c64b92214a5e22eee8",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:14"
+        }
+      },
+      "success": true
+    },
+    "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;Option&#039; object has no attribute &#039;get_nearest_expiry_date&#039;\n  at initialize\n    expiry = self._option.get_nearest_expiry_date()\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 19\n &#039;Option&#039; object has no attribute &#039;get_nearest_expiry_date&#039;",
+    "stacktrace": "'Option' object has no attribute 'get_nearest_expiry_date'\n  at initialize\n    expiry = self._option.get_nearest_expiry_date()\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 19\n 'Option' object has no attribute 'get_nearest_expiry_date'",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:52:47.431606+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;Option&#039; object has no attribute &#039;get_nearest_expiry_date&#039;\n  at initialize\n    expiry",
+  "note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;Option&#039; object has no attribute &#039;get_nearest_expiry_date&#039;\n  at initialize\n    expiry; UNKNOWN_API: add_option_contract; PROMPT_MISS: minute",
+  "total_orders": null
+}

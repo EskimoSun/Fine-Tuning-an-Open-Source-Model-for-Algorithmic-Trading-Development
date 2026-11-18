@@ -1,0 +1,291 @@
+{
+  "prompt_id": "equity-monthly-roc-rotation_v04",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\n# QuantConnect LEAN Algorithm: Monthly Top-3 ROC Rotation\n# Assets: SPY, EFA, EEM, AGG, GLD\n# Strategy: Rank by 1-month ROC, buy top 3. If all negative, hold cash.\n# Period: 2022-01-01 to 2024-12-31\n\nfrom datetime import datetime\nimport QuantConnect.Algorithm as QAC\nimport QuantConnect.Data as QC\n\nclass MonthlyTop3Rotation(QAC.Algorithm.QCAlgorithm):\n    def Initialize(self):\n        # Set the algorithm start and end dates\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Define the universe of assets\n        self.Universe = [\"SPY\", \"EFA\", \"EEM\", \"AGG\", \"GLD\"]\n        \n        # Initialize data feeds for the assets\n        self.SPY = self.AddEquity(\"SPY\", QC.DataNormalizationMode.RealTime).ResolveAdjustments()\n        self.EFA = self.AddEquity(\"EFA\", QC.DataNormalizationMode.RealTime).ResolveAdjustments()\n        self.EEM = self.AddEquity(\"EEM\", QC.DataNormalizationMode.RealTime).ResolveAdjustments()\n        self.AGG = self.AddEquity(\"AGG\", QC.DataNormalizationMode.RealTime).ResolveAdjustments()\n        self.GLD = self.AddEquity(\"GLD\", QC.DataNormalizationMode.RealTime).ResolveAdjustments()\n        \n        # Initialize cash position\n        self.Cash = self.Portfolio.Cash\n        \n        # Log initialization\n        self.Log(\"Strategy Initialized: Monthly Top-3 ROC Rotation\")\n        self.Log(\"Assets: SPY, EFA, EEM, AGG, GLD\")\n        self.Log(\"Logic: Buy top 3 by 1-month ROC. If all negative, hold cash.\")\n\n    def OnData(self, data):\n        # Only run on the last trading day of each month\n        if not self.IsLastDayOfMonth(data.Time):\n            return\n\n        # Get the latest close prices for all assets\n        prices = {}\n        for symbol in self.Universe:\n            if symbol in data:\n                prices[symbol] = data[symbol].Close\n            else:\n                self.Log(f\"Warning: No data for {symbol} on {data.Time}\")\n                continue\n\n        # Calculate 1-month ROC for each asset\n        # ROC = (Current Price - Price 1 Month Ago) / Price 1 Month Ago\n        # We need to access historical data to calculate ROC accurately.\n        # Since we are in OnData, we can use the data slice history or calculate based on available data.\n        # However, for simplicity in this specific context without explicit history lookups in OnData,\n        # we will assume the data object provides enough context or we calculate based on the current slice.\n        # To be robust, we should look back 1 month.\n        \n        roc_values = {}\n        valid_assets = []\n        \n        for symbol in self.Universe:\n            if symbol in data:\n                # Get the current close\n                current_close = data[symbol].Close\n                \n                # Get the close from 1 month ago\n                # We need to look at the history. In LEAN, we can use the data slice history.\n                # However, a simpler approach for this specific request is to use the data provided in the slice\n                # if the data object contains the necessary history, or we rely on the fact that \n                # OnData receives the latest slice. \n                # To strictly follow \"1-month ROC\", we need the price from exactly 1 month prior.\n                \n                # Let's use the DataSliceHistory to get the price from 1 month ago.\n                # Note: This requires the data to be available in the history.\n                # Since we are in a simplified example, we will assume we can access the previous month's close.\n                # In a real production environment, we would ensure the data feed has enough history.\n                \n                # For this specific implementation, we will simulate the ROC calculation logic.\n                # In a real run, we would do: prev_close = self.History(symbol, 1, QC.DataNormalizationMode.RealTime).Last.Close\n                # But since we don't have direct access to History in OnData without extra setup, \n                # we will assume the data object 'data' contains the necessary context or we use a workaround.\n                # Actually, the standard way is to use self.History.\n                \n                # Let's use self.History to get the price from 1 month ago.\n                try:\n                    history = self.History(symbol, 1, QC.DataNormalizationMode.RealTime)\n                    if len(history) > 0:\n                        prev_close = history[0].Close\n                        roc = (current_close - prev_close) / prev_close\n                        roc_values[symbol] = roc\n                        valid_assets.append(symbol)\n                    else:\n                        # Not enough history, skip\n                        continue\n                except Exception as e:\n                    self.Log(f\"Error calculating history for {symbol}: {e}\")\n                    continue\n\n        # Check if we have valid ROC values\n        if not roc_values:\n            self.Log(\"Not enough data to calculate ROC. Holding cash.\")\n            return\n\n        # Sort assets by ROC descending\n        sorted_assets = sorted(roc_values.items(), key=lambda item: item[1], reverse=True)\n        \n        # Determine the top 3 assets\n        top_3_assets = [item[0] for item in sorted_assets[:3]]\n        \n        # Check if all ROC values are negative\n        all_negative = all(roc < 0 for roc in roc_values.values())\n        \n        # Execute trades\n        if all_negative:\n            self.Log(\"All assets have negative ROC. Holding cash.\")\n            # Ensure we are in cash (sell everything)\n            for symbol in self.Universe:\n                if symbol in self.Portfolio:\n                    if self.Portfolio[symbol].Quantity > 0:\n                        self.Liquidate(symbol)\n        else:\n            # Sell existing positions in assets not in top 3\n            for symbol in self.Universe:\n                if symbol not in top_3_assets:\n                    if symbol in self.Portfolio:\n                        if self.Portfolio[symbol].Quantity > 0:\n                            self.Liquidate(symbol)\n                            self.Log(f\"Sold {symbol} as it is not in top 3.\")\n            \n            # Buy the top 3 assets\n            for symbol in top_3_assets:\n                if symbol in self.Portfolio:\n                    # If we already own it, we might want to rebalance to equal weight or just hold.\n                    # For simplicity, we will just ensure we hold it. \n                    # If we want to rebalance to equal weight among top 3:\n                    # Calculate target quantity based on available cash and equal split.\n                    # But since we just sold losers, we have cash.\n                    # Let's assume we want to buy the top 3 with available cash.\n                    # To keep it simple, we will just ensure we have a position.\n                    # If we want to rebalance to equal weight:\n                    pass\n                \n                # Simple logic: If we don't have a position, buy. \n                # If we have a position, we might want to adjust. \n                # Given the \"Quick\" requirement, let's just ensure we hold the top 3.\n                # We will buy if we don't have a position, or if we want to rebalance.\n                # Let's implement a simple rebalance to equal weight among top 3.\n                \n                # Calculate available cash\n                available_cash = self.Cash\n                \n                # Calculate target quantity for each top asset (equal weight)\n                # We ignore commissions and slippage for simplicity in this example.\n                # We will buy as much as possible with available cash, splitting equally.\n                \n                # However, we need to be careful not to over-buy if we already have positions.\n                # Let's calculate the total value of top 3 positions we want to hold.\n                # For simplicity, let's just buy the top 3 if we don't have them, \n                # and if we do, we will just hold them (no rebalancing logic to avoid complexity).\n                # But the prompt implies rotation, so we should sell losers and buy winners.\n                # We already sold losers above. Now we need to buy winners if we don't have them.\n                \n                if symbol not in self.Portfolio or self.Portfolio[symbol].Quantity == 0:\n                    # Buy the asset\n                    # We will buy a fixed amount or as much as cash allows.\n                    # Let's buy a fixed quantity (e.g., 100 shares) or proportional to cash.\n                    # To be safe, let's buy a fixed quantity if cash allows, or proportional.\n                    # Let's use proportional buying to equalize positions among top 3.\n                    \n                    # Calculate how much to buy for this symbol\n                    # We will distribute available_cash equally among top_3_assets\n                    cash_per_asset = available_cash / len(top_3_assets)\n                    \n                    # Calculate shares to buy\n                    shares_to_buy = int(cash_per_asset / prices[symbol])\n                    \n                    if shares_to_buy > 0:\n                        self.Buy(symbol, shares_to_buy)\n                        self.Log(f\"Bought {shares_to_buy} shares of {symbol} with {cash_per_asset:.2f} cash.\")\n                    else:\n                        self.Log(f\"Not enough cash to buy {symbol}.\")\n                else:\n                    # We already have a position. \n                    # If we want to rebalance to equal weight, we would sell/buy here.\n                    # For this quick example, we assume we just hold the position we have \n                    # (since we sold losers, we might have some cash left or we bought winners).\n                    # If we want to rebalance, we would calculate the difference.\n                    # Let's skip complex rebalancing for brevity, assuming the sell/buy logic above handles the rotation.\n                    pass\n\n        self.Log(f\"Month End: {data.Time}. Top 3 ROC: {top_3_assets}\")\n```",
+  "generated_at": "2026-11-14T22:06:06.014896+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddEquity, Buy, History, IsLastDayOfMonth, Liquidate, Log, SetEndDate, SetStartDate"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# QuantConnect LEAN Algorithm: Monthly Top-3 ROC Rotation\n# Assets: SPY, EFA, EEM, AGG, GLD\n# Strategy: Rank by 1-month ROC, buy top 3. If all negative, hold cash.\n# Period: 2022-01-01 to 2024-12-31\n\nfrom datetime import datetime\nimport QuantConnect.Algorithm as QAC\nimport QuantConnect.Data as QC\n\nclass MonthlyTop3Rotation(QAC.Algorithm.QCAlgorithm):\n    def Initialize(self):\n        # Set the algorithm start and end dates\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Define the universe of assets\n        self.Universe = [\"SPY\", \"EFA\", \"EEM\", \"AGG\", \"GLD\"]\n        \n        # Initialize data feeds for the assets\n        self.SPY = self.AddEquity(\"SPY\", QC.DataNormalizationMode.RealTime).ResolveAdjustments()\n        self.EFA = self.AddEquity(\"EFA\", QC.DataNormalizationMode.RealTime).ResolveAdjustments()\n        self.EEM = self.AddEquity(\"EEM\", QC.DataNormalizationMode.RealTime).ResolveAdjustments()\n        self.AGG = self.AddEquity(\"AGG\", QC.DataNormalizationMode.RealTime).ResolveAdjustments()\n        self.GLD = self.AddEquity(\"GLD\", QC.DataNormalizationMode.RealTime).ResolveAdjustments()\n        \n        # Initialize cash position\n        self.Cash = self.Portfolio.Cash\n        \n        # Log initialization\n        self.Log(\"Strategy Initialized: Monthly Top-3 ROC Rotation\")\n        self.Log(\"Assets: SPY, EFA, EEM, AGG, GLD\")\n        self.Log(\"Logic: Buy top 3 by 1-month ROC. If all negative, hold cash.\")\n\n    def OnData(self, data):\n        # Only run on the last trading day of each month\n        if not self.IsLastDayOfMonth(data.Time):\n            return\n\n        # Get the latest close prices for all assets\n        prices = {}\n        for symbol in self.Universe:\n            if symbol in data:\n                prices[symbol] = data[symbol].Close\n            else:\n                self.Log(f\"Warning: No data for {symbol} on {data.Time}\")\n                continue\n\n        # Calculate 1-month ROC for each asset\n        # ROC = (Current Price - Price 1 Month Ago) / Price 1 Month Ago\n        # We need to access historical data to calculate ROC accurately.\n        # Since we are in OnData, we can use the data slice history or calculate based on available data.\n        # However, for simplicity in this specific context without explicit history lookups in OnData,\n        # we will assume the data object provides enough context or we calculate based on the current slice.\n        # To be robust, we should look back 1 month.\n        \n        roc_values = {}\n        valid_assets = []\n        \n        for symbol in self.Universe:\n            if symbol in data:\n                # Get the current close\n                current_close = data[symbol].Close\n                \n                # Get the close from 1 month ago\n                # We need to look at the history. In LEAN, we can use the data slice history.\n                # However, a simpler approach for this specific request is to use the data provided in the slice\n                # if the data object contains the necessary history, or we rely on the fact that \n                # OnData receives the latest slice. \n                # To strictly follow \"1-month ROC\", we need the price from exactly 1 month prior.\n                \n                # Let's use the DataSliceHistory to get the price from 1 month ago.\n                # Note: This requires the data to be available in the history.\n                # Since we are in a simplified example, we will assume we can access the previous month's close.\n                # In a real production environment, we would ensure the data feed has enough history.\n                \n                # For this specific implementation, we will simulate the ROC calculation logic.\n                # In a real run, we would do: prev_close = self.History(symbol, 1, QC.DataNormalizationMode.RealTime).Last.Close\n                # But since we don't have direct access to History in OnData without extra setup, \n                # we will assume the data object 'data' contains the necessary context or we use a workaround.\n                # Actually, the standard way is to use self.History.\n                \n                # Let's use self.History to get the price from 1 month ago.\n                try:\n                    history = self.History(symbol, 1, QC.DataNormalizationMode.RealTime)\n                    if len(history) > 0:\n                        prev_close = history[0].Close\n                        roc = (current_close - prev_close) / prev_close\n                        roc_values[symbol] = roc\n                        valid_assets.append(symbol)\n                    else:\n                        # Not enough history, skip\n                        continue\n                except Exception as e:\n                    self.Log(f\"Error calculating history for {symbol}: {e}\")\n                    continue\n\n        # Check if we have valid ROC values\n        if not roc_values:\n            self.Log(\"Not enough data to calculate ROC. Holding cash.\")\n            return\n\n        # Sort assets by ROC descending\n        sorted_assets = sorted(roc_values.items(), key=lambda item: item[1], reverse=True)\n        \n        # Determine the top 3 assets\n        top_3_assets = [item[0] for item in sorted_assets[:3]]\n        \n        # Check if all ROC values are negative\n        all_negative = all(roc < 0 for roc in roc_values.values())\n        \n        # Execute trades\n        if all_negative:\n            self.Log(\"All assets have negative ROC. Holding cash.\")\n            # Ensure we are in cash (sell everything)\n            for symbol in self.Universe:\n                if symbol in self.Portfolio:\n                    if self.Portfolio[symbol].Quantity > 0:\n                        self.Liquidate(symbol)\n        else:\n            # Sell existing positions in assets not in top 3\n            for symbol in self.Universe:\n                if symbol not in top_3_assets:\n                    if symbol in self.Portfolio:\n                        if self.Portfolio[symbol].Quantity > 0:\n                            self.Liquidate(symbol)\n                            self.Log(f\"Sold {symbol} as it is not in top 3.\")\n            \n            # Buy the top 3 assets\n            for symbol in top_3_assets:\n                if symbol in self.Portfolio:\n                    # If we already own it, we might want to rebalance to equal weight or just hold.\n                    # For simplicity, we will just ensure we hold it. \n                    # If we want to rebalance to equal weight among top 3:\n                    # Calculate target quantity based on available cash and equal split.\n                    # But since we just sold losers, we have cash.\n                    # Let's assume we want to buy the top 3 with available cash.\n                    # To keep it simple, we will just ensure we have a position.\n                    # If we want to rebalance to equal weight:\n                    pass\n                \n                # Simple logic: If we don't have a position, buy. \n                # If we have a position, we might want to adjust. \n                # Given the \"Quick\" requirement, let's just ensure we hold the top 3.\n                # We will buy if we don't have a position, or if we want to rebalance.\n                # Let's implement a simple rebalance to equal weight among top 3.\n                \n                # Calculate available cash\n                available_cash = self.Cash\n                \n                # Calculate target quantity for each top asset (equal weight)\n                # We ignore commissions and slippage for simplicity in this example.\n                # We will buy as much as possible with available cash, splitting equally.\n                \n                # However, we need to be careful not to over-buy if we already have positions.\n                # Let's calculate the total value of top 3 positions we want to hold.\n                # For simplicity, let's just buy the top 3 if we don't have them, \n                # and if we do, we will just hold them (no rebalancing logic to avoid complexity).\n                # But the prompt implies rotation, so we should sell losers and buy winners.\n                # We already sold losers above. Now we need to buy winners if we don't have them.\n                \n                if symbol not in self.Portfolio or self.Portfolio[symbol].Quantity == 0:\n                    # Buy the asset\n                    # We will buy a fixed amount or as much as cash allows.\n                    # Let's buy a fixed quantity (e.g., 100 shares) or proportional to cash.\n                    # To be safe, let's buy a fixed quantity if cash allows, or proportional.\n                    # Let's use proportional buying to equalize positions among top 3.\n                    \n                    # Calculate how much to buy for this symbol\n                    # We will distribute available_cash equally among top_3_assets\n                    cash_per_asset = available_cash / len(top_3_assets)\n                    \n                    # Calculate shares to buy\n                    shares_to_buy = int(cash_per_asset / prices[symbol])\n                    \n                    if shares_to_buy > 0:\n                        self.Buy(symbol, shares_to_buy)\n                        self.Log(f\"Bought {shares_to_buy} shares of {symbol} with {cash_per_asset:.2f} cash.\")\n                    else:\n                        self.Log(f\"Not enough cash to buy {symbol}.\")\n                else:\n                    # We already have a position. \n                    # If we want to rebalance to equal weight, we would sell/buy here.\n                    # For this quick example, we assume we just hold the position we have \n                    # (since we sold losers, we might have some cash left or we bought winners).\n                    # If we want to rebalance, we would calculate the difference.\n                    # Let's skip complex rebalancing for brevity, assuming the sell/buy logic above handles the rotation.\n                    pass\n\n        self.Log(f\"Month End: {data.Time}. Top 3 ROC: {top_3_assets}\")\n",
+    "source_sha256": "358806b64396493987937568bf3c49fd07bac36553f5867b2e6828aba38cba64",
+    "started_at": "2026-11-14T22:06:06.016041+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39412587,
+    "compile_id": "cc94deb93160d22c3d3c517a48ce1d0b-bb39ff70c10db74405f111c82ca33d20",
+    "compile_created": {
+      "compileId": "cc94deb93160d22c3d3c517a48ce1d0b-bb39ff70c10db74405f111c82ca33d20",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39412587,
+      "signature": "bb39ff70c10db74405f111c82ca33d20",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "cc94deb93160d22c3d3c517a48ce1d0b-bb39ff70c10db74405f111c82ca33d20",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39412587, with CompileID: cc94deb93160d22c3d3c517a48ce1d0b-bb39ff70c10db74405f111c82ca33d20, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39412587, with CompileID: cc94deb93160d22c3d3c517a48ce1d0b-bb39ff70c10db74405f111c82ca33d20, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "ec8af446507080a0e4df31da809a2f21",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-monthly-roc-rotation_v04",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39412587,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "ec8af446507080a0e4df31da809a2f21",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 0
+        },
+        "backtestStart": "2026-11-14 22:06:09",
+        "backtestEnd": "2026-11-14 22:06:09",
+        "created": "2026-11-14 22:06:09",
+        "snapshotId": 39412591,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-monthly-roc-rotation_v04",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39412587,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "ec8af446507080a0e4df31da809a2f21",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 0
+        },
+        "backtestStart": "2026-11-14 22:06:09",
+        "backtestEnd": "2026-11-14 22:06:09",
+        "created": "2026-11-14 22:06:09",
+        "snapshotId": 39412591,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at \n    class MonthlyTop3Rotation(QAC.Algorithm.QCAlgorithm):\n                              ^^^^^^^^^^^^^\n in main.py: line 10\n Algorithm Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at \n    class MonthlyTop3Rotation(QAC.Algorithm.QCAlgorithm):\n                              ^^^^^^^^^^^^^\n in main.py: line 10\n Algorithm",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at <module>\n    class MonthlyTop3Rotation(QAC.Algorithm.QCAlgorithm):\n                              ^^^^^^^^^^^^^\n in main.py: line 10\n Algorithm",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.6%",
+          "Used RAM (MB)": "145",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-ec8af446507080a0e4df31da809a2f21",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at \n    class MonthlyTop3Rotation(QAC.Algorithm.QCAlgorithm):\n                              ^^^^^^^^^^^^^\n in main.py: line 10\n Algorithm Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at \n    class MonthlyTop3Rotation(QAC.Algorithm.QCAlgorithm):\n                              ^^^^^^^^^^^^^\n in main.py: line 10\n Algorithm",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at <module>\n    class MonthlyTop3Rotation(QAC.Algorithm.QCAlgorithm):\n                              ^^^^^^^^^^^^^\n in main.py: line 10\n Algorithm",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:06:57.181860+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; LEGACY_API: AddEquity, Buy, History, IsLastDayOfMonth, Liquidate, Log, SetEndDate, SetStartDate",
+  "total_orders": null
+}

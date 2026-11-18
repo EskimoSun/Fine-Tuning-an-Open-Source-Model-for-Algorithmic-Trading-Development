@@ -1,0 +1,9 @@
+{
+  "prompt_id": "equity-atr-volatility-stop_v08",
+  "model": "qwen_base_prompt_v3",
+  "base_model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "system_prompt": "v3",
+  "output": "```python\nfrom AlgorithmImports import *\n\n\nclass AtrChandelierStopAlgorithm(QCAlgorithm):\n    \"\"\"ATR chandelier stop reference strategy on SPY.\"\"\"\n\n    def initialize(self):\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100_000)\n\n        self.spy = self.add_equity(\"SPY\", resolution=Resolution.MINUTE)\n\n        self._atr = self.atr(\"SPY\", 14, resolution=Resolution.MINUTE)\n\n        self._trailing_high = None\n        self._stop_level = None\n        self._pending_reentry = False\n\n    def on_data(self, data: Slice):\n        if not self._atr.is_ready:\n            return\n\n        if \"SPY\" not in data:\n            return\n\n        bar = data[\"SPY\"]\n        close = bar.close\n        atr_value = self._atr.current.value\n\n        if atr_value is None or atr_value <= 0:\n            return\n\n        if self._pending_reentry:\n            self._pending_reentry = False\n            self.set_holdings(\"SPY\", 1.0)\n            self._trailing_high = close\n            self._stop_level = close - 3.0 * atr_value\n            return\n\n        if self.portfolio[\"SPY\"].quantity == 0:\n            self.set_holdings(\"SPY\", 1.0)\n            self._trailing_high = close\n            self._stop_level = close - 3.0 * atr_value\n            return\n\n        if close > self._trailing_high:\n            self._trailing_high = close\n\n        self._stop_level = self._trailing_high - 3.0 * atr_value\n\n        if close < self._stop_level:\n            self.liquidate(\"SPY\")\n            self._trailing_high = None\n            self._stop_level = None\n            self._pending_reentry = True\n```",
+  "generated_at": "2026-10-20T22:10:36.733712+00:00"
+}

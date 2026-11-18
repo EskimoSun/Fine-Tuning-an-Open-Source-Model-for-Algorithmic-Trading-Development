@@ -1,0 +1,63 @@
+{
+  "prompt_id": "equity-atr-volatility-stop_v09",
+  "source_model": "qwen_base_prompt_v3",
+  "model_id": "qwen/qwen3.8-27b",
+  "intervention": "model_qc_feedback_repair",
+  "status": "runtime_error",
+  "repairs_used": 3,
+  "source_output_sha256": "e9d94ffae7cfb27e2ad72143dd767a50537cfbf90224f5f44502462c32e527f1",
+  "attempts": [
+    {
+      "round": 0,
+      "model_id": "qwen/qwen3.8-27b",
+      "generated_at": "2026-10-20T21:46:02.074792+00:00",
+      "source_sha256": "fc36315ada7808b8a4a8f717976190d39e1d2ce207d29c0489a2560e69cf99ee",
+      "status": "runtime_error",
+      "project_id": 38187904,
+      "backtest_id": "1f8230b1bee12e99464645cf705b9958",
+      "total_orders": "1",
+      "closed_trades": null,
+      "net_profit": "0%",
+      "error": "2022-01-03 09:31:00 Runtime Error: 'TradeBar' object has no attribute 'is_trade'\n  at on_data\n    if bar.is_trade:\n       ^^^^^^^^^^^^\n in main.py: line 46\n"
+    },
+    {
+      "round": 1,
+      "model_id": "qwen/qwen3.8-27b",
+      "generated_at": "2026-10-20T21:46:04.959999+00:00",
+      "source_sha256": "1f8670a306b3720deaa7655dbcec8e1a3041e252023ee9aebedc7be042d64b02",
+      "status": "runtime_error",
+      "project_id": 38188210,
+      "backtest_id": "c794dd9db95d064276ca410d7c39e05b",
+      "total_orders": "1",
+      "closed_trades": null,
+      "net_profit": "0%",
+      "error": "2022-01-03 09:31:00 Runtime Error: 'AtrChandelierStopAlgorithm' object has no attribute 'add_plot_series' Did you mean: 'add_series'?\n  at _update_plots\n    self._plot_trailing_high = self.add_plot_series(\"Trailing High\")\n                               ^^^^^^^^^^^^^^^^^^^^\n in main.py: line 111\n  at on_data\n    self._update_plots(bar, close)\n in main.py: line 87\n"
+    },
+    {
+      "round": 2,
+      "model_id": "qwen/qwen3.8-27b",
+      "generated_at": "2026-10-20T21:46:31.655587+00:00",
+      "source_sha256": "2319e2ab69d9daa846fdd0f13ae09857b95bcb79849cb5062668ad761bbaba76",
+      "status": "runtime_error",
+      "project_id": 38188238,
+      "backtest_id": "b49cf59241e6ab8f01daf14465f3a813",
+      "total_orders": "1",
+      "closed_trades": null,
+      "net_profit": "0%",
+      "error": "2022-01-03 09:31:00 Runtime Error: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the add_series method. Please checkout the API documentation. The expected signature is:\n  add_series(chart: str, series: str, series_type: SeriesType, unit: str = \"$\")\n  at _update_plots\n    self._plot_trailing_high = self.add_series(\"Trailing High\")\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 111\n  at on_data\n    self._update_plots(bar, close)\n in main.py: line 87\n"
+    },
+    {
+      "round": 3,
+      "model_id": "qwen/qwen3.8-27b",
+      "generated_at": "2026-10-20T21:47:23.669981+00:00",
+      "source_sha256": "2d45e4b1f54bc026d02e800daeee7b1e3bff767beffe4d56f59863d13ecc941b",
+      "status": "runtime_error",
+      "project_id": 38188285,
+      "backtest_id": "bf8f048d5afcaab4ad9ebf77db1497ea",
+      "total_orders": "1",
+      "closed_trades": null,
+      "net_profit": "0%",
+      "error": "2022-01-03 09:32:00 Runtime Error: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the plot method. Please checkout the API documentation. The following overloads are available:\n  plot(series: str, value: float)\n  plot(series: str, open: float, high: float, low: float, close: float)\n  plot(series: str, value: int)\n  plot(series: str, bar: TradeBar)\n  plot(chart: str, series: str, value: float)\n  plot(chart: str, series: str, open: float, high: float, low: float, close: float)\n  plot(chart: str, series: str, value: int)\n  plot(series: str, open: int, high: int, low: int, close: int)\n  plot(chart: str, series: str, bar: TradeBar)\n  plot(chart: str, series: str, open: int, high: int, low: int, close: int)\n  ... and 4 more\nArgument mismatch: argument 3 ('value') expected float, got datetime.\n  at _update_plots\n    self.plot(\"Chandelier Stop\", \"Trailing High\", bar.end_time, self._trailing_high)\n in main.py: line 92\n  at on_data\n    self._update_plots(bar, close)\n in main.py: line 80\n"
+    }
+  ]
+}

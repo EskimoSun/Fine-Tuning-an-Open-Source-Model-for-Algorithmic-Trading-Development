@@ -1,0 +1,4201 @@
+{
+  "status": "completed",
+  "stage": "finished",
+  "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityRsiOverboughtOversoldAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n        self._equity = self.add_equity(\"QQQ\", Resolution.HOUR)\n        self._rsi = self.rsi(self._equity, 14, MovingAverageType.WILDERS, Resolution.HOUR)\n        # Alternatively, use a manual indicator.\n        # self._rsi = RelativeStrengthIndex(14, MovingAverageType.WILDERS)\n        # self.warm_up_indicator(self._equity, self._rsi)\n        # self.register_indicator(self._equity, self._rsi)\n        self.plot_indicator(\"RSI\", self._rsi)\n\n    def on_data(self, data: Slice) -> None:\n        if not self._rsi.is_ready:\n            return\n        rsi = self._rsi.current.value\n        quantity = self._equity.holdings.quantity\n        if quantity <= 0 and rsi < 30:\n            self.set_holdings(self._equity, 1)\n        elif quantity > 0 and rsi > 50:\n            self.liquidate()\n        elif quantity >= 0 and rsi > 70:\n            self.set_holdings(self._equity, -1)\n        elif quantity < 0 and rsi < 50:\n            self.liquidate()\n",
+  "source_sha256": "4e24b218ea5b6f6900210cc2c332c50f95656be7931102ec91f2a1537f2d1a4b",
+  "started_at": "2026-10-19T21:33:53.786292+00:00",
+  "compile_errors": 0,
+  "runtime_errors": 0,
+  "statistics": {
+    "Total Orders": "22",
+    "Average Win": "0.87%",
+    "Average Loss": "-1.33%",
+    "Compounding Annual Return": "9.018%",
+    "Drawdown": "4.700%",
+    "Expectancy": "0.201",
+    "Start Equity": "100000",
+    "End Equity": "102921.01",
+    "Net Profit": "2.921%",
+    "Sharpe Ratio": "0.203",
+    "Sortino Ratio": "0.203",
+    "Probabilistic Sharpe Ratio": "28.511%",
+    "Loss Rate": "27%",
+    "Win Rate": "73%",
+    "Profit-Loss Ratio": "0.65",
+    "Alpha": "0.02",
+    "Beta": "-0.08",
+    "Annual Standard Deviation": "0.076",
+    "Annual Variance": "0.006",
+    "Information Ratio": "-0.294",
+    "Tracking Error": "0.137",
+    "Treynor Ratio": "-0.194",
+    "Total Fees": "$23.01",
+    "Estimated Strategy Capacity": "$100000000.00",
+    "Lowest Capacity Asset": "QQQ RIWIV7K5Z9LX",
+    "Portfolio Turnover": "18.01%",
+    "Drawdown Recovery": "33"
+  },
+  "runtime_statistics": {
+    "Equity": "$102,921.01",
+    "Fees": "-$23.01",
+    "Holdings": "$0.00",
+    "Net Profit": "$2,921.01",
+    "Probabilistic Sharpe Ratio": "28.511%",
+    "Return": "2.92 %",
+    "Unrealized": "$0.00",
+    "Volume": "$2,250,787.50"
+  },
+  "logs": [
+    "2024-09-01 00:00:00 Launching analysis for 69b5c1dab0f1f15a4f063ec9f4b4dfb1 with LEAN Engine v2.5.0.0.18194",
+    "2024-10-24 16:00:00 Warning: market orders submitted while the market is closed are automatically converted into MarketOnOpen orders to fill at the next market open.",
+    "2024-12-31 16:00:00 Algorithm Id:(69b5c1dab0f1f15a4f063ec9f4b4dfb1) completed in 0.57 seconds at 2k data points per second. Processing total of 1,189 data points."
+  ],
+  "qc_note": "",
+  "project_id": 38128781,
+  "compile_id": "95d79cbc3aa80ebb748876d55dceb7b5-0d8d8c080af09a79c9d55ffc30d47bc6",
+  "compile_created": {
+    "compileId": "95d79cbc3aa80ebb748876d55dceb7b5-0d8d8c080af09a79c9d55ffc30d47bc6",
+    "state": "InQueue",
+    "parameters": [],
+    "projectId": 38128781,
+    "signature": "0d8d8c080af09a79c9d55ffc30d47bc6",
+    "signatureOrder": [
+      "project/main.py"
+    ],
+    "success": true
+  },
+  "compilation": {
+    "compileId": "95d79cbc3aa80ebb748876d55dceb7b5-0d8d8c080af09a79c9d55ffc30d47bc6",
+    "state": "BuildSuccess",
+    "logs": [
+      "Build Request Successful for Project ID: 38128781, with CompileID: 95d79cbc3aa80ebb748876d55dceb7b5-0d8d8c080af09a79c9d55ffc30d47bc6, Lean Version: 2.5.0.0.18194"
+    ],
+    "success": true
+  },
+  "compile_logs": [
+    "Build Request Successful for Project ID: 38128781, with CompileID: 95d79cbc3aa80ebb748876d55dceb7b5-0d8d8c080af09a79c9d55ffc30d47bc6, Lean Version: 2.5.0.0.18194"
+  ],
+  "backtest_id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+  "backtest_created": {
+    "backtest": {
+      "note": null,
+      "name": "gold-equity-rsi-overbought-oversold",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 38128781,
+      "completed": false,
+      "optimizationId": null,
+      "backtestId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+      "tradeableDates": 0,
+      "researchGuide": {
+        "minutes": 1,
+        "backtestCount": 1,
+        "parameters": 15
+      },
+      "backtestStart": "2026-10-19 21:33:59",
+      "backtestEnd": "2026-10-19 21:33:59",
+      "created": "2026-10-19 21:33:59",
+      "snapshotId": 38128788,
+      "status": "In Queue...",
+      "error": null,
+      "stacktrace": null,
+      "progress": 0,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": null,
+      "runtimeStatistics": {},
+      "statistics": {},
+      "totalPerformance": null,
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-07-21T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": null
+    },
+    "debugging": false,
+    "success": true
+  },
+  "raw_backtest": {
+    "backtest": {
+      "note": "",
+      "name": "gold-equity-rsi-overbought-oversold",
+      "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+      "projectId": 38128781,
+      "completed": true,
+      "optimizationId": null,
+      "backtestId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+      "tradeableDates": 84,
+      "researchGuide": {
+        "minutes": 1,
+        "backtestCount": 1,
+        "parameters": 15
+      },
+      "backtestStart": "2024-09-01 00:00:00",
+      "backtestEnd": "2024-12-31 23:59:59",
+      "created": "2026-10-19 21:33:59",
+      "snapshotId": 38128788,
+      "status": "Completed.",
+      "error": null,
+      "stacktrace": null,
+      "progress": 1,
+      "hasInitializeError": false,
+      "charts": {
+        "Strategy Equity": {
+          "name": "Strategy Equity"
+        },
+        "Benchmark": {
+          "name": "Benchmark"
+        },
+        "Portfolio Margin": {
+          "name": "Portfolio Margin"
+        },
+        "Assets Sales Volume": {
+          "name": "Assets Sales Volume"
+        },
+        "Drawdown": {
+          "name": "Drawdown"
+        },
+        "Portfolio Turnover": {
+          "name": "Portfolio Turnover"
+        },
+        "Exposure": {
+          "name": "Exposure"
+        },
+        "Capacity": {
+          "name": "Capacity"
+        },
+        "RSI": {
+          "name": "RSI"
+        }
+      },
+      "parameterSet": [],
+      "rollingWindow": {
+        "M1_20240930": {
+          "tradeStatistics": {
+            "startDateTime": "2024-09-06T15:00:00Z",
+            "endDateTime": "2024-09-30T14:00:00Z",
+            "totalNumberOfTrades": 3,
+            "numberOfWinningTrades": 2,
+            "numberOfLosingTrades": 1,
+            "totalProfitLoss": "1272.44",
+            "totalProfit": "1677.80",
+            "totalLoss": "-405.36",
+            "largestProfit": "1236.76",
+            "largestLoss": "-405.36",
+            "averageProfitLoss": "424.1467",
+            "averageProfit": "838.90",
+            "averageLoss": "-405.36",
+            "averageTradeDuration": "6.22:00:00",
+            "averageWinningTradeDuration": "4.22:30:00",
+            "averageLosingTradeDuration": "10.21:00:00",
+            "medianTradeDuration": "5.22:00:00",
+            "medianWinningTradeDuration": "5.22:00:00",
+            "medianLosingTradeDuration": "10.21:00:00",
+            "maxConsecutiveWinningTrades": 2,
+            "maxConsecutiveLosingTrades": 1,
+            "profitLossRatio": "2.0695",
+            "winLossRatio": "2",
+            "winRate": "0.6667",
+            "lossRate": "0.3333",
+            "averageMAE": "-824.300",
+            "averageMFE": "945.7033",
+            "largestMAE": "-1487.39",
+            "largestMFE": "1236.76",
+            "maximumClosedTradeDrawdown": "-405.36",
+            "maximumIntraTradeDrawdown": "-2503.24",
+            "profitLossStandardDeviation": "821.1903",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "4.1390",
+            "sharpeRatio": "0.5165",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "3.1390",
+            "maximumEndTradeDrawdown": "2503.24",
+            "averageEndTradeDrawdown": "-521.5567",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "6.490"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0083",
+            "averageLossRate": "-0.0040",
+            "profitLossRatio": "2.0811",
+            "winRate": "0.6667",
+            "lossRate": "0.3333",
+            "expectancy": "1.0541",
+            "startEquity": "100000",
+            "endEquity": "101265.9389",
+            "compoundingAnnualReturn": "0.1674",
+            "drawdown": "0.024",
+            "totalNetProfit": "0.0127",
+            "sharpeRatio": "1.0187",
+            "probabilisticSharpeRatio": "0.4890",
+            "sortinoRatio": "1.5778",
+            "alpha": "0.0436",
+            "beta": "0.1503",
+            "annualStandardDeviation": "0.0601",
+            "annualVariance": "0.0036",
+            "informationRatio": "-0.4981",
+            "trackingError": "0.1128",
+            "treynorRatio": "0.4076",
+            "portfolioTurnover": "0.1711",
+            "valueAtRisk99": "-0.008",
+            "valueAtRisk95": "-0.006",
+            "drawdownRecovery": "3"
+          },
+          "closedTrades": []
+        },
+        "M1_20241031": {
+          "tradeStatistics": {
+            "startDateTime": "2024-10-14T14:00:00Z",
+            "endDateTime": "2024-10-25T14:00:00Z",
+            "totalNumberOfTrades": 2,
+            "numberOfWinningTrades": 2,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "3177.21",
+            "totalProfit": "3177.21",
+            "totalLoss": "0",
+            "largestProfit": "1884.69",
+            "largestLoss": "0",
+            "averageProfitLoss": "1588.605",
+            "averageProfit": "1588.605",
+            "averageLoss": "0",
+            "averageTradeDuration": "1.10:30:00",
+            "averageWinningTradeDuration": "1.10:30:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "1.20:00:00",
+            "medianWinningTradeDuration": "1.20:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 2,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "10",
+            "winRate": "1",
+            "lossRate": "0",
+            "averageMAE": "0.00",
+            "averageMFE": "1986.32",
+            "largestMAE": "0",
+            "largestMFE": "2680.12",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "-2680.12",
+            "profitLossStandardDeviation": "418.7274",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "10",
+            "sharpeRatio": "3.7939",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "10",
+            "maximumEndTradeDrawdown": "795.43",
+            "averageEndTradeDrawdown": "-397.715",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "4.16"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0155",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "1",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "101265.9389",
+            "endEquity": "103635.4792",
+            "compoundingAnnualReturn": "0.3169",
+            "drawdown": "0.008",
+            "totalNetProfit": "0.0234",
+            "sharpeRatio": "6.0995",
+            "probabilisticSharpeRatio": "0.9951",
+            "sortinoRatio": "0",
+            "alpha": "0.2844",
+            "beta": "-0.1826",
+            "annualStandardDeviation": "0.0424",
+            "annualVariance": "0.0018",
+            "informationRatio": "1.2230",
+            "trackingError": "0.0960",
+            "treynorRatio": "-1.4160",
+            "portfolioTurnover": "0.1597",
+            "valueAtRisk99": "-0.005",
+            "valueAtRisk95": "-0.003",
+            "drawdownRecovery": "1"
+          },
+          "closedTrades": []
+        },
+        "M1_20241130": {
+          "tradeStatistics": {
+            "startDateTime": "2024-10-31T14:00:00Z",
+            "endDateTime": "2024-11-19T19:00:00Z",
+            "totalNumberOfTrades": 3,
+            "numberOfWinningTrades": 2,
+            "numberOfLosingTrades": 1,
+            "totalProfitLoss": "-821.54",
+            "totalProfit": "1219.28",
+            "totalLoss": "-2040.82",
+            "largestProfit": "715.16",
+            "largestLoss": "-2040.82",
+            "averageProfitLoss": "-273.8467",
+            "averageProfit": "609.64",
+            "averageLoss": "-2040.82",
+            "averageTradeDuration": "5.02:40:00",
+            "averageWinningTradeDuration": "4.14:30:00",
+            "averageLosingTradeDuration": "6.03:00:00",
+            "medianTradeDuration": "5.01:00:00",
+            "medianWinningTradeDuration": "5.01:00:00",
+            "medianLosingTradeDuration": "6.03:00:00",
+            "maxConsecutiveWinningTrades": 1,
+            "maxConsecutiveLosingTrades": 1,
+            "profitLossRatio": "0.2987",
+            "winLossRatio": "2",
+            "winRate": "0.6667",
+            "lossRate": "0.3333",
+            "averageMAE": "-1686.6667",
+            "averageMFE": "406.4267",
+            "largestMAE": "-2984.98",
+            "largestMFE": "715.16",
+            "maximumClosedTradeDrawdown": "-2040.82",
+            "maximumIntraTradeDrawdown": "-3313.41",
+            "profitLossStandardDeviation": "1533.8776",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0.5974",
+            "sharpeRatio": "-0.1785",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "-0.4026",
+            "maximumEndTradeDrawdown": "2984.98",
+            "averageEndTradeDrawdown": "-680.2733",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "6.330"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0059",
+            "averageLossRate": "-0.0196",
+            "profitLossRatio": "0.3010",
+            "winRate": "0.6667",
+            "lossRate": "0.3333",
+            "expectancy": "-0.1326",
+            "startEquity": "103635.4792",
+            "endEquity": "103611.1176",
+            "compoundingAnnualReturn": "-0.0030",
+            "drawdown": "0.032",
+            "totalNetProfit": "-0.0002",
+            "sharpeRatio": "-1.3481",
+            "probabilisticSharpeRatio": "0.2093",
+            "sortinoRatio": "-1.1660",
+            "alpha": "-0.0622",
+            "beta": "-0.0836",
+            "annualStandardDeviation": "0.0822",
+            "annualVariance": "0.0068",
+            "informationRatio": "-5.0370",
+            "trackingError": "0.1375",
+            "treynorRatio": "1.3256",
+            "portfolioTurnover": "0.2012",
+            "valueAtRisk99": "-0.012",
+            "valueAtRisk95": "-0.009",
+            "drawdownRecovery": "4"
+          },
+          "closedTrades": []
+        },
+        "M1_20241231": {
+          "tradeStatistics": {
+            "startDateTime": "2024-12-02T15:00:00Z",
+            "endDateTime": "2024-12-23T19:00:00Z",
+            "totalNumberOfTrades": 3,
+            "numberOfWinningTrades": 2,
+            "numberOfLosingTrades": 1,
+            "totalProfitLoss": "-684.08",
+            "totalProfit": "1032.17",
+            "totalLoss": "-1716.25",
+            "largestProfit": "582.75",
+            "largestLoss": "-1716.25",
+            "averageProfitLoss": "-228.0267",
+            "averageProfit": "516.085",
+            "averageLoss": "-1716.25",
+            "averageTradeDuration": "6.03:40:00",
+            "averageWinningTradeDuration": "5.15:00:00",
+            "averageLosingTradeDuration": "7.05:00:00",
+            "medianTradeDuration": "7.02:00:00",
+            "medianWinningTradeDuration": "7.02:00:00",
+            "medianLosingTradeDuration": "7.05:00:00",
+            "maxConsecutiveWinningTrades": 2,
+            "maxConsecutiveLosingTrades": 1,
+            "profitLossRatio": "0.3007",
+            "winLossRatio": "2",
+            "winRate": "0.6667",
+            "lossRate": "0.3333",
+            "averageMAE": "-2091.03",
+            "averageMFE": "360.1933",
+            "largestMAE": "-2580.40",
+            "largestMFE": "601.86",
+            "maximumClosedTradeDrawdown": "-1716.25",
+            "maximumIntraTradeDrawdown": "-3401.45",
+            "profitLossStandardDeviation": "1290.5622",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0.6014",
+            "sharpeRatio": "-0.1767",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "-0.3986",
+            "maximumEndTradeDrawdown": "2580.40",
+            "averageEndTradeDrawdown": "-588.2200",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "6.030"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0050",
+            "averageLossRate": "-0.0166",
+            "profitLossRatio": "0.3035",
+            "winRate": "0.6667",
+            "lossRate": "0.3333",
+            "expectancy": "-0.1310",
+            "startEquity": "103611.1176",
+            "endEquity": "102921.0138",
+            "compoundingAnnualReturn": "-0.0765",
+            "drawdown": "0.033",
+            "totalNetProfit": "-0.0067",
+            "sharpeRatio": "-0.9006",
+            "probabilisticSharpeRatio": "0.2583",
+            "sortinoRatio": "-1.1479",
+            "alpha": "-0.1826",
+            "beta": "-0.3837",
+            "annualStandardDeviation": "0.1065",
+            "annualVariance": "0.0114",
+            "informationRatio": "0.6808",
+            "trackingError": "0.1909",
+            "treynorRatio": "0.2501",
+            "portfolioTurnover": "0.1882",
+            "valueAtRisk99": "-0.016",
+            "valueAtRisk95": "-0.011",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "M3_20240930": {
+          "tradeStatistics": {
+            "startDateTime": "2024-09-06T15:00:00Z",
+            "endDateTime": "2024-09-30T14:00:00Z",
+            "totalNumberOfTrades": 3,
+            "numberOfWinningTrades": 2,
+            "numberOfLosingTrades": 1,
+            "totalProfitLoss": "1272.44",
+            "totalProfit": "1677.80",
+            "totalLoss": "-405.36",
+            "largestProfit": "1236.76",
+            "largestLoss": "-405.36",
+            "averageProfitLoss": "424.1467",
+            "averageProfit": "838.90",
+            "averageLoss": "-405.36",
+            "averageTradeDuration": "6.22:00:00",
+            "averageWinningTradeDuration": "4.22:30:00",
+            "averageLosingTradeDuration": "10.21:00:00",
+            "medianTradeDuration": "5.22:00:00",
+            "medianWinningTradeDuration": "5.22:00:00",
+            "medianLosingTradeDuration": "10.21:00:00",
+            "maxConsecutiveWinningTrades": 2,
+            "maxConsecutiveLosingTrades": 1,
+            "profitLossRatio": "2.0695",
+            "winLossRatio": "2",
+            "winRate": "0.6667",
+            "lossRate": "0.3333",
+            "averageMAE": "-824.300",
+            "averageMFE": "945.7033",
+            "largestMAE": "-1487.39",
+            "largestMFE": "1236.76",
+            "maximumClosedTradeDrawdown": "-405.36",
+            "maximumIntraTradeDrawdown": "-2503.24",
+            "profitLossStandardDeviation": "821.1903",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "4.1390",
+            "sharpeRatio": "0.5165",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "3.1390",
+            "maximumEndTradeDrawdown": "2503.24",
+            "averageEndTradeDrawdown": "-521.5567",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "6.490"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0083",
+            "averageLossRate": "-0.0040",
+            "profitLossRatio": "2.0811",
+            "winRate": "0.6667",
+            "lossRate": "0.3333",
+            "expectancy": "1.0541",
+            "startEquity": "100000",
+            "endEquity": "101265.9389",
+            "compoundingAnnualReturn": "0.1674",
+            "drawdown": "0.024",
+            "totalNetProfit": "0.0127",
+            "sharpeRatio": "1.0187",
+            "probabilisticSharpeRatio": "0.4890",
+            "sortinoRatio": "1.5778",
+            "alpha": "0.0436",
+            "beta": "0.1503",
+            "annualStandardDeviation": "0.0601",
+            "annualVariance": "0.0036",
+            "informationRatio": "-0.4981",
+            "trackingError": "0.1128",
+            "treynorRatio": "0.4076",
+            "portfolioTurnover": "0.1711",
+            "valueAtRisk99": "-0.008",
+            "valueAtRisk95": "-0.006",
+            "drawdownRecovery": "3"
+          },
+          "closedTrades": []
+        },
+        "M3_20241031": {
+          "tradeStatistics": {
+            "startDateTime": "2024-09-06T15:00:00Z",
+            "endDateTime": "2024-10-25T14:00:00Z",
+            "totalNumberOfTrades": 5,
+            "numberOfWinningTrades": 4,
+            "numberOfLosingTrades": 1,
+            "totalProfitLoss": "4449.65",
+            "totalProfit": "4855.01",
+            "totalLoss": "-405.36",
+            "largestProfit": "1884.69",
+            "largestLoss": "-405.36",
+            "averageProfitLoss": "889.9300",
+            "averageProfit": "1213.7525",
+            "averageLoss": "-405.36",
+            "averageTradeDuration": "4.17:24:00",
+            "averageWinningTradeDuration": "3.04:30:00",
+            "averageLosingTradeDuration": "10.21:00:00",
+            "medianTradeDuration": "3.23:00:00",
+            "medianWinningTradeDuration": "3.23:00:00",
+            "medianLosingTradeDuration": "10.21:00:00",
+            "maxConsecutiveWinningTrades": 2,
+            "maxConsecutiveLosingTrades": 1,
+            "profitLossRatio": "2.9943",
+            "winLossRatio": "4",
+            "winRate": "0.8",
+            "lossRate": "0.2",
+            "averageMAE": "-494.580",
+            "averageMFE": "1361.9500",
+            "largestMAE": "-1487.39",
+            "largestMFE": "2680.12",
+            "maximumClosedTradeDrawdown": "-405.36",
+            "maximumIntraTradeDrawdown": "-2680.12",
+            "profitLossStandardDeviation": "887.5804",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "11.9770",
+            "sharpeRatio": "1.0026",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "10.9770",
+            "maximumEndTradeDrawdown": "2503.24",
+            "averageEndTradeDrawdown": "-472.0200",
+            "maximumDrawdownDuration": "26.23:00:00",
+            "totalFees": "10.650"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0119",
+            "averageLossRate": "-0.0040",
+            "profitLossRatio": "2.9806",
+            "winRate": "0.8",
+            "lossRate": "0.2",
+            "expectancy": "2.1844",
+            "startEquity": "100000",
+            "endEquity": "103635.4792",
+            "compoundingAnnualReturn": "0.2397",
+            "drawdown": "0.024",
+            "totalNetProfit": "0.0364",
+            "sharpeRatio": "3.0319",
+            "probabilisticSharpeRatio": "0.8142",
+            "sortinoRatio": "3.9658",
+            "alpha": "0.1489",
+            "beta": "0.0511",
+            "annualStandardDeviation": "0.0508",
+            "annualVariance": "0.0026",
+            "informationRatio": "0.5353",
+            "trackingError": "0.1038",
+            "treynorRatio": "3.0154",
+            "portfolioTurnover": "0.1652",
+            "valueAtRisk99": "-0.007",
+            "valueAtRisk95": "-0.005",
+            "drawdownRecovery": "33"
+          },
+          "closedTrades": []
+        },
+        "M3_20241130": {
+          "tradeStatistics": {
+            "startDateTime": "2024-09-06T15:00:00Z",
+            "endDateTime": "2024-11-19T19:00:00Z",
+            "totalNumberOfTrades": 8,
+            "numberOfWinningTrades": 6,
+            "numberOfLosingTrades": 2,
+            "totalProfitLoss": "3628.11",
+            "totalProfit": "6074.29",
+            "totalLoss": "-2446.18",
+            "largestProfit": "1884.69",
+            "largestLoss": "-2040.82",
+            "averageProfitLoss": "453.5138",
+            "averageProfit": "1012.3817",
+            "averageLoss": "-1223.09",
+            "averageTradeDuration": "4.20:52:30",
+            "averageWinningTradeDuration": "3.15:50:00",
+            "averageLosingTradeDuration": "8.12:00:00",
+            "medianTradeDuration": "5.01:00:00",
+            "medianWinningTradeDuration": "4.04:00:00",
+            "medianLosingTradeDuration": "10.21:00:00",
+            "maxConsecutiveWinningTrades": 3,
+            "maxConsecutiveLosingTrades": 1,
+            "profitLossRatio": "0.8277",
+            "winLossRatio": "3",
+            "winRate": "0.75",
+            "lossRate": "0.25",
+            "averageMAE": "-941.6125",
+            "averageMFE": "1003.6288",
+            "largestMAE": "-2984.98",
+            "largestMFE": "2680.12",
+            "maximumClosedTradeDrawdown": "-2040.82",
+            "maximumIntraTradeDrawdown": "-3393.68",
+            "profitLossStandardDeviation": "1218.6768",
+            "profitLossDownsideDeviation": "1156.4449",
+            "profitFactor": "2.4832",
+            "sharpeRatio": "0.3721",
+            "sortinoRatio": "0.3922",
+            "profitToMaxDrawdownRatio": "1.7778",
+            "maximumEndTradeDrawdown": "2984.98",
+            "averageEndTradeDrawdown": "-550.1150",
+            "maximumDrawdownDuration": "26.23:00:00",
+            "totalFees": "16.980"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0099",
+            "averageLossRate": "-0.0117",
+            "profitLossRatio": "0.8459",
+            "winRate": "0.75",
+            "lossRate": "0.25",
+            "expectancy": "0.3845",
+            "startEquity": "100000",
+            "endEquity": "103611.1176",
+            "compoundingAnnualReturn": "0.1547",
+            "drawdown": "0.032",
+            "totalNetProfit": "0.0361",
+            "sharpeRatio": "0.8931",
+            "probabilisticSharpeRatio": "0.4555",
+            "sortinoRatio": "0.8114",
+            "alpha": "0.0492",
+            "beta": "0.0481",
+            "annualStandardDeviation": "0.0645",
+            "annualVariance": "0.0042",
+            "informationRatio": "-0.9979",
+            "trackingError": "0.1170",
+            "treynorRatio": "1.1969",
+            "portfolioTurnover": "0.1772",
+            "valueAtRisk99": "-0.009",
+            "valueAtRisk95": "-0.006",
+            "drawdownRecovery": "33"
+          },
+          "closedTrades": []
+        },
+        "M3_20241231": {
+          "tradeStatistics": {
+            "startDateTime": "2024-10-14T14:00:00Z",
+            "endDateTime": "2024-12-23T19:00:00Z",
+            "totalNumberOfTrades": 8,
+            "numberOfWinningTrades": 6,
+            "numberOfLosingTrades": 2,
+            "totalProfitLoss": "1671.59",
+            "totalProfit": "5428.66",
+            "totalLoss": "-3757.07",
+            "largestProfit": "1884.69",
+            "largestLoss": "-2040.82",
+            "averageProfitLoss": "208.9488",
+            "averageProfit": "904.7767",
+            "averageLoss": "-1878.535",
+            "averageTradeDuration": "4.14:00:00",
+            "averageWinningTradeDuration": "3.21:20:00",
+            "averageLosingTradeDuration": "6.16:00:00",
+            "medianTradeDuration": "5.01:00:00",
+            "medianWinningTradeDuration": "4.04:00:00",
+            "medianLosingTradeDuration": "7.05:00:00",
+            "maxConsecutiveWinningTrades": 3,
+            "maxConsecutiveLosingTrades": 1,
+            "profitLossRatio": "0.4816",
+            "winLossRatio": "3",
+            "winRate": "0.75",
+            "lossRate": "0.25",
+            "averageMAE": "-1416.6362",
+            "averageMFE": "784.0625",
+            "largestMAE": "-2984.98",
+            "largestMFE": "2680.12",
+            "maximumClosedTradeDrawdown": "-3252.95",
+            "maximumIntraTradeDrawdown": "-5018.42",
+            "profitLossStandardDeviation": "1377.9392",
+            "profitLossDownsideDeviation": "229.5056",
+            "profitFactor": "1.4449",
+            "sharpeRatio": "0.1516",
+            "sortinoRatio": "0.9104",
+            "profitToMaxDrawdownRatio": "0.5139",
+            "maximumEndTradeDrawdown": "2984.98",
+            "averageEndTradeDrawdown": "-575.1137",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "16.520"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0088",
+            "averageLossRate": "-0.0180",
+            "profitLossRatio": "0.4893",
+            "winRate": "0.75",
+            "lossRate": "0.25",
+            "expectancy": "0.1170",
+            "startEquity": "101265.9389",
+            "endEquity": "102921.0138",
+            "compoundingAnnualReturn": "0.0666",
+            "drawdown": "0.047",
+            "totalNetProfit": "0.0163",
+            "sharpeRatio": "0.0132",
+            "probabilisticSharpeRatio": "0.2748",
+            "sortinoRatio": "0.0134",
+            "alpha": "0.0102",
+            "beta": "-0.1658",
+            "annualStandardDeviation": "0.0816",
+            "annualVariance": "0.0067",
+            "informationRatio": "-0.3722",
+            "trackingError": "0.1453",
+            "treynorRatio": "-0.0065",
+            "portfolioTurnover": "0.1829",
+            "valueAtRisk99": "-0.012",
+            "valueAtRisk95": "-0.008",
+            "drawdownRecovery": "4"
+          },
+          "closedTrades": []
+        },
+        "M6_20240930": {
+          "tradeStatistics": {
+            "startDateTime": "2024-09-06T15:00:00Z",
+            "endDateTime": "2024-09-30T14:00:00Z",
+            "totalNumberOfTrades": 3,
+            "numberOfWinningTrades": 2,
+            "numberOfLosingTrades": 1,
+            "totalProfitLoss": "1272.44",
+            "totalProfit": "1677.80",
+            "totalLoss": "-405.36",
+            "largestProfit": "1236.76",
+            "largestLoss": "-405.36",
+            "averageProfitLoss": "424.1467",
+            "averageProfit": "838.90",
+            "averageLoss": "-405.36",
+            "averageTradeDuration": "6.22:00:00",
+            "averageWinningTradeDuration": "4.22:30:00",
+            "averageLosingTradeDuration": "10.21:00:00",
+            "medianTradeDuration": "5.22:00:00",
+            "medianWinningTradeDuration": "5.22:00:00",
+            "medianLosingTradeDuration": "10.21:00:00",
+            "maxConsecutiveWinningTrades": 2,
+            "maxConsecutiveLosingTrades": 1,
+            "profitLossRatio": "2.0695",
+            "winLossRatio": "2",
+            "winRate": "0.6667",
+            "lossRate": "0.3333",
+            "averageMAE": "-824.300",
+            "averageMFE": "945.7033",
+            "largestMAE": "-1487.39",
+            "largestMFE": "1236.76",
+            "maximumClosedTradeDrawdown": "-405.36",
+            "maximumIntraTradeDrawdown": "-2503.24",
+            "profitLossStandardDeviation": "821.1903",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "4.1390",
+            "sharpeRatio": "0.5165",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "3.1390",
+            "maximumEndTradeDrawdown": "2503.24",
+            "averageEndTradeDrawdown": "-521.5567",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "6.490"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0083",
+            "averageLossRate": "-0.0040",
+            "profitLossRatio": "2.0811",
+            "winRate": "0.6667",
+            "lossRate": "0.3333",
+            "expectancy": "1.0541",
+            "startEquity": "100000",
+            "endEquity": "101265.9389",
+            "compoundingAnnualReturn": "0.1674",
+            "drawdown": "0.024",
+            "totalNetProfit": "0.0127",
+            "sharpeRatio": "1.0187",
+            "probabilisticSharpeRatio": "0.4890",
+            "sortinoRatio": "1.5778",
+            "alpha": "0.0436",
+            "beta": "0.1503",
+            "annualStandardDeviation": "0.0601",
+            "annualVariance": "0.0036",
+            "informationRatio": "-0.4981",
+            "trackingError": "0.1128",
+            "treynorRatio": "0.4076",
+            "portfolioTurnover": "0.1711",
+            "valueAtRisk99": "-0.008",
+            "valueAtRisk95": "-0.006",
+            "drawdownRecovery": "3"
+          },
+          "closedTrades": []
+        },
+        "M6_20241031": {
+          "tradeStatistics": {
+            "startDateTime": "2024-09-06T15:00:00Z",
+            "endDateTime": "2024-10-25T14:00:00Z",
+            "totalNumberOfTrades": 5,
+            "numberOfWinningTrades": 4,
+            "numberOfLosingTrades": 1,
+            "totalProfitLoss": "4449.65",
+            "totalProfit": "4855.01",
+            "totalLoss": "-405.36",
+            "largestProfit": "1884.69",
+            "largestLoss": "-405.36",
+            "averageProfitLoss": "889.9300",
+            "averageProfit": "1213.7525",
+            "averageLoss": "-405.36",
+            "averageTradeDuration": "4.17:24:00",
+            "averageWinningTradeDuration": "3.04:30:00",
+            "averageLosingTradeDuration": "10.21:00:00",
+            "medianTradeDuration": "3.23:00:00",
+            "medianWinningTradeDuration": "3.23:00:00",
+            "medianLosingTradeDuration": "10.21:00:00",
+            "maxConsecutiveWinningTrades": 2,
+            "maxConsecutiveLosingTrades": 1,
+            "profitLossRatio": "2.9943",
+            "winLossRatio": "4",
+            "winRate": "0.8",
+            "lossRate": "0.2",
+            "averageMAE": "-494.580",
+            "averageMFE": "1361.9500",
+            "largestMAE": "-1487.39",
+            "largestMFE": "2680.12",
+            "maximumClosedTradeDrawdown": "-405.36",
+            "maximumIntraTradeDrawdown": "-2680.12",
+            "profitLossStandardDeviation": "887.5804",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "11.9770",
+            "sharpeRatio": "1.0026",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "10.9770",
+            "maximumEndTradeDrawdown": "2503.24",
+            "averageEndTradeDrawdown": "-472.0200",
+            "maximumDrawdownDuration": "26.23:00:00",
+            "totalFees": "10.650"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0119",
+            "averageLossRate": "-0.0040",
+            "profitLossRatio": "2.9806",
+            "winRate": "0.8",
+            "lossRate": "0.2",
+            "expectancy": "2.1844",
+            "startEquity": "100000",
+            "endEquity": "103635.4792",
+            "compoundingAnnualReturn": "0.2397",
+            "drawdown": "0.024",
+            "totalNetProfit": "0.0364",
+            "sharpeRatio": "3.0319",
+            "probabilisticSharpeRatio": "0.8142",
+            "sortinoRatio": "3.9658",
+            "alpha": "0.1489",
+            "beta": "0.0511",
+            "annualStandardDeviation": "0.0508",
+            "annualVariance": "0.0026",
+            "informationRatio": "0.5353",
+            "trackingError": "0.1038",
+            "treynorRatio": "3.0154",
+            "portfolioTurnover": "0.1652",
+            "valueAtRisk99": "-0.007",
+            "valueAtRisk95": "-0.005",
+            "drawdownRecovery": "33"
+          },
+          "closedTrades": []
+        },
+        "M6_20241130": {
+          "tradeStatistics": {
+            "startDateTime": "2024-09-06T15:00:00Z",
+            "endDateTime": "2024-11-19T19:00:00Z",
+            "totalNumberOfTrades": 8,
+            "numberOfWinningTrades": 6,
+            "numberOfLosingTrades": 2,
+            "totalProfitLoss": "3628.11",
+            "totalProfit": "6074.29",
+            "totalLoss": "-2446.18",
+            "largestProfit": "1884.69",
+            "largestLoss": "-2040.82",
+            "averageProfitLoss": "453.5138",
+            "averageProfit": "1012.3817",
+            "averageLoss": "-1223.09",
+            "averageTradeDuration": "4.20:52:30",
+            "averageWinningTradeDuration": "3.15:50:00",
+            "averageLosingTradeDuration": "8.12:00:00",
+            "medianTradeDuration": "5.01:00:00",
+            "medianWinningTradeDuration": "4.04:00:00",
+            "medianLosingTradeDuration": "10.21:00:00",
+            "maxConsecutiveWinningTrades": 3,
+            "maxConsecutiveLosingTrades": 1,
+            "profitLossRatio": "0.8277",
+            "winLossRatio": "3",
+            "winRate": "0.75",
+            "lossRate": "0.25",
+            "averageMAE": "-941.6125",
+            "averageMFE": "1003.6288",
+            "largestMAE": "-2984.98",
+            "largestMFE": "2680.12",
+            "maximumClosedTradeDrawdown": "-2040.82",
+            "maximumIntraTradeDrawdown": "-3393.68",
+            "profitLossStandardDeviation": "1218.6768",
+            "profitLossDownsideDeviation": "1156.4449",
+            "profitFactor": "2.4832",
+            "sharpeRatio": "0.3721",
+            "sortinoRatio": "0.3922",
+            "profitToMaxDrawdownRatio": "1.7778",
+            "maximumEndTradeDrawdown": "2984.98",
+            "averageEndTradeDrawdown": "-550.1150",
+            "maximumDrawdownDuration": "26.23:00:00",
+            "totalFees": "16.980"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0099",
+            "averageLossRate": "-0.0117",
+            "profitLossRatio": "0.8459",
+            "winRate": "0.75",
+            "lossRate": "0.25",
+            "expectancy": "0.3845",
+            "startEquity": "100000",
+            "endEquity": "103611.1176",
+            "compoundingAnnualReturn": "0.1547",
+            "drawdown": "0.032",
+            "totalNetProfit": "0.0361",
+            "sharpeRatio": "0.8931",
+            "probabilisticSharpeRatio": "0.4555",
+            "sortinoRatio": "0.8114",
+            "alpha": "0.0492",
+            "beta": "0.0481",
+            "annualStandardDeviation": "0.0645",
+            "annualVariance": "0.0042",
+            "informationRatio": "-0.9979",
+            "trackingError": "0.1170",
+            "treynorRatio": "1.1969",
+            "portfolioTurnover": "0.1772",
+            "valueAtRisk99": "-0.009",
+            "valueAtRisk95": "-0.006",
+            "drawdownRecovery": "33"
+          },
+          "closedTrades": []
+        },
+        "M6_20241231": {
+          "tradeStatistics": {
+            "startDateTime": "2024-09-06T15:00:00Z",
+            "endDateTime": "2024-12-23T19:00:00Z",
+            "totalNumberOfTrades": 11,
+            "numberOfWinningTrades": 8,
+            "numberOfLosingTrades": 3,
+            "totalProfitLoss": "2944.03",
+            "totalProfit": "7106.46",
+            "totalLoss": "-4162.43",
+            "largestProfit": "1884.69",
+            "largestLoss": "-2040.82",
+            "averageProfitLoss": "267.6391",
+            "averageProfit": "888.3075",
+            "averageLoss": "-1387.4767",
+            "averageTradeDuration": "5.05:16:21.8181819",
+            "averageWinningTradeDuration": "4.03:37:29.9999999",
+            "averageLosingTradeDuration": "8.01:40:00",
+            "medianTradeDuration": "5.01:00:00",
+            "medianWinningTradeDuration": "4.04:00:00",
+            "medianLosingTradeDuration": "7.05:00:00",
+            "maxConsecutiveWinningTrades": 3,
+            "maxConsecutiveLosingTrades": 1,
+            "profitLossRatio": "0.6402",
+            "winLossRatio": "2.6667",
+            "winRate": "0.7273",
+            "lossRate": "0.2727",
+            "averageMAE": "-1255.0900",
+            "averageMFE": "828.1464",
+            "largestMAE": "-2984.98",
+            "largestMFE": "2680.12",
+            "maximumClosedTradeDrawdown": "-3252.95",
+            "maximumIntraTradeDrawdown": "-5018.42",
+            "profitLossStandardDeviation": "1214.1154",
+            "profitLossDownsideDeviation": "865.8818",
+            "profitFactor": "1.7073",
+            "sharpeRatio": "0.2204",
+            "sortinoRatio": "0.3091",
+            "profitToMaxDrawdownRatio": "0.9050",
+            "maximumEndTradeDrawdown": "2984.98",
+            "averageEndTradeDrawdown": "-560.5073",
+            "maximumDrawdownDuration": "26.23:00:00",
+            "totalFees": "23.010"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0087",
+            "averageLossRate": "-0.0133",
+            "profitLossRatio": "0.6516",
+            "winRate": "0.7273",
+            "lossRate": "0.2727",
+            "expectancy": "0.2012",
+            "startEquity": "100000",
+            "endEquity": "102921.0138",
+            "compoundingAnnualReturn": "0.0902",
+            "drawdown": "0.047",
+            "totalNetProfit": "0.0292",
+            "sharpeRatio": "0.2026",
+            "probabilisticSharpeRatio": "0.2851",
+            "sortinoRatio": "0.2025",
+            "alpha": "0.0199",
+            "beta": "-0.0796",
+            "annualStandardDeviation": "0.0762",
+            "annualVariance": "0.0058",
+            "informationRatio": "-0.2945",
+            "trackingError": "0.1374",
+            "treynorRatio": "-0.1940",
+            "portfolioTurnover": "0.1801",
+            "valueAtRisk99": "-0.011",
+            "valueAtRisk95": "-0.008",
+            "drawdownRecovery": "33"
+          },
+          "closedTrades": []
+        },
+        "M12_20240930": {
+          "tradeStatistics": {
+            "startDateTime": "2024-09-06T15:00:00Z",
+            "endDateTime": "2024-09-30T14:00:00Z",
+            "totalNumberOfTrades": 3,
+            "numberOfWinningTrades": 2,
+            "numberOfLosingTrades": 1,
+            "totalProfitLoss": "1272.44",
+            "totalProfit": "1677.80",
+            "totalLoss": "-405.36",
+            "largestProfit": "1236.76",
+            "largestLoss": "-405.36",
+            "averageProfitLoss": "424.1467",
+            "averageProfit": "838.90",
+            "averageLoss": "-405.36",
+            "averageTradeDuration": "6.22:00:00",
+            "averageWinningTradeDuration": "4.22:30:00",
+            "averageLosingTradeDuration": "10.21:00:00",
+            "medianTradeDuration": "5.22:00:00",
+            "medianWinningTradeDuration": "5.22:00:00",
+            "medianLosingTradeDuration": "10.21:00:00",
+            "maxConsecutiveWinningTrades": 2,
+            "maxConsecutiveLosingTrades": 1,
+            "profitLossRatio": "2.0695",
+            "winLossRatio": "2",
+            "winRate": "0.6667",
+            "lossRate": "0.3333",
+            "averageMAE": "-824.300",
+            "averageMFE": "945.7033",
+            "largestMAE": "-1487.39",
+            "largestMFE": "1236.76",
+            "maximumClosedTradeDrawdown": "-405.36",
+            "maximumIntraTradeDrawdown": "-2503.24",
+            "profitLossStandardDeviation": "821.1903",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "4.1390",
+            "sharpeRatio": "0.5165",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "3.1390",
+            "maximumEndTradeDrawdown": "2503.24",
+            "averageEndTradeDrawdown": "-521.5567",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "6.490"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0083",
+            "averageLossRate": "-0.0040",
+            "profitLossRatio": "2.0811",
+            "winRate": "0.6667",
+            "lossRate": "0.3333",
+            "expectancy": "1.0541",
+            "startEquity": "100000",
+            "endEquity": "101265.9389",
+            "compoundingAnnualReturn": "0.1674",
+            "drawdown": "0.024",
+            "totalNetProfit": "0.0127",
+            "sharpeRatio": "1.0187",
+            "probabilisticSharpeRatio": "0.4890",
+            "sortinoRatio": "1.5778",
+            "alpha": "0.0436",
+            "beta": "0.1503",
+            "annualStandardDeviation": "0.0601",
+            "annualVariance": "0.0036",
+            "informationRatio": "-0.4981",
+            "trackingError": "0.1128",
+            "treynorRatio": "0.4076",
+            "portfolioTurnover": "0.1711",
+            "valueAtRisk99": "-0.008",
+            "valueAtRisk95": "-0.006",
+            "drawdownRecovery": "3"
+          },
+          "closedTrades": []
+        },
+        "M12_20241031": {
+          "tradeStatistics": {
+            "startDateTime": "2024-09-06T15:00:00Z",
+            "endDateTime": "2024-10-25T14:00:00Z",
+            "totalNumberOfTrades": 5,
+            "numberOfWinningTrades": 4,
+            "numberOfLosingTrades": 1,
+            "totalProfitLoss": "4449.65",
+            "totalProfit": "4855.01",
+            "totalLoss": "-405.36",
+            "largestProfit": "1884.69",
+            "largestLoss": "-405.36",
+            "averageProfitLoss": "889.9300",
+            "averageProfit": "1213.7525",
+            "averageLoss": "-405.36",
+            "averageTradeDuration": "4.17:24:00",
+            "averageWinningTradeDuration": "3.04:30:00",
+            "averageLosingTradeDuration": "10.21:00:00",
+            "medianTradeDuration": "3.23:00:00",
+            "medianWinningTradeDuration": "3.23:00:00",
+            "medianLosingTradeDuration": "10.21:00:00",
+            "maxConsecutiveWinningTrades": 2,
+            "maxConsecutiveLosingTrades": 1,
+            "profitLossRatio": "2.9943",
+            "winLossRatio": "4",
+            "winRate": "0.8",
+            "lossRate": "0.2",
+            "averageMAE": "-494.580",
+            "averageMFE": "1361.9500",
+            "largestMAE": "-1487.39",
+            "largestMFE": "2680.12",
+            "maximumClosedTradeDrawdown": "-405.36",
+            "maximumIntraTradeDrawdown": "-2680.12",
+            "profitLossStandardDeviation": "887.5804",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "11.9770",
+            "sharpeRatio": "1.0026",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "10.9770",
+            "maximumEndTradeDrawdown": "2503.24",
+            "averageEndTradeDrawdown": "-472.0200",
+            "maximumDrawdownDuration": "26.23:00:00",
+            "totalFees": "10.650"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0119",
+            "averageLossRate": "-0.0040",
+            "profitLossRatio": "2.9806",
+            "winRate": "0.8",
+            "lossRate": "0.2",
+            "expectancy": "2.1844",
+            "startEquity": "100000",
+            "endEquity": "103635.4792",
+            "compoundingAnnualReturn": "0.2397",
+            "drawdown": "0.024",
+            "totalNetProfit": "0.0364",
+            "sharpeRatio": "3.0319",
+            "probabilisticSharpeRatio": "0.8142",
+            "sortinoRatio": "3.9658",
+            "alpha": "0.1489",
+            "beta": "0.0511",
+            "annualStandardDeviation": "0.0508",
+            "annualVariance": "0.0026",
+            "informationRatio": "0.5353",
+            "trackingError": "0.1038",
+            "treynorRatio": "3.0154",
+            "portfolioTurnover": "0.1652",
+            "valueAtRisk99": "-0.007",
+            "valueAtRisk95": "-0.005",
+            "drawdownRecovery": "33"
+          },
+          "closedTrades": []
+        },
+        "M12_20241130": {
+          "tradeStatistics": {
+            "startDateTime": "2024-09-06T15:00:00Z",
+            "endDateTime": "2024-11-19T19:00:00Z",
+            "totalNumberOfTrades": 8,
+            "numberOfWinningTrades": 6,
+            "numberOfLosingTrades": 2,
+            "totalProfitLoss": "3628.11",
+            "totalProfit": "6074.29",
+            "totalLoss": "-2446.18",
+            "largestProfit": "1884.69",
+            "largestLoss": "-2040.82",
+            "averageProfitLoss": "453.5138",
+            "averageProfit": "1012.3817",
+            "averageLoss": "-1223.09",
+            "averageTradeDuration": "4.20:52:30",
+            "averageWinningTradeDuration": "3.15:50:00",
+            "averageLosingTradeDuration": "8.12:00:00",
+            "medianTradeDuration": "5.01:00:00",
+            "medianWinningTradeDuration": "4.04:00:00",
+            "medianLosingTradeDuration": "10.21:00:00",
+            "maxConsecutiveWinningTrades": 3,
+            "maxConsecutiveLosingTrades": 1,
+            "profitLossRatio": "0.8277",
+            "winLossRatio": "3",
+            "winRate": "0.75",
+            "lossRate": "0.25",
+            "averageMAE": "-941.6125",
+            "averageMFE": "1003.6288",
+            "largestMAE": "-2984.98",
+            "largestMFE": "2680.12",
+            "maximumClosedTradeDrawdown": "-2040.82",
+            "maximumIntraTradeDrawdown": "-3393.68",
+            "profitLossStandardDeviation": "1218.6768",
+            "profitLossDownsideDeviation": "1156.4449",
+            "profitFactor": "2.4832",
+            "sharpeRatio": "0.3721",
+            "sortinoRatio": "0.3922",
+            "profitToMaxDrawdownRatio": "1.7778",
+            "maximumEndTradeDrawdown": "2984.98",
+            "averageEndTradeDrawdown": "-550.1150",
+            "maximumDrawdownDuration": "26.23:00:00",
+            "totalFees": "16.980"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0099",
+            "averageLossRate": "-0.0117",
+            "profitLossRatio": "0.8459",
+            "winRate": "0.75",
+            "lossRate": "0.25",
+            "expectancy": "0.3845",
+            "startEquity": "100000",
+            "endEquity": "103611.1176",
+            "compoundingAnnualReturn": "0.1547",
+            "drawdown": "0.032",
+            "totalNetProfit": "0.0361",
+            "sharpeRatio": "0.8931",
+            "probabilisticSharpeRatio": "0.4555",
+            "sortinoRatio": "0.8114",
+            "alpha": "0.0492",
+            "beta": "0.0481",
+            "annualStandardDeviation": "0.0645",
+            "annualVariance": "0.0042",
+            "informationRatio": "-0.9979",
+            "trackingError": "0.1170",
+            "treynorRatio": "1.1969",
+            "portfolioTurnover": "0.1772",
+            "valueAtRisk99": "-0.009",
+            "valueAtRisk95": "-0.006",
+            "drawdownRecovery": "33"
+          },
+          "closedTrades": []
+        },
+        "M12_20241231": {
+          "tradeStatistics": {
+            "startDateTime": "2024-09-06T15:00:00Z",
+            "endDateTime": "2024-12-23T19:00:00Z",
+            "totalNumberOfTrades": 11,
+            "numberOfWinningTrades": 8,
+            "numberOfLosingTrades": 3,
+            "totalProfitLoss": "2944.03",
+            "totalProfit": "7106.46",
+            "totalLoss": "-4162.43",
+            "largestProfit": "1884.69",
+            "largestLoss": "-2040.82",
+            "averageProfitLoss": "267.6391",
+            "averageProfit": "888.3075",
+            "averageLoss": "-1387.4767",
+            "averageTradeDuration": "5.05:16:21.8181819",
+            "averageWinningTradeDuration": "4.03:37:29.9999999",
+            "averageLosingTradeDuration": "8.01:40:00",
+            "medianTradeDuration": "5.01:00:00",
+            "medianWinningTradeDuration": "4.04:00:00",
+            "medianLosingTradeDuration": "7.05:00:00",
+            "maxConsecutiveWinningTrades": 3,
+            "maxConsecutiveLosingTrades": 1,
+            "profitLossRatio": "0.6402",
+            "winLossRatio": "2.6667",
+            "winRate": "0.7273",
+            "lossRate": "0.2727",
+            "averageMAE": "-1255.0900",
+            "averageMFE": "828.1464",
+            "largestMAE": "-2984.98",
+            "largestMFE": "2680.12",
+            "maximumClosedTradeDrawdown": "-3252.95",
+            "maximumIntraTradeDrawdown": "-5018.42",
+            "profitLossStandardDeviation": "1214.1154",
+            "profitLossDownsideDeviation": "865.8818",
+            "profitFactor": "1.7073",
+            "sharpeRatio": "0.2204",
+            "sortinoRatio": "0.3091",
+            "profitToMaxDrawdownRatio": "0.9050",
+            "maximumEndTradeDrawdown": "2984.98",
+            "averageEndTradeDrawdown": "-560.5073",
+            "maximumDrawdownDuration": "26.23:00:00",
+            "totalFees": "23.010"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0.0087",
+            "averageLossRate": "-0.0133",
+            "profitLossRatio": "0.6516",
+            "winRate": "0.7273",
+            "lossRate": "0.2727",
+            "expectancy": "0.2012",
+            "startEquity": "100000",
+            "endEquity": "102921.0138",
+            "compoundingAnnualReturn": "0.0902",
+            "drawdown": "0.047",
+            "totalNetProfit": "0.0292",
+            "sharpeRatio": "0.2026",
+            "probabilisticSharpeRatio": "0.2851",
+            "sortinoRatio": "0.2025",
+            "alpha": "0.0199",
+            "beta": "-0.0796",
+            "annualStandardDeviation": "0.0762",
+            "annualVariance": "0.0058",
+            "informationRatio": "-0.2945",
+            "trackingError": "0.1374",
+            "treynorRatio": "-0.1940",
+            "portfolioTurnover": "0.1801",
+            "valueAtRisk99": "-0.011",
+            "valueAtRisk95": "-0.008",
+            "drawdownRecovery": "33"
+          },
+          "closedTrades": []
+        }
+      },
+      "runtimeStatistics": {
+        "Equity": "$102,921.01",
+        "Fees": "-$23.01",
+        "Holdings": "$0.00",
+        "Net Profit": "$2,921.01",
+        "Probabilistic Sharpe Ratio": "28.511%",
+        "Return": "2.92 %",
+        "Unrealized": "$0.00",
+        "Volume": "$2,250,787.50"
+      },
+      "statistics": {
+        "Total Orders": "22",
+        "Average Win": "0.87%",
+        "Average Loss": "-1.33%",
+        "Compounding Annual Return": "9.018%",
+        "Drawdown": "4.700%",
+        "Expectancy": "0.201",
+        "Start Equity": "100000",
+        "End Equity": "102921.01",
+        "Net Profit": "2.921%",
+        "Sharpe Ratio": "0.203",
+        "Sortino Ratio": "0.203",
+        "Probabilistic Sharpe Ratio": "28.511%",
+        "Loss Rate": "27%",
+        "Win Rate": "73%",
+        "Profit-Loss Ratio": "0.65",
+        "Alpha": "0.02",
+        "Beta": "-0.08",
+        "Annual Standard Deviation": "0.076",
+        "Annual Variance": "0.006",
+        "Information Ratio": "-0.294",
+        "Tracking Error": "0.137",
+        "Treynor Ratio": "-0.194",
+        "Total Fees": "$23.01",
+        "Estimated Strategy Capacity": "$100000000.00",
+        "Lowest Capacity Asset": "QQQ RIWIV7K5Z9LX",
+        "Portfolio Turnover": "18.01%",
+        "Drawdown Recovery": "33"
+      },
+      "totalPerformance": {
+        "tradeStatistics": {
+          "startDateTime": "2024-09-06T15:00:00Z",
+          "endDateTime": "2024-12-23T19:00:00Z",
+          "totalNumberOfTrades": 11,
+          "numberOfWinningTrades": 8,
+          "numberOfLosingTrades": 3,
+          "totalProfitLoss": "2944.03",
+          "totalProfit": "7106.46",
+          "totalLoss": "-4162.43",
+          "largestProfit": "1884.69",
+          "largestLoss": "-2040.82",
+          "averageProfitLoss": "267.6391",
+          "averageProfit": "888.3075",
+          "averageLoss": "-1387.4767",
+          "averageTradeDuration": "5.05:16:21.8181819",
+          "averageWinningTradeDuration": "4.03:37:29.9999999",
+          "averageLosingTradeDuration": "8.01:40:00",
+          "medianTradeDuration": "5.01:00:00",
+          "medianWinningTradeDuration": "4.04:00:00",
+          "medianLosingTradeDuration": "7.05:00:00",
+          "maxConsecutiveWinningTrades": 3,
+          "maxConsecutiveLosingTrades": 1,
+          "profitLossRatio": "0.6402",
+          "winLossRatio": "2.6667",
+          "winRate": "0.7273",
+          "lossRate": "0.2727",
+          "averageMAE": "-1255.0900",
+          "averageMFE": "828.1464",
+          "largestMAE": "-2984.98",
+          "largestMFE": "2680.12",
+          "maximumClosedTradeDrawdown": "-3252.95",
+          "maximumIntraTradeDrawdown": "-5018.42",
+          "profitLossStandardDeviation": "1214.1154",
+          "profitLossDownsideDeviation": "865.8818",
+          "profitFactor": "1.7073",
+          "sharpeRatio": "0.2204",
+          "sortinoRatio": "0.3091",
+          "profitToMaxDrawdownRatio": "0.9050",
+          "maximumEndTradeDrawdown": "2984.98",
+          "averageEndTradeDrawdown": "-560.5073",
+          "maximumDrawdownDuration": "26.23:00:00",
+          "totalFees": "23.010"
+        },
+        "portfolioStatistics": {
+          "averageWinRate": "0.0087",
+          "averageLossRate": "-0.0133",
+          "profitLossRatio": "0.6516",
+          "winRate": "0.7273",
+          "lossRate": "0.2727",
+          "expectancy": "0.2012",
+          "startEquity": "100000",
+          "endEquity": "102921.0138",
+          "compoundingAnnualReturn": "0.0902",
+          "drawdown": "0.047",
+          "totalNetProfit": "0.0292",
+          "sharpeRatio": "0.2026",
+          "probabilisticSharpeRatio": "0.2851",
+          "sortinoRatio": "0.2025",
+          "alpha": "0.0199",
+          "beta": "-0.0796",
+          "annualStandardDeviation": "0.0762",
+          "annualVariance": "0.0058",
+          "informationRatio": "-0.2945",
+          "trackingError": "0.1374",
+          "treynorRatio": "-0.1940",
+          "portfolioTurnover": "0.1801",
+          "valueAtRisk99": "-0.011",
+          "valueAtRisk95": "-0.008",
+          "drawdownRecovery": "33"
+        },
+        "closedTrades": [
+          {
+            "id": "7268d493-f91d-4957-9cda-1f57e562519b",
+            "symbols": [
+              {
+                "value": "QQQ",
+                "id": "QQQ RIWIV7K5Z9LX",
+                "permtick": "QQQ"
+              }
+            ],
+            "entryTime": "2024-09-06T15:00:00Z",
+            "entryPrice": 445.587936941,
+            "direction": 0,
+            "quantity": 223,
+            "exitTime": "2024-09-10T14:00:00Z",
+            "exitPrice": 451.133936378,
+            "profitLoss": 1236.76,
+            "totalFees": 2.23,
+            "mae": -454.14,
+            "mfe": 1236.76,
+            "duration": "3.23:00:00",
+            "endTradeDrawdown": 906.07,
+            "isWin": true,
+            "orderIds": [
+              1,
+              2
+            ]
+          },
+          {
+            "id": "6e552c67-241c-4336-9707-160157801583",
+            "symbols": [
+              {
+                "value": "QQQ",
+                "id": "QQQ RIWIV7K5Z9LX",
+                "permtick": "QQQ"
+              }
+            ],
+            "entryTime": "2024-09-12T18:00:00Z",
+            "entryPrice": 468.236572788,
+            "direction": 1,
+            "quantity": 215,
+            "exitTime": "2024-09-18T16:00:00Z",
+            "exitPrice": 466.1852450105,
+            "profitLoss": 441.04,
+            "totalFees": 2.15,
+            "mae": -531.37,
+            "mfe": 584.5,
+            "duration": "5.22:00:00",
+            "endTradeDrawdown": 1037.23,
+            "isWin": true,
+            "orderIds": [
+              3,
+              4
+            ]
+          },
+          {
+            "id": "b6375374-e8cc-4b10-91f4-f4b7c1a517d4",
+            "symbols": [
+              {
+                "value": "QQQ",
+                "id": "QQQ RIWIV7K5Z9LX",
+                "permtick": "QQQ"
+              }
+            ],
+            "entryTime": "2024-09-19T17:00:00Z",
+            "entryPrice": 479.585605504,
+            "direction": 1,
+            "quantity": 211,
+            "exitTime": "2024-09-30T14:00:00Z",
+            "exitPrice": 481.506764228,
+            "profitLoss": -405.36,
+            "totalFees": 2.11,
+            "mae": -1487.39,
+            "mfe": 1015.85,
+            "duration": "10.21:00:00",
+            "endTradeDrawdown": 2503.24,
+            "isWin": false,
+            "orderIds": [
+              5,
+              6
+            ]
+          },
+          {
+            "id": "8e03ec08-8981-444b-825e-52d128d17908",
+            "symbols": [
+              {
+                "value": "QQQ",
+                "id": "QQQ RIWIV7K5Z9LX",
+                "permtick": "QQQ"
+              }
+            ],
+            "entryTime": "2024-10-14T14:00:00Z",
+            "entryPrice": 493.624126772,
+            "direction": 1,
+            "quantity": 204,
+            "exitTime": "2024-10-15T15:00:00Z",
+            "exitPrice": 487.288250932,
+            "profitLoss": 1292.52,
+            "totalFees": 2.04,
+            "mae": 0,
+            "mfe": 1292.52,
+            "duration": "1.01:00:00",
+            "endTradeDrawdown": 329.19,
+            "isWin": true,
+            "orderIds": [
+              7,
+              8
+            ]
+          },
+          {
+            "id": "dd6724a6-14ae-4222-9430-614fce927c5c",
+            "symbols": [
+              {
+                "value": "QQQ",
+                "id": "QQQ RIWIV7K5Z9LX",
+                "permtick": "QQQ"
+              }
+            ],
+            "entryTime": "2024-10-23T18:00:00Z",
+            "entryPrice": 481.298868302,
+            "direction": 0,
+            "quantity": 212,
+            "exitTime": "2024-10-25T14:00:00Z",
+            "exitPrice": 490.18889409,
+            "profitLoss": 1884.69,
+            "totalFees": 2.12,
+            "mae": 0,
+            "mfe": 2680.12,
+            "duration": "1.20:00:00",
+            "endTradeDrawdown": 795.43,
+            "isWin": true,
+            "orderIds": [
+              9,
+              10
+            ]
+          },
+          {
+            "id": "8e4d2d1b-04b6-4893-88b1-8c656aa92aed",
+            "symbols": [
+              {
+                "value": "QQQ",
+                "id": "QQQ RIWIV7K5Z9LX",
+                "permtick": "QQQ"
+              }
+            ],
+            "entryTime": "2024-10-31T14:00:00Z",
+            "entryPrice": 482.734340172,
+            "direction": 0,
+            "quantity": 215,
+            "exitTime": "2024-11-05T15:00:00Z",
+            "exitPrice": 486.060674988,
+            "profitLoss": 715.16,
+            "totalFees": 2.15,
+            "mae": -802.43,
+            "mfe": 715.16,
+            "duration": "5.01:00:00",
+            "endTradeDrawdown": 802.43,
+            "isWin": true,
+            "orderIds": [
+              11,
+              12
+            ]
+          },
+          {
+            "id": "8e5a4db7-36a7-417e-8f18-9d1787b94387",
+            "symbols": [
+              {
+                "value": "QQQ",
+                "id": "QQQ RIWIV7K5Z9LX",
+                "permtick": "QQQ"
+              }
+            ],
+            "entryTime": "2024-11-06T15:00:00Z",
+            "entryPrice": 495.316993598,
+            "direction": 1,
+            "quantity": 211,
+            "exitTime": "2024-11-12T18:00:00Z",
+            "exitPrice": 504.98910406,
+            "profitLoss": -2040.82,
+            "totalFees": 2.11,
+            "mae": -2984.98,
+            "mfe": 0,
+            "duration": "6.03:00:00",
+            "endTradeDrawdown": 2984.98,
+            "isWin": false,
+            "orderIds": [
+              13,
+              14
+            ]
+          },
+          {
+            "id": "61f7dea0-7905-4be8-a10b-4c8850be3520",
+            "symbols": [
+              {
+                "value": "QQQ",
+                "id": "QQQ RIWIV7K5Z9LX",
+                "permtick": "QQQ"
+              }
+            ],
+            "entryTime": "2024-11-15T15:00:00Z",
+            "entryPrice": 496.257475168,
+            "direction": 0,
+            "quantity": 207,
+            "exitTime": "2024-11-19T19:00:00Z",
+            "exitPrice": 498.692827444,
+            "profitLoss": 504.12,
+            "totalFees": 2.07,
+            "mae": -1272.59,
+            "mfe": 504.12,
+            "duration": "4.04:00:00",
+            "endTradeDrawdown": 1272.59,
+            "isWin": true,
+            "orderIds": [
+              15,
+              16
+            ]
+          },
+          {
+            "id": "2566ccb4-1cf9-425c-8075-3c43b3ba44e5",
+            "symbols": [
+              {
+                "value": "QQQ",
+                "id": "QQQ RIWIV7K5Z9LX",
+                "permtick": "QQQ"
+              }
+            ],
+            "entryTime": "2024-12-02T15:00:00Z",
+            "entryPrice": 508.50353519,
+            "direction": 1,
+            "quantity": 203,
+            "exitTime": "2024-12-09T20:00:00Z",
+            "exitPrice": 516.957969514,
+            "profitLoss": -1716.25,
+            "totalFees": 2.03,
+            "mae": -2580.4,
+            "mfe": 0,
+            "duration": "7.05:00:00",
+            "endTradeDrawdown": 2580.4,
+            "isWin": false,
+            "orderIds": [
+              17,
+              18
+            ]
+          },
+          {
+            "id": "bb15a018-f010-404b-b30e-8957a66511e6",
+            "symbols": [
+              {
+                "value": "QQQ",
+                "id": "QQQ RIWIV7K5Z9LX",
+                "permtick": "QQQ"
+              }
+            ],
+            "entryTime": "2024-12-11T18:00:00Z",
+            "entryPrice": 524.34322479,
+            "direction": 1,
+            "quantity": 193,
+            "exitTime": "2024-12-18T20:00:00Z",
+            "exitPrice": 521.32378396,
+            "profitLoss": 582.75,
+            "totalFees": 2,
+            "mae": -1685.2,
+            "mfe": 601.86,
+            "duration": "7.02:00:00",
+            "endTradeDrawdown": 2287.06,
+            "isWin": true,
+            "orderIds": [
+              19,
+              20
+            ]
+          },
+          {
+            "id": "1925ab2e-2a92-4c7b-998e-8289e2db6ed4",
+            "symbols": [
+              {
+                "value": "QQQ",
+                "id": "QQQ RIWIV7K5Z9LX",
+                "permtick": "QQQ"
+              }
+            ],
+            "entryTime": "2024-12-19T15:00:00Z",
+            "entryPrice": 515.888790466,
+            "direction": 0,
+            "quantity": 199,
+            "exitTime": "2024-12-23T19:00:00Z",
+            "exitPrice": 518.1472039887,
+            "profitLoss": 449.42,
+            "totalFees": 2,
+            "mae": -2007.49,
+            "mfe": 478.72,
+            "duration": "4.04:00:00",
+            "endTradeDrawdown": 2007.49,
+            "isWin": true,
+            "orderIds": [
+              21,
+              22
+            ]
+          }
+        ]
+      },
+      "nodeName": "B8-16 node 9045b97c",
+      "outOfSampleMaxEndDate": "2026-07-21T00:00:00Z",
+      "outOfSampleDays": 90,
+      "analysis": [
+        {
+          "name": "FlatEquityCurveAnalysis",
+          "issue": "The equity curve is flat for several days in a row.",
+          "sample": [
+            {
+              "start": "2024-10-01T04:00:00",
+              "end": "2024-10-12T04:00:00",
+              "trading_days": 10
+            },
+            {
+              "start": "2024-10-16T04:00:00",
+              "end": "2024-10-23T04:00:00",
+              "trading_days": 6
+            },
+            {
+              "start": "2024-10-26T04:00:00",
+              "end": "2024-10-31T04:00:00",
+              "trading_days": 4
+            },
+            {
+              "start": "2024-09-04T04:00:00",
+              "end": "2024-09-06T04:00:00",
+              "trading_days": 3
+            },
+            {
+              "start": "2024-09-11T04:00:00",
+              "end": "2024-09-12T04:00:00",
+              "trading_days": 2
+            }
+          ],
+          "solutions": [
+            "Log how often each entry condition passes individually: when several conditions must align (trend, volume, indicator thresholds), it is common that they are never all true at the same time. Relax the single most restrictive condition and re-run, changing one condition per backtest instead of redesigning the strategy.",
+            "Check if you need to warm-up some data structures, including indicators, RollingWindow objects, and training data. Log how many assets pass IsReady or warm-up gates: they can silently exclude most of the universe.",
+            "Check if the algorithm subscribes to any assets. Is the universe selection actually selecting anything? Log the selection count on each rebalance.",
+            "Check custom data sources actually deliver data by logging the first points received: a reader or date-format error can silently produce no data and therefore no signals.",
+            "Check minimum-history or training-window requirements against the history the data source actually provides: if a model requires more history than exists, the trading logic may never activate.",
+            "Check if there is enough cash to satisfy the minimum order sizes."
+          ]
+        },
+        {
+          "name": "PortfolioMarginUsageAnalysis",
+          "issue": "The algorithm sometimes only utilizes a small proportion of the margin available.",
+          "sample": "Number of days when the 3-day SMA of the margin usage drops below 50%: 30",
+          "solutions": [
+            "Adjust the strategy logic or position sizing to utilize more margin.",
+            "If the algorithm logic leads to periods of time when the portfolio sits in cash, consider holding a \"risk-free\" asset during these periods."
+          ]
+        },
+        {
+          "name": "PerformanceRelativeToBenchmarkAnalysis",
+          "issue": "The strategy has a lower Sharpe ratio than the benchmark.",
+          "sample": {
+            "backtestSharpe": -12.348481931143157,
+            "benchmarkSharpe": -7.181009168482598
+          },
+          "solutions": [
+            "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+          ]
+        },
+        {
+          "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+          "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+          "sample": {
+            "pValue": 0.47102937915633697
+          },
+          "solutions": [
+            "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+          ]
+        }
+      ],
+      "serverStatistics": {
+        "CPU Usage": "0.0%",
+        "Used RAM (MB)": "268",
+        "Total RAM (MB)": "16384",
+        "Hostname": "BACKTESTING-com-69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+        "LEAN Version": "v2.5.0.0.18194",
+        "Up Time": "0d 00:00:04"
+      }
+    },
+    "success": true
+  },
+  "error": null,
+  "stacktrace": null,
+  "has_initialize_error": false,
+  "trade_statistics": {
+    "startDateTime": "2024-09-06T15:00:00Z",
+    "endDateTime": "2024-12-23T19:00:00Z",
+    "totalNumberOfTrades": 11,
+    "numberOfWinningTrades": 8,
+    "numberOfLosingTrades": 3,
+    "totalProfitLoss": "2944.03",
+    "totalProfit": "7106.46",
+    "totalLoss": "-4162.43",
+    "largestProfit": "1884.69",
+    "largestLoss": "-2040.82",
+    "averageProfitLoss": "267.6391",
+    "averageProfit": "888.3075",
+    "averageLoss": "-1387.4767",
+    "averageTradeDuration": "5.05:16:21.8181819",
+    "averageWinningTradeDuration": "4.03:37:29.9999999",
+    "averageLosingTradeDuration": "8.01:40:00",
+    "medianTradeDuration": "5.01:00:00",
+    "medianWinningTradeDuration": "4.04:00:00",
+    "medianLosingTradeDuration": "7.05:00:00",
+    "maxConsecutiveWinningTrades": 3,
+    "maxConsecutiveLosingTrades": 1,
+    "profitLossRatio": "0.6402",
+    "winLossRatio": "2.6667",
+    "winRate": "0.7273",
+    "lossRate": "0.2727",
+    "averageMAE": "-1255.0900",
+    "averageMFE": "828.1464",
+    "largestMAE": "-2984.98",
+    "largestMFE": "2680.12",
+    "maximumClosedTradeDrawdown": "-3252.95",
+    "maximumIntraTradeDrawdown": "-5018.42",
+    "profitLossStandardDeviation": "1214.1154",
+    "profitLossDownsideDeviation": "865.8818",
+    "profitFactor": "1.7073",
+    "sharpeRatio": "0.2204",
+    "sortinoRatio": "0.3091",
+    "profitToMaxDrawdownRatio": "0.9050",
+    "maximumEndTradeDrawdown": "2984.98",
+    "averageEndTradeDrawdown": "-560.5073",
+    "maximumDrawdownDuration": "26.23:00:00",
+    "totalFees": "23.010"
+  },
+  "total_orders": "22",
+  "finished_at": "2026-10-19T21:34:14.627142+00:00",
+  "orders": [
+    {
+      "type": 0,
+      "id": 1,
+      "contingentId": 0,
+      "brokerId": [
+        "1"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 445.587936941,
+      "priceCurrency": "USD",
+      "time": "2024-09-06T15:00:00Z",
+      "createdTime": "2024-09-06T15:00:00Z",
+      "lastFillTime": "2024-09-06T15:00:00Z",
+      "quantity": 223.0,
+      "status": 3,
+      "tag": "",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 0,
+      "value": 99366.109937843,
+      "orderSubmissionData": {
+        "bidPrice": 445.587936941,
+        "askPrice": 445.587936941,
+        "lastPrice": 445.587936941
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-1-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 1,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1725634800.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "buy",
+          "message": null,
+          "isAssignment": false,
+          "quantity": 223.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-1-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 1,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1725634800.0,
+          "status": "filled",
+          "orderFeeAmount": 1.115,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 445.587936941,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 223.0,
+          "direction": "buy",
+          "message": "Warning: No quote information available at 09/06/2024 11:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": 223.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 2,
+      "contingentId": 0,
+      "brokerId": [
+        "2"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 451.133936378,
+      "priceCurrency": "USD",
+      "time": "2024-09-10T14:00:00Z",
+      "createdTime": "2024-09-10T14:00:00Z",
+      "lastFillTime": "2024-09-10T14:00:00Z",
+      "quantity": -223.0,
+      "status": 3,
+      "tag": "Liquidated",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 1,
+      "value": -100602.867812294,
+      "orderSubmissionData": {
+        "bidPrice": 451.133936378,
+        "askPrice": 451.133936378,
+        "lastPrice": 451.133936378
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-2-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 2,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1725976800.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "sell",
+          "message": null,
+          "isAssignment": false,
+          "quantity": -223.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-2-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 2,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1725976800.0,
+          "status": "filled",
+          "orderFeeAmount": 1.115,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 451.133936378,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": -223.0,
+          "direction": "sell",
+          "message": "Warning: No quote information available at 09/10/2024 10:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": -223.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 3,
+      "contingentId": 0,
+      "brokerId": [
+        "3"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 468.236572788,
+      "priceCurrency": "USD",
+      "time": "2024-09-12T18:00:00Z",
+      "createdTime": "2024-09-12T18:00:00Z",
+      "lastFillTime": "2024-09-12T18:00:00Z",
+      "quantity": -215.0,
+      "status": 3,
+      "tag": "",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 1,
+      "value": -100670.86314942,
+      "orderSubmissionData": {
+        "bidPrice": 468.236572788,
+        "askPrice": 468.236572788,
+        "lastPrice": 468.236572788
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-3-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 3,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1726164000.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "sell",
+          "message": null,
+          "isAssignment": false,
+          "quantity": -215.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-3-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 3,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1726164000.0,
+          "status": "filled",
+          "orderFeeAmount": 1.075,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 468.236572788,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": -215.0,
+          "direction": "sell",
+          "message": "Warning: No quote information available at 09/12/2024 14:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": -215.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 4,
+      "contingentId": 0,
+      "brokerId": [
+        "4"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 466.1852450105,
+      "priceCurrency": "USD",
+      "time": "2024-09-18T16:00:00Z",
+      "createdTime": "2024-09-18T16:00:00Z",
+      "lastFillTime": "2024-09-18T16:00:00Z",
+      "quantity": 215.0,
+      "status": 3,
+      "tag": "Liquidated",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 0,
+      "value": 100229.8276772575,
+      "orderSubmissionData": {
+        "bidPrice": 466.1852450105,
+        "askPrice": 466.1852450105,
+        "lastPrice": 466.1852450105
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-4-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 4,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1726675200.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "buy",
+          "message": null,
+          "isAssignment": false,
+          "quantity": 215.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-4-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 4,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1726675200.0,
+          "status": "filled",
+          "orderFeeAmount": 1.075,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 466.1852450105,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 215.0,
+          "direction": "buy",
+          "message": "Warning: No quote information available at 09/18/2024 12:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": 215.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 5,
+      "contingentId": 0,
+      "brokerId": [
+        "5"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 479.585605504,
+      "priceCurrency": "USD",
+      "time": "2024-09-19T17:00:00Z",
+      "createdTime": "2024-09-19T17:00:00Z",
+      "lastFillTime": "2024-09-19T17:00:00Z",
+      "quantity": -211.0,
+      "status": 3,
+      "tag": "",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 1,
+      "value": -101192.562761344,
+      "orderSubmissionData": {
+        "bidPrice": 479.585605504,
+        "askPrice": 479.585605504,
+        "lastPrice": 479.585605504
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-5-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 5,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1726765200.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "sell",
+          "message": null,
+          "isAssignment": false,
+          "quantity": -211.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-5-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 5,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1726765200.0,
+          "status": "filled",
+          "orderFeeAmount": 1.055,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 479.585605504,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": -211.0,
+          "direction": "sell",
+          "message": "Warning: No quote information available at 09/19/2024 13:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": -211.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 6,
+      "contingentId": 0,
+      "brokerId": [
+        "6"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 481.506764228,
+      "priceCurrency": "USD",
+      "time": "2024-09-30T14:00:00Z",
+      "createdTime": "2024-09-30T14:00:00Z",
+      "lastFillTime": "2024-09-30T14:00:00Z",
+      "quantity": 211.0,
+      "status": 3,
+      "tag": "Liquidated",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 0,
+      "value": 101597.927252108,
+      "orderSubmissionData": {
+        "bidPrice": 481.506764228,
+        "askPrice": 481.506764228,
+        "lastPrice": 481.506764228
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-6-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 6,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1727704800.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "buy",
+          "message": null,
+          "isAssignment": false,
+          "quantity": 211.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-6-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 6,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1727704800.0,
+          "status": "filled",
+          "orderFeeAmount": 1.055,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 481.506764228,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 211.0,
+          "direction": "buy",
+          "message": "Warning: No quote information available at 09/30/2024 10:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": 211.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 7,
+      "contingentId": 0,
+      "brokerId": [
+        "7"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 493.624126772,
+      "priceCurrency": "USD",
+      "time": "2024-10-14T14:00:00Z",
+      "createdTime": "2024-10-14T14:00:00Z",
+      "lastFillTime": "2024-10-14T14:00:00Z",
+      "quantity": -204.0,
+      "status": 3,
+      "tag": "",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 1,
+      "value": -100699.321861488,
+      "orderSubmissionData": {
+        "bidPrice": 493.624126772,
+        "askPrice": 493.624126772,
+        "lastPrice": 493.624126772
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-7-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 7,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1728914400.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "sell",
+          "message": null,
+          "isAssignment": false,
+          "quantity": -204.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-7-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 7,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1728914400.0,
+          "status": "filled",
+          "orderFeeAmount": 1.02,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 493.624126772,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": -204.0,
+          "direction": "sell",
+          "message": "Warning: No quote information available at 10/14/2024 10:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": -204.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 8,
+      "contingentId": 0,
+      "brokerId": [
+        "8"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 487.288250932,
+      "priceCurrency": "USD",
+      "time": "2024-10-15T15:00:00Z",
+      "createdTime": "2024-10-15T15:00:00Z",
+      "lastFillTime": "2024-10-15T15:00:00Z",
+      "quantity": 204.0,
+      "status": 3,
+      "tag": "Liquidated",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 0,
+      "value": 99406.803190128,
+      "orderSubmissionData": {
+        "bidPrice": 487.288250932,
+        "askPrice": 487.288250932,
+        "lastPrice": 487.288250932
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-8-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 8,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1729004400.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "buy",
+          "message": null,
+          "isAssignment": false,
+          "quantity": 204.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-8-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 8,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1729004400.0,
+          "status": "filled",
+          "orderFeeAmount": 1.02,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 487.288250932,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 204.0,
+          "direction": "buy",
+          "message": "Warning: No quote information available at 10/15/2024 11:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": 204.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 9,
+      "contingentId": 0,
+      "brokerId": [
+        "9"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 481.298868302,
+      "priceCurrency": "USD",
+      "time": "2024-10-23T18:00:00Z",
+      "createdTime": "2024-10-23T18:00:00Z",
+      "lastFillTime": "2024-10-23T18:00:00Z",
+      "quantity": 212.0,
+      "status": 3,
+      "tag": "",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 0,
+      "value": 102035.360080024,
+      "orderSubmissionData": {
+        "bidPrice": 481.298868302,
+        "askPrice": 481.298868302,
+        "lastPrice": 481.298868302
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-9-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 9,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1729706400.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "buy",
+          "message": null,
+          "isAssignment": false,
+          "quantity": 212.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-9-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 9,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1729706400.0,
+          "status": "filled",
+          "orderFeeAmount": 1.06,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 481.298868302,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 212.0,
+          "direction": "buy",
+          "message": "Warning: No quote information available at 10/23/2024 14:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": 212.0
+        }
+      ]
+    },
+    {
+      "type": 4,
+      "id": 10,
+      "contingentId": 0,
+      "brokerId": [
+        "10"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 490.18889409,
+      "priceCurrency": "USD",
+      "time": "2024-10-24T20:00:00Z",
+      "createdTime": "2024-10-24T20:00:00Z",
+      "lastFillTime": "2024-10-25T14:00:00Z",
+      "quantity": -212.0,
+      "status": 3,
+      "tag": "Liquidated",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 1,
+      "value": -103920.04554708,
+      "orderSubmissionData": {
+        "bidPrice": 487.387248992,
+        "askPrice": 487.387248992,
+        "lastPrice": 487.387248992
+      },
+      "isMarketable": false,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-10-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 10,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1729800000.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "sell",
+          "message": null,
+          "isAssignment": false,
+          "quantity": -212.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-10-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 10,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1729864800.0,
+          "status": "filled",
+          "orderFeeAmount": 1.06,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 490.18889409,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": -212.0,
+          "direction": "sell",
+          "message": null,
+          "isAssignment": false,
+          "quantity": -212.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 11,
+      "contingentId": 0,
+      "brokerId": [
+        "11"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 482.734340172,
+      "priceCurrency": "USD",
+      "time": "2024-10-31T14:00:00Z",
+      "createdTime": "2024-10-31T14:00:00Z",
+      "lastFillTime": "2024-10-31T14:00:00Z",
+      "quantity": 215.0,
+      "status": 3,
+      "tag": "",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 0,
+      "value": 103787.88313698,
+      "orderSubmissionData": {
+        "bidPrice": 482.734340172,
+        "askPrice": 482.734340172,
+        "lastPrice": 482.734340172
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-11-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 11,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1730383200.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "buy",
+          "message": null,
+          "isAssignment": false,
+          "quantity": 215.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-11-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 11,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1730383200.0,
+          "status": "filled",
+          "orderFeeAmount": 1.075,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 482.734340172,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 215.0,
+          "direction": "buy",
+          "message": "Warning: No quote information available at 10/31/2024 10:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": 215.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 12,
+      "contingentId": 0,
+      "brokerId": [
+        "12"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 486.060674988,
+      "priceCurrency": "USD",
+      "time": "2024-11-05T15:00:00Z",
+      "createdTime": "2024-11-05T15:00:00Z",
+      "lastFillTime": "2024-11-05T15:00:00Z",
+      "quantity": -215.0,
+      "status": 3,
+      "tag": "Liquidated",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 1,
+      "value": -104503.04512242,
+      "orderSubmissionData": {
+        "bidPrice": 486.060674988,
+        "askPrice": 486.060674988,
+        "lastPrice": 486.060674988
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-12-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 12,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1730818800.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "sell",
+          "message": null,
+          "isAssignment": false,
+          "quantity": -215.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-12-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 12,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1730818800.0,
+          "status": "filled",
+          "orderFeeAmount": 1.075,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 486.060674988,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": -215.0,
+          "direction": "sell",
+          "message": "Warning: No quote information available at 11/05/2024 10:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": -215.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 13,
+      "contingentId": 0,
+      "brokerId": [
+        "13"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 495.316993598,
+      "priceCurrency": "USD",
+      "time": "2024-11-06T15:00:00Z",
+      "createdTime": "2024-11-06T15:00:00Z",
+      "lastFillTime": "2024-11-06T15:00:00Z",
+      "quantity": -211.0,
+      "status": 3,
+      "tag": "",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 1,
+      "value": -104511.885649178,
+      "orderSubmissionData": {
+        "bidPrice": 495.316993598,
+        "askPrice": 495.316993598,
+        "lastPrice": 495.316993598
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-13-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 13,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1730905200.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "sell",
+          "message": null,
+          "isAssignment": false,
+          "quantity": -211.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-13-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 13,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1730905200.0,
+          "status": "filled",
+          "orderFeeAmount": 1.055,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 495.316993598,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": -211.0,
+          "direction": "sell",
+          "message": "Warning: No quote information available at 11/06/2024 10:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": -211.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 14,
+      "contingentId": 0,
+      "brokerId": [
+        "14"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 504.98910406,
+      "priceCurrency": "USD",
+      "time": "2024-11-12T18:00:00Z",
+      "createdTime": "2024-11-12T18:00:00Z",
+      "lastFillTime": "2024-11-12T18:00:00Z",
+      "quantity": 211.0,
+      "status": 3,
+      "tag": "Liquidated",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 0,
+      "value": 106552.70095666,
+      "orderSubmissionData": {
+        "bidPrice": 504.98910406,
+        "askPrice": 504.98910406,
+        "lastPrice": 504.98910406
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-14-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 14,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1731434400.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "buy",
+          "message": null,
+          "isAssignment": false,
+          "quantity": 211.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-14-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 14,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1731434400.0,
+          "status": "filled",
+          "orderFeeAmount": 1.055,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 504.98910406,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 211.0,
+          "direction": "buy",
+          "message": "Warning: No quote information available at 11/12/2024 13:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": 211.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 15,
+      "contingentId": 0,
+      "brokerId": [
+        "15"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 496.257475168,
+      "priceCurrency": "USD",
+      "time": "2024-11-15T15:00:00Z",
+      "createdTime": "2024-11-15T15:00:00Z",
+      "lastFillTime": "2024-11-15T15:00:00Z",
+      "quantity": 207.0,
+      "status": 3,
+      "tag": "",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 0,
+      "value": 102725.297359776,
+      "orderSubmissionData": {
+        "bidPrice": 496.257475168,
+        "askPrice": 496.257475168,
+        "lastPrice": 496.257475168
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-15-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 15,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1731682800.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "buy",
+          "message": null,
+          "isAssignment": false,
+          "quantity": 207.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-15-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 15,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1731682800.0,
+          "status": "filled",
+          "orderFeeAmount": 1.035,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 496.257475168,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 207.0,
+          "direction": "buy",
+          "message": "Warning: No quote information available at 11/15/2024 10:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": 207.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 16,
+      "contingentId": 0,
+      "brokerId": [
+        "16"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 498.692827444,
+      "priceCurrency": "USD",
+      "time": "2024-11-19T19:00:00Z",
+      "createdTime": "2024-11-19T19:00:00Z",
+      "lastFillTime": "2024-11-19T19:00:00Z",
+      "quantity": -207.0,
+      "status": 3,
+      "tag": "Liquidated",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 1,
+      "value": -103229.415280908,
+      "orderSubmissionData": {
+        "bidPrice": 498.692827444,
+        "askPrice": 498.692827444,
+        "lastPrice": 498.692827444
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-16-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 16,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1732042800.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "sell",
+          "message": null,
+          "isAssignment": false,
+          "quantity": -207.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-16-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 16,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1732042800.0,
+          "status": "filled",
+          "orderFeeAmount": 1.035,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 498.692827444,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": -207.0,
+          "direction": "sell",
+          "message": "Warning: No quote information available at 11/19/2024 14:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": -207.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 17,
+      "contingentId": 0,
+      "brokerId": [
+        "17"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 508.50353519,
+      "priceCurrency": "USD",
+      "time": "2024-12-02T15:00:00Z",
+      "createdTime": "2024-12-02T15:00:00Z",
+      "lastFillTime": "2024-12-02T15:00:00Z",
+      "quantity": -203.0,
+      "status": 3,
+      "tag": "",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 1,
+      "value": -103226.21764357,
+      "orderSubmissionData": {
+        "bidPrice": 508.50353519,
+        "askPrice": 508.50353519,
+        "lastPrice": 508.50353519
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-17-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 17,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1733151600.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "sell",
+          "message": null,
+          "isAssignment": false,
+          "quantity": -203.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-17-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 17,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1733151600.0,
+          "status": "filled",
+          "orderFeeAmount": 1.015,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 508.50353519,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": -203.0,
+          "direction": "sell",
+          "message": "Warning: No quote information available at 12/02/2024 10:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": -203.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 18,
+      "contingentId": 0,
+      "brokerId": [
+        "18"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 516.957969514,
+      "priceCurrency": "USD",
+      "time": "2024-12-09T20:00:00Z",
+      "createdTime": "2024-12-09T20:00:00Z",
+      "lastFillTime": "2024-12-09T20:00:00Z",
+      "quantity": 203.0,
+      "status": 3,
+      "tag": "Liquidated",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 0,
+      "value": 104942.467811342,
+      "orderSubmissionData": {
+        "bidPrice": 516.957969514,
+        "askPrice": 516.957969514,
+        "lastPrice": 516.957969514
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-18-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 18,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1733774400.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "buy",
+          "message": null,
+          "isAssignment": false,
+          "quantity": 203.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-18-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 18,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1733774400.0,
+          "status": "filled",
+          "orderFeeAmount": 1.015,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 516.957969514,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 203.0,
+          "direction": "buy",
+          "message": "Warning: No quote information available at 12/09/2024 15:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": 203.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 19,
+      "contingentId": 0,
+      "brokerId": [
+        "19"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 524.34322479,
+      "priceCurrency": "USD",
+      "time": "2024-12-11T18:00:00Z",
+      "createdTime": "2024-12-11T18:00:00Z",
+      "lastFillTime": "2024-12-11T18:00:00Z",
+      "quantity": -193.0,
+      "status": 3,
+      "tag": "",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 1,
+      "value": -101198.24238447,
+      "orderSubmissionData": {
+        "bidPrice": 524.34322479,
+        "askPrice": 524.34322479,
+        "lastPrice": 524.34322479
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-19-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 19,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1733940000.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "sell",
+          "message": null,
+          "isAssignment": false,
+          "quantity": -193.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-19-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 19,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1733940000.0,
+          "status": "filled",
+          "orderFeeAmount": 1.0,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 524.34322479,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": -193.0,
+          "direction": "sell",
+          "message": "Warning: No quote information available at 12/11/2024 13:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": -193.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 20,
+      "contingentId": 0,
+      "brokerId": [
+        "20"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 521.32378396,
+      "priceCurrency": "USD",
+      "time": "2024-12-18T20:00:00Z",
+      "createdTime": "2024-12-18T20:00:00Z",
+      "lastFillTime": "2024-12-18T20:00:00Z",
+      "quantity": 193.0,
+      "status": 3,
+      "tag": "Liquidated",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 0,
+      "value": 100615.49030428,
+      "orderSubmissionData": {
+        "bidPrice": 521.32378396,
+        "askPrice": 521.32378396,
+        "lastPrice": 521.32378396
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-20-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 20,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1734552000.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "buy",
+          "message": null,
+          "isAssignment": false,
+          "quantity": 193.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-20-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 20,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1734552000.0,
+          "status": "filled",
+          "orderFeeAmount": 1.0,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 521.32378396,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 193.0,
+          "direction": "buy",
+          "message": "Warning: No quote information available at 12/18/2024 15:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": 193.0
+        }
+      ]
+    },
+    {
+      "type": 4,
+      "id": 21,
+      "contingentId": 0,
+      "brokerId": [
+        "21"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 515.888790466,
+      "priceCurrency": "USD",
+      "time": "2024-12-18T21:00:00Z",
+      "createdTime": "2024-12-18T21:00:00Z",
+      "lastFillTime": "2024-12-19T15:00:00Z",
+      "quantity": 199.0,
+      "status": 3,
+      "tag": "",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 0,
+      "value": 102661.869302734,
+      "orderSubmissionData": {
+        "bidPrice": 511.295280482,
+        "askPrice": 511.295280482,
+        "lastPrice": 511.295280482
+      },
+      "isMarketable": false,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-21-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 21,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1734555600.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "buy",
+          "message": null,
+          "isAssignment": false,
+          "quantity": 199.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-21-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 21,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1734620400.0,
+          "status": "filled",
+          "orderFeeAmount": 1.0,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 515.888790466,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 199.0,
+          "direction": "buy",
+          "message": null,
+          "isAssignment": false,
+          "quantity": 199.0
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "id": 22,
+      "contingentId": 0,
+      "brokerId": [
+        "22"
+      ],
+      "symbol": {
+        "value": "QQQ",
+        "id": "QQQ RIWIV7K5Z9LX",
+        "permtick": "QQQ"
+      },
+      "price": 518.1472039887,
+      "priceCurrency": "USD",
+      "time": "2024-12-23T19:00:00Z",
+      "createdTime": "2024-12-23T19:00:00Z",
+      "lastFillTime": "2024-12-23T19:00:00Z",
+      "quantity": -199.0,
+      "status": 3,
+      "tag": "Liquidated",
+      "properties": {
+        "timeInForce": {}
+      },
+      "securityType": 1,
+      "direction": 1,
+      "value": -103111.2935937513,
+      "orderSubmissionData": {
+        "bidPrice": 518.1472039887,
+        "askPrice": 518.1472039887,
+        "lastPrice": 518.1472039887
+      },
+      "isMarketable": true,
+      "priceAdjustmentMode": 1,
+      "events": [
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-22-1",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 22,
+          "orderEventId": 1,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1734980400.0,
+          "status": "submitted",
+          "fillPrice": 0.0,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": 0.0,
+          "direction": "sell",
+          "message": null,
+          "isAssignment": false,
+          "quantity": -199.0
+        },
+        {
+          "id": "69b5c1dab0f1f15a4f063ec9f4b4dfb1-22-2",
+          "algorithmId": "69b5c1dab0f1f15a4f063ec9f4b4dfb1",
+          "orderId": 22,
+          "orderEventId": 2,
+          "symbol": "QQQ RIWIV7K5Z9LX",
+          "symbolValue": "QQQ",
+          "symbolPermtick": "QQQ",
+          "time": 1734980400.0,
+          "status": "filled",
+          "orderFeeAmount": 1.0,
+          "orderFeeCurrency": "USD",
+          "fillPrice": 518.1472039887,
+          "fillPriceCurrency": "USD",
+          "fillQuantity": -199.0,
+          "direction": "sell",
+          "message": "Warning: No quote information available at 12/23/2024 14:00:00 America/New_York, order filled using TradeBar data",
+          "isAssignment": false,
+          "quantity": -199.0
+        }
+      ]
+    }
+  ],
+  "equity_chart": {
+    "name": "Strategy Equity",
+    "chartType": 0,
+    "series": {
+      "Equity": {
+        "name": "Equity",
+        "unit": "$",
+        "index": 0,
+        "seriesType": 2,
+        "values": [
+          [
+            1725163200,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1725342444,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1725521689,
+            100000.0,
+            100000.0,
+            100000.0,
+            100000.0
+          ],
+          [
+            1725700933,
+            100000.0,
+            100000.0,
+            99544.7457,
+            99684.6232
+          ],
+          [
+            1725880178,
+            99549.1549,
+            100818.9811,
+            99549.1549,
+            100712.9367
+          ],
+          [
+            1726059422,
+            99912.9072,
+            101234.5279,
+            99912.9072,
+            101205.6391
+          ],
+          [
+            1726238667,
+            101234.5279,
+            101322.7227,
+            100944.3887,
+            100945.9226
+          ],
+          [
+            1726417911,
+            100833.8641,
+            100948.6396,
+            100702.0848,
+            100864.9294
+          ],
+          [
+            1726597156,
+            101367.3576,
+            101817.9577,
+            100780.7273,
+            101475.9587
+          ],
+          [
+            1726776401,
+            101265.335,
+            102039.4818,
+            101116.5519,
+            101932.3428
+          ],
+          [
+            1726955645,
+            102387.8318,
+            102688.2055,
+            102231.3872,
+            102251.2636
+          ],
+          [
+            1727134890,
+            102231.3872,
+            102231.3872,
+            101835.1635,
+            101988.6119
+          ],
+          [
+            1727314134,
+            101897.8293,
+            101966.7616,
+            101166.7286,
+            101410.9274
+          ],
+          [
+            1727493379,
+            100184.9649,
+            101258.6384,
+            100184.9649,
+            101174.4684
+          ],
+          [
+            1727672623,
+            101189.7061,
+            101265.9389,
+            101189.7061,
+            101254.1914
+          ],
+          [
+            1727851868,
+            101265.9389,
+            101265.9389,
+            101265.9389,
+            101265.9389
+          ],
+          [
+            1728031113,
+            101265.9389,
+            101265.9389,
+            101265.9389,
+            101265.9389
+          ],
+          [
+            1728210357,
+            101265.9389,
+            101265.9389,
+            101265.9389,
+            101265.9389
+          ],
+          [
+            1728389602,
+            101265.9389,
+            101265.9389,
+            101265.9389,
+            101265.9389
+          ],
+          [
+            1728568846,
+            101265.9389,
+            101265.9389,
+            101265.9389,
+            101265.9389
+          ],
+          [
+            1728748091,
+            101265.9389,
+            101265.9389,
+            101265.9389,
+            101265.9389
+          ],
+          [
+            1728927335,
+            101265.9389,
+            101771.8285,
+            101264.9189,
+            101554.6319
+          ],
+          [
+            1729106580,
+            101470.914,
+            102556.4175,
+            101442.6402,
+            102543.0323
+          ],
+          [
+            1729285825,
+            102556.4175,
+            102556.4175,
+            102556.4175,
+            102556.4175
+          ],
+          [
+            1729465069,
+            102556.4175,
+            102556.4175,
+            102556.4175,
+            102556.4175
+          ],
+          [
+            1729644314,
+            102556.4175,
+            102556.4175,
+            102556.4175,
+            102556.4175
+          ],
+          [
+            1729823558,
+            102556.4175,
+            103846.0942,
+            102555.3575,
+            103806.9763
+          ],
+          [
+            1730002803,
+            104438.983,
+            104438.983,
+            104438.983,
+            104438.983
+          ],
+          [
+            1730182047,
+            104438.983,
+            104438.983,
+            104438.983,
+            104438.983
+          ],
+          [
+            1730361292,
+            104438.983,
+            104438.983,
+            104437.908,
+            104438.0443
+          ],
+          [
+            1730540536,
+            104035.6294,
+            104844.4435,
+            103635.4792,
+            104290.6943
+          ],
+          [
+            1730719781,
+            104397.4673,
+            104397.4673,
+            104327.2282,
+            104334.2624
+          ],
+          [
+            1730899026,
+            104601.7993,
+            105151.995,
+            104052.657,
+            105131.32
+          ],
+          [
+            1731078270,
+            104910.7212,
+            104910.7212,
+            102328.8914,
+            102490.3392
+          ],
+          [
+            1731257515,
+            102335.158,
+            102341.4245,
+            102165.9604,
+            102279.9382
+          ],
+          [
+            1731436759,
+            102581.6433,
+            103109.0697,
+            102236.9816,
+            103104.2881
+          ],
+          [
+            1731616004,
+            103109.0697,
+            103109.0697,
+            103109.0697,
+            103109.0697
+          ],
+          [
+            1731795248,
+            103109.0697,
+            103109.0697,
+            101835.4443,
+            102259.5441
+          ],
+          [
+            1731974493,
+            102142.8333,
+            103073.1973,
+            102142.8333,
+            102776.5651
+          ],
+          [
+            1732153738,
+            102478.9119,
+            103611.1176,
+            102478.9119,
+            103536.0176
+          ],
+          [
+            1732332982,
+            103611.1176,
+            103611.1176,
+            103611.1176,
+            103611.1176
+          ],
+          [
+            1732512227,
+            103611.1176,
+            103611.1176,
+            103611.1176,
+            103611.1176
+          ],
+          [
+            1732691471,
+            103611.1176,
+            103611.1176,
+            103611.1176,
+            103611.1176
+          ],
+          [
+            1732870716,
+            103611.1176,
+            103611.1176,
+            103611.1176,
+            103611.1176
+          ],
+          [
+            1733049960,
+            103611.1176,
+            103611.1176,
+            103611.1176,
+            103611.1176
+          ],
+          [
+            1733229205,
+            103610.1026,
+            103610.1026,
+            103232.2864,
+            103350.8308
+          ],
+          [
+            1733408450,
+            103308.6535,
+            103316.6921,
+            101678.8187,
+            101821.9057
+          ],
+          [
+            1733587694,
+            101835.5723,
+            101970.2195,
+            101029.6984,
+            101198.4789
+          ],
+          [
+            1733766939,
+            101031.708,
+            101839.5916,
+            101031.708,
+            101838.0095
+          ],
+          [
+            1733946183,
+            101636.6159,
+            101892.8374,
+            101636.6159,
+            101808.7018
+          ],
+          [
+            1734125428,
+            101840.2495,
+            102493.6961,
+            101343.4773,
+            101739.0186
+          ],
+          [
+            1734304672,
+            101723.6991,
+            101723.6991,
+            101723.6991,
+            101723.6991
+          ],
+          [
+            1734483917,
+            100902.1142,
+            100902.1142,
+            100206.633,
+            100731.8841
+          ],
+          [
+            1734663161,
+            100806.5811,
+            102473.5895,
+            100653.7281,
+            101092.1601
+          ],
+          [
+            1734842406,
+            100465.0969,
+            102951.3144,
+            100465.0969,
+            101979.3931
+          ],
+          [
+            1735021651,
+            101989.9245,
+            102921.0138,
+            101989.9245,
+            102783.8971
+          ],
+          [
+            1735200895,
+            102921.0138,
+            102921.0138,
+            102921.0138,
+            102921.0138
+          ],
+          [
+            1735380140,
+            102921.0138,
+            102921.0138,
+            102921.0138,
+            102921.0138
+          ],
+          [
+            1735559384,
+            102921.0138,
+            102921.0138,
+            102921.0138,
+            102921.0138
+          ]
+        ]
+      },
+      "Return": {
+        "name": "Return",
+        "unit": "%",
+        "index": 1,
+        "seriesType": 3,
+        "values": [
+          [
+            1725163200,
+            0.0
+          ],
+          [
+            1725342445,
+            0.0
+          ],
+          [
+            1725521689,
+            0.0
+          ],
+          [
+            1725700934,
+            -0.3499597
+          ],
+          [
+            1725880178,
+            0.3812414
+          ],
+          [
+            1726059423,
+            0.2570754
+          ],
+          [
+            1726238667,
+            -0.1508986
+          ],
+          [
+            1726417912,
+            0.0
+          ],
+          [
+            1726597157,
+            0.1471527
+          ],
+          [
+            1726776401,
+            0.3741561
+          ],
+          [
+            1726955646,
+            0.04778876
+          ],
+          [
+            1727134890,
+            -0.2140597
+          ],
+          [
+            1727314135,
+            -0.1329926
+          ],
+          [
+            1727493379,
+            0.5247229
+          ],
+          [
+            1727672624,
+            0.003334265
+          ],
+          [
+            1727851868,
+            0.0
+          ],
+          [
+            1728031113,
+            0.0
+          ],
+          [
+            1728210358,
+            0.0
+          ],
+          [
+            1728389602,
+            0.0
+          ],
+          [
+            1728568847,
+            0.0
+          ],
+          [
+            1728748091,
+            0.0
+          ],
+          [
+            1728927336,
+            0.1259396
+          ],
+          [
+            1729106580,
+            0.3768503
+          ],
+          [
+            1729285825,
+            0.0
+          ],
+          [
+            1729465070,
+            0.0
+          ],
+          [
+            1729644314,
+            0.0
+          ],
+          [
+            1729823559,
+            0.7849668
+          ],
+          [
+            1730002803,
+            0.0
+          ],
+          [
+            1730182048,
+            0.0
+          ],
+          [
+            1730361292,
+            -0.1254864
+          ],
+          [
+            1730540537,
+            0.5604898
+          ],
+          [
+            1730719782,
+            -0.07834707
+          ],
+          [
+            1730899026,
+            0.3043674
+          ],
+          [
+            1731078271,
+            -0.9785146
+          ],
+          [
+            1731257515,
+            0.0
+          ],
+          [
+            1731436760,
+            0.460214
+          ],
+          [
+            1731616004,
+            0.0
+          ],
+          [
+            1731795249,
+            -0.2641137
+          ],
+          [
+            1731974493,
+            0.5487112
+          ],
+          [
+            1732153738,
+            0.09819536
+          ],
+          [
+            1732332983,
+            0.0
+          ],
+          [
+            1732512227,
+            0.0
+          ],
+          [
+            1732691472,
+            0.0
+          ],
+          [
+            1732870716,
+            0.0
+          ],
+          [
+            1733049961,
+            0.0
+          ],
+          [
+            1733229205,
+            -0.3154131
+          ],
+          [
+            1733408450,
+            -0.6498495
+          ],
+          [
+            1733587695,
+            -0.4932696
+          ],
+          [
+            1733766939,
+            0.4591085
+          ],
+          [
+            1733946184,
+            -0.03164978
+          ],
+          [
+            1734125428,
+            -0.3164369
+          ],
+          [
+            1734304673,
+            0.0
+          ],
+          [
+            1734483917,
+            0.1441249
+          ],
+          [
+            1734663162,
+            -1.062957
+          ],
+          [
+            1734842407,
+            0.01208501
+          ],
+          [
+            1735021651,
+            0.8574385
+          ],
+          [
+            1735200896,
+            0.0
+          ],
+          [
+            1735380140,
+            0.0
+          ],
+          [
+            1735559385,
+            0.0
+          ]
+        ],
+        "color": "",
+        "scatterMarkerSymbol": "none"
+      }
+    }
+  },
+  "evidence_note": "Equity chart requests up to 10000 observations; daily diagnostics are not intraday rule proofs."
+}

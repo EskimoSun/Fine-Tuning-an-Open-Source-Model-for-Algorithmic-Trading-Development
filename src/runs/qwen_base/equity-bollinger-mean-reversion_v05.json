@@ -1,0 +1,76 @@
+{
+  "prompt_id": "equity-bollinger-mean-reversion_v05",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\n# QuantConnect LEAN Algorithm in Python (Snake Case API)\n# Strategy: SPY Daily Bars\n# Indicators: Bollinger Bands (Length: 20, StdDev: 2)\n# Logic:\n#   - Pre-open check (before market opens):\n#       - If Flat AND Price < Lower Band -> Go 100% Long\n#       - If Invested AND Price >= Middle Band -> Liquidate (Go Flat)\n#   - Date Range: 2024-09-01 to 2024-12-31\n#   - Initial Capital: $100,000\n\nfrom datetime import datetime\nimport QuantConnect.Algorithm as QCAlgorithm\nimport QuantConnect.Indicators as Indicators\n\nclass SPY_BB_Strategy(QCAlgorithm.QCAlgorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Set initial capital to $100,000.\n        - Add SPY data on Daily bars.\n        - Calculate Bollinger Bands (Length=20, StdDev=2).\n        \"\"\"\n        self.SetInitialCash(100000.0)\n        \n        # Add SPY data\n        self.Add(Equity.SPY)\n        \n        # Calculate Bollinger Bands\n        # BB = Middle Band +/- (StdDev * Multiplier)\n        # We need the Middle Band (SMA) and the Upper/Lower bands to determine conditions.\n        self.bollinger = Indicators.BollingerBands(self.Securities[\"SPY\"].Price, 20, 2)\n        \n        # Store state\n        self.is_invested = False\n        self.entry_date = None\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        - Check if we are at the start of the trading day (Pre-open).\n        - Execute logic based on current price vs Bollinger Bands.\n        \"\"\"\n        symbol = self.Securities[\"SPY\"]\n        \n        # Check if we have data for today\n        if symbol.CurrentPrice is None:\n            return\n\n        current_price = symbol.CurrentPrice\n        date = symbol.Date\n        \n        # Check if this is the first bar of the day (Pre-open condition)\n        # In daily data, the first bar usually represents the open or pre-market data.\n        # We check if we already have a position or if it's the first bar of the day.\n        # Since we are on daily bars, we only act on the first bar of the day.\n        # We can track this by checking if the date is the same as the previous bar's date.\n        \n        is_first_bar_of_day = False\n        if hasattr(self, 'last_date'):\n            if date != self.last_date:\n                is_first_bar_of_day = True\n        \n        self.last_date = date\n\n        # Only execute logic on the first bar of the day (Pre-open)\n        if is_first_bar_of_day:\n            # Get Band values\n            # BollingerBands object in QuantConnect usually returns:\n            # .UpperBand, .MiddleBand, .LowerBand\n            # However, the standard implementation often returns a tuple or specific properties.\n            # Let's access the underlying SMA and StdDev to be safe, or use the specific properties if available.\n            # In the standard QuantConnect Python API for Indicators:\n            # self.bollinger.UpperBand, self.bollinger.MiddleBand, self.bollinger.LowerBand\n            \n            try:\n                upper_band = self.bollinger.UpperBand\n                middle_band = self.bollinger.MiddleBand\n                lower_band = self.bollinger.LowerBand\n            except AttributeError:\n                # Fallback if properties are named differently in specific versions\n                # Usually it's .UpperBand, .MiddleBand, .LowerBand\n                # If not, we might need to calculate manually, but let's assume standard API.\n                # If this fails, it means the indicator hasn't produced a value yet (warmup).\n                return\n\n            # Logic Implementation\n            # Condition 1: Flat AND Price < Lower Band -> 100% Long\n            if not self.is_invested:\n                if current_price < lower_band:\n                    self.SetHoldings(\"SPY\", 1.0)\n                    self.is_invested = True\n                    self.entry_date = date\n                    self.Log(f\"{date}: Entered Long. Price ({current_price}) < Lower Band ({lower_band})\")\n\n            # Condition 2: Invested AND Price >= Middle Band -> Liquidate\n            elif self.is_invested:\n                if current_price >= middle_band:\n                    self.SetHoldings(\"SPY\", 0.0)\n                    self.is_invested = False\n                    self.entry_date = None\n                    self.Log(f\"{date}: Liquidated. Price ({current_price}) >= Middle Band ({middle_band})\")\n\n    def OnEndOfAlgorithm(self):\n        \"\"\"\n        Log final summary.\n        \"\"\"\n        self.Log(f\"Algorithm finished. Final Equity: ${self.Portfolio[\"SPY\"].TotalValue:,.2f}\")\n        self.Log(f\"Total Return: {((self.Portfolio[\"SPY\"].TotalValue - 100000) / 100000) * 100:.2f}%\")\n\n# Run the algorithm\n# Note: This script must be run within the QuantConnect LEAN environment (e.g., via LEAN CLI or Web IDE).\n# The date range 2024-09-01 to 2024-12-31 is handled by the data feed configuration in the environment.\n# If running locally, ensure the data feed is configured to provide data for this specific range.\n```",
+  "generated_at": "2026-11-14T21:21:11.180785+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "Add, Log, SetHoldings, SetInitialCash"
+    }
+  ],
+  "note": "compile: Warning main.py Line: 75 Column: 1 - Use of try/catch is discouraged as it can hide errors leading to unpredictable behavior in your strategy.; LEGACY_API: Add, Log, SetHoldings, SetInitialCash",
+  "qc_evaluation": {
+    "status": "compile_error",
+    "stage": "compile",
+    "source": "# QuantConnect LEAN Algorithm in Python (Snake Case API)\n# Strategy: SPY Daily Bars\n# Indicators: Bollinger Bands (Length: 20, StdDev: 2)\n# Logic:\n#   - Pre-open check (before market opens):\n#       - If Flat AND Price < Lower Band -> Go 100% Long\n#       - If Invested AND Price >= Middle Band -> Liquidate (Go Flat)\n#   - Date Range: 2024-09-01 to 2024-12-31\n#   - Initial Capital: $100,000\n\nfrom datetime import datetime\nimport QuantConnect.Algorithm as QCAlgorithm\nimport QuantConnect.Indicators as Indicators\n\nclass SPY_BB_Strategy(QCAlgorithm.QCAlgorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Set initial capital to $100,000.\n        - Add SPY data on Daily bars.\n        - Calculate Bollinger Bands (Length=20, StdDev=2).\n        \"\"\"\n        self.SetInitialCash(100000.0)\n        \n        # Add SPY data\n        self.Add(Equity.SPY)\n        \n        # Calculate Bollinger Bands\n        # BB = Middle Band +/- (StdDev * Multiplier)\n        # We need the Middle Band (SMA) and the Upper/Lower bands to determine conditions.\n        self.bollinger = Indicators.BollingerBands(self.Securities[\"SPY\"].Price, 20, 2)\n        \n        # Store state\n        self.is_invested = False\n        self.entry_date = None\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        - Check if we are at the start of the trading day (Pre-open).\n        - Execute logic based on current price vs Bollinger Bands.\n        \"\"\"\n        symbol = self.Securities[\"SPY\"]\n        \n        # Check if we have data for today\n        if symbol.CurrentPrice is None:\n            return\n\n        current_price = symbol.CurrentPrice\n        date = symbol.Date\n        \n        # Check if this is the first bar of the day (Pre-open condition)\n        # In daily data, the first bar usually represents the open or pre-market data.\n        # We check if we already have a position or if it's the first bar of the day.\n        # Since we are on daily bars, we only act on the first bar of the day.\n        # We can track this by checking if the date is the same as the previous bar's date.\n        \n        is_first_bar_of_day = False\n        if hasattr(self, 'last_date'):\n            if date != self.last_date:\n                is_first_bar_of_day = True\n        \n        self.last_date = date\n\n        # Only execute logic on the first bar of the day (Pre-open)\n        if is_first_bar_of_day:\n            # Get Band values\n            # BollingerBands object in QuantConnect usually returns:\n            # .UpperBand, .MiddleBand, .LowerBand\n            # However, the standard implementation often returns a tuple or specific properties.\n            # Let's access the underlying SMA and StdDev to be safe, or use the specific properties if available.\n            # In the standard QuantConnect Python API for Indicators:\n            # self.bollinger.UpperBand, self.bollinger.MiddleBand, self.bollinger.LowerBand\n            \n            try:\n                upper_band = self.bollinger.UpperBand\n                middle_band = self.bollinger.MiddleBand\n                lower_band = self.bollinger.LowerBand\n            except AttributeError:\n                # Fallback if properties are named differently in specific versions\n                # Usually it's .UpperBand, .MiddleBand, .LowerBand\n                # If not, we might need to calculate manually, but let's assume standard API.\n                # If this fails, it means the indicator hasn't produced a value yet (warmup).\n                return\n\n            # Logic Implementation\n            # Condition 1: Flat AND Price < Lower Band -> 100% Long\n            if not self.is_invested:\n                if current_price < lower_band:\n                    self.SetHoldings(\"SPY\", 1.0)\n                    self.is_invested = True\n                    self.entry_date = date\n                    self.Log(f\"{date}: Entered Long. Price ({current_price}) < Lower Band ({lower_band})\")\n\n            # Condition 2: Invested AND Price >= Middle Band -> Liquidate\n            elif self.is_invested:\n                if current_price >= middle_band:\n                    self.SetHoldings(\"SPY\", 0.0)\n                    self.is_invested = False\n                    self.entry_date = None\n                    self.Log(f\"{date}: Liquidated. Price ({current_price}) >= Middle Band ({middle_band})\")\n\n    def OnEndOfAlgorithm(self):\n        \"\"\"\n        Log final summary.\n        \"\"\"\n        self.Log(f\"Algorithm finished. Final Equity: ${self.Portfolio[\"SPY\"].TotalValue:,.2f}\")\n        self.Log(f\"Total Return: {((self.Portfolio[\"SPY\"].TotalValue - 100000) / 100000) * 100:.2f}%\")\n\n# Run the algorithm\n# Note: This script must be run within the QuantConnect LEAN environment (e.g., via LEAN CLI or Web IDE).\n# The date range 2024-09-01 to 2024-12-31 is handled by the data feed configuration in the environment.\n# If running locally, ensure the data feed is configured to provide data for this specific range.\n",
+    "source_sha256": "518f8ba5a01b5a3040328a093cd3f77f0b7f82faa1c9be5cd4f340be1926428a",
+    "started_at": "2026-11-14T21:41:14.624720+00:00",
+    "compile_errors": 1,
+    "runtime_errors": null,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "compile: Warning main.py Line: 75 Column: 1 - Use of try/catch is discouraged as it can hide errors leading to unpredictable behavior in your strategy.",
+    "project_id": 39411597,
+    "compile_id": "b8b0fbb4df80e1d45a3f05bed68d4143-e1eb0f2b7dca2185c1e4de19a072f8f4",
+    "compile_created": {
+      "compileId": "b8b0fbb4df80e1d45a3f05bed68d4143-e1eb0f2b7dca2185c1e4de19a072f8f4",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39411597,
+      "signature": "e1eb0f2b7dca2185c1e4de19a072f8f4",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "b8b0fbb4df80e1d45a3f05bed68d4143-e1eb0f2b7dca2185c1e4de19a072f8f4",
+      "state": "BuildError",
+      "logs": [
+        "Warning main.py Line: 1 Column: 1 - Add 'from AlgorithmImports import *' at the top of the file. Without it, QuantConnect names such as QCAlgorithm and Resolution are undefined when the algorithm loads.",
+        "Warning main.py Line: 12 Column: 1 - Incompatible import of \"QCAlgorithm\" (imported name has type Module, local name has type \"QCAlgorithm\"); maybe \"from AlgorithmImports import *\"?",
+        "Warning main.py Line: 15 Column: 23 - Name \"QCAlgorithm.QCAlgorithm\" is not defined",
+        "Warning main.py Line: 75 Column: 1 - Use of try/catch is discouraged as it can hide errors leading to unpredictable behavior in your strategy.",
+        "Error main.py Line: 107 Column: 67 - SyntaxError: f-string: unmatched '['"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Warning main.py Line: 1 Column: 1 - Add 'from AlgorithmImports import *' at the top of the file. Without it, QuantConnect names such as QCAlgorithm and Resolution are undefined when the algorithm loads.",
+      "Warning main.py Line: 12 Column: 1 - Incompatible import of \"QCAlgorithm\" (imported name has type Module, local name has type \"QCAlgorithm\"); maybe \"from AlgorithmImports import *\"?",
+      "Warning main.py Line: 15 Column: 23 - Name \"QCAlgorithm.QCAlgorithm\" is not defined",
+      "Warning main.py Line: 75 Column: 1 - Use of try/catch is discouraged as it can hide errors leading to unpredictable behavior in your strategy.",
+      "Error main.py Line: 107 Column: 67 - SyntaxError: f-string: unmatched '['"
+    ],
+    "error": [
+      "Warning main.py Line: 1 Column: 1 - Add 'from AlgorithmImports import *' at the top of the file. Without it, QuantConnect names such as QCAlgorithm and Resolution are undefined when the algorithm loads.",
+      "Warning main.py Line: 12 Column: 1 - Incompatible import of \"QCAlgorithm\" (imported name has type Module, local name has type \"QCAlgorithm\"); maybe \"from AlgorithmImports import *\"?",
+      "Warning main.py Line: 15 Column: 23 - Name \"QCAlgorithm.QCAlgorithm\" is not defined",
+      "Warning main.py Line: 75 Column: 1 - Use of try/catch is discouraged as it can hide errors leading to unpredictable behavior in your strategy.",
+      "Error main.py Line: 107 Column: 67 - SyntaxError: f-string: unmatched '['"
+    ],
+    "finished_at": "2026-11-14T21:41:19.004174+00:00"
+  },
+  "compile_errors": 1,
+  "runtime_errors": null,
+  "statistics": {},
+  "qc_note": "compile: Warning main.py Line: 75 Column: 1 - Use of try/catch is discouraged as it can hide errors leading to unpredictable behavior in your strategy."
+}

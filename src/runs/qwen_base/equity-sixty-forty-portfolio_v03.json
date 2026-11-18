@@ -1,0 +1,297 @@
+{
+  "prompt_id": "equity-sixty-forty-portfolio_v03",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport QuantConnect\nfrom QuantConnect import *\nfrom QuantConnect.Algorithm import QC_Algorithm\nfrom QuantConnect.Data.Market import MinuteBar\nfrom QuantConnect.Securities.Equity import EquitySecurityDefinition\nfrom QuantConnect.Securities.Bond import BondSecurityDefinition\nfrom QuantConnect.Lean.Engine.DataFeeds import DataFeedHandler\nfrom QuantConnect.Util import DateTimeExtensions\n\nclass SixtyForty(QC_Algorithm):\n    \"\"\"\n    Algorithm to maintain a 60% SPY / 40% TLT portfolio.\n    Rebalances at the start of every quarter, 1 minute after market open.\n    \"\"\"\n    \n    # Named constant for the tolerance threshold\n    REBALANCE_TOLERANCE = 0.05  # 5 percentage points\n    \n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        Sets up the universe, adds data feeds, and sets the start/end dates.\n        \"\"\"\n        # Set the start and end dates\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Set the initial cash\n        self.SetInitialCash(100000)\n        \n        # Add SPY (S&P 500 ETF)\n        self.AddEquity(\"SPY\", Resolution.Minute)\n        \n        # Add TLT (iShares 20+ Year Treasury Bond ETF)\n        # Note: TLT is an equity ETF in QuantConnect's data feed, though it holds bonds.\n        self.AddEquity(\"TLT\", Resolution.Minute)\n        \n        # Set the target weights\n        self._target_weight_spy = 0.60\n        self._target_weight_tlt = 0.40\n        \n        # Flag to ensure we only buy on the first bar\n        self._first_bar = True\n        \n        # Flag to track if we have executed the first buy\n        self._initial_buy_done = False\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        Checks for the rebalance condition at the start of every quarter, 1 minute after open.\n        \"\"\"\n        current_time = self.GetUtcTime()\n        \n        # Check if this is the first bar of the algorithm\n        if self._first_bar:\n            self._first_bar = False\n            # Buy the initial positions to get 60/40\n            self._ExecuteInitialBuy()\n            return\n\n        # Determine if we are at the start of a quarter\n        # Quarters start on the 1st of Jan, Apr, Jul, Oct\n        is_quarter_start = current_time.Day == 1 and current_time.Month in [1, 4, 7, 10]\n        \n        # Check if it is 1 minute after the market open\n        # For US markets, open is typically 9:30 AM ET. \n        # We check if the minute is 9:31 AM ET.\n        # We need to convert to local time or check the specific minute offset.\n        # Since we are using UTC, we need to know the offset or check the minute directly if we assume EST/EDT.\n        # A safer way in LEAN is to check the minute of the day relative to the open.\n        # However, without explicit timezone handling in the check, we can check the minute value.\n        # 9:30 AM ET is roughly 14:30 UTC (in winter) or 13:30 UTC (in summer).\n        # To be robust, we check if the minute is 31 and the hour corresponds to open + 1 min.\n        # Let's assume standard US market hours logic: Open is 9:30 AM ET.\n        # We will check if the minute is 31 and the hour is 9 or 10 (depending on DST) or simply check the minute offset from open.\n        # A simpler approach for this specific requirement: Check if the minute is 31 and the hour is 9 (EST) or 10 (EDT) in UTC?\n        # Actually, let's rely on the fact that the user wants \"1 minute after open\".\n        # We can check if the minute is 31 and the hour is 9 (if EST) or 10 (if EDT).\n        # But a more robust way in LEAN Python is to check the minute of the day.\n        # Let's assume the user implies the standard US session.\n        # We will check if the minute is 31 and the hour is 9 or 10.\n        \n        # Refined check: \n        # We need to know if we are exactly 1 minute past the open.\n        # Since we don't have a direct \"IsOpen\" flag for the specific minute, we check the time.\n        # 9:30 AM ET = 14:30 UTC (Winter) / 13:30 UTC (Summer).\n        # 9:31 AM ET = 14:31 UTC (Winter) / 13:31 UTC (Summer).\n        # This is tricky without knowing the exact DST state.\n        # Alternative: Check if the minute is 31 and the hour is 9 or 10.\n        # Let's try to detect the open minute.\n        # If the minute is 31 and the hour is 9 or 10, it's likely 1 min after open.\n        \n        hour = current_time.Hour\n        minute = current_time.Minute\n        \n        # Check for 1 minute after open (9:31 AM ET)\n        # In Winter (EST), 9:31 AM ET is 14:31 UTC.\n        # In Summer (EDT), 9:31 AM ET is 13:31 UTC.\n        # We can check if minute == 31 and (hour == 14 or hour == 13).\n        is_one_minute_after_open = (minute == 31 and (hour == 13 or hour == 14))\n        \n        # Check if it is the start of a quarter AND 1 minute after open\n        if is_quarter_start and is_one_minute_after_open:\n            self._Rebalance()\n\n    def _ExecuteInitialBuy(self):\n        \"\"\"\n        Execute the initial buy to establish 60% SPY and 40% TLT.\n        \"\"\"\n        if self._initial_buy_done:\n            return\n            \n        # Calculate target dollar amounts\n        total_cash = self.Cash\n        target_spy_cash = total_cash * self._target_weight_spy\n        target_tlt_cash = total_cash * self._target_weight_tlt\n        \n        # Buy SPY\n        self.SetHoldings(\"SPY\", self._target_weight_spy)\n        \n        # Buy TLT\n        self.SetHoldings(\"TLT\", self._target_weight_tlt)\n        \n        self._initial_buy_done = True\n        self.Log(\"Initial positions established: 60% SPY, 40% TLT\")\n\n    def _Rebalance(self):\n        \"\"\"\n        Check current weights and rebalance if necessary.\n        \"\"\"\n        # Get current holdings\n        current_holdings = self.Portfolio\n        \n        current_spy_weight = current_holdings.Get(\"SPY\").Weight\n        current_tlt_weight = current_holdings.Get(\"TLT\").Weight\n        \n        # Calculate deviation from target\n        spy_deviation = abs(current_spy_weight - self._target_weight_spy)\n        tlt_deviation = abs(current_tlt_weight - self._target_weight_tlt)\n        \n        needs_rebalance = spy_deviation > self.REBALANCE_TOLERANCE or tlt_deviation > self.REBALANCE_TOLERANCE\n        \n        if needs_rebalance:\n            # Rebalance to target\n            self.SetHoldings(\"SPY\", self._target_weight_spy)\n            self.SetHoldings(\"TLT\", self._target_weight_tlt)\n            self.Log(f\"Rebalanced at {self.GetUtcTime().ToString('yyyy-MM-dd HH:mm:ss')}: SPY={current_spy_weight:F4} -> {self._target_weight_spy}, TLT={current_tlt_weight:F4} -> {self._target_weight_tlt}\")\n        else:\n            # Log that rebalance was skipped\n            self.Log(f\"Rebalance skipped at {self.GetUtcTime().ToString('yyyy-MM-dd HH:mm:ss')}: SPY={current_spy_weight:F4}, TLT={current_tlt_weight:F4} (within {self.REBALANCE_TOLERANCE*100}% tolerance)\")\n```",
+  "generated_at": "2026-11-14T22:15:21.113527+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddEquity, GetUtcTime, Log, SetEndDate, SetHoldings, SetInitialCash, SetStartDate"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import QuantConnect\nfrom QuantConnect import *\nfrom QuantConnect.Algorithm import QC_Algorithm\nfrom QuantConnect.Data.Market import MinuteBar\nfrom QuantConnect.Securities.Equity import EquitySecurityDefinition\nfrom QuantConnect.Securities.Bond import BondSecurityDefinition\nfrom QuantConnect.Lean.Engine.DataFeeds import DataFeedHandler\nfrom QuantConnect.Util import DateTimeExtensions\n\nclass SixtyForty(QC_Algorithm):\n    \"\"\"\n    Algorithm to maintain a 60% SPY / 40% TLT portfolio.\n    Rebalances at the start of every quarter, 1 minute after market open.\n    \"\"\"\n    \n    # Named constant for the tolerance threshold\n    REBALANCE_TOLERANCE = 0.05  # 5 percentage points\n    \n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        Sets up the universe, adds data feeds, and sets the start/end dates.\n        \"\"\"\n        # Set the start and end dates\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Set the initial cash\n        self.SetInitialCash(100000)\n        \n        # Add SPY (S&P 500 ETF)\n        self.AddEquity(\"SPY\", Resolution.Minute)\n        \n        # Add TLT (iShares 20+ Year Treasury Bond ETF)\n        # Note: TLT is an equity ETF in QuantConnect's data feed, though it holds bonds.\n        self.AddEquity(\"TLT\", Resolution.Minute)\n        \n        # Set the target weights\n        self._target_weight_spy = 0.60\n        self._target_weight_tlt = 0.40\n        \n        # Flag to ensure we only buy on the first bar\n        self._first_bar = True\n        \n        # Flag to track if we have executed the first buy\n        self._initial_buy_done = False\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        Checks for the rebalance condition at the start of every quarter, 1 minute after open.\n        \"\"\"\n        current_time = self.GetUtcTime()\n        \n        # Check if this is the first bar of the algorithm\n        if self._first_bar:\n            self._first_bar = False\n            # Buy the initial positions to get 60/40\n            self._ExecuteInitialBuy()\n            return\n\n        # Determine if we are at the start of a quarter\n        # Quarters start on the 1st of Jan, Apr, Jul, Oct\n        is_quarter_start = current_time.Day == 1 and current_time.Month in [1, 4, 7, 10]\n        \n        # Check if it is 1 minute after the market open\n        # For US markets, open is typically 9:30 AM ET. \n        # We check if the minute is 9:31 AM ET.\n        # We need to convert to local time or check the specific minute offset.\n        # Since we are using UTC, we need to know the offset or check the minute directly if we assume EST/EDT.\n        # A safer way in LEAN is to check the minute of the day relative to the open.\n        # However, without explicit timezone handling in the check, we can check the minute value.\n        # 9:30 AM ET is roughly 14:30 UTC (in winter) or 13:30 UTC (in summer).\n        # To be robust, we check if the minute is 31 and the hour corresponds to open + 1 min.\n        # Let's assume standard US market hours logic: Open is 9:30 AM ET.\n        # We will check if the minute is 31 and the hour is 9 or 10 (depending on DST) or simply check the minute offset from open.\n        # A simpler approach for this specific requirement: Check if the minute is 31 and the hour is 9 (EST) or 10 (EDT) in UTC?\n        # Actually, let's rely on the fact that the user wants \"1 minute after open\".\n        # We can check if the minute is 31 and the hour is 9 (if EST) or 10 (if EDT).\n        # But a more robust way in LEAN Python is to check the minute of the day.\n        # Let's assume the user implies the standard US session.\n        # We will check if the minute is 31 and the hour is 9 or 10.\n        \n        # Refined check: \n        # We need to know if we are exactly 1 minute past the open.\n        # Since we don't have a direct \"IsOpen\" flag for the specific minute, we check the time.\n        # 9:30 AM ET = 14:30 UTC (Winter) / 13:30 UTC (Summer).\n        # 9:31 AM ET = 14:31 UTC (Winter) / 13:31 UTC (Summer).\n        # This is tricky without knowing the exact DST state.\n        # Alternative: Check if the minute is 31 and the hour is 9 or 10.\n        # Let's try to detect the open minute.\n        # If the minute is 31 and the hour is 9 or 10, it's likely 1 min after open.\n        \n        hour = current_time.Hour\n        minute = current_time.Minute\n        \n        # Check for 1 minute after open (9:31 AM ET)\n        # In Winter (EST), 9:31 AM ET is 14:31 UTC.\n        # In Summer (EDT), 9:31 AM ET is 13:31 UTC.\n        # We can check if minute == 31 and (hour == 14 or hour == 13).\n        is_one_minute_after_open = (minute == 31 and (hour == 13 or hour == 14))\n        \n        # Check if it is the start of a quarter AND 1 minute after open\n        if is_quarter_start and is_one_minute_after_open:\n            self._Rebalance()\n\n    def _ExecuteInitialBuy(self):\n        \"\"\"\n        Execute the initial buy to establish 60% SPY and 40% TLT.\n        \"\"\"\n        if self._initial_buy_done:\n            return\n            \n        # Calculate target dollar amounts\n        total_cash = self.Cash\n        target_spy_cash = total_cash * self._target_weight_spy\n        target_tlt_cash = total_cash * self._target_weight_tlt\n        \n        # Buy SPY\n        self.SetHoldings(\"SPY\", self._target_weight_spy)\n        \n        # Buy TLT\n        self.SetHoldings(\"TLT\", self._target_weight_tlt)\n        \n        self._initial_buy_done = True\n        self.Log(\"Initial positions established: 60% SPY, 40% TLT\")\n\n    def _Rebalance(self):\n        \"\"\"\n        Check current weights and rebalance if necessary.\n        \"\"\"\n        # Get current holdings\n        current_holdings = self.Portfolio\n        \n        current_spy_weight = current_holdings.Get(\"SPY\").Weight\n        current_tlt_weight = current_holdings.Get(\"TLT\").Weight\n        \n        # Calculate deviation from target\n        spy_deviation = abs(current_spy_weight - self._target_weight_spy)\n        tlt_deviation = abs(current_tlt_weight - self._target_weight_tlt)\n        \n        needs_rebalance = spy_deviation > self.REBALANCE_TOLERANCE or tlt_deviation > self.REBALANCE_TOLERANCE\n        \n        if needs_rebalance:\n            # Rebalance to target\n            self.SetHoldings(\"SPY\", self._target_weight_spy)\n            self.SetHoldings(\"TLT\", self._target_weight_tlt)\n            self.Log(f\"Rebalanced at {self.GetUtcTime().ToString('yyyy-MM-dd HH:mm:ss')}: SPY={current_spy_weight:F4} -> {self._target_weight_spy}, TLT={current_tlt_weight:F4} -> {self._target_weight_tlt}\")\n        else:\n            # Log that rebalance was skipped\n            self.Log(f\"Rebalance skipped at {self.GetUtcTime().ToString('yyyy-MM-dd HH:mm:ss')}: SPY={current_spy_weight:F4}, TLT={current_tlt_weight:F4} (within {self.REBALANCE_TOLERANCE*100}% tolerance)\")\n",
+    "source_sha256": "c86096900d4dace276792127254c47202458ef3c27415f2ac73a3ec268893105",
+    "started_at": "2026-11-14T22:15:21.115406+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Loader.TryCreatePythonAlgorithm():  System.Exception: AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location),  a",
+    "project_id": 39412984,
+    "compile_id": "fccc60f1ffa902be35e08f06e00454ff-023fdd642271d88cc4f9027b9bd166e1",
+    "compile_created": {
+      "compileId": "fccc60f1ffa902be35e08f06e00454ff-023fdd642271d88cc4f9027b9bd166e1",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39412984,
+      "signature": "023fdd642271d88cc4f9027b9bd166e1",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "fccc60f1ffa902be35e08f06e00454ff-023fdd642271d88cc4f9027b9bd166e1",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39412984, with CompileID: fccc60f1ffa902be35e08f06e00454ff-023fdd642271d88cc4f9027b9bd166e1, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39412984, with CompileID: fccc60f1ffa902be35e08f06e00454ff-023fdd642271d88cc4f9027b9bd166e1, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "2fe93fa45589514489b160aa3f938597",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-sixty-forty-portfolio_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39412984,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "2fe93fa45589514489b160aa3f938597",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 17
+        },
+        "backtestStart": "2026-11-14 22:15:24",
+        "backtestEnd": "2026-11-14 22:15:24",
+        "created": "2026-11-14 22:15:24",
+        "snapshotId": 39412991,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-sixty-forty-portfolio_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39412984,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "2fe93fa45589514489b160aa3f938597",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 17
+        },
+        "backtestStart": "2026-11-14 22:15:24",
+        "backtestEnd": "2026-11-14 22:15:24",
+        "created": "2026-11-14 22:15:24",
+        "snapshotId": 39412991,
+        "status": "Runtime Error",
+        "error": "[ERROR] FATAL UNHANDLED EXCEPTION:Loader.TryCreatePythonAlgorithm():  System.Exception: AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location),  at <module>,    from QuantConnect.Algorithm import QC_Algorithm, in main.py: line 3, cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location),   at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper..ctor(String moduleName) in AlgorithmFactory/Python/Wrappers/AlgorithmPythonWrapper.cs:line 188,   at QuantConnect.AlgorithmFactory.Loader.TryCreatePythonAlgorithm(String assemblyPath, IAlgorithm& algorithmInstance, String& errorMessage) in AlgorithmFactory/Loader.cs:line 173,Engine.Run():  QuantConnect.Lean.Engine.Setup.AlgorithmSetupException: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'Q",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 3\n cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.5%",
+          "Used RAM (MB)": "167",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-2fe93fa45589514489b160aa3f938597",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "[ERROR] FATAL UNHANDLED EXCEPTION:Loader.TryCreatePythonAlgorithm():  System.Exception: AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location),  at <module>,    from QuantConnect.Algorithm import QC_Algorithm, in main.py: line 3, cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location),   at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper..ctor(String moduleName) in AlgorithmFactory/Python/Wrappers/AlgorithmPythonWrapper.cs:line 188,   at QuantConnect.AlgorithmFactory.Loader.TryCreatePythonAlgorithm(String assemblyPath, IAlgorithm& algorithmInstance, String& errorMessage) in AlgorithmFactory/Loader.cs:line 173,Engine.Run():  QuantConnect.Lean.Engine.Setup.AlgorithmSetupException: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'Q",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC_Algorithm\n in main.py: line 3\n cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:16:11.875637+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Loader.TryCreatePythonAlgorithm():  System.Exception: AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location),  a",
+  "note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Loader.TryCreatePythonAlgorithm():  System.Exception: AlgorithmPythonWrapper(): cannot import name 'QC_Algorithm' from 'QuantConnect.Algorithm' (unknown location),  a; NO_ALGORITHM_CLASS; LEGACY_API: AddEquity, GetUtcTime, Log, SetEndDate, SetHoldings, SetInitialCash, SetStartDate",
+  "total_orders": null
+}

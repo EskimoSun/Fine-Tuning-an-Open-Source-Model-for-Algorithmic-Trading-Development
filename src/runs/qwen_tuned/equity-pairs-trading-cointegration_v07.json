@@ -1,0 +1,331 @@
+{
+  "prompt_id": "equity-pairs-trading-cointegration_v07",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass PairTradingAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        for ticker in [\"KO\", \"PEP\"]:\n            equity = self.add_equity(ticker)\n            equity.spread = self.spread(equity, \"PEP\" if ticker == \"KO\" else \"KO\")\n            # Alternatively, use a manual indicator.\n            # equity.spread = Spread(0, 0)\n            # self.warm_up_indicator(equity, equity.spread, Resolution.DAILY)\n            # self.register_indicator(equity, equity.spread, Resolution.DAILY)\n            equity.ols = self.ols(equity, \"PEP\" if ticker == \"KO\" else \"KO\", 20)\n            # Alternatively, use a manual indicator.\n            # equity.ols = OrdinaryLeastSquares(20)\n            # self.warm_up_indicator(equity, equity.ols, Resolution.DAILY)\n            # self.register_indicator(equity, equity.ols, Resolution.DAILY)\n\n        self.schedule.on(\n            self.date_rules.every_day(\"KO\"),\n            self.time_rules.after_market_open(\"KO\", 1),\n            self._rebalance\n        )\n\n    def _rebalance(self) -> None:\n        for security in self.securities.values():\n            if not security.ols.is_ready:\n                continue\n            beta, _ = security.ols.current.value\n\n            other = self.securities.get(security.id.other)\n            if not other:\n                continue\n            z = other.spread.current.value\n\n            if not self.portfolio.invested:\n                if z > 2 and beta < 0:\n                    target = min(1, 1/abs(beta))\n                    self.set_holdings(security, 1)\n                    self.set_holdings(other, -target)\n                elif z < -2 and beta > 0:\n                    target = min(1, 1/abs(beta))\n                    self.set_holdings(security, -1)\n                    self.set_holdings(other, target)\n                continue\n\n            weight = self.portfolio[security].quantity / self.portfolio.total_invested_quantity\n\n            if weight > 0.5 and z > 2:\n                self.liquidate(security)\n                self.liquidate(other)\n                continue\n\n            if weight < -0.5 and z < -2:\n                self.liquidate(security)\n                self.liquidate(other)\n                continue\n```",
+  "generated_at": "2026-11-12T23:58:11.218330+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "ols, spread"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass PairTradingAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        for ticker in [\"KO\", \"PEP\"]:\n            equity = self.add_equity(ticker)\n            equity.spread = self.spread(equity, \"PEP\" if ticker == \"KO\" else \"KO\")\n            # Alternatively, use a manual indicator.\n            # equity.spread = Spread(0, 0)\n            # self.warm_up_indicator(equity, equity.spread, Resolution.DAILY)\n            # self.register_indicator(equity, equity.spread, Resolution.DAILY)\n            equity.ols = self.ols(equity, \"PEP\" if ticker == \"KO\" else \"KO\", 20)\n            # Alternatively, use a manual indicator.\n            # equity.ols = OrdinaryLeastSquares(20)\n            # self.warm_up_indicator(equity, equity.ols, Resolution.DAILY)\n            # self.register_indicator(equity, equity.ols, Resolution.DAILY)\n\n        self.schedule.on(\n            self.date_rules.every_day(\"KO\"),\n            self.time_rules.after_market_open(\"KO\", 1),\n            self._rebalance\n        )\n\n    def _rebalance(self) -> None:\n        for security in self.securities.values():\n            if not security.ols.is_ready:\n                continue\n            beta, _ = security.ols.current.value\n\n            other = self.securities.get(security.id.other)\n            if not other:\n                continue\n            z = other.spread.current.value\n\n            if not self.portfolio.invested:\n                if z > 2 and beta < 0:\n                    target = min(1, 1/abs(beta))\n                    self.set_holdings(security, 1)\n                    self.set_holdings(other, -target)\n                elif z < -2 and beta > 0:\n                    target = min(1, 1/abs(beta))\n                    self.set_holdings(security, -1)\n                    self.set_holdings(other, target)\n                continue\n\n            weight = self.portfolio[security].quantity / self.portfolio.total_invested_quantity\n\n            if weight > 0.5 and z > 2:\n                self.liquidate(security)\n                self.liquidate(other)\n                continue\n\n            if weight < -0.5 and z < -2:\n                self.liquidate(security)\n                self.liquidate(other)\n                continue\n",
+    "source_sha256": "78b6744e42c16e13ceffa63e603324f28c9a18b6146b3e249384715ee5f98655",
+    "started_at": "2026-11-12T23:58:11.220724+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;PairTradingAlgorithm&#039; object has no attribute &#039;spread&#039;\n  at initialize\n    equity.sp",
+    "project_id": 39315271,
+    "compile_id": "6834f8e0e58985d0d0a4d42701ccb1c4-c50f8fbafdadc325f6ef08d503881db2",
+    "compile_created": {
+      "compileId": "6834f8e0e58985d0d0a4d42701ccb1c4-c50f8fbafdadc325f6ef08d503881db2",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39315271,
+      "signature": "c50f8fbafdadc325f6ef08d503881db2",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "6834f8e0e58985d0d0a4d42701ccb1c4-c50f8fbafdadc325f6ef08d503881db2",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39315271, with CompileID: 6834f8e0e58985d0d0a4d42701ccb1c4-c50f8fbafdadc325f6ef08d503881db2, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39315271, with CompileID: 6834f8e0e58985d0d0a4d42701ccb1c4-c50f8fbafdadc325f6ef08d503881db2, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "789a94cf1c6a00709b77e587931dd02d",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v07",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315271,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "789a94cf1c6a00709b77e587931dd02d",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 21
+        },
+        "backtestStart": "2026-11-12 23:58:14",
+        "backtestEnd": "2026-11-12 23:58:14",
+        "created": "2026-11-12 23:58:14",
+        "snapshotId": 39315276,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v07",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315271,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "789a94cf1c6a00709b77e587931dd02d",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 21
+        },
+        "backtestStart": "2026-11-12 23:58:14",
+        "backtestEnd": "2026-11-12 23:58:14",
+        "created": "2026-11-12 23:58:14",
+        "snapshotId": 39315276,
+        "status": "Runtime Error",
+        "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;PairTradingAlgorithm&#039; object has no attribute &#039;spread&#039;\n  at initialize\n    equity.spread = self.spread(equity, &quot;PEP&quot; if ticker == &quot;KO&quot; else &quot;KO&quot;)\n                    ^^^^^^^^^^^\n in main.py: line 16\n &#039;PairTradingAlgorithm&#039; object has no attribute &#039;spread&#039;",
+        "stacktrace": "'PairTradingAlgorithm' object has no attribute 'spread'\n  at initialize\n    equity.spread = self.spread(equity, \"PEP\" if ticker == \"KO\" else \"KO\")\n                    ^^^^^^^^^^^\n in main.py: line 16\n 'PairTradingAlgorithm' object has no attribute 'spread'",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "7.0%",
+          "Used RAM (MB)": "225",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-789a94cf1c6a00709b77e587931dd02d",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:13"
+        }
+      },
+      "success": true
+    },
+    "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;PairTradingAlgorithm&#039; object has no attribute &#039;spread&#039;\n  at initialize\n    equity.spread = self.spread(equity, &quot;PEP&quot; if ticker == &quot;KO&quot; else &quot;KO&quot;)\n                    ^^^^^^^^^^^\n in main.py: line 16\n &#039;PairTradingAlgorithm&#039; object has no attribute &#039;spread&#039;",
+    "stacktrace": "'PairTradingAlgorithm' object has no attribute 'spread'\n  at initialize\n    equity.spread = self.spread(equity, \"PEP\" if ticker == \"KO\" else \"KO\")\n                    ^^^^^^^^^^^\n in main.py: line 16\n 'PairTradingAlgorithm' object has no attribute 'spread'",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:59:06.051963+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;PairTradingAlgorithm&#039; object has no attribute &#039;spread&#039;\n  at initialize\n    equity.sp",
+  "note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;PairTradingAlgorithm&#039; object has no attribute &#039;spread&#039;\n  at initialize\n    equity.sp; UNKNOWN_API: ols, spread",
+  "total_orders": null
+}

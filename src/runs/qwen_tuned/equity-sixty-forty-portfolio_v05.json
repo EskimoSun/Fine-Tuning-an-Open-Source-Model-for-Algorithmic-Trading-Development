@@ -1,0 +1,291 @@
+{
+  "prompt_id": "equity-sixty-forty-portfolio_v05",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass StaticPortfolioAlgorithm(QCAlgorithm):\n    _tolerance = 0.05\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n        \n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        # Request SPY and TLT data to form a static portfolio.\n        tickers = [\"SPY\", \"TLT\"]\n        targets = [self.add_equity(t, Resolution.MINUTE) for t in tickers]\n        self.set_portfolio_targets(targets, [0.6, 0.4])\n\n        # Create a PortfolioRebalanceManager to manage the rebalancing schedule.\n        self._rebalance_manager = PortfolioRebalanceManager(self)\n        # Set the rebalancing strategy and schedule.\n        self._rebalance_manager.set_strategy(lambda portfolio: (portfolio, 0.05, \"SPY\"))\n        self.schedule.on(self.date_rules.every_quarter_start(), self.time_rules.at(9, 0), self._rebalance_manager.rebalance)\n\n    def on_warmup_finished(self) -> None:\n        self.set_holdings(self.portfolio, self.portfolio.targets)\n\n    def _check_if_rebalance_needed(self, current: PortfolioHoldings, targets: PortfolioTargets) -> bool:\n        for holding, target in zip(current.values, targets.values):\n            weight = holding.holdings / self.portfolio.total_holdings_value\n            if abs(weight - target.weight) > self._tolerance:\n                return True\n        return False\n\n    def on_order_event(self, order_event: OrderEvent) -> None:\n        super().on_order_event(order_event)\n        # Rebalance if the rebalance manager indicates so and we have valid portfolio data.\n        if self._rebalance_manager.should_rebalance and self.portfolio.total_holdings_value:\n            self.set_holdings(self.portfolio, self.portfolio.targets)\n```",
+  "generated_at": "2026-11-12T23:34:07.677791+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "set_portfolio_targets"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass StaticPortfolioAlgorithm(QCAlgorithm):\n    _tolerance = 0.05\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n        \n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        # Request SPY and TLT data to form a static portfolio.\n        tickers = [\"SPY\", \"TLT\"]\n        targets = [self.add_equity(t, Resolution.MINUTE) for t in tickers]\n        self.set_portfolio_targets(targets, [0.6, 0.4])\n\n        # Create a PortfolioRebalanceManager to manage the rebalancing schedule.\n        self._rebalance_manager = PortfolioRebalanceManager(self)\n        # Set the rebalancing strategy and schedule.\n        self._rebalance_manager.set_strategy(lambda portfolio: (portfolio, 0.05, \"SPY\"))\n        self.schedule.on(self.date_rules.every_quarter_start(), self.time_rules.at(9, 0), self._rebalance_manager.rebalance)\n\n    def on_warmup_finished(self) -> None:\n        self.set_holdings(self.portfolio, self.portfolio.targets)\n\n    def _check_if_rebalance_needed(self, current: PortfolioHoldings, targets: PortfolioTargets) -> bool:\n        for holding, target in zip(current.values, targets.values):\n            weight = holding.holdings / self.portfolio.total_holdings_value\n            if abs(weight - target.weight) > self._tolerance:\n                return True\n        return False\n\n    def on_order_event(self, order_event: OrderEvent) -> None:\n        super().on_order_event(order_event)\n        # Rebalance if the rebalance manager indicates so and we have valid portfolio data.\n        if self._rebalance_manager.should_rebalance and self.portfolio.total_holdings_value:\n            self.set_holdings(self.portfolio, self.portfolio.targets)\n",
+    "source_sha256": "5cc0461b7e12f33c1568e0c61fdb42ca59f4b40ea9f5201cce4e8a2bd6c798bf",
+    "started_at": "2026-11-12T23:34:07.699951+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39314483,
+    "compile_id": "73e0974bafa63ee6be1221ab82611a9f-6b87c2aa4b4f2226e90162b8e190bde3",
+    "compile_created": {
+      "compileId": "73e0974bafa63ee6be1221ab82611a9f-6b87c2aa4b4f2226e90162b8e190bde3",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39314483,
+      "signature": "6b87c2aa4b4f2226e90162b8e190bde3",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "73e0974bafa63ee6be1221ab82611a9f-6b87c2aa4b4f2226e90162b8e190bde3",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39314483, with CompileID: 73e0974bafa63ee6be1221ab82611a9f-6b87c2aa4b4f2226e90162b8e190bde3, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39314483, with CompileID: 73e0974bafa63ee6be1221ab82611a9f-6b87c2aa4b4f2226e90162b8e190bde3, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "d0241d5bdf86e35af4de76e1cc5a5526",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-sixty-forty-portfolio_v05",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314483,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "d0241d5bdf86e35af4de76e1cc5a5526",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 10
+        },
+        "backtestStart": "2026-11-12 23:34:11",
+        "backtestEnd": "2026-11-12 23:34:11",
+        "created": "2026-11-12 23:34:11",
+        "snapshotId": 39314484,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-sixty-forty-portfolio_v05",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314483,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "d0241d5bdf86e35af4de76e1cc5a5526",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 10
+        },
+        "backtestStart": "2026-11-12 23:34:11",
+        "backtestEnd": "2026-11-12 23:34:11",
+        "created": "2026-11-12 23:34:11",
+        "snapshotId": 39314484,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;PortfolioHoldings&#039; is not defined\n  at StaticPortfolioAlgorithm\n    def _check_if_rebalance_needed(self, current: PortfolioHoldings, targets: PortfolioTargets) -&gt; bool:\n                                                  ^^^^^^^^^^^^^^^^^\n in main.py: line 31\n  at \n    class StaticPortfolioAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;PortfolioHoldings&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;PortfolioHoldings&#039; is not defined\n  at StaticPortfolioAlgorithm\n    def _check_if_rebalance_needed(self, current: PortfolioHoldings, targets: PortfolioTargets) -&gt; bool:\n                                                  ^^^^^^^^^^^^^^^^^\n in main.py: line 31\n  at \n    class StaticPortfolioAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;PortfolioHoldings&#039; is not defined",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'PortfolioHoldings' is not defined\n  at StaticPortfolioAlgorithm\n    def _check_if_rebalance_needed(self, current: PortfolioHoldings, targets: PortfolioTargets) -> bool:\n                                                  ^^^^^^^^^^^^^^^^^\n in main.py: line 31\n  at <module>\n    class StaticPortfolioAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'PortfolioHoldings' is not defined",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "6.3%",
+          "Used RAM (MB)": "200",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-d0241d5bdf86e35af4de76e1cc5a5526",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:13"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;PortfolioHoldings&#039; is not defined\n  at StaticPortfolioAlgorithm\n    def _check_if_rebalance_needed(self, current: PortfolioHoldings, targets: PortfolioTargets) -&gt; bool:\n                                                  ^^^^^^^^^^^^^^^^^\n in main.py: line 31\n  at \n    class StaticPortfolioAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;PortfolioHoldings&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;PortfolioHoldings&#039; is not defined\n  at StaticPortfolioAlgorithm\n    def _check_if_rebalance_needed(self, current: PortfolioHoldings, targets: PortfolioTargets) -&gt; bool:\n                                                  ^^^^^^^^^^^^^^^^^\n in main.py: line 31\n  at \n    class StaticPortfolioAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;PortfolioHoldings&#039; is not defined",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'PortfolioHoldings' is not defined\n  at StaticPortfolioAlgorithm\n    def _check_if_rebalance_needed(self, current: PortfolioHoldings, targets: PortfolioTargets) -> bool:\n                                                  ^^^^^^^^^^^^^^^^^\n in main.py: line 31\n  at <module>\n    class StaticPortfolioAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'PortfolioHoldings' is not defined",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:35:02.076651+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; UNKNOWN_API: set_portfolio_targets",
+  "total_orders": null
+}

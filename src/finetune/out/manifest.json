@@ -1,0 +1,46 @@
+{
+ "system_prompt": "qc_eval.pipeline.SYSTEM (v1) for code; FAQ_SYSTEM for FAQ answers",
+ "train_examples": 1262,
+ "val_examples": 100,
+ "train_by_kind": {
+  "template": 876,
+  "faq": 386
+ },
+ "train_by_source": {
+  "handwritten": 780,
+  "qc_templates_json": 96,
+  "qc_faq": 386
+ },
+ "templates_used": 87,
+ "val_templates": [
+  "alternative-data-chain-universe-quivergovernmentcontractuniverse",
+  "alternative-data-chain-universe-smartinsiderintentionuniverse",
+  "cfd",
+  "chained-universe",
+  "crypto-static",
+  "equity-all-weather-portfolio",
+  "equity-dual-momentum-asset-class",
+  "index-options-static",
+  "warmup-template-rolling-window"
+ ],
+ "excluded_eval_templates": [
+  "equity-atr-volatility-stop",
+  "equity-bollinger-mean-reversion",
+  "equity-momentum-cross-sectional-decile",
+  "equity-monthly-roc-rotation",
+  "equity-opening-range-breakout",
+  "equity-pairs-trading-cointegration",
+  "equity-rsi-overbought-oversold",
+  "equity-sixty-forty-portfolio",
+  "futures",
+  "option-iron-condor-spy"
+ ],
+ "dropped_for_similarity": [],
+ "skipped_not_qc_passed": [
+  "alternative-data",
+  "alternative-data-chain-universe-eodhdupcomingdividends"
+ ],
+ "qc_validation_present": true,
+ "max_prompt_sim_kept": 0.514,
+ "max_code_sim_kept": 0.486
+}

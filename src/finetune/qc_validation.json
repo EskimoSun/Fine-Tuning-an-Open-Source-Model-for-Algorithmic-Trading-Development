@@ -1,0 +1,623 @@
+{
+ "ai": {
+  "backtest_id": "6817e239601c9d37f11d03183bc70511",
+  "checked_at": "2026-11-08T20:09:15+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "1"
+ },
+ "alternative-data": {
+  "backtest_id": "148d84c338e5416c11baa957ea6c230f",
+  "checked_at": "2026-11-08T20:09:41+00:00",
+  "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: The current user does not have a subscription for AAPL,#0,AAPL,Daily,BrainStockRanking2Day,Trade,Adjusted,OpenInterest data.Please license the dataset from https://qnt.co/datasets for your organization.\n  at initialize\n    self.add_data(BrainStockRanking2Day, equity)\n in main.py: line 18\n The current user does not have a subscription for AAPL,#0,AAPL,Daily,BrainStockRanking2Day,Trade,Adjusted,OpenInterest data.Please license the dataset from https://qnt.co/datasets for your organization.",
+  "status": "runtime_error",
+  "total_orders": null
+ },
+ "alternative-data-chain-universe-braincompanyfilinglanguagemetricsuniverseall": {
+  "backtest_id": "8a9c64c1070c7880d5d64d213cc9b9d9",
+  "checked_at": "2026-11-08T20:09:59+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "alternative-data-chain-universe-brainsentimentindicatoruniverse": {
+  "backtest_id": "c166440b1ee3c20d6aa283556653a323",
+  "checked_at": "2026-11-08T20:10:34+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "3671"
+ },
+ "alternative-data-chain-universe-brainstockrankinguniverse": {
+  "backtest_id": "e5bb26a825513f530ae1844e7a323ede",
+  "checked_at": "2026-11-08T20:10:52+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "alternative-data-chain-universe-eodhdupcomingdividends": {
+  "checked_at": "2026-11-08T20:11:27+00:00",
+  "error": "AttributeError: 'NoneType' object has no attribute 'get'",
+  "status": "error"
+ },
+ "alternative-data-chain-universe-eodhdupcomingearnings": {
+  "backtest_id": "e2092bf5657098f2c0d20421b2622b11",
+  "checked_at": "2026-11-08T20:11:51+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "3438"
+ },
+ "alternative-data-chain-universe-eodhdupcomingipos": {
+  "backtest_id": "ce7839cc442db23a1f289e68e265a5a4",
+  "checked_at": "2026-11-08T20:12:10+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "366"
+ },
+ "alternative-data-chain-universe-eodhdupcomingsplits": {
+  "backtest_id": "e7357a974817cf02306526023e8c49e1",
+  "checked_at": "2026-11-08T20:12:35+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "428"
+ },
+ "alternative-data-chain-universe-quivercnbcsuniverse": {
+  "backtest_id": "ba111995b054c822aadc30d17d4f7b45",
+  "checked_at": "2026-11-08T20:12:52+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "alternative-data-chain-universe-quivergovernmentcontractuniverse": {
+  "backtest_id": "7a01ffddd1264f3023c1891ac885fd96",
+  "checked_at": "2026-11-08T20:13:11+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "alternative-data-chain-universe-quiverinsidertradinguniverse": {
+  "backtest_id": "609f0ad1871ef3834dc31d7f7a4a62c9",
+  "checked_at": "2026-11-08T20:13:35+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "1541"
+ },
+ "alternative-data-chain-universe-quiverlobbyinguniverse": {
+  "backtest_id": "c06cf2dbbc9551130c55462b329e4c3a",
+  "checked_at": "2026-11-08T20:13:54+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "alternative-data-chain-universe-quiverquantcongressuniverse": {
+  "backtest_id": "753619b868136c92c2d3a2198cb77644",
+  "checked_at": "2026-11-08T20:14:14+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "alternative-data-chain-universe-smartinsiderintentionuniverse": {
+  "backtest_id": "5f0d4ab7f77e3138b98d26d3f521203e",
+  "checked_at": "2026-11-08T20:14:35+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "alternative-data-chain-universe-smartinsidertransactionuniverse": {
+  "backtest_id": "5520306e43b3434274ec7803df2058c6",
+  "checked_at": "2026-11-08T20:14:53+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "alternative-data-universe": {
+  "backtest_id": "a9d48173dbb7821b69d0b47f6e5427c9",
+  "checked_at": "2026-11-08T20:15:18+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "320"
+ },
+ "alternative-data-universe-braincompanyfilinglanguagemetricsuniverseall": {
+  "backtest_id": "1ece28734ea5bbf69206b3f6fe33c14f",
+  "checked_at": "2026-11-08T20:15:36+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "alternative-data-universe-brainsentimentindicatoruniverse": {
+  "backtest_id": "09850f13befa3e0a79c48548e2306da9",
+  "checked_at": "2026-11-08T20:15:56+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "1779"
+ },
+ "alternative-data-universe-brainstockrankinguniverse": {
+  "backtest_id": "49a4f0db0d8956c2d428924a6e6c09ab",
+  "checked_at": "2026-11-08T20:16:13+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "alternative-data-universe-coingeckouniverse": {
+  "backtest_id": "a94122f30f26efcbd439414bde960ade",
+  "checked_at": "2026-11-08T20:16:32+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "1218"
+ },
+ "alternative-data-universe-eodhdupcomingdividends": {
+  "backtest_id": "9fc11701543743fc6f234a9f8728bfb7",
+  "checked_at": "2026-11-08T20:17:04+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "2601"
+ },
+ "alternative-data-universe-eodhdupcomingearnings": {
+  "backtest_id": "194b78924dce5934da39072828be9199",
+  "checked_at": "2026-11-08T20:17:29+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "1613"
+ },
+ "alternative-data-universe-eodhdupcomingipos": {
+  "backtest_id": "d42a01c29960368e23a885b2c9b208fa",
+  "checked_at": "2026-11-08T20:17:46+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "2"
+ },
+ "alternative-data-universe-eodhdupcomingsplits": {
+  "backtest_id": "4f2ebe5edec540662103ea65cbf706bf",
+  "checked_at": "2026-11-08T20:18:05+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "297"
+ },
+ "alternative-data-universe-quivercnbcsuniverse": {
+  "backtest_id": "613747ecd490f6631c38f1e888fb085a",
+  "checked_at": "2026-11-08T20:18:23+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "alternative-data-universe-quivergovernmentcontractuniverse": {
+  "backtest_id": "89f1f109d2ca12246e428ad567768b60",
+  "checked_at": "2026-11-08T20:18:41+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "alternative-data-universe-quiverinsidertradinguniverse": {
+  "backtest_id": "005439a7a438fe439d0b00cef4e84d4a",
+  "checked_at": "2026-11-08T20:19:00+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "55"
+ },
+ "alternative-data-universe-quiverlobbyinguniverse": {
+  "backtest_id": "6e156f4c55497f6032a9d1a32388bee2",
+  "checked_at": "2026-11-08T20:19:18+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "alternative-data-universe-quiverquantcongressuniverse": {
+  "backtest_id": "3e30c9c98fc29bb5151b80534480d4c1",
+  "checked_at": "2026-11-08T20:19:36+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "alternative-data-universe-smartinsiderintentionuniverse": {
+  "backtest_id": "c48667f756b58eafa929a93f926943b1",
+  "checked_at": "2026-11-08T20:19:53+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "alternative-data-universe-smartinsidertransactionuniverse": {
+  "backtest_id": "b1bff8bc8d5dd675e57e73613f77d2dc",
+  "checked_at": "2026-11-08T20:20:10+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "cfd": {
+  "backtest_id": "0be9164876dac9d8a9e92dc7090f22cc",
+  "checked_at": "2026-11-08T20:20:30+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "549"
+ },
+ "chained-universe": {
+  "backtest_id": "08f641c75cd70626776d441404c98163",
+  "checked_at": "2026-11-08T20:20:50+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "404"
+ },
+ "crypto-fred-rates-toggle": {
+  "backtest_id": "e00176dec4df4af70852ec41d1e12de9",
+  "checked_at": "2026-11-08T20:21:16+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "3"
+ },
+ "crypto-futures": {
+  "backtest_id": "4a2a577d445d1b9914ea05410385d2e5",
+  "checked_at": "2026-11-08T20:21:35+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "7"
+ },
+ "crypto-onchain-network-activity": {
+  "backtest_id": "96062bc8d3a688b7b4ae347e6ac19bf0",
+  "checked_at": "2026-11-08T20:21:55+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "45"
+ },
+ "crypto-static": {
+  "backtest_id": "f63de780f042857dabce48bc1c4a0f03",
+  "checked_at": "2026-11-08T20:22:15+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "54"
+ },
+ "crypto-universe": {
+  "backtest_id": "d533b2e5a4ae175aeb3071a3d836f4c4",
+  "checked_at": "2026-11-08T20:22:41+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "1428"
+ },
+ "custom-consolidators": {
+  "backtest_id": "f1d6768698ffb8bbdf82f445b9542455",
+  "checked_at": "2026-11-08T20:23:00+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "9"
+ },
+ "custom-data": {
+  "backtest_id": "ef75575e7c00f3c56e102427da22fd55",
+  "checked_at": "2026-11-08T20:23:18+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "custom-data-ticker-mapping": {
+  "backtest_id": "b0fd35d03fa5857f86d5147a83d63171",
+  "checked_at": "2026-11-08T20:23:37+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "custom-indicator": {
+  "backtest_id": "643ca8980d46e269b56d389cbd817256",
+  "checked_at": "2026-11-08T20:23:56+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "647"
+ },
+ "custom-models": {
+  "backtest_id": "92ffe439d725e7b3b93da51dca2a1b96",
+  "checked_at": "2026-11-08T20:24:13+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "1"
+ },
+ "dataset-blockchain-bitcoin-metadata": {
+  "backtest_id": "f3c542a378c8b8b2051410934190561a",
+  "checked_at": "2026-11-08T20:24:53+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "308"
+ },
+ "dataset-eodhd-macro-indicators": {
+  "backtest_id": "abcb4b5e1c11e9adf8cf0e3e32b035ec",
+  "checked_at": "2026-11-08T20:25:16+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "27"
+ },
+ "equities-static-universe": {
+  "backtest_id": "478787d65424b6b9c18e6a7401632cac",
+  "checked_at": "2026-11-08T20:25:34+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "14"
+ },
+ "equities-universe": {
+  "backtest_id": "572448602328944754a2be71746af952",
+  "checked_at": "2026-11-08T20:34:14+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "14319"
+ },
+ "equity-adx-trend-filter": {
+  "backtest_id": "5172f0fdc78217f7a37c2cf6b11d7ad5",
+  "checked_at": "2026-11-08T20:34:32+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "4"
+ },
+ "equity-all-weather-portfolio": {
+  "backtest_id": "7604e3bc9d26396b4bc565cc9fc035bf",
+  "checked_at": "2026-11-08T20:34:52+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "15"
+ },
+ "equity-aroon-trend": {
+  "backtest_id": "67c4ae05b52fee2fb1ed658c84179785",
+  "checked_at": "2026-11-08T20:35:18+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "6261"
+ },
+ "equity-cci-overbought": {
+  "backtest_id": "82655ca9a64236345b7bc5e6161ce593",
+  "checked_at": "2026-11-08T20:35:38+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "79"
+ },
+ "equity-cmf-money-flow": {
+  "backtest_id": "d6bd09f8351b8d7ea17c4b6ae5571379",
+  "checked_at": "2026-11-08T20:36:00+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "503"
+ },
+ "equity-dollar-cost-averaging": {
+  "backtest_id": "06571a56830fac62bd6bbdc5f43025dc",
+  "checked_at": "2026-11-08T20:36:20+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "43"
+ },
+ "equity-donchian-breakout-turtle": {
+  "backtest_id": "dd6e60ef944584f8c194b162a72954e7",
+  "checked_at": "2026-11-08T20:36:38+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "12"
+ },
+ "equity-dual-momentum-asset-class": {
+  "backtest_id": "104adbc14d0591d95daef0e6446913e3",
+  "checked_at": "2026-11-08T20:36:58+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "23"
+ },
+ "equity-fisher-transform-reversal": {
+  "backtest_id": "7124896978f316290a0db1a29c8dc3b9",
+  "checked_at": "2026-11-08T20:37:18+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "50"
+ },
+ "equity-ichimoku-cloud": {
+  "backtest_id": "1ffac7aa406fefdbcf70c9d59099eeea",
+  "checked_at": "2026-11-08T20:37:36+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "3"
+ },
+ "equity-keltner-squeeze": {
+  "backtest_id": "6637038c36bfb72e0093e079e05cdcc0",
+  "checked_at": "2026-11-08T20:37:54+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "18"
+ },
+ "equity-low-volatility-factor": {
+  "backtest_id": "abb056c551a893a0cce4fe40c608d8c0",
+  "checked_at": "2026-11-08T20:39:18+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "1158"
+ },
+ "equity-macd-histogram-divergence": {
+  "backtest_id": "0b84b97bf3b296522e74bbf825eb0400",
+  "checked_at": "2026-11-08T20:39:37+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "6"
+ },
+ "equity-obv-divergence": {
+  "backtest_id": "6128de9f4a2bd74358ac00aeb151990b",
+  "checked_at": "2026-11-08T20:39:56+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "47"
+ },
+ "equity-options-static": {
+  "backtest_id": "f9e20a71f5db4e827ed8a7733d2c097a",
+  "checked_at": "2026-11-08T20:40:15+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "45"
+ },
+ "equity-options-universe": {
+  "backtest_id": "39a0d2ffba6de0888726fdbf79a261c4",
+  "checked_at": "2026-11-08T20:40:34+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "4"
+ },
+ "equity-parabolic-sar-trailing": {
+  "backtest_id": "95b8e9772d5dd6a9dd57a3698f06ef63",
+  "checked_at": "2026-11-08T20:40:57+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "17"
+ },
+ "equity-permanent-portfolio": {
+  "backtest_id": "ce37393f04dddc6b909aa5f1ed4f67b8",
+  "checked_at": "2026-11-08T20:41:16+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "11"
+ },
+ "equity-roc-momentum-rank": {
+  "backtest_id": "a6bc34a9e13f40bf6adabfbce3e610b5",
+  "checked_at": "2026-11-08T20:41:41+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "149"
+ },
+ "equity-stochastic-oscillator": {
+  "backtest_id": "83c6f9c3c000d2382c8454f357f67498",
+  "checked_at": "2026-11-08T20:42:00+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "4"
+ },
+ "equity-supertrend-trend-following": {
+  "backtest_id": "aa4c33a946ae21fcaf4c61089d2201fa",
+  "checked_at": "2026-11-08T20:42:18+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "4"
+ },
+ "equity-turn-of-month-effect": {
+  "backtest_id": "bb1b61072d41235afa5c1f5a844503bf",
+  "checked_at": "2026-11-08T20:42:38+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "73"
+ },
+ "equity-value-pe-pb-quality": {
+  "backtest_id": "1ce0f974ed30f641022f5589ea1bdaa3",
+  "checked_at": "2026-11-08T20:43:48+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "587"
+ },
+ "equity-williams-percent-r": {
+  "backtest_id": "f6b5e566cc9fcd506c63952d05b18d1c",
+  "checked_at": "2026-11-08T20:44:14+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "15257"
+ },
+ "financial-advisors": {
+  "backtest_id": "84da1ad58cf62be6814539cbaeb8195e",
+  "checked_at": "2026-11-08T20:44:30+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "1"
+ },
+ "forex": {
+  "backtest_id": "8233cfa4acec5abcc849d2b389ce7e51",
+  "checked_at": "2026-11-08T20:44:55+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "3"
+ },
+ "future-options": {
+  "backtest_id": "b276fbaad3de327094523ce5bbcb683a",
+  "checked_at": "2026-11-08T20:45:19+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "10"
+ },
+ "history-and-etf-universe": {
+  "backtest_id": "831ce4b5860d9ddce551fabb72c7bbb7",
+  "checked_at": "2026-11-08T20:45:43+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "355"
+ },
+ "index-options-static": {
+  "backtest_id": "9811f6ac3d420935b390a2dc933a48c5",
+  "checked_at": "2026-11-08T20:47:05+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "99"
+ },
+ "index-options-universe": {
+  "backtest_id": "3c1dbac7859ff7e96c1da40e27c77eb7",
+  "checked_at": "2026-11-08T20:47:39+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "167"
+ },
+ "intraday-greeks-based-options-selection": {
+  "backtest_id": "aa7dc99ab037058aeb27bd89fcafe08f",
+  "checked_at": "2026-11-08T20:49:02+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "60"
+ },
+ "intraday-index-options-selection": {
+  "backtest_id": "bf07009aa989c264fbe61d4557c743aa",
+  "checked_at": "2026-11-08T20:50:04+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "1741"
+ },
+ "intraday-indicator-scans": {
+  "backtest_id": "ebd3728929d8ba23734e3e02164aece4",
+  "checked_at": "2026-11-08T20:50:39+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "7869"
+ },
+ "live-commands-listener": {
+  "backtest_id": "c9a360c1343ababbcf8c0e60c0334f86",
+  "checked_at": "2026-11-08T20:50:57+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "1"
+ },
+ "live-notifications-telegram-webhook": {
+  "backtest_id": "3a0829401a17dd357757a12054547ca7",
+  "checked_at": "2026-11-08T20:51:16+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "live-trading-features": {
+  "backtest_id": "1c65c4b197ea709ebdecf445443b6290",
+  "checked_at": "2026-11-08T20:51:34+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "0"
+ },
+ "trade-management": {
+  "backtest_id": "6da71bae8e1900f819e8c5b65ca872b0",
+  "checked_at": "2026-11-08T20:51:54+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "6"
+ },
+ "warmup-template-consolidator": {
+  "backtest_id": "cff90f9b4bd62597764232ec9feb8e24",
+  "checked_at": "2026-11-08T20:52:10+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "118"
+ },
+ "warmup-template-custom-indicator": {
+  "backtest_id": "b6c19581ab2b68967980c1c20b94eb2f",
+  "checked_at": "2026-11-08T20:52:26+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "43"
+ },
+ "warmup-template-manual-indicator": {
+  "backtest_id": "084ef8a5306728fa1d2d8a0901401bc8",
+  "checked_at": "2026-11-08T20:52:44+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "38"
+ },
+ "warmup-template-rolling-window": {
+  "backtest_id": "f5baedb4dd5a721780eb43ce963ab2a8",
+  "checked_at": "2026-11-08T20:53:00+00:00",
+  "error": null,
+  "status": "completed",
+  "total_orders": "42"
+ }
+}

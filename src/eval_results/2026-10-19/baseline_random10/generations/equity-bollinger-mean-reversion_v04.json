@@ -1,0 +1,17 @@
+{
+  "prompt_id": "equity-bollinger-mean-reversion_v04",
+  "model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "output": "```python\n# QuantConnect LEAN Algorithm\n# SPY BB(20,2) Dip Buy, Exit at Midline, Daily Check, Q4 2024\n\nfrom AlgorithmImports import *\n\nclass BB202DipBuyMidlineExitQ42024(QCAlgorithm):\n\n    def initialize(self):\n        # Set start and end dates for Q4 2024\n        self.set_start_date(2024, 10, 1)\n        self.set_end_date(2025, 1, 1)\n        \n        # Set cash\n        self.set_cash(100000)\n        \n        # Add SPY equity\n        self.spy = self.add_equity(\"SPY\", Resolution.DAILY).symbol\n        \n        # Set up Bollinger Bands indicator (20 period, 2 std dev)\n        self.bb = self.bollinger_bands(20, 2, MovingAverageType.SIMPLE)\n        self.set_benchmark(\"SPY\")\n        \n        # Track position state\n        self.in_position = False\n        self.entry_price = 0.0\n        \n        # Schedule daily check at market open\n        self.schedule.on(self.spy, MarketHours.Open, self.daily_check)\n\n    def on_data(self, data: Slice):\n        # No action needed here; logic is in scheduled event\n        pass\n\n    def daily_check(self):\n        # Check if we have enough data for BB\n        if len(self.bb) < 20:\n            return\n            \n        # Get current price\n        if self.spy not in data:\n            return\n            \n        current_price = data[self.spy].price\n        \n        # Get BB values\n        upper = self.bb.upper\n        middle = self.bb.middle\n        lower = self.bb.lower\n        \n        # If not in position, check for dip buy (price <= lower band)\n        if not self.in_position:\n            if current_price <= lower:\n                # Buy SPY\n                self.set_holdings(self.spy, 1.0)\n                self.in_position = True\n                self.entry_price = current_price\n                self.log(f\"BUY SPY at {current_price:.2f} (Lower BB: {lower:.2f})\")\n                \n        # If in position, check for exit at midline\n        else:\n            if current_price >= middle:\n                # Sell SPY\n                self.set_holdings(self.spy, 0.0)\n                self.in_position = False\n                self.log(f\"SELL SPY at {current_price:.2f} (Midline BB: {middle:.2f})\")\n```",
+  "generated_at": "2026-10-20T01:35:08.606191+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "bollinger_bands"
+    }
+  ],
+  "note": "UNKNOWN_API: bollinger_bands"
+}

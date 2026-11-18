@@ -1,0 +1,324 @@
+{
+  "prompt_id": "equity-momentum-cross-sectional-decile_v01",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass SP500MomentumUniverseAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n\n        # Refilter the ETF constituents monthly to match the rebalance cadence.\n        self.universe_settings.filter_period = timedelta(30)\n        # Select all SP500 constituents ranked by 1-year price momentum, then by dollar volume.\n        self._universe = self.add_universe(self.universe.etf(\"SP500\", universe_filter_func=lambda u: u.all(Selection.MOMENTUM, 1, Resolution.DAILY).then(lambda s: s.by_dollar_volume(10))))\n\n        # Rebalance the portfolio monthly.\n        self.schedule.on(self.date_rules.month_start('SPY'))\n\n    def on_securities_changed(self, changes: SecurityChanges) -> None:\n        if self.is_warming_up or self.time.date().day != 1:\n            return\n        # Create equal-weight portfolio of the universe securities.\n        targets = [PortfolioTarget(s, 1./len(self._universe.selected)) for s in self._universe.selected]\n        self.set_holdings(targets, liquidate_existing_holdings=True)\n```",
+  "generated_at": "2026-11-12T23:38:07.910227+00:00",
+  "has_code": true,
+  "static_findings": [],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass SP500MomentumUniverseAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        self.settings.seed_initial_prices = True\n\n        # Refilter the ETF constituents monthly to match the rebalance cadence.\n        self.universe_settings.filter_period = timedelta(30)\n        # Select all SP500 constituents ranked by 1-year price momentum, then by dollar volume.\n        self._universe = self.add_universe(self.universe.etf(\"SP500\", universe_filter_func=lambda u: u.all(Selection.MOMENTUM, 1, Resolution.DAILY).then(lambda s: s.by_dollar_volume(10))))\n\n        # Rebalance the portfolio monthly.\n        self.schedule.on(self.date_rules.month_start('SPY'))\n\n    def on_securities_changed(self, changes: SecurityChanges) -> None:\n        if self.is_warming_up or self.time.date().day != 1:\n            return\n        # Create equal-weight portfolio of the universe securities.\n        targets = [PortfolioTarget(s, 1./len(self._universe.selected)) for s in self._universe.selected]\n        self.set_holdings(targets, liquidate_existing_holdings=True)\n",
+    "source_sha256": "afca0fe915aa74f8ee51971bd3133ea0a93ae83226fcee16785caaf65a130ad6",
+    "started_at": "2026-11-12T23:38:07.912373+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the ex",
+    "project_id": 39314607,
+    "compile_id": "b8c6026cec76e89db3a38c424ea80adc-c6e4a33d818312e74d64cdb528fb8382",
+    "compile_created": {
+      "compileId": "b8c6026cec76e89db3a38c424ea80adc-c6e4a33d818312e74d64cdb528fb8382",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39314607,
+      "signature": "c6e4a33d818312e74d64cdb528fb8382",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "b8c6026cec76e89db3a38c424ea80adc-c6e4a33d818312e74d64cdb528fb8382",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39314607, with CompileID: b8c6026cec76e89db3a38c424ea80adc-c6e4a33d818312e74d64cdb528fb8382, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39314607, with CompileID: b8c6026cec76e89db3a38c424ea80adc-c6e4a33d818312e74d64cdb528fb8382, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "4f470b1e80f437a552ba2754952d04ce",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v01",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314607,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "4f470b1e80f437a552ba2754952d04ce",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 11
+        },
+        "backtestStart": "2026-11-12 23:38:11",
+        "backtestEnd": "2026-11-12 23:38:11",
+        "created": "2026-11-12 23:38:11",
+        "snapshotId": 39314610,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v01",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314607,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "4f470b1e80f437a552ba2754952d04ce",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 11
+        },
+        "backtestStart": "2026-11-12 23:38:11",
+        "backtestEnd": "2026-11-12 23:38:11",
+        "created": "2026-11-12 23:38:11",
+        "snapshotId": 39314610,
+        "status": "Runtime Error",
+        "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the on method. Please checkout the API documentation. The following overloads are available:\n  on(date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[], None])\n  on(date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[str, datetime], None])\n  on(name: str, date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[], None])\n  on(name: str, date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[str, datetime], None])\nArgument mismatch: argument 1 (&#039;name&#039;) expected str, got FuncDateRule.\n  at initialize\n    self.schedule.on(self.date_rules.month_start(&#039;SPY&#039;))\n in main.py: line 19\n No method matches given arguments for on: (). The following overloads are available:\n  on(date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[], None])\n  on(date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[str, datetime], None])\n  on(name: str, date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[], None])\n  on(name: str, date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[str, datetime], None])\nArgument mismatch: argument 1 (&#039;name&#039;) expected str, got FuncDateRule.",
+        "stacktrace": "Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the on method. Please checkout the API documentation. The following overloads are available:\n  on(date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[], None])\n  on(date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[str, datetime], None])\n  on(name: str, date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[], None])\n  on(name: str, date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[str, datetime], None])\nArgument mismatch: argument 1 ('name') expected str, got FuncDateRule.\n  at initialize\n    self.schedule.on(self.date_rules.month_start('SPY'))\n in main.py: line 19\n No method matches given arguments for on: (<class 'QuantConnect.Scheduling.FuncDateRule'>). The following overloads are available:\n  on(date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[], None])\n  on(date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[str, datetime], None])\n  on(name: str, date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[], None])\n  on(name: str, date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[str, datetime], None])\nArgument mismatch: argument 1 ('name') expected str, got FuncDateRule.",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "7.9%",
+          "Used RAM (MB)": "232",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-4f470b1e80f437a552ba2754952d04ce",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:13"
+        }
+      },
+      "success": true
+    },
+    "error": "2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the on method. Please checkout the API documentation. The following overloads are available:\n  on(date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[], None])\n  on(date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[str, datetime], None])\n  on(name: str, date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[], None])\n  on(name: str, date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[str, datetime], None])\nArgument mismatch: argument 1 (&#039;name&#039;) expected str, got FuncDateRule.\n  at initialize\n    self.schedule.on(self.date_rules.month_start(&#039;SPY&#039;))\n in main.py: line 19\n No method matches given arguments for on: (). The following overloads are available:\n  on(date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[], None])\n  on(date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[str, datetime], None])\n  on(name: str, date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[], None])\n  on(name: str, date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[str, datetime], None])\nArgument mismatch: argument 1 (&#039;name&#039;) expected str, got FuncDateRule.",
+    "stacktrace": "Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the on method. Please checkout the API documentation. The following overloads are available:\n  on(date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[], None])\n  on(date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[str, datetime], None])\n  on(name: str, date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[], None])\n  on(name: str, date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[str, datetime], None])\nArgument mismatch: argument 1 ('name') expected str, got FuncDateRule.\n  at initialize\n    self.schedule.on(self.date_rules.month_start('SPY'))\n in main.py: line 19\n No method matches given arguments for on: (<class 'QuantConnect.Scheduling.FuncDateRule'>). The following overloads are available:\n  on(date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[], None])\n  on(date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[str, datetime], None])\n  on(name: str, date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[], None])\n  on(name: str, date_rule: IDateRule, time_rule: ITimeRule, callback: Callable[[str, datetime], None])\nArgument mismatch: argument 1 ('name') expected str, got FuncDateRule.",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:39:01.308022+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the ex",
+  "note": "runtime: 2022-01-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the ex",
+  "total_orders": null
+}

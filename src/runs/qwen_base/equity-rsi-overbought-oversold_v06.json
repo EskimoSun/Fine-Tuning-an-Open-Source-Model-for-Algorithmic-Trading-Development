@@ -1,0 +1,91 @@
+{
+  "prompt_id": "equity-rsi-overbought-oversold_v06",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport QuantConnect as QC\n\nclass RsiStrategy(QC.Algorithm.Questions.Questions):\n    def Initialize(self):\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        self.SetCash(100_000)\n        self.AddEquity(\"QQQ\", QC.DataResolution.Hourly)\n        self.rsi = QC.Indicators.RSI(self, 14, QC.Indicators.RsiType.Wilder)\n        self.rsi_ready = False\n\n    def OnData(self, data):\n        if not self.rsi_ready:\n            if self.rsi.IsReady:\n                self.rsi_ready = True\n            return\n\n        rsi_value = self.rsi.Current.Value\n        if rsi_value < 30:\n            self.SetHoldings(\"QQQ\", 1.0)\n        elif rsi_value > 70:\n            self.SetHoldings(\"QQQ\", -1.0)\n        else:\n            self.SetHoldings(\"QQQ\", 0.0)\n\n        self.Log(f\"RSI: {rsi_value:.2f}, Position: {self.Portfolio[\"QQQ\"].TotalShares}\")\n        self.AddPlot(\"RSI\", self.rsi)\n```",
+  "generated_at": "2026-11-14T21:34:28.522962+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddEquity, AddPlot, Log, SetCash, SetEndDate, SetHoldings, SetStartDate"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "50"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "compile_error",
+    "stage": "compile",
+    "source": "import QuantConnect as QC\n\nclass RsiStrategy(QC.Algorithm.Questions.Questions):\n    def Initialize(self):\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        self.SetCash(100_000)\n        self.AddEquity(\"QQQ\", QC.DataResolution.Hourly)\n        self.rsi = QC.Indicators.RSI(self, 14, QC.Indicators.RsiType.Wilder)\n        self.rsi_ready = False\n\n    def OnData(self, data):\n        if not self.rsi_ready:\n            if self.rsi.IsReady:\n                self.rsi_ready = True\n            return\n\n        rsi_value = self.rsi.Current.Value\n        if rsi_value < 30:\n            self.SetHoldings(\"QQQ\", 1.0)\n        elif rsi_value > 70:\n            self.SetHoldings(\"QQQ\", -1.0)\n        else:\n            self.SetHoldings(\"QQQ\", 0.0)\n\n        self.Log(f\"RSI: {rsi_value:.2f}, Position: {self.Portfolio[\"QQQ\"].TotalShares}\")\n        self.AddPlot(\"RSI\", self.rsi)\n",
+    "source_sha256": "922dfde195ce7144ce8ef386efad3475a57c5fc13d0e46b392f8f9761c3e1c9b",
+    "started_at": "2026-11-14T21:34:28.524684+00:00",
+    "compile_errors": 1,
+    "runtime_errors": null,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "compile: Error main.py Line: 26 Column: 64 - SyntaxError: f-string: unmatched '['",
+    "project_id": 39411329,
+    "compile_id": "ce0598fde7db42d89b0e26af26b10225-66010a1436fd63a2e81ad49841f03311",
+    "compile_created": {
+      "compileId": "ce0598fde7db42d89b0e26af26b10225-66010a1436fd63a2e81ad49841f03311",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39411329,
+      "signature": "66010a1436fd63a2e81ad49841f03311",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "ce0598fde7db42d89b0e26af26b10225-66010a1436fd63a2e81ad49841f03311",
+      "state": "BuildError",
+      "logs": [
+        "Warning main.py Line: 1 Column: 1 - Add 'from AlgorithmImports import *' at the top of the file. Without it, QuantConnect names such as QCAlgorithm and Resolution are undefined when the algorithm loads.",
+        "Warning main.py Line: 3 Column: 19 - Name \"QC.Algorithm.Questions.Questions\" is not defined",
+        "Warning main.py Line: 8 Column: 31 - Module has no attribute \"DataResolution\"",
+        "Warning main.py Line: 9 Column: 20 - Module has no attribute \"RSI\"",
+        "Warning main.py Line: 9 Column: 48 - Module has no attribute \"RsiType\"",
+        "Error main.py Line: 26 Column: 64 - SyntaxError: f-string: unmatched '['"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Warning main.py Line: 1 Column: 1 - Add 'from AlgorithmImports import *' at the top of the file. Without it, QuantConnect names such as QCAlgorithm and Resolution are undefined when the algorithm loads.",
+      "Warning main.py Line: 3 Column: 19 - Name \"QC.Algorithm.Questions.Questions\" is not defined",
+      "Warning main.py Line: 8 Column: 31 - Module has no attribute \"DataResolution\"",
+      "Warning main.py Line: 9 Column: 20 - Module has no attribute \"RSI\"",
+      "Warning main.py Line: 9 Column: 48 - Module has no attribute \"RsiType\"",
+      "Error main.py Line: 26 Column: 64 - SyntaxError: f-string: unmatched '['"
+    ],
+    "error": [
+      "Warning main.py Line: 1 Column: 1 - Add 'from AlgorithmImports import *' at the top of the file. Without it, QuantConnect names such as QCAlgorithm and Resolution are undefined when the algorithm loads.",
+      "Warning main.py Line: 3 Column: 19 - Name \"QC.Algorithm.Questions.Questions\" is not defined",
+      "Warning main.py Line: 8 Column: 31 - Module has no attribute \"DataResolution\"",
+      "Warning main.py Line: 9 Column: 20 - Module has no attribute \"RSI\"",
+      "Warning main.py Line: 9 Column: 48 - Module has no attribute \"RsiType\"",
+      "Error main.py Line: 26 Column: 64 - SyntaxError: f-string: unmatched '['"
+    ],
+    "finished_at": "2026-11-14T21:34:32.987551+00:00"
+  },
+  "compile_errors": 1,
+  "runtime_errors": null,
+  "statistics": {},
+  "qc_note": "compile: Error main.py Line: 26 Column: 64 - SyntaxError: f-string: unmatched '['",
+  "note": "compile: Error main.py Line: 26 Column: 64 - SyntaxError: f-string: unmatched '['; NO_ALGORITHM_CLASS; LEGACY_API: AddEquity, AddPlot, Log, SetCash, SetEndDate, SetHoldings, SetStartDate; PROMPT_MISS: 50"
+}

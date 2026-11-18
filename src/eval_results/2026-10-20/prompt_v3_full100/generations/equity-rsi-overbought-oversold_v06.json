@@ -1,0 +1,9 @@
+{
+  "prompt_id": "equity-rsi-overbought-oversold_v06",
+  "model": "qwen_base_prompt_v3",
+  "base_model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "system_prompt": "v3",
+  "output": "```python\nfrom AlgorithmImports import *\n\nclass QQQRSIHourly(QCAlgorithm):\n    def initialize(self):\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100_000)\n        self.settings.automatic_indicator_warm_up = True\n        self._symbol = self.add_equity(\"QQQ\", resolution=Resolution.HOUR).symbol\n        self._rsi = rsi(self._symbol, 14, moving_average_type=MovingAverageType.WILDERS, resolution=Resolution.HOUR)\n        self.set_plot(\"RSI\", self._rsi, \"RSI\")\n\n    def on_data(self, data: Slice):\n        if not self._rsi.is_ready:\n            return\n        if self._symbol not in data:\n            return\n        rsi_value = self._rsi.current.value\n        if rsi_value < 30:\n            self.set_holdings(self._symbol, 1.0)\n        elif rsi_value > 50:\n            self.liquidate(self._symbol)\n        if rsi_value > 70:\n            self.set_holdings(self._symbol, -1.0)\n        elif rsi_value < 50:\n            self.liquidate(self._symbol)\n```",
+  "generated_at": "2026-10-20T21:58:16.206106+00:00"
+}

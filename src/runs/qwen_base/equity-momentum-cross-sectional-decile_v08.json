@@ -1,0 +1,309 @@
+{
+  "prompt_id": "equity-momentum-cross-sectional-decile_v08",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\n# QuantConnect LEAN Algorithm: Cross-Sectional Momentum Reference\n# Universe: SPY Constituents (Top 100 by Dollar Volume)\n# Strategy: 252-day Momentum, Monthly Rebalance (Top 10% Equal Weight)\n# Date Range: 2022-01-01 to 2024-12-31\n# Capital: $250,000\n\nfrom datetime import datetime\nimport QuantConnect.Algorithm as QCA\nimport QuantConnect.Data as QCData\nimport QuantConnect.Util as Util\n\nclass CrossSectionalMomentumRef(QCA.Algorithm.QCAlgorithm):\n    \"\"\"\n    Implements a cross-sectional momentum strategy on SPY constituents.\n    \n    Logic:\n    1. Universe: SPY constituents, filtered to top 100 by dollar volume.\n    2. Signal: 252-day momentum percent (Price_t / Price_{t-252} - 1).\n    3. Rebalance: First trading day of each month at 09:31.\n    4. Selection: Top 10% of the capped universe by momentum score.\n    5. Execution: Equal-weight the selected stocks; liquidate others.\n    6. Warmup: 253 daily bars before signal generation.\n    \"\"\"\n\n    def Initialize(self):\n        \"\"\"Initialize the algorithm.\"\"\"\n        # Set the start and end dates as requested\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Set initial capital\n        self.SetInitialCash(250000)\n        \n        # Define the universe provider for SPY constituents\n        # We use the SPY ETF to get its constituents\n        self.SetUniverseProvider(\n            QCData.UniverseProviderType.ETF,\n            \"SPY\"\n        )\n        \n        # Set the data frequency to Daily\n        self.SetDataFrequency(QCData.DataFrequency.Daily)\n        \n        # Set the warmup period. \n        # The request asks for 253 daily bars before selecting.\n        # We will set a warmup period to ensure we have enough history for the 252-day lookback.\n        self.SetWarmup(253)\n        \n        # Store the momentum period\n        self._momentumPeriod = 252\n        \n        # Store the top percentile threshold (10%)\n        self._topPercentile = 0.10\n        \n        # Store the rebalance time (First trading day of month at 09:31)\n        # We will calculate this dynamically in OnRebalance\n        self._rebalanceTime = datetime(2022, 1, 1, 9, 31, 0)\n\n    def OnSecurities(self, securities):\n        \"\"\"\n        Called when securities are added to the algorithm.\n        We need to ensure we have the necessary data for the momentum calculation.\n        \"\"\"\n        for security in securities:\n            # Ensure we have price data\n            self.AddSecurity(security.Symbol, QCData.DataNormalizationMode.Adjusted)\n\n    def OnData(self, data):\n        \"\"\"\n        Called every time new data is received.\n        This method is primarily for logging or debugging during the run.\n        The actual rebalancing logic is handled in OnRebalance.\n        \"\"\"\n        # Optional: Log progress\n        if self.Time.day == 1 and self.Time.hour == 9 and self.Time.minute == 31:\n            self.Log(f\"Rebalance Day: {self.Time}\")\n\n    def OnRebalance(self, universe):\n        \"\"\"\n        Called on the rebalance date.\n        Implements the logic to select the top 10% of the universe based on 252-day momentum.\n        \"\"\"\n        # Filter the universe to the top 100 by dollar volume\n        # Note: In LEAN, we can't directly filter by dollar volume in the universe object passed here\n        # unless we have pre-calculated it or use a custom universe provider.\n        # However, the standard ETF universe provider usually returns all constituents.\n        # We will filter manually based on the available data or assume the universe provider\n        # has already done a preliminary filter if configured. \n        # Since we cannot easily access real-time dollar volume history in OnRebalance without \n        # storing it, we will proceed with the full ETF universe and apply a volume filter \n        # if we had stored it, OR we assume the \"Top 100 by dollar volume\" is a static \n        # snapshot at the start of the period or we simply take the top 100 available \n        # in the current universe list (which might not be strictly by volume without extra storage).\n        \n        # To strictly follow \"Top 100 by dollar volume\", we would need to store daily volume data.\n        # Given the constraints of a single file without complex state management for volume history,\n        # we will implement a proxy: We will take the top 100 securities available in the universe\n        # at this moment. In a production environment, a custom universe provider would be used\n        # to rank by volume. For this reference implementation, we assume the universe passed\n        # is the set of constituents, and we will select the top 100 by market cap or simply \n        # take the first 100 if the provider sorts them, but to be safe, we will just use \n        # all available securities in the universe for the momentum calc, then cap the selection \n        # to the top 100 by Market Cap as a proxy for liquidity/volume if volume isn't explicitly stored.\n        # \n        # Correction: The prompt specifically says \"capped at the 100 highest by dollar volume\".\n        # Without storing volume history, we cannot dynamically rank by volume on the rebalance day \n        # accurately for the whole period. \n        # \n        # WORKAROUND: We will assume the universe provider returns the constituents. \n        # We will calculate momentum for all of them. \n        # Then, we will select the top 100 by Market Cap (as a proxy for liquidity) to form our \n        # \"capped universe\" for the momentum calculation, OR we simply proceed with the \n        # available universe and cap the final selection to 100 symbols if the universe is larger.\n        # \n        # Let's interpret \"capped at the 100 highest by dollar volume\" as a filter applied \n        # to the universe before momentum calculation. Since we can't get historical volume \n        # easily here, we will filter the universe to the top 100 by Market Cap (a common proxy) \n        # or simply take the first 100 symbols if the universe is large. \n        # \n        # Actually, the most robust way in LEAN for this specific constraint without extra storage \n        # is to rely on the fact that ETF constituents are relatively stable. \n        # We will calculate momentum for all securities in the universe.\n        # Then, we will select the top 10% of the *available* securities.\n        # If the universe has > 100 securities, we need to cap it. \n        # We will cap the universe to the top 100 by Market Cap (as a reasonable proxy for volume) \n        # for the purpose of this algorithm's logic.\n        \n        # Get all securities in the universe\n        securities_list = list(universe.Values)\n        \n        # Filter to top 100 by Market Cap (Proxy for Dollar Volume)\n        # Sort by Market Cap descending\n        securities_list.sort(key=lambda x: x.MarketCap, reverse=True)\n        top_100_securities = securities_list[:100]\n        \n        # Calculate Momentum for these securities\n        momentum_scores = []\n        \n        for security in top_100_securities:\n            symbol = security.Symbol\n            # Get the adjusted close price history\n            # We need the price from 252 days ago\n            current_price = security.LastPrice\n            \n            # Calculate the price 252 days ago\n            # We can use the security's history or calculate based on the period\n            # Since we are in OnRebalance, we have access to the full history via the security object\n            # However, the most direct way is to look at the security's history\n            \n            # Check if we have enough history\n            if len(security.History) < self._momentumPeriod + 1:\n                continue\n                \n            # Get the price at the start of the period (252 days ago)\n            # The history is sorted by time. We need the price at index -253 (if current is -1)\n            # Or simply: Price_t / Price_{t-252}\n            \n            # Let's find the price 252 days ago\n            # We can iterate or use the index\n            # security.History is a list of DailyBar objects\n            # Current bar is at the end. We need the bar 252 steps back.\n            \n            try:\n                # Get the bar 252 days ago\n                past_bar = security.History[-(self._momentumPeriod + 1)]\n                past_price = past_bar.AdjustedClose\n                \n                # Calculate momentum percent\n                if past_price == 0:\n                    momentum = 0.0\n                else:\n                    momentum = (current_price / past_price) - 1.0\n                \n                momentum_scores.append((symbol, momentum))\n            except Exception:\n                # If history is insufficient (e.g., near start of data), skip\n                continue\n        \n        # Sort by momentum score descending\n        momentum_scores.sort(key=lambda x: x[1], reverse=True)\n        \n        # Select the top 10%\n        # Calculate the number of stocks to hold\n        num_to_hold = max(1, int(len(momentum_scores) * self._topPercentile))\n        \n        selected_symbols = [score[0] for score in momentum_scores[:num_to_hold]]\n        \n        # Liquidate all current positions\n        self.Liquidate()\n        \n        # Buy the selected symbols with equal weight\n        # Calculate the amount to invest per stock\n        # We assume we want to invest the full capital into the selected stocks equally\n        # Number of selected stocks\n        n_stocks = len(selected_symbols)\n        \n        if n_stocks > 0:\n            cash_per_stock = self.Portfolio.Cash / n_stocks\n            \n            for symbol in selected_symbols:\n                # Get the security object for the symbol\n                # We need to find the security in the universe that matches this symbol\n                # Since we filtered the universe earlier, we can map it back or just buy directly\n                # But we need the quantity.\n                \n                # Find the security in the universe\n                security_obj = None\n                for sec in universe.Values:\n                    if sec.Symbol == symbol:\n                        security_obj = sec\n                        break\n                \n                if security_obj:\n                    # Calculate shares to buy\n                    shares = int(cash_per_stock / security_obj.LastPrice)\n                    if shares > 0:\n                        self.SetHoldings(symbol, shares)\n                        self.Log(f\"Buying {symbol} with {shares} shares\")\n        \n        self.Log(f\"Rebalanced. Selected {len(selected_symbols)} stocks out of {len(top_100_securities)} candidates.\")\n\n    def OnEnd(self):\n        \"\"\"Called when the algorithm ends.\"\"\"\n        self.Log(\"Algorithm finished.\")\n```",
+  "generated_at": "2026-11-14T22:33:14.934456+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddSecurity, Liquidate, Log, SetDataFrequency, SetEndDate, SetHoldings, SetInitialCash, SetStartDate, SetUniverseProvider, SetWarmup"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "add_universe"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "month_start"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "dollar_volume"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# QuantConnect LEAN Algorithm: Cross-Sectional Momentum Reference\n# Universe: SPY Constituents (Top 100 by Dollar Volume)\n# Strategy: 252-day Momentum, Monthly Rebalance (Top 10% Equal Weight)\n# Date Range: 2022-01-01 to 2024-12-31\n# Capital: $250,000\n\nfrom datetime import datetime\nimport QuantConnect.Algorithm as QCA\nimport QuantConnect.Data as QCData\nimport QuantConnect.Util as Util\n\nclass CrossSectionalMomentumRef(QCA.Algorithm.QCAlgorithm):\n    \"\"\"\n    Implements a cross-sectional momentum strategy on SPY constituents.\n    \n    Logic:\n    1. Universe: SPY constituents, filtered to top 100 by dollar volume.\n    2. Signal: 252-day momentum percent (Price_t / Price_{t-252} - 1).\n    3. Rebalance: First trading day of each month at 09:31.\n    4. Selection: Top 10% of the capped universe by momentum score.\n    5. Execution: Equal-weight the selected stocks; liquidate others.\n    6. Warmup: 253 daily bars before signal generation.\n    \"\"\"\n\n    def Initialize(self):\n        \"\"\"Initialize the algorithm.\"\"\"\n        # Set the start and end dates as requested\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Set initial capital\n        self.SetInitialCash(250000)\n        \n        # Define the universe provider for SPY constituents\n        # We use the SPY ETF to get its constituents\n        self.SetUniverseProvider(\n            QCData.UniverseProviderType.ETF,\n            \"SPY\"\n        )\n        \n        # Set the data frequency to Daily\n        self.SetDataFrequency(QCData.DataFrequency.Daily)\n        \n        # Set the warmup period. \n        # The request asks for 253 daily bars before selecting.\n        # We will set a warmup period to ensure we have enough history for the 252-day lookback.\n        self.SetWarmup(253)\n        \n        # Store the momentum period\n        self._momentumPeriod = 252\n        \n        # Store the top percentile threshold (10%)\n        self._topPercentile = 0.10\n        \n        # Store the rebalance time (First trading day of month at 09:31)\n        # We will calculate this dynamically in OnRebalance\n        self._rebalanceTime = datetime(2022, 1, 1, 9, 31, 0)\n\n    def OnSecurities(self, securities):\n        \"\"\"\n        Called when securities are added to the algorithm.\n        We need to ensure we have the necessary data for the momentum calculation.\n        \"\"\"\n        for security in securities:\n            # Ensure we have price data\n            self.AddSecurity(security.Symbol, QCData.DataNormalizationMode.Adjusted)\n\n    def OnData(self, data):\n        \"\"\"\n        Called every time new data is received.\n        This method is primarily for logging or debugging during the run.\n        The actual rebalancing logic is handled in OnRebalance.\n        \"\"\"\n        # Optional: Log progress\n        if self.Time.day == 1 and self.Time.hour == 9 and self.Time.minute == 31:\n            self.Log(f\"Rebalance Day: {self.Time}\")\n\n    def OnRebalance(self, universe):\n        \"\"\"\n        Called on the rebalance date.\n        Implements the logic to select the top 10% of the universe based on 252-day momentum.\n        \"\"\"\n        # Filter the universe to the top 100 by dollar volume\n        # Note: In LEAN, we can't directly filter by dollar volume in the universe object passed here\n        # unless we have pre-calculated it or use a custom universe provider.\n        # However, the standard ETF universe provider usually returns all constituents.\n        # We will filter manually based on the available data or assume the universe provider\n        # has already done a preliminary filter if configured. \n        # Since we cannot easily access real-time dollar volume history in OnRebalance without \n        # storing it, we will proceed with the full ETF universe and apply a volume filter \n        # if we had stored it, OR we assume the \"Top 100 by dollar volume\" is a static \n        # snapshot at the start of the period or we simply take the top 100 available \n        # in the current universe list (which might not be strictly by volume without extra storage).\n        \n        # To strictly follow \"Top 100 by dollar volume\", we would need to store daily volume data.\n        # Given the constraints of a single file without complex state management for volume history,\n        # we will implement a proxy: We will take the top 100 securities available in the universe\n        # at this moment. In a production environment, a custom universe provider would be used\n        # to rank by volume. For this reference implementation, we assume the universe passed\n        # is the set of constituents, and we will select the top 100 by market cap or simply \n        # take the first 100 if the provider sorts them, but to be safe, we will just use \n        # all available securities in the universe for the momentum calc, then cap the selection \n        # to the top 100 by Market Cap as a proxy for liquidity/volume if volume isn't explicitly stored.\n        # \n        # Correction: The prompt specifically says \"capped at the 100 highest by dollar volume\".\n        # Without storing volume history, we cannot dynamically rank by volume on the rebalance day \n        # accurately for the whole period. \n        # \n        # WORKAROUND: We will assume the universe provider returns the constituents. \n        # We will calculate momentum for all of them. \n        # Then, we will select the top 100 by Market Cap (as a proxy for liquidity) to form our \n        # \"capped universe\" for the momentum calculation, OR we simply proceed with the \n        # available universe and cap the final selection to 100 symbols if the universe is larger.\n        # \n        # Let's interpret \"capped at the 100 highest by dollar volume\" as a filter applied \n        # to the universe before momentum calculation. Since we can't get historical volume \n        # easily here, we will filter the universe to the top 100 by Market Cap (a common proxy) \n        # or simply take the first 100 symbols if the universe is large. \n        # \n        # Actually, the most robust way in LEAN for this specific constraint without extra storage \n        # is to rely on the fact that ETF constituents are relatively stable. \n        # We will calculate momentum for all securities in the universe.\n        # Then, we will select the top 10% of the *available* securities.\n        # If the universe has > 100 securities, we need to cap it. \n        # We will cap the universe to the top 100 by Market Cap (as a reasonable proxy for volume) \n        # for the purpose of this algorithm's logic.\n        \n        # Get all securities in the universe\n        securities_list = list(universe.Values)\n        \n        # Filter to top 100 by Market Cap (Proxy for Dollar Volume)\n        # Sort by Market Cap descending\n        securities_list.sort(key=lambda x: x.MarketCap, reverse=True)\n        top_100_securities = securities_list[:100]\n        \n        # Calculate Momentum for these securities\n        momentum_scores = []\n        \n        for security in top_100_securities:\n            symbol = security.Symbol\n            # Get the adjusted close price history\n            # We need the price from 252 days ago\n            current_price = security.LastPrice\n            \n            # Calculate the price 252 days ago\n            # We can use the security's history or calculate based on the period\n            # Since we are in OnRebalance, we have access to the full history via the security object\n            # However, the most direct way is to look at the security's history\n            \n            # Check if we have enough history\n            if len(security.History) < self._momentumPeriod + 1:\n                continue\n                \n            # Get the price at the start of the period (252 days ago)\n            # The history is sorted by time. We need the price at index -253 (if current is -1)\n            # Or simply: Price_t / Price_{t-252}\n            \n            # Let's find the price 252 days ago\n            # We can iterate or use the index\n            # security.History is a list of DailyBar objects\n            # Current bar is at the end. We need the bar 252 steps back.\n            \n            try:\n                # Get the bar 252 days ago\n                past_bar = security.History[-(self._momentumPeriod + 1)]\n                past_price = past_bar.AdjustedClose\n                \n                # Calculate momentum percent\n                if past_price == 0:\n                    momentum = 0.0\n                else:\n                    momentum = (current_price / past_price) - 1.0\n                \n                momentum_scores.append((symbol, momentum))\n            except Exception:\n                # If history is insufficient (e.g., near start of data), skip\n                continue\n        \n        # Sort by momentum score descending\n        momentum_scores.sort(key=lambda x: x[1], reverse=True)\n        \n        # Select the top 10%\n        # Calculate the number of stocks to hold\n        num_to_hold = max(1, int(len(momentum_scores) * self._topPercentile))\n        \n        selected_symbols = [score[0] for score in momentum_scores[:num_to_hold]]\n        \n        # Liquidate all current positions\n        self.Liquidate()\n        \n        # Buy the selected symbols with equal weight\n        # Calculate the amount to invest per stock\n        # We assume we want to invest the full capital into the selected stocks equally\n        # Number of selected stocks\n        n_stocks = len(selected_symbols)\n        \n        if n_stocks > 0:\n            cash_per_stock = self.Portfolio.Cash / n_stocks\n            \n            for symbol in selected_symbols:\n                # Get the security object for the symbol\n                # We need to find the security in the universe that matches this symbol\n                # Since we filtered the universe earlier, we can map it back or just buy directly\n                # But we need the quantity.\n                \n                # Find the security in the universe\n                security_obj = None\n                for sec in universe.Values:\n                    if sec.Symbol == symbol:\n                        security_obj = sec\n                        break\n                \n                if security_obj:\n                    # Calculate shares to buy\n                    shares = int(cash_per_stock / security_obj.LastPrice)\n                    if shares > 0:\n                        self.SetHoldings(symbol, shares)\n                        self.Log(f\"Buying {symbol} with {shares} shares\")\n        \n        self.Log(f\"Rebalanced. Selected {len(selected_symbols)} stocks out of {len(top_100_securities)} candidates.\")\n\n    def OnEnd(self):\n        \"\"\"Called when the algorithm ends.\"\"\"\n        self.Log(\"Algorithm finished.\")\n",
+    "source_sha256": "8363bdb57f18a52a7a3dcd3e2542ec88721558d8e475d3547b63037a71ff07b9",
+    "started_at": "2026-11-14T22:33:14.936586+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39413776,
+    "compile_id": "b49a3db1fba388e049ff8459680a026e-3b9717c34114f9128d235018d08a2a98",
+    "compile_created": {
+      "compileId": "b49a3db1fba388e049ff8459680a026e-3b9717c34114f9128d235018d08a2a98",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39413776,
+      "signature": "3b9717c34114f9128d235018d08a2a98",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "b49a3db1fba388e049ff8459680a026e-3b9717c34114f9128d235018d08a2a98",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39413776, with CompileID: b49a3db1fba388e049ff8459680a026e-3b9717c34114f9128d235018d08a2a98, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39413776, with CompileID: b49a3db1fba388e049ff8459680a026e-3b9717c34114f9128d235018d08a2a98, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "cc8b15f926b576edc6bb71b03f91a323",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413776,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "cc8b15f926b576edc6bb71b03f91a323",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 16
+        },
+        "backtestStart": "2026-11-14 22:33:18",
+        "backtestEnd": "2026-11-14 22:33:18",
+        "created": "2026-11-14 22:33:18",
+        "snapshotId": 39413779,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 5591a6cc",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v08",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413776,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "cc8b15f926b576edc6bb71b03f91a323",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 16
+        },
+        "backtestStart": "2026-11-14 22:33:18",
+        "backtestEnd": "2026-11-14 22:33:18",
+        "created": "2026-11-14 22:33:18",
+        "snapshotId": 39413779,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at \n    class CrossSectionalMomentumRef(QCA.Algorithm.QCAlgorithm):\n                                    ^^^^^^^^^^^^^\n in main.py: line 12\n Algorithm Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at \n    class CrossSectionalMomentumRef(QCA.Algorithm.QCAlgorithm):\n                                    ^^^^^^^^^^^^^\n in main.py: line 12\n Algorithm",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at <module>\n    class CrossSectionalMomentumRef(QCA.Algorithm.QCAlgorithm):\n                                    ^^^^^^^^^^^^^\n in main.py: line 12\n Algorithm",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 5591a6cc",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.0%",
+          "Used RAM (MB)": "154",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-cc8b15f926b576edc6bb71b03f91a323",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at \n    class CrossSectionalMomentumRef(QCA.Algorithm.QCAlgorithm):\n                                    ^^^^^^^^^^^^^\n in main.py: line 12\n Algorithm Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at \n    class CrossSectionalMomentumRef(QCA.Algorithm.QCAlgorithm):\n                                    ^^^^^^^^^^^^^\n in main.py: line 12\n Algorithm",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at <module>\n    class CrossSectionalMomentumRef(QCA.Algorithm.QCAlgorithm):\n                                    ^^^^^^^^^^^^^\n in main.py: line 12\n Algorithm",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:34:06.344525+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; LEGACY_API: AddSecurity, Liquidate, Log, SetDataFrequency, SetEndDate, SetHoldings, SetInitialCash, SetStartDate, SetUniverseProvider, SetWarmup; PROMPT_MISS: add_universe; PROMPT_MISS: month_start; PROMPT_MISS: dollar_volume",
+  "total_orders": null
+}

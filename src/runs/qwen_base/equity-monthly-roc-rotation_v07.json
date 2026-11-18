@@ -1,0 +1,297 @@
+{
+  "prompt_id": "equity-monthly-roc-rotation_v07",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\n# ==============================================================================\n# QuantConnect LEAN Algorithm: Monthly Cross-Asset Momentum Rotation\n# ==============================================================================\n# Strategy:\n#   1. Universe: SPY (US Equity), EFA (Ex-US), EEM (Emerging Markets), \n#                AGG (Aggregate Bonds), GLD (Gold).\n#   2. Signal: 12-month trailing momentum (Price Change).\n#   3. Execution: Monthly rebalancing on the first trading day.\n#   4. Risk Management: Cash fallback if the best asset class is in a \n#                        significant drawdown relative to its own history \n#                        or if the overall portfolio drawdown exceeds a threshold.\n#   5. Account: Standard Paper Account.\n# ==============================================================================\n\nfrom QuantConnect.Algorithm import QC\nfrom QuantConnect.Data.UniverseSelection import UniverseSelectionMethod\nfrom QuantConnect.Orders import OrderType\nfrom QuantConnect.Orders.Side import Side\nfrom QuantConnect.Util import helpers\n\nclass MomentumRotation(QC.Algorithm.QCAlgorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Set the benchmark to SPY for drawdown calculations.\n        - Define the universe of assets.\n        - Set initial cash allocation.\n        \"\"\"\n        self.SetBenchmark(\"SPY\")\n        \n        # Define the assets to trade\n        self.Assets = [\"SPY\", \"EFA\", \"EEM\", \"AGG\", \"GLD\"]\n        \n        # Initial cash allocation (100% cash initially)\n        self.Portfolio[\"Cash\"].SetBalance(self.SettleDate().ToDateTime())\n        \n        # Momentum parameters\n        self.MomentumPeriod = 12  # 12 months\n        \n        # Risk parameters\n        self.MaxPortfolioDrawdown = 0.10  # 10% max drawdown before cash fallback\n        self.AssetDrawdownThreshold = 0.15  # 15% drawdown for individual asset class\n        \n        # Storage for monthly signals and positions\n        self.LastRebalanceDate = None\n        self.CurrentWeights = {asset: 0.0 for asset in self.Assets}\n        \n        # Log initialization\n        self.Log(\"Strategy Initialized: Monthly Cross-Asset Momentum Rotation\")\n        self.Log(f\"Assets: {', '.join(self.Assets)}\")\n        self.Log(f\"Momentum Period: {self.MomentumPeriod} months\")\n        self.Log(f\"Max Portfolio Drawdown: {self.MaxPortfolioDrawdown * 100}%\")\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        - Check if it's the first trading day of the month.\n        - Calculate momentum scores.\n        - Execute rebalancing if conditions are met.\n        \"\"\"\n        # Determine if we are on the first trading day of the month\n        current_date = self.SettleDate()\n        last_rebalance_date = self.LastRebalanceDate\n        \n        # If no previous rebalance date, we are on the first day\n        if last_rebalance_date is None:\n            is_first_of_month = True\n        else:\n            # Check if the current month has started (day 1)\n            # We use the day of the month to trigger rebalancing\n            is_first_of_month = current_date.Day == 1 and current_date.Month != last_rebalance_date.Month\n\n        if is_first_of_month:\n            self.LastRebalanceDate = current_date\n            self.RunRebalance(data)\n\n    def RunRebalance(self, data):\n        \"\"\"\n        Execute the monthly rebalancing logic.\n        1. Calculate 12-month momentum for each asset.\n        2. Check risk constraints (drawdowns).\n        3. Select the best asset.\n        4. Rebalance portfolio to equal weights (20% each) or cash.\n        \"\"\"\n        self.Log(f\"\\n--- Rebalancing Date: {self.LastRebalanceDate} ---\")\n        \n        # Step 1: Calculate Momentum Scores\n        # We use the current price and the price from 12 months ago.\n        # Since we are on the first day of the month, we have full data for the past 12 months.\n        \n        momentum_scores = {}\n        asset_prices = {}\n        \n        for symbol in self.Assets:\n            if symbol not in self.Securities:\n                self.Log(f\"Warning: {symbol} not found in universe.\")\n                continue\n                \n            # Get current price\n            current_price = self.Securities[symbol].Price\n            \n            # Get price from 12 months ago\n            # We look for the last close 12 months prior to today\n            # In LEAN, we can approximate this by looking at the history or using the current price\n            # Since we are on the first day of the month, we can safely assume we have the data.\n            # However, to be precise with LEAN's data model, we calculate the return based on available history.\n            \n            # A robust way in LEAN without complex history lookups for every symbol:\n            # We assume the data feed provides enough history. \n            # We will calculate the return based on the current price and the price at the same time last year.\n            # For simplicity in this script, we use the standard momentum calculation:\n            # (Current Price - Price 12 months ago) / Price 12 months ago\n            \n            # Note: In a real production environment, we might cache the price from 12 months ago.\n            # Here, we rely on the fact that OnData runs with historical data available.\n            # We will use a simplified approach: calculate return from the last available close 12 months ago.\n            \n            # Since we cannot easily access \"price 12 months ago\" directly in a single OnData call \n            # without iterating history, we will use the standard QuantConnect momentum indicator \n            # or calculate it manually if history is available.\n            # Given the constraints, we will assume the data object has the necessary history.\n            \n            # Let's use a simpler heuristic: Compare current price to the price at the start of the month 12 months ago.\n            # Since we are on the 1st of the month, we can look at the price from exactly 12 months ago.\n            \n            # To ensure this works in the standard LEAN environment without complex history iteration:\n            # We will use the 'Price' property which is the latest close.\n            # We need to estimate the price 12 months ago. \n            # For this demo, we will assume the data feed is sufficient.\n            \n            # Alternative: Use the built-in momentum if available, but custom calculation is clearer.\n            # We will store the current price and calculate the return later if we had the history.\n            # Since we don't have a direct \"get price N months ago\" method in the snippet without iteration,\n            # we will use a proxy: The change from the previous month's close is not enough.\n            # We must iterate the history of the symbol to find the price 12 months ago.\n            \n            # Optimization: Only iterate if necessary.\n            history = self.History(symbol, 13, Resolution.Daily)\n            if len(history) < 13:\n                self.Log(f\"Insufficient history for {symbol}. Skipping.\")\n                continue\n            \n            # Get price 12 months ago (index 0 is today, index 12 is 12 months ago)\n            price_12m_ago = history[12].Close\n            current_close = history[0].Close\n            \n            if price_12m_ago == 0:\n                self.Log(f\"Invalid price 12 months ago for {symbol}.\")\n                continue\n                \n            momentum = (current_close - price_12m_ago) / price_12m_ago\n            momentum_scores[symbol] = momentum\n            asset_prices[symbol] = current_close\n            \n            self.Log(f\"{symbol}: Momentum = {momentum:.4f}, Price = {current_close:.2f}\")\n\n        if not momentum_scores:\n            self.Log(\"No valid momentum scores calculated. Skipping rebalance.\")\n            return\n\n        # Step 2: Check Risk Constraints\n        \n        # Calculate Portfolio Drawdown\n        # We need the peak equity value since inception or last reset.\n        # For simplicity, we calculate drawdown relative to the highest value since the start of the strategy.\n        # However, LEAN doesn't expose \"Peak Equity\" directly in a simple variable.\n        # We will approximate using the current portfolio value and a tracked peak.\n        \n        current_equity = self.Portfolio.TotalPortfolioValue\n        if not hasattr(self, 'PeakEquity'):\n            self.PeakEquity = current_equity\n        else:\n            if current_equity > self.PeakEquity:\n                self.PeakEquity = current_equity\n                \n        portfolio_drawdown = (self.PeakEquity - current_equity) / self.PeakEquity\n        \n        self.Log(f\"Current Equity: {current_equity:.2f}, Peak Equity: {self.PeakEquity:.2f}\")\n        self.Log(f\"Portfolio Drawdown: {portfolio_drawdown:.4f} ({portfolio_drawdown * 100:.2f}%)\")\n        \n        # Check if portfolio drawdown exceeds threshold\n        if portfolio_drawdown > self.MaxPortfolioDrawdown:\n            self.Log(f\"Portfolio drawdown ({portfolio_drawdown:.2%}) exceeds threshold ({self.MaxPortfolioDrawdown:.2%}). Switching to Cash.\")\n            self.RebalanceToCash()\n            return\n\n        # Check Individual Asset Drawdowns (Relative to their own 12-month high)\n        # This is a simplified check. We calculate the drawdown of each asset relative to its own peak over the last 12 months.\n        assets_in_drawdown = []\n        \n        for symbol, price in asset_prices.items():\n            history = self.History(symbol, 13, Resolution.Daily)\n            if len(history) < 13:\n                continue\n                \n            # Find the highest price in the last 13 months\n            max_price = max(h.Close for h in history)\n            current_drawdown = (max_price - price) / max_price\n            \n            if current_drawdown > self.AssetDrawdownThreshold:\n                self.Log(f\"{symbol} is in drawdown ({current_drawdown:.2%}).\")\n                assets_in_drawdown.append(symbol)\n        \n        if assets_in_drawdown:\n            self.Log(f\"Assets in significant drawdown: {assets_in_drawdown}. Applying cash fallback.\")\n            self.RebalanceToCash()\n            return\n\n        # Step 3: Select Best Asset\n        # Sort assets by momentum score descending\n        sorted_assets = sorted(momentum_scores.items(), key=lambda x: x[1], reverse=True)\n        \n        best_asset = sorted_assets[0][0]\n        best_momentum = sorted_assets[0][1]\n        \n        self.Log(f\"Best Asset: {best_asset} (Momentum: {best_momentum:.4f})\")\n        \n        # Step 4: Rebalance\n        # Target: Equal weight (20% each) in the selected asset, 0% in others.\n        # Or, if we want to diversify among top N, we could do that. \n        # The prompt implies \"rotation\", usually meaning picking the winner.\n        # Let's pick the single best asset and allocate 100% to it (excluding cash).\n        \n        self.RebalanceToAsset(best_asset)\n\n    def RebalanceToAsset(self, symbol):\n        \"\"\"\n        Rebalance the portfolio to 100% in the selected asset.\n        \"\"\"\n        self.Log(f\"Allocating 100% to {symbol}.\")\n        \n        # Calculate the amount to buy/sell\n        cash_available = self.Portfolio[\"Cash\"].Balance\n        target_value = cash_available\n        \n        # Ensure we don't exceed available cash\n        if target_value > cash_available:\n            target_value = cash_available\n            \n        if target_value <= 0:\n            self.Log(\"No cash available to invest.\")\n            return\n\n        # Get current position\n        current_position = self.Portfolio[symbol].Quantity\n        current_price = self.Securities[symbol].Price\n        \n        # Calculate target quantity\n        target_quantity = target_value / current_price\n        \n        # Calculate order quantity (difference)\n        order_quantity = target_quantity - current_position\n        \n        if abs(order_quantity) < 1:\n            self.Log(f\"Position adjustment for {symbol} is negligible.\")\n            return\n\n        # Place Order\n        side = Side.Buy if order_quantity > 0 else Side.Sell\n        order = Order(\n            symbol,\n            order_quantity,\n            OrderType.Market,\n            self.SettleDate().ToDateTime()\n        )\n        \n        self.Log(f\"Placing {side} order for {order_quantity:.2f} shares of {symbol} at ${current_price:.2f}\")\n        self.SettleDate(order)\n        self.AddOrder(order)\n\n    def RebalanceToCash(self):\n        \"\"\"\n        Rebalance the portfolio to 100% cash.\n        \"\"\"\n        self.Log(\"Selling all positions to go to cash.\")\n        \n        for symbol in self.Assets:\n            if symbol in self.Portfolio:\n                position = self.Portfolio[symbol]\n                if position.Quantity > 0:\n                    # Sell all\n                    order = Order(\n                        symbol,\n                        -position.Quantity,\n                        OrderType.Market,\n                        self.SettleDate().ToDateTime()\n                    )\n                    self.AddOrder(order)\n                    self.Log(f\"Selling {position.Quantity} shares of {symbol}.\")\n                else:\n                    self.Log(f\"No position in {symbol} to sell.\")\n\n    def OnOrderEvent(self, order):\n        \"\"\"\n        Handle order events.\n        \"\"\"\n        pass\n\n    def OnEndOfAlgorithm(self):\n        \"\"\"\n        Log final summary.\n        \"\"\"\n        self.Log(\"\\n=== Algorithm Ended ===\")\n        self.Log(f\"Final Equity: {self.Portfolio.TotalPortfolioValue:.2f}\")\n        self.Log(f\"Total Return: {(self.Portfolio.TotalPortfolioValue / self.SettleDate().ToDateTime() - 1) * 100:.2f}%\")\n```",
+  "generated_at": "2026-11-14T22:08:10.010559+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddOrder, History, Log, RebalanceToAsset, RebalanceToCash, RunRebalance, SetBenchmark, SettleDate"
+    },
+    {
+      "code": "NO_ORDERS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# ==============================================================================\n# QuantConnect LEAN Algorithm: Monthly Cross-Asset Momentum Rotation\n# ==============================================================================\n# Strategy:\n#   1. Universe: SPY (US Equity), EFA (Ex-US), EEM (Emerging Markets), \n#                AGG (Aggregate Bonds), GLD (Gold).\n#   2. Signal: 12-month trailing momentum (Price Change).\n#   3. Execution: Monthly rebalancing on the first trading day.\n#   4. Risk Management: Cash fallback if the best asset class is in a \n#                        significant drawdown relative to its own history \n#                        or if the overall portfolio drawdown exceeds a threshold.\n#   5. Account: Standard Paper Account.\n# ==============================================================================\n\nfrom QuantConnect.Algorithm import QC\nfrom QuantConnect.Data.UniverseSelection import UniverseSelectionMethod\nfrom QuantConnect.Orders import OrderType\nfrom QuantConnect.Orders.Side import Side\nfrom QuantConnect.Util import helpers\n\nclass MomentumRotation(QC.Algorithm.QCAlgorithm):\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        - Set the benchmark to SPY for drawdown calculations.\n        - Define the universe of assets.\n        - Set initial cash allocation.\n        \"\"\"\n        self.SetBenchmark(\"SPY\")\n        \n        # Define the assets to trade\n        self.Assets = [\"SPY\", \"EFA\", \"EEM\", \"AGG\", \"GLD\"]\n        \n        # Initial cash allocation (100% cash initially)\n        self.Portfolio[\"Cash\"].SetBalance(self.SettleDate().ToDateTime())\n        \n        # Momentum parameters\n        self.MomentumPeriod = 12  # 12 months\n        \n        # Risk parameters\n        self.MaxPortfolioDrawdown = 0.10  # 10% max drawdown before cash fallback\n        self.AssetDrawdownThreshold = 0.15  # 15% drawdown for individual asset class\n        \n        # Storage for monthly signals and positions\n        self.LastRebalanceDate = None\n        self.CurrentWeights = {asset: 0.0 for asset in self.Assets}\n        \n        # Log initialization\n        self.Log(\"Strategy Initialized: Monthly Cross-Asset Momentum Rotation\")\n        self.Log(f\"Assets: {', '.join(self.Assets)}\")\n        self.Log(f\"Momentum Period: {self.MomentumPeriod} months\")\n        self.Log(f\"Max Portfolio Drawdown: {self.MaxPortfolioDrawdown * 100}%\")\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        - Check if it's the first trading day of the month.\n        - Calculate momentum scores.\n        - Execute rebalancing if conditions are met.\n        \"\"\"\n        # Determine if we are on the first trading day of the month\n        current_date = self.SettleDate()\n        last_rebalance_date = self.LastRebalanceDate\n        \n        # If no previous rebalance date, we are on the first day\n        if last_rebalance_date is None:\n            is_first_of_month = True\n        else:\n            # Check if the current month has started (day 1)\n            # We use the day of the month to trigger rebalancing\n            is_first_of_month = current_date.Day == 1 and current_date.Month != last_rebalance_date.Month\n\n        if is_first_of_month:\n            self.LastRebalanceDate = current_date\n            self.RunRebalance(data)\n\n    def RunRebalance(self, data):\n        \"\"\"\n        Execute the monthly rebalancing logic.\n        1. Calculate 12-month momentum for each asset.\n        2. Check risk constraints (drawdowns).\n        3. Select the best asset.\n        4. Rebalance portfolio to equal weights (20% each) or cash.\n        \"\"\"\n        self.Log(f\"\\n--- Rebalancing Date: {self.LastRebalanceDate} ---\")\n        \n        # Step 1: Calculate Momentum Scores\n        # We use the current price and the price from 12 months ago.\n        # Since we are on the first day of the month, we have full data for the past 12 months.\n        \n        momentum_scores = {}\n        asset_prices = {}\n        \n        for symbol in self.Assets:\n            if symbol not in self.Securities:\n                self.Log(f\"Warning: {symbol} not found in universe.\")\n                continue\n                \n            # Get current price\n            current_price = self.Securities[symbol].Price\n            \n            # Get price from 12 months ago\n            # We look for the last close 12 months prior to today\n            # In LEAN, we can approximate this by looking at the history or using the current price\n            # Since we are on the first day of the month, we can safely assume we have the data.\n            # However, to be precise with LEAN's data model, we calculate the return based on available history.\n            \n            # A robust way in LEAN without complex history lookups for every symbol:\n            # We assume the data feed provides enough history. \n            # We will calculate the return based on the current price and the price at the same time last year.\n            # For simplicity in this script, we use the standard momentum calculation:\n            # (Current Price - Price 12 months ago) / Price 12 months ago\n            \n            # Note: In a real production environment, we might cache the price from 12 months ago.\n            # Here, we rely on the fact that OnData runs with historical data available.\n            # We will use a simplified approach: calculate return from the last available close 12 months ago.\n            \n            # Since we cannot easily access \"price 12 months ago\" directly in a single OnData call \n            # without iterating history, we will use the standard QuantConnect momentum indicator \n            # or calculate it manually if history is available.\n            # Given the constraints, we will assume the data object has the necessary history.\n            \n            # Let's use a simpler heuristic: Compare current price to the price at the start of the month 12 months ago.\n            # Since we are on the 1st of the month, we can look at the price from exactly 12 months ago.\n            \n            # To ensure this works in the standard LEAN environment without complex history iteration:\n            # We will use the 'Price' property which is the latest close.\n            # We need to estimate the price 12 months ago. \n            # For this demo, we will assume the data feed is sufficient.\n            \n            # Alternative: Use the built-in momentum if available, but custom calculation is clearer.\n            # We will store the current price and calculate the return later if we had the history.\n            # Since we don't have a direct \"get price N months ago\" method in the snippet without iteration,\n            # we will use a proxy: The change from the previous month's close is not enough.\n            # We must iterate the history of the symbol to find the price 12 months ago.\n            \n            # Optimization: Only iterate if necessary.\n            history = self.History(symbol, 13, Resolution.Daily)\n            if len(history) < 13:\n                self.Log(f\"Insufficient history for {symbol}. Skipping.\")\n                continue\n            \n            # Get price 12 months ago (index 0 is today, index 12 is 12 months ago)\n            price_12m_ago = history[12].Close\n            current_close = history[0].Close\n            \n            if price_12m_ago == 0:\n                self.Log(f\"Invalid price 12 months ago for {symbol}.\")\n                continue\n                \n            momentum = (current_close - price_12m_ago) / price_12m_ago\n            momentum_scores[symbol] = momentum\n            asset_prices[symbol] = current_close\n            \n            self.Log(f\"{symbol}: Momentum = {momentum:.4f}, Price = {current_close:.2f}\")\n\n        if not momentum_scores:\n            self.Log(\"No valid momentum scores calculated. Skipping rebalance.\")\n            return\n\n        # Step 2: Check Risk Constraints\n        \n        # Calculate Portfolio Drawdown\n        # We need the peak equity value since inception or last reset.\n        # For simplicity, we calculate drawdown relative to the highest value since the start of the strategy.\n        # However, LEAN doesn't expose \"Peak Equity\" directly in a simple variable.\n        # We will approximate using the current portfolio value and a tracked peak.\n        \n        current_equity = self.Portfolio.TotalPortfolioValue\n        if not hasattr(self, 'PeakEquity'):\n            self.PeakEquity = current_equity\n        else:\n            if current_equity > self.PeakEquity:\n                self.PeakEquity = current_equity\n                \n        portfolio_drawdown = (self.PeakEquity - current_equity) / self.PeakEquity\n        \n        self.Log(f\"Current Equity: {current_equity:.2f}, Peak Equity: {self.PeakEquity:.2f}\")\n        self.Log(f\"Portfolio Drawdown: {portfolio_drawdown:.4f} ({portfolio_drawdown * 100:.2f}%)\")\n        \n        # Check if portfolio drawdown exceeds threshold\n        if portfolio_drawdown > self.MaxPortfolioDrawdown:\n            self.Log(f\"Portfolio drawdown ({portfolio_drawdown:.2%}) exceeds threshold ({self.MaxPortfolioDrawdown:.2%}). Switching to Cash.\")\n            self.RebalanceToCash()\n            return\n\n        # Check Individual Asset Drawdowns (Relative to their own 12-month high)\n        # This is a simplified check. We calculate the drawdown of each asset relative to its own peak over the last 12 months.\n        assets_in_drawdown = []\n        \n        for symbol, price in asset_prices.items():\n            history = self.History(symbol, 13, Resolution.Daily)\n            if len(history) < 13:\n                continue\n                \n            # Find the highest price in the last 13 months\n            max_price = max(h.Close for h in history)\n            current_drawdown = (max_price - price) / max_price\n            \n            if current_drawdown > self.AssetDrawdownThreshold:\n                self.Log(f\"{symbol} is in drawdown ({current_drawdown:.2%}).\")\n                assets_in_drawdown.append(symbol)\n        \n        if assets_in_drawdown:\n            self.Log(f\"Assets in significant drawdown: {assets_in_drawdown}. Applying cash fallback.\")\n            self.RebalanceToCash()\n            return\n\n        # Step 3: Select Best Asset\n        # Sort assets by momentum score descending\n        sorted_assets = sorted(momentum_scores.items(), key=lambda x: x[1], reverse=True)\n        \n        best_asset = sorted_assets[0][0]\n        best_momentum = sorted_assets[0][1]\n        \n        self.Log(f\"Best Asset: {best_asset} (Momentum: {best_momentum:.4f})\")\n        \n        # Step 4: Rebalance\n        # Target: Equal weight (20% each) in the selected asset, 0% in others.\n        # Or, if we want to diversify among top N, we could do that. \n        # The prompt implies \"rotation\", usually meaning picking the winner.\n        # Let's pick the single best asset and allocate 100% to it (excluding cash).\n        \n        self.RebalanceToAsset(best_asset)\n\n    def RebalanceToAsset(self, symbol):\n        \"\"\"\n        Rebalance the portfolio to 100% in the selected asset.\n        \"\"\"\n        self.Log(f\"Allocating 100% to {symbol}.\")\n        \n        # Calculate the amount to buy/sell\n        cash_available = self.Portfolio[\"Cash\"].Balance\n        target_value = cash_available\n        \n        # Ensure we don't exceed available cash\n        if target_value > cash_available:\n            target_value = cash_available\n            \n        if target_value <= 0:\n            self.Log(\"No cash available to invest.\")\n            return\n\n        # Get current position\n        current_position = self.Portfolio[symbol].Quantity\n        current_price = self.Securities[symbol].Price\n        \n        # Calculate target quantity\n        target_quantity = target_value / current_price\n        \n        # Calculate order quantity (difference)\n        order_quantity = target_quantity - current_position\n        \n        if abs(order_quantity) < 1:\n            self.Log(f\"Position adjustment for {symbol} is negligible.\")\n            return\n\n        # Place Order\n        side = Side.Buy if order_quantity > 0 else Side.Sell\n        order = Order(\n            symbol,\n            order_quantity,\n            OrderType.Market,\n            self.SettleDate().ToDateTime()\n        )\n        \n        self.Log(f\"Placing {side} order for {order_quantity:.2f} shares of {symbol} at ${current_price:.2f}\")\n        self.SettleDate(order)\n        self.AddOrder(order)\n\n    def RebalanceToCash(self):\n        \"\"\"\n        Rebalance the portfolio to 100% cash.\n        \"\"\"\n        self.Log(\"Selling all positions to go to cash.\")\n        \n        for symbol in self.Assets:\n            if symbol in self.Portfolio:\n                position = self.Portfolio[symbol]\n                if position.Quantity > 0:\n                    # Sell all\n                    order = Order(\n                        symbol,\n                        -position.Quantity,\n                        OrderType.Market,\n                        self.SettleDate().ToDateTime()\n                    )\n                    self.AddOrder(order)\n                    self.Log(f\"Selling {position.Quantity} shares of {symbol}.\")\n                else:\n                    self.Log(f\"No position in {symbol} to sell.\")\n\n    def OnOrderEvent(self, order):\n        \"\"\"\n        Handle order events.\n        \"\"\"\n        pass\n\n    def OnEndOfAlgorithm(self):\n        \"\"\"\n        Log final summary.\n        \"\"\"\n        self.Log(\"\\n=== Algorithm Ended ===\")\n        self.Log(f\"Final Equity: {self.Portfolio.TotalPortfolioValue:.2f}\")\n        self.Log(f\"Total Return: {(self.Portfolio.TotalPortfolioValue / self.SettleDate().ToDateTime() - 1) * 100:.2f}%\")\n",
+    "source_sha256": "6d4e6eadfb67bdad82bf35f7cb61a841073b8ed9933332a54929cb84b2de02bb",
+    "started_at": "2026-11-14T22:08:10.015968+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39412664,
+    "compile_id": "95ff0a048d7ae7c8d6b7f768851f7701-be2fe93b9a02db99c69f8997991a8ed0",
+    "compile_created": {
+      "compileId": "95ff0a048d7ae7c8d6b7f768851f7701-be2fe93b9a02db99c69f8997991a8ed0",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39412664,
+      "signature": "be2fe93b9a02db99c69f8997991a8ed0",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "95ff0a048d7ae7c8d6b7f768851f7701-be2fe93b9a02db99c69f8997991a8ed0",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39412664, with CompileID: 95ff0a048d7ae7c8d6b7f768851f7701-be2fe93b9a02db99c69f8997991a8ed0, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39412664, with CompileID: 95ff0a048d7ae7c8d6b7f768851f7701-be2fe93b9a02db99c69f8997991a8ed0, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "cd8bd14be15eb02aaa0cd870f259f505",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-monthly-roc-rotation_v07",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39412664,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "cd8bd14be15eb02aaa0cd870f259f505",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 0
+        },
+        "backtestStart": "2026-11-14 22:08:16",
+        "backtestEnd": "2026-11-14 22:08:16",
+        "created": "2026-11-14 22:08:16",
+        "snapshotId": 39412670,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-monthly-roc-rotation_v07",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39412664,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "cd8bd14be15eb02aaa0cd870f259f505",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 0
+        },
+        "backtestStart": "2026-11-14 22:08:16",
+        "backtestEnd": "2026-11-14 22:08:16",
+        "created": "2026-11-14 22:08:16",
+        "snapshotId": 39412670,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC\n in main.py: line 15\n cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC\n in main.py: line 15\n cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC\n in main.py: line 15\n cannot import name 'QC' from 'QuantConnect.Algorithm' (unknown location)",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.4%",
+          "Used RAM (MB)": "143",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-cd8bd14be15eb02aaa0cd870f259f505",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC\n in main.py: line 15\n cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QC\n in main.py: line 15\n cannot import name &#039;QC&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QC' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QC\n in main.py: line 15\n cannot import name 'QC' from 'QuantConnect.Algorithm' (unknown location)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:09:04.138147+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; LEGACY_API: AddOrder, History, Log, RebalanceToAsset, RebalanceToCash, RunRebalance, SetBenchmark, SettleDate; NO_ORDERS",
+  "total_orders": null
+}

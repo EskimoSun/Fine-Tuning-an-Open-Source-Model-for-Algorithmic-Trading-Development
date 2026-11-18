@@ -1,0 +1,337 @@
+{
+  "prompt_id": "equity-opening-range-breakout_v03",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass OpeningRangeBreakoutAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        self._spy = self.add_equity(\"SPY\", Resolution.MINUTE)\n\n        self._orb = self.orb(self._spy.symbol, 9, 30, 10, 0, Resolution.MINUTE)\n        # Alternatively, use a manual indicator.\n        # self._orb = OpeningRangeBreakout(9, 30, 10, 0)\n        # self.warm_up_indicator(self._spy, self._orb)\n        # self.register_indicator(self._spy, self._orb)\n\n        self.plot_indicator(\"ORB\", self._orb)\n\n        self.schedule.on(\n            self.date_rules.every_day(self._spy.symbol),\n            self.time_rules.after_market_open(self._spy.symbol, 30),\n            self._exit_orb\n        )\n\n    def on_data(self, data: Slice) -> None:\n        if not data.bars or not self._orb.is_ready:\n            return\n\n        bar = data.bars.get(self._spy.symbol)\n        if not bar:\n            return\n\n        price = bar.close\n\n        if not self._spy.holdings.is_long and price > self._orb.high:\n            self.set_holdings(self._spy.symbol, 1)\n\n        if self._spy.holdings.is_short and price < self._orb.low:\n            self.set_holdings(self._spy.symbol, -1)\n\n    def _exit_orb(self) -> None:\n        if self.portfolio.invested:\n            self.liquidate()\n```",
+  "generated_at": "2026-11-12T23:46:18.523628+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "orb"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "15 / 55"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass OpeningRangeBreakoutAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        self._spy = self.add_equity(\"SPY\", Resolution.MINUTE)\n\n        self._orb = self.orb(self._spy.symbol, 9, 30, 10, 0, Resolution.MINUTE)\n        # Alternatively, use a manual indicator.\n        # self._orb = OpeningRangeBreakout(9, 30, 10, 0)\n        # self.warm_up_indicator(self._spy, self._orb)\n        # self.register_indicator(self._spy, self._orb)\n\n        self.plot_indicator(\"ORB\", self._orb)\n\n        self.schedule.on(\n            self.date_rules.every_day(self._spy.symbol),\n            self.time_rules.after_market_open(self._spy.symbol, 30),\n            self._exit_orb\n        )\n\n    def on_data(self, data: Slice) -> None:\n        if not data.bars or not self._orb.is_ready:\n            return\n\n        bar = data.bars.get(self._spy.symbol)\n        if not bar:\n            return\n\n        price = bar.close\n\n        if not self._spy.holdings.is_long and price > self._orb.high:\n            self.set_holdings(self._spy.symbol, 1)\n\n        if self._spy.holdings.is_short and price < self._orb.low:\n            self.set_holdings(self._spy.symbol, -1)\n\n    def _exit_orb(self) -> None:\n        if self.portfolio.invested:\n            self.liquidate()\n",
+    "source_sha256": "917962e6ec8461e80b4402d448f1f74252b37ebd82b88a0c6576b6889bc64160",
+    "started_at": "2026-11-12T23:46:18.526239+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;OpeningRangeBreakoutAlgorithm&#039; object has no attribute &#039;orb&#039;\n  at initialize\n    sel",
+    "project_id": 39314847,
+    "compile_id": "daddd7a13a739f26201471ac10f66904-5c65c22da05cc2080328d19533aa5057",
+    "compile_created": {
+      "compileId": "daddd7a13a739f26201471ac10f66904-5c65c22da05cc2080328d19533aa5057",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39314847,
+      "signature": "5c65c22da05cc2080328d19533aa5057",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "daddd7a13a739f26201471ac10f66904-5c65c22da05cc2080328d19533aa5057",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39314847, with CompileID: daddd7a13a739f26201471ac10f66904-5c65c22da05cc2080328d19533aa5057, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39314847, with CompileID: daddd7a13a739f26201471ac10f66904-5c65c22da05cc2080328d19533aa5057, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "f5c7c13f66269b84f0ec25052983a9ba",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-opening-range-breakout_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314847,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "f5c7c13f66269b84f0ec25052983a9ba",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 13
+        },
+        "backtestStart": "2026-11-12 23:46:22",
+        "backtestEnd": "2026-11-12 23:46:22",
+        "created": "2026-11-12 23:46:22",
+        "snapshotId": 39314850,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-opening-range-breakout_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39314847,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "f5c7c13f66269b84f0ec25052983a9ba",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 13
+        },
+        "backtestStart": "2026-11-12 23:46:22",
+        "backtestEnd": "2026-11-12 23:46:22",
+        "created": "2026-11-12 23:46:22",
+        "snapshotId": 39314850,
+        "status": "Runtime Error",
+        "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;OpeningRangeBreakoutAlgorithm&#039; object has no attribute &#039;orb&#039;\n  at initialize\n    self._orb = self.orb(self._spy.symbol, 9, 30, 10, 0, Resolution.MINUTE)\n                ^^^^^^^^\n in main.py: line 16\n &#039;OpeningRangeBreakoutAlgorithm&#039; object has no attribute &#039;orb&#039;",
+        "stacktrace": "'OpeningRangeBreakoutAlgorithm' object has no attribute 'orb'\n  at initialize\n    self._orb = self.orb(self._spy.symbol, 9, 30, 10, 0, Resolution.MINUTE)\n                ^^^^^^^^\n in main.py: line 16\n 'OpeningRangeBreakoutAlgorithm' object has no attribute 'orb'",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "19.8%",
+          "Used RAM (MB)": "207",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-f5c7c13f66269b84f0ec25052983a9ba",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:14"
+        }
+      },
+      "success": true
+    },
+    "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;OpeningRangeBreakoutAlgorithm&#039; object has no attribute &#039;orb&#039;\n  at initialize\n    self._orb = self.orb(self._spy.symbol, 9, 30, 10, 0, Resolution.MINUTE)\n                ^^^^^^^^\n in main.py: line 16\n &#039;OpeningRangeBreakoutAlgorithm&#039; object has no attribute &#039;orb&#039;",
+    "stacktrace": "'OpeningRangeBreakoutAlgorithm' object has no attribute 'orb'\n  at initialize\n    self._orb = self.orb(self._spy.symbol, 9, 30, 10, 0, Resolution.MINUTE)\n                ^^^^^^^^\n in main.py: line 16\n 'OpeningRangeBreakoutAlgorithm' object has no attribute 'orb'",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:47:13.656835+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;OpeningRangeBreakoutAlgorithm&#039; object has no attribute &#039;orb&#039;\n  at initialize\n    sel",
+  "note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: &#039;OpeningRangeBreakoutAlgorithm&#039; object has no attribute &#039;orb&#039;\n  at initialize\n    sel; UNKNOWN_API: orb; PROMPT_MISS: 15 / 55",
+  "total_orders": null
+}

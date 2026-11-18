@@ -1,0 +1,331 @@
+{
+  "prompt_id": "futures_v04",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityOptionAlgorithm(QCAlgorithm):\n    \n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        self._option = self.add_option(\"SPY\")\n        # Using Staddle() method, it will only return the best-matched ATM call and put contracts expiring after 30 days.\n        # It provides better accuracy in filtering, and subscribe only to the needed contracts to save computation resources.\n        self._option.set_filter(lambda u: u.call() ^ u.put(), 30, True)\n\n    def on_data(self, data: Slice) -> None:\n        if self.portfolio.invested:\n            return\n        # Only wants the option chain of the selected symbol.\n        chain = list(data.option_chains.get(self._option))\n        if chain:\n            # There should only be 1 expiry and 1 strike from the 2 contracts returned, getting from either contract is fine.\n            expiry, strike = chain[0].expiry, chain[0].strike\n    \n            # Forms a long call, short put spread using abstraction method ensure accuracy.\n            long_call = OptionRight.create_call(self._option, strike, expiry)\n            short_put = OptionRight.create_put(self._option, strike, expiry)\n            strategy = OptionStrategy.create_straddle(self._option, [long_call, short_put])\n            \n            self.buy(strategy, 1)\n```",
+  "generated_at": "2026-11-13T00:11:41.449764+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ORDERS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass EquityOptionAlgorithm(QCAlgorithm):\n    \n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n\n        self._option = self.add_option(\"SPY\")\n        # Using Staddle() method, it will only return the best-matched ATM call and put contracts expiring after 30 days.\n        # It provides better accuracy in filtering, and subscribe only to the needed contracts to save computation resources.\n        self._option.set_filter(lambda u: u.call() ^ u.put(), 30, True)\n\n    def on_data(self, data: Slice) -> None:\n        if self.portfolio.invested:\n            return\n        # Only wants the option chain of the selected symbol.\n        chain = list(data.option_chains.get(self._option))\n        if chain:\n            # There should only be 1 expiry and 1 strike from the 2 contracts returned, getting from either contract is fine.\n            expiry, strike = chain[0].expiry, chain[0].strike\n    \n            # Forms a long call, short put spread using abstraction method ensure accuracy.\n            long_call = OptionRight.create_call(self._option, strike, expiry)\n            short_put = OptionRight.create_put(self._option, strike, expiry)\n            strategy = OptionStrategy.create_straddle(self._option, [long_call, short_put])\n            \n            self.buy(strategy, 1)\n",
+    "source_sha256": "bb69111919056de1dd3fb11b0a9f065df9208299ed95fea78b39337b6a6045ad",
+    "started_at": "2026-11-13T00:11:41.451863+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:  set_filter(min_strike: int, max_strike: int, min_expiry: timedelta, max_expiry: timedelta),Argument mismatch: argument 1 ('min_strike') expected int, got function.,",
+    "project_id": 39315816,
+    "compile_id": "aeb24410d5b0d847e8438a666b5fe0ec-ba1a946ffabdd047e6519abccc58df1f",
+    "compile_created": {
+      "compileId": "aeb24410d5b0d847e8438a666b5fe0ec-ba1a946ffabdd047e6519abccc58df1f",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39315816,
+      "signature": "ba1a946ffabdd047e6519abccc58df1f",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "aeb24410d5b0d847e8438a666b5fe0ec-ba1a946ffabdd047e6519abccc58df1f",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39315816, with CompileID: aeb24410d5b0d847e8438a666b5fe0ec-ba1a946ffabdd047e6519abccc58df1f, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39315816, with CompileID: aeb24410d5b0d847e8438a666b5fe0ec-ba1a946ffabdd047e6519abccc58df1f, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "1506f78111686a1adc9a287594be8511",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v04",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315816,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "1506f78111686a1adc9a287594be8511",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 0
+        },
+        "backtestStart": "2026-11-13 00:11:45",
+        "backtestEnd": "2026-11-13 00:11:45",
+        "created": "2026-11-13 00:11:45",
+        "snapshotId": 39315818,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-15T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v04",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315816,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "1506f78111686a1adc9a287594be8511",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 0
+        },
+        "backtestStart": "2026-11-13 00:11:45",
+        "backtestEnd": "2026-11-13 00:11:45",
+        "created": "2026-11-13 00:11:45",
+        "snapshotId": 39315818,
+        "status": "Runtime Error",
+        "error": "[ERROR] FATAL UNHANDLED EXCEPTION:  set_filter(min_strike: int, max_strike: int, min_expiry: timedelta, max_expiry: timedelta),Argument mismatch: argument 1 ('min_strike') expected int, got function.,Extensions.SetRuntimeError(): Extensions.SetRuntimeError(): RuntimeError at 09/01/2024 04:00:00 UTC. Context: RuntimeError System.Exception: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the set_filter method. Please checkout the API documentation. The following overloads are available:,  set_filter(universe_func: Callable[[OptionFilterUniverse], OptionFilterUniverse]),  set_filter(min_strike: int, max_strike: int),  set_filter(min_expiry: timedelta, max_expiry: timedelta),  set_filter(min_strike: int, max_strike: int, min_expiry_days: int, max_expiry_days: int),  set_filter(min_strike: int, max_strike: int, mi",
+        "stacktrace": "Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the set_filter method. Please checkout the API documentation. The following overloads are available:\n  set_filter(universe_func: Callable[[OptionFilterUniverse], OptionFilterUniverse])\n  set_filter(min_strike: int, max_strike: int)\n  set_filter(min_expiry: timedelta, max_expiry: timedelta)\n  set_filter(min_strike: int, max_strike: int, min_expiry_days: int, max_expiry_days: int)\n  set_filter(min_strike: int, max_strike: int, min_expiry: timedelta, max_expiry: timedelta)\nArgument mismatch: argument 1 ('min_strike') expected int, got function.\n  at initialize\n    self._option.set_filter(lambda u: u.call() ^ u.put(), 30, True)\n in main.py: line 15\n No method matches given arguments for set_filter: (<class 'function'>, <class 'int'>, <class 'bool'>). The following overloads are available:\n  set_filter(universe_func: Callable[[OptionFilterUniverse], OptionFilterUniverse])\n  set_filter(min_strike: int, max_strike: int)\n  set_filter(min_expiry: timedelta, max_expiry: timedelta)\n  set_filter(min_strike: int, max_strike: int, min_expiry_days: int, max_expiry_days: int)\n  set_filter(min_strike: int, max_strike: int, min_expiry: timedelta, max_expiry: timedelta)\nArgument mismatch: argument 1 ('min_strike') expected int, got function.",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-15T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "0.6%",
+          "Used RAM (MB)": "222",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-47-1506f78111686a1adc9a287594be8511",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:11"
+        }
+      },
+      "success": true
+    },
+    "error": "[ERROR] FATAL UNHANDLED EXCEPTION:  set_filter(min_strike: int, max_strike: int, min_expiry: timedelta, max_expiry: timedelta),Argument mismatch: argument 1 ('min_strike') expected int, got function.,Extensions.SetRuntimeError(): Extensions.SetRuntimeError(): RuntimeError at 09/01/2024 04:00:00 UTC. Context: RuntimeError System.Exception: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the set_filter method. Please checkout the API documentation. The following overloads are available:,  set_filter(universe_func: Callable[[OptionFilterUniverse], OptionFilterUniverse]),  set_filter(min_strike: int, max_strike: int),  set_filter(min_expiry: timedelta, max_expiry: timedelta),  set_filter(min_strike: int, max_strike: int, min_expiry_days: int, max_expiry_days: int),  set_filter(min_strike: int, max_strike: int, mi",
+    "stacktrace": "Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the set_filter method. Please checkout the API documentation. The following overloads are available:\n  set_filter(universe_func: Callable[[OptionFilterUniverse], OptionFilterUniverse])\n  set_filter(min_strike: int, max_strike: int)\n  set_filter(min_expiry: timedelta, max_expiry: timedelta)\n  set_filter(min_strike: int, max_strike: int, min_expiry_days: int, max_expiry_days: int)\n  set_filter(min_strike: int, max_strike: int, min_expiry: timedelta, max_expiry: timedelta)\nArgument mismatch: argument 1 ('min_strike') expected int, got function.\n  at initialize\n    self._option.set_filter(lambda u: u.call() ^ u.put(), 30, True)\n in main.py: line 15\n No method matches given arguments for set_filter: (<class 'function'>, <class 'int'>, <class 'bool'>). The following overloads are available:\n  set_filter(universe_func: Callable[[OptionFilterUniverse], OptionFilterUniverse])\n  set_filter(min_strike: int, max_strike: int)\n  set_filter(min_expiry: timedelta, max_expiry: timedelta)\n  set_filter(min_strike: int, max_strike: int, min_expiry_days: int, max_expiry_days: int)\n  set_filter(min_strike: int, max_strike: int, min_expiry: timedelta, max_expiry: timedelta)\nArgument mismatch: argument 1 ('min_strike') expected int, got function.",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-13T00:12:33.984491+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:  set_filter(min_strike: int, max_strike: int, min_expiry: timedelta, max_expiry: timedelta),Argument mismatch: argument 1 ('min_strike') expected int, got function.,",
+  "note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:  set_filter(min_strike: int, max_strike: int, min_expiry: timedelta, max_expiry: timedelta),Argument mismatch: argument 1 ('min_strike') expected int, got function.,; NO_ORDERS",
+  "total_orders": null
+}

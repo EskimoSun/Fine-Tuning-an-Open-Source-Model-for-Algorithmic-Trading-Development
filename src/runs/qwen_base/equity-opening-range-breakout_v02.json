@@ -1,0 +1,297 @@
+{
+  "prompt_id": "equity-opening-range-breakout_v02",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport QuantConnect as QC\nfrom QuantConnect.Algorithm import QCAlgo\nfrom QuantConnect.Data.Market import MinuteBar\nfrom QuantConnect.Orders import Order, OrderType, OrderSide\nfrom QuantConnect.Securities import Equity\nfrom QuantConnect.Util import DateTime\n\nclass SPY_MomentumStrategy(QCAlgo):\n    \"\"\"\n    Strategy: Track SPY high/low from 9:30 to 10:00.\n    After 10:00, if close > 9:30-10:00 High -> Buy 100% cash.\n    If close < 9:30-10:00 Low -> Short 100% cash.\n    Close all positions at 3:55.\n    Reset indicators/variables at 3:55.\n    Date Range: Sept 1, 2024 to Dec 31, 2024.\n    Initial Capital: $100,000.\n    \"\"\"\n\n    def Initialize(self):\n        \"\"\"Initialize the algorithm.\"\"\"\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        self.SetCash(100000)\n        \n        # Add SPY data\n        self.Add(Equity(\"SPY\", QC.DataNormalizationMode.RealTime)).SetInterval(QC.DataNormalizationMode.Minute)\n        \n        # Variables to store the range\n        self._range_high = None\n        self._range_low = None\n        self._range_initialized = False\n        \n        # Flag to ensure only one trade per day\n        self._traded_today = False\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        Logic:\n        1. If not initialized (before 9:30), wait.\n        2. From 9:30 to 10:00 (inclusive), update High/Low.\n        3. At 10:00 (start of 10:00 bar), lock in the range and wait for close.\n        4. After 10:00, check close against locked range.\n        5. At 3:55, close positions and reset.\n        \"\"\"\n        \n        # Get the current bar for SPY\n        if not data.ContainsKey(\"SPY\"):\n            return\n\n        bar = data[\"SPY\"]\n        \n        # Check if we are in the setup phase (9:30 to 10:00)\n        # We need to track the high and low of the first 30 minutes.\n        # The first bar is 9:30. The 30th bar is 10:00.\n        # We consider the range from the open of the first bar to the close of the 30th bar (10:00).\n        \n        # Determine if we are in the first 30 minutes based on time\n        # 9:30 is the start. 10:00 is the 30th minute mark.\n        # We will initialize the range on the first bar (9:30) and update until 10:00.\n        \n        if not self._range_initialized:\n            # First bar (9:30)\n            self._range_high = bar.High\n            self._range_low = bar.Low\n            self._range_initialized = True\n            return\n\n        # Check if we have reached the 10:00 bar (the 30th minute of the day)\n        # We can check the time. 10:00:00 is the start of the 30th minute.\n        # However, since we are processing bars, the bar at 10:00 is the one we are currently looking at.\n        # If the current bar is 10:00, we finalize the range.\n        \n        # Note: The logic requires tracking from 9:30 to 10:00.\n        # If today is the first day, we start fresh.\n        # We need to ensure we don't reset mid-day unless it's 3:55.\n        \n        # Check if we are at the 10:00 bar (30th minute)\n        # We can infer this by checking if the bar time is 10:00.\n        # Since we don't have a direct \"minute of day\" property easily accessible without parsing,\n        # we can rely on the fact that we are processing minute bars.\n        # Let's assume the first bar is 9:30.\n        # We will count bars or check time. Checking time is safer.\n        \n        # 9:30 is 09:30:00. 10:00 is 10:00:00.\n        # If bar.Time >= 10:00:00, we are at the end of the observation window.\n        \n        # However, we need to be careful about the exact moment.\n        # The prompt says \"Track the high and low from 9:30 to 10:00\".\n        # Usually, this implies the range is established by the close of the 10:00 bar.\n        # So, if bar.Time is 10:00:00, we lock the range.\n        \n        # Let's refine the logic:\n        # 1. Initialize on first bar (9:30).\n        # 2. Update High/Low for every bar until 10:00.\n        # 3. Once 10:00 bar arrives, we lock the range.\n        # 4. On the NEXT bar (10:01), we check the close of the 10:00 bar against the locked range.\n        \n        # Wait, the prompt says \"After 10:00, if a bar closes...\".\n        # This implies we look at the bar starting at 10:00 or 10:01?\n        # \"Track ... from 9:30 to 10:00\". This usually means the 30-minute window ending at 10:00.\n        # \"After 10:00\" implies the action happens on the 10:01 bar or later.\n        # But we need the close of the 10:00 bar to make the decision? Or the close of the 10:01 bar?\n        # \"if a bar closes above that high\". If we are \"After 10:00\", the first bar is 10:01.\n        # But we need the range from 9:30-10:00.\n        # Let's assume the range is defined by the 9:30-10:00 window.\n        # The decision is made on the first bar AFTER 10:00 (i.e., 10:01) based on the close of that bar?\n        # Or does it mean \"if the 10:00 bar closes above...\"?\n        # \"After 10:00\" strongly suggests the 10:01 bar onwards.\n        # However, to have a signal immediately after 10:00, we usually look at the 10:00 bar's close.\n        # Let's interpret \"After 10:00\" as the trading phase starting at 10:01.\n        # But we need the close of the 10:00 bar to compare? No, \"if a bar closes\".\n        # If the trading phase starts at 10:01, we check the close of the 10:01 bar.\n        # But that gives us a 1-minute delay.\n        # Alternative interpretation: The range is 9:30-10:00. The first trade opportunity is the 10:00 bar itself?\n        # \"After 10:00\" usually means > 10:00.\n        # Let's stick to the literal: Range = 9:30 to 10:00. Action = On bars > 10:00.\n        # So we wait for the 10:01 bar to close.\n        \n        # Actually, a common interpretation in algo trading for \"After X\" is the bar starting at X+1.\n        # But let's look at the constraint: \"Only one trade per day\".\n        # If we wait for 10:01 close, we might miss the 10:00 move.\n        # Let's assume the standard interpretation: \n        # Range is established by 10:00 bar close.\n        # Signal is generated on the 10:01 bar based on its close.\n        \n        # However, to be robust, let's check the time.\n        # If bar.Time is 10:00:00, we finalize the range.\n        # If bar.Time is > 10:00:00 (i.e., 10:01:00), we check the previous bar's close? \n        # No, OnData gives us the current bar.\n        # If current bar is 10:01, we check its close.\n        \n        # Let's implement:\n        # 1. If bar.Time is 9:30, init.\n        # 2. If 9:30 < bar.Time <= 10:00, update range.\n        # 3. If bar.Time > 10:00, check close of CURRENT bar against locked range.\n        \n        # Wait, if we are at 10:01, we haven't seen the close of 10:01 yet in a real-time scenario, \n        # but in backtesting, we have the full bar.\n        # So if bar.Time is 10:01, we check bar.Close.\n        \n        # One edge case: What if the market closes before 10:01? (Unlikely for SPY, but possible on holidays).\n        # We handle that by checking if we are in the trading phase.\n        \n        # Let's refine the \"After 10:00\" logic.\n        # If the range is 9:30-10:00, the first bar \"After 10:00\" is 10:01.\n        # So we check the close of the 10:01 bar.\n        \n        # However, there is a nuance: \"if a bar closes above that high\".\n        # If we wait for 10:01, we are reacting to 10:01.\n        # Is it possible the user meant \"If the 10:00 bar closes above...\"?\n        # \"After 10:00\" implies the time period following 10:00.\n        # I will proceed with: Range = 9:30-10:00. Signal = Close of 10:01 bar.\n        \n        # Check if we are in the observation window (9:30 to 10:00 inclusive)\n        # We need to parse the time. \n        # bar.Time is a DateTime.\n        \n        # Helper to check if time is within 9:30 and 10:00\n        def is_in_observation_window(dt):\n            # 9:30:00 to 10:00:00\n            # Note: 10:00:00 is the start of the 10:00 bar.\n            # We want to include the 10:00 bar in the range calculation.\n            # So if dt >= 9:30:00 and dt <= 10:00:00\n            return dt.hour == 9 and dt.minute >= 30 and (dt.hour == 10 and dt.minute == 0)\n\n        # Check if we are in the trading phase (> 10:00)\n        def is_in_trading_phase(dt):\n            return dt.hour == 10 and dt.minute > 0\n\n        current_time = bar.Time\n        \n        # Reset logic at 3:55\n        if current_time.hour == 15 and current_time.minute == 55:\n            # Close all positions\n            if self.Portfolio.Invested:\n                # Close Long\n                if self.Portfolio.Invested.Value > 0:\n                    self.Liquidate()\n                # Close Short (if any, though Liquidate handles both usually, but let's be explicit if needed)\n                # Liquidate closes all open orders/positions.\n            \n            # Reset variables\n            self._range_high = None\n            self._range_low = None\n            self._range_initialized = False\n            self._traded_today = False\n            \n            self.Log(f\"{self.Time}: Resetting strategy for next day.\")\n            return\n\n        # If we are in the observation window\n        if is_in_observation_window(current_time):\n            if not self._range_initialized:\n                # First bar (9:30)\n                self._range_high = bar.High\n                self._range_low = bar.Low\n                self._range_initialized = True\n            else:\n                # Update range\n                if bar.High > self._range_high:\n                    self._range_high = bar.High\n                if bar.Low < self._range_low:\n                    self._range_low = bar.Low\n            \n            # If we are at the very end of the observation window (10:00 bar), \n            # we don't trade yet, we just lock the range.\n            # The trade happens on the NEXT bar.\n            return\n\n        # If we are in the trading phase (> 10:00)\n        if is_in_trading_phase(current_time):\n            # We are on a bar after 10:00.\n            # Check if we have already traded today.\n            if self._traded_today:\n                return\n\n            # Check the close of the CURRENT bar against the locked range\n            # Note: We locked the range on the 10:00 bar.\n            # Now we are on 10:01, 10:02, etc.\n            \n            if bar.Close > self._range_high:\n                # Buy\n                self.Log(f\"{self.Time}: Buy signal. Close {bar.Close} > High {self._range_high}\")\n                # Calculate shares to buy with 100% cash\n                # We need to account for commission and slippage if possible, \n                # but standard is Cash / Price.\n                # Ensure we have enough cash.\n                cash_available = self.Cash - self.Portfolio.TotalPortfolioValue * 0.001 # Rough estimate for fees if needed, but usually just Cash\n                # Actually, simpler: Cash / Price.\n                # But we must ensure we don't go negative.\n                \n                # Calculate shares\n                shares = int(self.Cash / bar.Close)\n                \n                # Place Market Order\n                self.SetHoldings(\"SPY\", shares)\n                # Or use Order: self.MarketOrder(OrderSide.Long, \"SPY\", shares)\n                # SetHoldings is easier for \"buy with everything\" logic in backtest\n                # But SetHoldings might not execute immediately in all contexts, MarketOrder is safer for \"Buy\".\n                # Let's use MarketOrder for precision.\n                \n                # Calculate shares to buy\n                # We want to spend all cash.\n                # Cash includes the value of existing positions? No, Cash is liquid cash.\n                # If we are short, we have negative equity but positive cash? \n                # In LEAN, Cash is the liquid asset.\n                \n                # Simple approach: Buy with all available cash.\n                # If we are already long, we might be over-leveraged if we buy again, \n                # but the logic says \"Only one trade per day\".\n                \n                # Check if we are already long\n                if self.Portfolio.Invested.Value > 0:\n                    # We are already long, do nothing (one trade per day)\n                    self._traded_today = True\n                    return\n\n                # Calculate shares\n                # We need to consider that we might have a short position from a previous day?\n                # No, we close everything at 3:55. So we should be flat at start of day.\n                # But let's check just in case.\n                \n                if self.Portfolio.Invested.Value == 0:\n                    shares = int(self.Cash / bar.Close)\n                    self.MarketOrder(OrderSide.Long, \"SPY\", shares)\n                    self._traded_today = True\n                    self.Log(f\"{self.Time}: Bought {shares} shares of SPY.\")\n                else:\n                    # Should not happen due to reset, but safety check\n                    self.Log(f\"{self.Time}: Already invested, skipping.\")\n                    self._traded_today = True\n\n            elif bar.Close < self._range_low:\n                # Short\n                self.Log(f\"{self.Time}: Short signal. Close {bar.Close} < Low {self._range_low}\")\n                \n                if self.Portfolio.Invested.Value < 0:\n                    # Already short\n                    self._traded_today = True\n                    return\n\n                if self.Portfolio.Invested.Value == 0:\n                    # Short with everything\n                    # Shorting: We sell shares we don't own.\n                    # Max shares = Cash / Price (assuming we can borrow freely or using margin)\n                    # In LEAN, Shorting requires margin. \n                    # \"Short with everything\" usually means max margin allowed or using all cash as collateral.\n                    # Standard interpretation: Sell short using all available cash as collateral.\n                    shares = int(self.Cash / bar.Close)\n                    self.MarketOrder(OrderSide.Short, \"SPY\", shares)\n                    self._traded_today = True\n                    self.Log(f\"{self.Time}: Shorted {shares} shares of SPY.\")\n            else:\n                # No signal\n                pass\n\n        # If we are past 3:55 but before market close, we do nothing (already reset at 3:55)\n        # If we are past market close, we do nothing.\n\n```",
+  "generated_at": "2026-11-14T22:38:39.229054+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "Add, Liquidate, Log, MarketOrder, SetCash, SetEndDate, SetHoldings, SetStartDate"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import QuantConnect as QC\nfrom QuantConnect.Algorithm import QCAlgo\nfrom QuantConnect.Data.Market import MinuteBar\nfrom QuantConnect.Orders import Order, OrderType, OrderSide\nfrom QuantConnect.Securities import Equity\nfrom QuantConnect.Util import DateTime\n\nclass SPY_MomentumStrategy(QCAlgo):\n    \"\"\"\n    Strategy: Track SPY high/low from 9:30 to 10:00.\n    After 10:00, if close > 9:30-10:00 High -> Buy 100% cash.\n    If close < 9:30-10:00 Low -> Short 100% cash.\n    Close all positions at 3:55.\n    Reset indicators/variables at 3:55.\n    Date Range: Sept 1, 2024 to Dec 31, 2024.\n    Initial Capital: $100,000.\n    \"\"\"\n\n    def Initialize(self):\n        \"\"\"Initialize the algorithm.\"\"\"\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        self.SetCash(100000)\n        \n        # Add SPY data\n        self.Add(Equity(\"SPY\", QC.DataNormalizationMode.RealTime)).SetInterval(QC.DataNormalizationMode.Minute)\n        \n        # Variables to store the range\n        self._range_high = None\n        self._range_low = None\n        self._range_initialized = False\n        \n        # Flag to ensure only one trade per day\n        self._traded_today = False\n\n    def OnData(self, data):\n        \"\"\"\n        Process incoming data.\n        Logic:\n        1. If not initialized (before 9:30), wait.\n        2. From 9:30 to 10:00 (inclusive), update High/Low.\n        3. At 10:00 (start of 10:00 bar), lock in the range and wait for close.\n        4. After 10:00, check close against locked range.\n        5. At 3:55, close positions and reset.\n        \"\"\"\n        \n        # Get the current bar for SPY\n        if not data.ContainsKey(\"SPY\"):\n            return\n\n        bar = data[\"SPY\"]\n        \n        # Check if we are in the setup phase (9:30 to 10:00)\n        # We need to track the high and low of the first 30 minutes.\n        # The first bar is 9:30. The 30th bar is 10:00.\n        # We consider the range from the open of the first bar to the close of the 30th bar (10:00).\n        \n        # Determine if we are in the first 30 minutes based on time\n        # 9:30 is the start. 10:00 is the 30th minute mark.\n        # We will initialize the range on the first bar (9:30) and update until 10:00.\n        \n        if not self._range_initialized:\n            # First bar (9:30)\n            self._range_high = bar.High\n            self._range_low = bar.Low\n            self._range_initialized = True\n            return\n\n        # Check if we have reached the 10:00 bar (the 30th minute of the day)\n        # We can check the time. 10:00:00 is the start of the 30th minute.\n        # However, since we are processing bars, the bar at 10:00 is the one we are currently looking at.\n        # If the current bar is 10:00, we finalize the range.\n        \n        # Note: The logic requires tracking from 9:30 to 10:00.\n        # If today is the first day, we start fresh.\n        # We need to ensure we don't reset mid-day unless it's 3:55.\n        \n        # Check if we are at the 10:00 bar (30th minute)\n        # We can infer this by checking if the bar time is 10:00.\n        # Since we don't have a direct \"minute of day\" property easily accessible without parsing,\n        # we can rely on the fact that we are processing minute bars.\n        # Let's assume the first bar is 9:30.\n        # We will count bars or check time. Checking time is safer.\n        \n        # 9:30 is 09:30:00. 10:00 is 10:00:00.\n        # If bar.Time >= 10:00:00, we are at the end of the observation window.\n        \n        # However, we need to be careful about the exact moment.\n        # The prompt says \"Track the high and low from 9:30 to 10:00\".\n        # Usually, this implies the range is established by the close of the 10:00 bar.\n        # So, if bar.Time is 10:00:00, we lock the range.\n        \n        # Let's refine the logic:\n        # 1. Initialize on first bar (9:30).\n        # 2. Update High/Low for every bar until 10:00.\n        # 3. Once 10:00 bar arrives, we lock the range.\n        # 4. On the NEXT bar (10:01), we check the close of the 10:00 bar against the locked range.\n        \n        # Wait, the prompt says \"After 10:00, if a bar closes...\".\n        # This implies we look at the bar starting at 10:00 or 10:01?\n        # \"Track ... from 9:30 to 10:00\". This usually means the 30-minute window ending at 10:00.\n        # \"After 10:00\" implies the action happens on the 10:01 bar or later.\n        # But we need the close of the 10:00 bar to make the decision? Or the close of the 10:01 bar?\n        # \"if a bar closes above that high\". If we are \"After 10:00\", the first bar is 10:01.\n        # But we need the range from 9:30-10:00.\n        # Let's assume the range is defined by the 9:30-10:00 window.\n        # The decision is made on the first bar AFTER 10:00 (i.e., 10:01) based on the close of that bar?\n        # Or does it mean \"if the 10:00 bar closes above...\"?\n        # \"After 10:00\" strongly suggests the 10:01 bar onwards.\n        # However, to have a signal immediately after 10:00, we usually look at the 10:00 bar's close.\n        # Let's interpret \"After 10:00\" as the trading phase starting at 10:01.\n        # But we need the close of the 10:00 bar to compare? No, \"if a bar closes\".\n        # If the trading phase starts at 10:01, we check the close of the 10:01 bar.\n        # But that gives us a 1-minute delay.\n        # Alternative interpretation: The range is 9:30-10:00. The first trade opportunity is the 10:00 bar itself?\n        # \"After 10:00\" usually means > 10:00.\n        # Let's stick to the literal: Range = 9:30 to 10:00. Action = On bars > 10:00.\n        # So we wait for the 10:01 bar to close.\n        \n        # Actually, a common interpretation in algo trading for \"After X\" is the bar starting at X+1.\n        # But let's look at the constraint: \"Only one trade per day\".\n        # If we wait for 10:01 close, we might miss the 10:00 move.\n        # Let's assume the standard interpretation: \n        # Range is established by 10:00 bar close.\n        # Signal is generated on the 10:01 bar based on its close.\n        \n        # However, to be robust, let's check the time.\n        # If bar.Time is 10:00:00, we finalize the range.\n        # If bar.Time is > 10:00:00 (i.e., 10:01:00), we check the previous bar's close? \n        # No, OnData gives us the current bar.\n        # If current bar is 10:01, we check its close.\n        \n        # Let's implement:\n        # 1. If bar.Time is 9:30, init.\n        # 2. If 9:30 < bar.Time <= 10:00, update range.\n        # 3. If bar.Time > 10:00, check close of CURRENT bar against locked range.\n        \n        # Wait, if we are at 10:01, we haven't seen the close of 10:01 yet in a real-time scenario, \n        # but in backtesting, we have the full bar.\n        # So if bar.Time is 10:01, we check bar.Close.\n        \n        # One edge case: What if the market closes before 10:01? (Unlikely for SPY, but possible on holidays).\n        # We handle that by checking if we are in the trading phase.\n        \n        # Let's refine the \"After 10:00\" logic.\n        # If the range is 9:30-10:00, the first bar \"After 10:00\" is 10:01.\n        # So we check the close of the 10:01 bar.\n        \n        # However, there is a nuance: \"if a bar closes above that high\".\n        # If we wait for 10:01, we are reacting to 10:01.\n        # Is it possible the user meant \"If the 10:00 bar closes above...\"?\n        # \"After 10:00\" implies the time period following 10:00.\n        # I will proceed with: Range = 9:30-10:00. Signal = Close of 10:01 bar.\n        \n        # Check if we are in the observation window (9:30 to 10:00 inclusive)\n        # We need to parse the time. \n        # bar.Time is a DateTime.\n        \n        # Helper to check if time is within 9:30 and 10:00\n        def is_in_observation_window(dt):\n            # 9:30:00 to 10:00:00\n            # Note: 10:00:00 is the start of the 10:00 bar.\n            # We want to include the 10:00 bar in the range calculation.\n            # So if dt >= 9:30:00 and dt <= 10:00:00\n            return dt.hour == 9 and dt.minute >= 30 and (dt.hour == 10 and dt.minute == 0)\n\n        # Check if we are in the trading phase (> 10:00)\n        def is_in_trading_phase(dt):\n            return dt.hour == 10 and dt.minute > 0\n\n        current_time = bar.Time\n        \n        # Reset logic at 3:55\n        if current_time.hour == 15 and current_time.minute == 55:\n            # Close all positions\n            if self.Portfolio.Invested:\n                # Close Long\n                if self.Portfolio.Invested.Value > 0:\n                    self.Liquidate()\n                # Close Short (if any, though Liquidate handles both usually, but let's be explicit if needed)\n                # Liquidate closes all open orders/positions.\n            \n            # Reset variables\n            self._range_high = None\n            self._range_low = None\n            self._range_initialized = False\n            self._traded_today = False\n            \n            self.Log(f\"{self.Time}: Resetting strategy for next day.\")\n            return\n\n        # If we are in the observation window\n        if is_in_observation_window(current_time):\n            if not self._range_initialized:\n                # First bar (9:30)\n                self._range_high = bar.High\n                self._range_low = bar.Low\n                self._range_initialized = True\n            else:\n                # Update range\n                if bar.High > self._range_high:\n                    self._range_high = bar.High\n                if bar.Low < self._range_low:\n                    self._range_low = bar.Low\n            \n            # If we are at the very end of the observation window (10:00 bar), \n            # we don't trade yet, we just lock the range.\n            # The trade happens on the NEXT bar.\n            return\n\n        # If we are in the trading phase (> 10:00)\n        if is_in_trading_phase(current_time):\n            # We are on a bar after 10:00.\n            # Check if we have already traded today.\n            if self._traded_today:\n                return\n\n            # Check the close of the CURRENT bar against the locked range\n            # Note: We locked the range on the 10:00 bar.\n            # Now we are on 10:01, 10:02, etc.\n            \n            if bar.Close > self._range_high:\n                # Buy\n                self.Log(f\"{self.Time}: Buy signal. Close {bar.Close} > High {self._range_high}\")\n                # Calculate shares to buy with 100% cash\n                # We need to account for commission and slippage if possible, \n                # but standard is Cash / Price.\n                # Ensure we have enough cash.\n                cash_available = self.Cash - self.Portfolio.TotalPortfolioValue * 0.001 # Rough estimate for fees if needed, but usually just Cash\n                # Actually, simpler: Cash / Price.\n                # But we must ensure we don't go negative.\n                \n                # Calculate shares\n                shares = int(self.Cash / bar.Close)\n                \n                # Place Market Order\n                self.SetHoldings(\"SPY\", shares)\n                # Or use Order: self.MarketOrder(OrderSide.Long, \"SPY\", shares)\n                # SetHoldings is easier for \"buy with everything\" logic in backtest\n                # But SetHoldings might not execute immediately in all contexts, MarketOrder is safer for \"Buy\".\n                # Let's use MarketOrder for precision.\n                \n                # Calculate shares to buy\n                # We want to spend all cash.\n                # Cash includes the value of existing positions? No, Cash is liquid cash.\n                # If we are short, we have negative equity but positive cash? \n                # In LEAN, Cash is the liquid asset.\n                \n                # Simple approach: Buy with all available cash.\n                # If we are already long, we might be over-leveraged if we buy again, \n                # but the logic says \"Only one trade per day\".\n                \n                # Check if we are already long\n                if self.Portfolio.Invested.Value > 0:\n                    # We are already long, do nothing (one trade per day)\n                    self._traded_today = True\n                    return\n\n                # Calculate shares\n                # We need to consider that we might have a short position from a previous day?\n                # No, we close everything at 3:55. So we should be flat at start of day.\n                # But let's check just in case.\n                \n                if self.Portfolio.Invested.Value == 0:\n                    shares = int(self.Cash / bar.Close)\n                    self.MarketOrder(OrderSide.Long, \"SPY\", shares)\n                    self._traded_today = True\n                    self.Log(f\"{self.Time}: Bought {shares} shares of SPY.\")\n                else:\n                    # Should not happen due to reset, but safety check\n                    self.Log(f\"{self.Time}: Already invested, skipping.\")\n                    self._traded_today = True\n\n            elif bar.Close < self._range_low:\n                # Short\n                self.Log(f\"{self.Time}: Short signal. Close {bar.Close} < Low {self._range_low}\")\n                \n                if self.Portfolio.Invested.Value < 0:\n                    # Already short\n                    self._traded_today = True\n                    return\n\n                if self.Portfolio.Invested.Value == 0:\n                    # Short with everything\n                    # Shorting: We sell shares we don't own.\n                    # Max shares = Cash / Price (assuming we can borrow freely or using margin)\n                    # In LEAN, Shorting requires margin. \n                    # \"Short with everything\" usually means max margin allowed or using all cash as collateral.\n                    # Standard interpretation: Sell short using all available cash as collateral.\n                    shares = int(self.Cash / bar.Close)\n                    self.MarketOrder(OrderSide.Short, \"SPY\", shares)\n                    self._traded_today = True\n                    self.Log(f\"{self.Time}: Shorted {shares} shares of SPY.\")\n            else:\n                # No signal\n                pass\n\n        # If we are past 3:55 but before market close, we do nothing (already reset at 3:55)\n        # If we are past market close, we do nothing.\n\n",
+    "source_sha256": "1e577629b3897145f28c7a4b4367b02fb320344f300e5f110f8213bd3d50e612",
+    "started_at": "2026-11-14T22:38:39.232570+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39413998,
+    "compile_id": "bc214446ee7f7619f45efb3001b8ca07-2ea75f00ad10030cea701c4f30f75baa",
+    "compile_created": {
+      "compileId": "bc214446ee7f7619f45efb3001b8ca07-2ea75f00ad10030cea701c4f30f75baa",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39413998,
+      "signature": "2ea75f00ad10030cea701c4f30f75baa",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "bc214446ee7f7619f45efb3001b8ca07-2ea75f00ad10030cea701c4f30f75baa",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39413998, with CompileID: bc214446ee7f7619f45efb3001b8ca07-2ea75f00ad10030cea701c4f30f75baa, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39413998, with CompileID: bc214446ee7f7619f45efb3001b8ca07-2ea75f00ad10030cea701c4f30f75baa, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "deb55556b002415dd290282ff6594a5a",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-opening-range-breakout_v02",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413998,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "deb55556b002415dd290282ff6594a5a",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 9
+        },
+        "backtestStart": "2026-11-14 22:38:42",
+        "backtestEnd": "2026-11-14 22:38:42",
+        "created": "2026-11-14 22:38:42",
+        "snapshotId": 39414000,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 5591a6cc",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-opening-range-breakout_v02",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413998,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "deb55556b002415dd290282ff6594a5a",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 9
+        },
+        "backtestStart": "2026-11-14 22:38:42",
+        "backtestEnd": "2026-11-14 22:38:42",
+        "created": "2026-11-14 22:38:42",
+        "snapshotId": 39414000,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 5591a6cc",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.4%",
+          "Used RAM (MB)": "176",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-deb55556b002415dd290282ff6594a5a",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:39:30.009932+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS; LEGACY_API: Add, Liquidate, Log, MarketOrder, SetCash, SetEndDate, SetHoldings, SetStartDate",
+  "total_orders": null
+}

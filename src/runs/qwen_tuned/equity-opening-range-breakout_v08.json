@@ -1,0 +1,17 @@
+{
+  "prompt_id": "equity-opening-range-breakout_v08",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "",
+  "generated_at": "2026-11-13T00:29:47.477553+00:00",
+  "has_code": false,
+  "static_findings": [],
+  "compile_errors": null,
+  "runtime_errors": null,
+  "fidelity": 1,
+  "judge_reason": "no code returned",
+  "qc_note": "no code",
+  "note": "no code"
+}

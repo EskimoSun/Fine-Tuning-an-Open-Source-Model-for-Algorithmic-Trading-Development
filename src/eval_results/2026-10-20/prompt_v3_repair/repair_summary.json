@@ -1,0 +1,82 @@
+{
+  "condition": "prompt_v3_plus_qc_feedback_repair",
+  "source_run": "qwen_base_prompt_v3",
+  "repair_model": "qwen/qwen3.8-27b",
+  "repair_system": "REPAIR_SYSTEM in src/qc_eval/auto_repair.py",
+  "max_repairs": 3,
+  "judge": "skipped (no Anthropic calls)",
+  "repaired_prompts": 4,
+  "completed_after_repair": 2,
+  "rows": [
+    {
+      "prompt_id": "equity-atr-volatility-stop_v09",
+      "final_status": "runtime_error",
+      "repairs_used": 3,
+      "total_orders": "1",
+      "closed_trades": null,
+      "gold_total_orders": "17905",
+      "gold_closed_trades": 8952,
+      "final_project_id": 38188285,
+      "final_backtest_id": "bf8f048d5afcaab4ad9ebf77db1497ea",
+      "final_error": "2022-01-03 09:32:00 Runtime Error: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the plot method. Please checkout the API documentation. The following overloads are available:\n  plot(series: str, value: float)\n  plot(series: str, open: float, high: float, low: float, close: float)\n  plot(series: str, value: int)\n  plot(series: str, bar: TradeBar)\n  plot(chart: str, series: str, value: float)\n  plot(chart: str, series: str, open: float, high: float, low: float, close: float)\n  plot(chart: str, series: str, value: int)\n  plot(series: str, open: int, high: int, low: int, close: int)\n  plot(chart: str, series: str, bar: TradeBar)\n  plot(chart: str, series: str, open: int, high: int, low: int, close: int)\n  ... and 4 more\nArgument mismatch: argument 3 ('value') expected float, got datetime.\n  at _update_plots\n    self.plot(\"Chandelier Stop\", \"Trailing High\", bar.end_time, self._trailing_high)\n in main.py: line 92\n  at on_data\n    self._update_plots(bar, close)\n in main.py: line 80\n",
+      "round_statuses": [
+        "runtime_error",
+        "runtime_error",
+        "runtime_error",
+        "runtime_error"
+      ]
+    },
+    {
+      "prompt_id": "equity-monthly-roc-rotation_v06",
+      "final_status": "completed",
+      "repairs_used": 1,
+      "total_orders": "30",
+      "closed_trades": 18,
+      "gold_total_orders": "110",
+      "gold_closed_trades": 71,
+      "final_project_id": 38188332,
+      "final_backtest_id": "668d5fa6e40799dfe9b710b4fb3632ce",
+      "final_error": null,
+      "round_statuses": [
+        "runtime_error",
+        "completed"
+      ]
+    },
+    {
+      "prompt_id": "equity-rsi-overbought-oversold_v04",
+      "final_status": "completed",
+      "repairs_used": 3,
+      "total_orders": "37",
+      "closed_trades": 18,
+      "gold_total_orders": "22",
+      "gold_closed_trades": 11,
+      "final_project_id": 38188190,
+      "final_backtest_id": "c066eace7ed8f7e067b046d873347af6",
+      "final_error": null,
+      "round_statuses": [
+        "runtime_error",
+        "runtime_error",
+        "runtime_error",
+        "completed"
+      ]
+    },
+    {
+      "prompt_id": "option-iron-condor-spy_v02",
+      "final_status": "runtime_error",
+      "repairs_used": 3,
+      "total_orders": "0",
+      "closed_trades": null,
+      "gold_total_orders": "132",
+      "gold_closed_trades": 64,
+      "final_project_id": 38188436,
+      "final_backtest_id": "dea88fda98b25fdb9c92cb2083b7da3f",
+      "final_error": "2024-09-03 00:00:00 Runtime Error: 'MethodBinding' object has no attribute 'get'\n  at open_iron_condor\n    chain = self.option_chains.get(self.option.symbol)\n            ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 47\n",
+      "round_statuses": [
+        "runtime_error",
+        "runtime_error",
+        "runtime_error",
+        "runtime_error"
+      ]
+    }
+  ]
+}

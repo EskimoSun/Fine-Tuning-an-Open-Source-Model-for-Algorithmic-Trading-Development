@@ -1,0 +1,309 @@
+{
+  "prompt_id": "futures_v03",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass IndexFutureRolloverAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # Create the mapped continuous Futures symbol.\n        self._symbol = self.add_index_future(\"SPX\", data_mapping_mode=DataMappingType.LAST_TRADING_DAY, data_normalization_mode=DataNormalizationType.BACKWARDS_RATIO, extended_market_hours=True)\n        # Place a buy order for the mapped continuous Futures symbol.\n        self.market_order(self._symbol, 1)\n\n    def on_data(self, slice: Slice) -> None:\n        # Create the canonical Futures contract symbol for the current month.\n        current_month = slice.time.month\n        current_year = slice.time.year\n        contract_symbol = Symbol.create_canonical_future(self._symbol.local_symbol, mapping_mode=DataMappingType.EXPLICIT, front_month_offset=0)\n        \n        # If the contract has expired, it will be replaced by a new contract in the next iteration.\n        if contract_symbol != self._symbol and self.portfolio[self._symbol].is_long:\n            self.liquidate(self._symbol, tag=f\"Rollover {self._symbol.value} -> {contract_symbol.value}\")\n            self._symbol = contract_symbol\n\n    # Define a custom data mapping mode to roll over to the next month's contract.\n    def on_data_mapping_changed(self, previous_mapping: DataMapping, new_mapping: DataMapping) -> None:\n        # If the contract has expired, it will be replaced by a new contract in the next iteration.\n        if previous_mapping.contract.end_of_last_trading_day and not new_mapping.contract.is_expired:\n            self.liquidate(previous_mapping.symbol, tag=f\"Rollover {previous_mapping.symbol.value} -> {new_mapping.symbol.value}\")\n            self.set_holdings(new_mapping.symbol, 1)\n```",
+  "generated_at": "2026-11-13T00:10:45.401575+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "add_index_future"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "add_future"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "sp_500_e_mini"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "symbol_changed / symbolchanged"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass IndexFutureRolloverAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # Create the mapped continuous Futures symbol.\n        self._symbol = self.add_index_future(\"SPX\", data_mapping_mode=DataMappingType.LAST_TRADING_DAY, data_normalization_mode=DataNormalizationType.BACKWARDS_RATIO, extended_market_hours=True)\n        # Place a buy order for the mapped continuous Futures symbol.\n        self.market_order(self._symbol, 1)\n\n    def on_data(self, slice: Slice) -> None:\n        # Create the canonical Futures contract symbol for the current month.\n        current_month = slice.time.month\n        current_year = slice.time.year\n        contract_symbol = Symbol.create_canonical_future(self._symbol.local_symbol, mapping_mode=DataMappingType.EXPLICIT, front_month_offset=0)\n        \n        # If the contract has expired, it will be replaced by a new contract in the next iteration.\n        if contract_symbol != self._symbol and self.portfolio[self._symbol].is_long:\n            self.liquidate(self._symbol, tag=f\"Rollover {self._symbol.value} -> {contract_symbol.value}\")\n            self._symbol = contract_symbol\n\n    # Define a custom data mapping mode to roll over to the next month's contract.\n    def on_data_mapping_changed(self, previous_mapping: DataMapping, new_mapping: DataMapping) -> None:\n        # If the contract has expired, it will be replaced by a new contract in the next iteration.\n        if previous_mapping.contract.end_of_last_trading_day and not new_mapping.contract.is_expired:\n            self.liquidate(previous_mapping.symbol, tag=f\"Rollover {previous_mapping.symbol.value} -> {new_mapping.symbol.value}\")\n            self.set_holdings(new_mapping.symbol, 1)\n",
+    "source_sha256": "0420d27428ea058cb57b6f84c26d85ee0dd9fb0536b3b9397225273104284fef",
+    "started_at": "2026-11-13T00:10:45.404065+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39315769,
+    "compile_id": "2e12572bca8e4f48d78fb9d07b2b8f5f-4f796b92503876ef9d595a48f105e2d3",
+    "compile_created": {
+      "compileId": "2e12572bca8e4f48d78fb9d07b2b8f5f-4f796b92503876ef9d595a48f105e2d3",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39315769,
+      "signature": "4f796b92503876ef9d595a48f105e2d3",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "2e12572bca8e4f48d78fb9d07b2b8f5f-4f796b92503876ef9d595a48f105e2d3",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39315769, with CompileID: 2e12572bca8e4f48d78fb9d07b2b8f5f-4f796b92503876ef9d595a48f105e2d3, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39315769, with CompileID: 2e12572bca8e4f48d78fb9d07b2b8f5f-4f796b92503876ef9d595a48f105e2d3, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "993116d2b435de5f82116a4e90fa8ec0",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315769,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "993116d2b435de5f82116a4e90fa8ec0",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 9
+        },
+        "backtestStart": "2026-11-13 00:10:49",
+        "backtestEnd": "2026-11-13 00:10:49",
+        "created": "2026-11-13 00:10:49",
+        "snapshotId": 39315774,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-15T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315769,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "993116d2b435de5f82116a4e90fa8ec0",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 9
+        },
+        "backtestStart": "2026-11-13 00:10:49",
+        "backtestEnd": "2026-11-13 00:10:49",
+        "created": "2026-11-13 00:10:49",
+        "snapshotId": 39315774,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;DataMapping&#039; is not defined\n  at IndexFutureRolloverAlgorithm\n    def on_data_mapping_changed(self, previous_mapping: DataMapping, new_mapping: DataMapping) -&gt; None:\n                                                        ^^^^^^^^^^^\n in main.py: line 27\n  at \n    class IndexFutureRolloverAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;DataMapping&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;DataMapping&#039; is not defined\n  at IndexFutureRolloverAlgorithm\n    def on_data_mapping_changed(self, previous_mapping: DataMapping, new_mapping: DataMapping) -&gt; None:\n                                                        ^^^^^^^^^^^\n in main.py: line 27\n  at \n    class IndexFutureRolloverAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;DataMapping&#039; is not defined",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'DataMapping' is not defined\n  at IndexFutureRolloverAlgorithm\n    def on_data_mapping_changed(self, previous_mapping: DataMapping, new_mapping: DataMapping) -> None:\n                                                        ^^^^^^^^^^^\n in main.py: line 27\n  at <module>\n    class IndexFutureRolloverAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'DataMapping' is not defined",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-15T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "5.7%",
+          "Used RAM (MB)": "222",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-993116d2b435de5f82116a4e90fa8ec0",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:13"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;DataMapping&#039; is not defined\n  at IndexFutureRolloverAlgorithm\n    def on_data_mapping_changed(self, previous_mapping: DataMapping, new_mapping: DataMapping) -&gt; None:\n                                                        ^^^^^^^^^^^\n in main.py: line 27\n  at \n    class IndexFutureRolloverAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;DataMapping&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;DataMapping&#039; is not defined\n  at IndexFutureRolloverAlgorithm\n    def on_data_mapping_changed(self, previous_mapping: DataMapping, new_mapping: DataMapping) -&gt; None:\n                                                        ^^^^^^^^^^^\n in main.py: line 27\n  at \n    class IndexFutureRolloverAlgorithm(QCAlgorithm):\n in main.py: line 5\n name &#039;DataMapping&#039; is not defined",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'DataMapping' is not defined\n  at IndexFutureRolloverAlgorithm\n    def on_data_mapping_changed(self, previous_mapping: DataMapping, new_mapping: DataMapping) -> None:\n                                                        ^^^^^^^^^^^\n in main.py: line 27\n  at <module>\n    class IndexFutureRolloverAlgorithm(QCAlgorithm):\n in main.py: line 5\n name 'DataMapping' is not defined",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-13T00:11:39.495348+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; UNKNOWN_API: add_index_future; PROMPT_MISS: add_future; PROMPT_MISS: sp_500_e_mini; PROMPT_MISS: symbol_changed / symbolchanged",
+  "total_orders": null
+}

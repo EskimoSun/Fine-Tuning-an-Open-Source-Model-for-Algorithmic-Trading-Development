@@ -1,0 +1,343 @@
+{
+  "prompt_id": "futures_v02",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass FutureExampleAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # Subscribe to the continuous SPX future, which provides daily data.\n        self._future = self.add_future(Future.of(\"SPX\", Resolution.DAILY))\n        # Use a rolling method to automatically roll the contract to the next month's contract.\n        self._future.rolling_method = FutureContractRollingMethods.CREATE_NEW_CONTRACT\n        # Warm up the portfolio value to account for the buying power of 1 contract.\n        self.set_portfolio_initial_value(self._future.contract.multiplier)\n\n    def on_data(self, slice: Slice) -> None:\n        if self.portfolio.invested:\n            return\n        # Select the mapped future contract.\n        contract = self._future.mapped_contract\n        # Check if the current contract is expiring to avoid liquidation fee.\n        expiry = contract.expiry\n        if expiry < self.time + timedelta(30):\n            self.liquidate(self._future)\n            return\n        # Request the data of the next contract to trade.\n        next_contract = self.next_future_contract(self._future)\n        if next_contract:\n            self.set_holdings(self._future, 1)\n```",
+  "generated_at": "2026-11-13T00:09:48.774320+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "next_future_contract, set_portfolio_initial_value"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "sp_500_e_mini"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "symbol_changed / symbolchanged"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass FutureExampleAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # Subscribe to the continuous SPX future, which provides daily data.\n        self._future = self.add_future(Future.of(\"SPX\", Resolution.DAILY))\n        # Use a rolling method to automatically roll the contract to the next month's contract.\n        self._future.rolling_method = FutureContractRollingMethods.CREATE_NEW_CONTRACT\n        # Warm up the portfolio value to account for the buying power of 1 contract.\n        self.set_portfolio_initial_value(self._future.contract.multiplier)\n\n    def on_data(self, slice: Slice) -> None:\n        if self.portfolio.invested:\n            return\n        # Select the mapped future contract.\n        contract = self._future.mapped_contract\n        # Check if the current contract is expiring to avoid liquidation fee.\n        expiry = contract.expiry\n        if expiry < self.time + timedelta(30):\n            self.liquidate(self._future)\n            return\n        # Request the data of the next contract to trade.\n        next_contract = self.next_future_contract(self._future)\n        if next_contract:\n            self.set_holdings(self._future, 1)\n",
+    "source_sha256": "b1fb57ed05b2aaccd1bef5301715b8611b09673381e41937e1cc4ab00fa058f9",
+    "started_at": "2026-11-13T00:09:48.776007+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Future&#039; has no attribute &#039;of&#039;\n  at initialize\n    self._future = self.ad",
+    "project_id": 39315735,
+    "compile_id": "05c9b88ed7e67b34b72e6a54f2832980-e99e9dac62444f390d18432c69a152f7",
+    "compile_created": {
+      "compileId": "05c9b88ed7e67b34b72e6a54f2832980-e99e9dac62444f390d18432c69a152f7",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39315735,
+      "signature": "e99e9dac62444f390d18432c69a152f7",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "05c9b88ed7e67b34b72e6a54f2832980-e99e9dac62444f390d18432c69a152f7",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39315735, with CompileID: 05c9b88ed7e67b34b72e6a54f2832980-e99e9dac62444f390d18432c69a152f7, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39315735, with CompileID: 05c9b88ed7e67b34b72e6a54f2832980-e99e9dac62444f390d18432c69a152f7, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "d8b383340a3530dc2f3139a1496c825e",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v02",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315735,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "d8b383340a3530dc2f3139a1496c825e",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 8
+        },
+        "backtestStart": "2026-11-13 00:09:52",
+        "backtestEnd": "2026-11-13 00:09:52",
+        "created": "2026-11-13 00:09:52",
+        "snapshotId": 39315737,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-15T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v02",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315735,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "d8b383340a3530dc2f3139a1496c825e",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 8
+        },
+        "backtestStart": "2026-11-13 00:09:52",
+        "backtestEnd": "2026-11-13 00:09:52",
+        "created": "2026-11-13 00:09:52",
+        "snapshotId": 39315737,
+        "status": "Runtime Error",
+        "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Future&#039; has no attribute &#039;of&#039;\n  at initialize\n    self._future = self.add_future(Future.of(&quot;SPX&quot;, Resolution.DAILY))\n                                   ^^^^^^^^^\n in main.py: line 11\n type object &#039;Future&#039; has no attribute &#039;of&#039;",
+        "stacktrace": "type object 'Future' has no attribute 'of'\n  at initialize\n    self._future = self.add_future(Future.of(\"SPX\", Resolution.DAILY))\n                                   ^^^^^^^^^\n in main.py: line 11\n type object 'Future' has no attribute 'of'",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-15T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "7.4%",
+          "Used RAM (MB)": "207",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-d8b383340a3530dc2f3139a1496c825e",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:13"
+        }
+      },
+      "success": true
+    },
+    "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Future&#039; has no attribute &#039;of&#039;\n  at initialize\n    self._future = self.add_future(Future.of(&quot;SPX&quot;, Resolution.DAILY))\n                                   ^^^^^^^^^\n in main.py: line 11\n type object &#039;Future&#039; has no attribute &#039;of&#039;",
+    "stacktrace": "type object 'Future' has no attribute 'of'\n  at initialize\n    self._future = self.add_future(Future.of(\"SPX\", Resolution.DAILY))\n                                   ^^^^^^^^^\n in main.py: line 11\n type object 'Future' has no attribute 'of'",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-13T00:10:42.333284+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Future&#039; has no attribute &#039;of&#039;\n  at initialize\n    self._future = self.ad",
+  "note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: type object &#039;Future&#039; has no attribute &#039;of&#039;\n  at initialize\n    self._future = self.ad; UNKNOWN_API: next_future_contract, set_portfolio_initial_value; PROMPT_MISS: sp_500_e_mini; PROMPT_MISS: symbol_changed / symbolchanged",
+  "total_orders": null
+}

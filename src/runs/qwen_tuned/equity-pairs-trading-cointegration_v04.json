@@ -1,0 +1,291 @@
+{
+  "prompt_id": "equity-pairs-trading-cointegration_v04",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\nimport numpy.typing as npt\nfrom scipy import stats\n# endregion\n\nclass EquityKinkedBetaStatArbAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        for ticker in [\"KO\", \"PEP\"]:\n            equity = self.add_equity(ticker)\n            equity.beta = self.beta(equity, 60, Resolution.DAILY)\n            # Alternatively, use a manual indicator.\n            # equity.beta = Beta(60)\n            # self.warm_up_indicator(equity, equity.beta, Resolution.DAILY)\n            # self.register_indicator(equity, equity.beta, Resolution.DAILY)\n\n        self.schedule.on(\n            self.date_rules.week_start(),\n            self.time_rules.at(9, 0),\n            self._rebalance\n        )\n\n    def _rebalance(self) -> None:\n        for security in self.securities.values():\n            if not security.beta.is_ready:\n                continue\n            pair = self._get_pair(security)\n            if not pair:\n                continue\n\n            beta, intercept = pair.linear_regression.model.coef_, pair.linear_regression.model.intercept_\n            history = pair.history\n            if not history:\n                continue\n\n            prices = np.stack([history.high, history.low], axis=1).reshape(-1, 2)\n            residuals = prices - np.tile([beta, intercept], (len(prices), 1))\n            z_scores = (residuals - residuals.mean(axis=0)) / residuals.std(axis=0)\n\n            long = None\n            short = None\n            for ticker, z in pair.z_scores.items():\n                if abs(z) > 2.0:\n                    if z > 0:\n                        long = ticker\n                    else:\n                        short = ticker\n\n            if not long or not short:\n                continue\n\n            weight = 0.5\n            if self.portfolio[long].holding_quantity == 0:\n                self.set_holdings(long, weight)\n            if self.portfolio[short].holding_quantity == 0:\n                self.set_holdings(short, -weight)\n\n    def _get_pair(self, security: Equity) -> tuple[EdgeLinearRegressionModel, list['TradeBar']]:\n        pair = self.objects.get(security.id)\n        if not pair:\n            pair = self.add_pair(security, \"KO-PEP\")\n            self.set_holdings(pair.long, 1)\n            self.set_holdings(pair.short, -1)\n        return pair\n\n    class EdgeLinearRegressionModel(scipy.stats.linregress):\n        def __init__(self) -> None:\n            super().__init__()\n            self.model = LinearRegression()\n\n        def fit(self, x: npt.ArrayLike, y: npt.ArrayLike) -> 'EdgeLinearRegressionModel':\n            self.model.fit(x, y)\n            return self\n```",
+  "generated_at": "2026-11-12T23:55:17.343889+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "add_pair, beta"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\nimport numpy.typing as npt\nfrom scipy import stats\n# endregion\n\nclass EquityKinkedBetaStatArbAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100000)\n        # automatic_indicator_warm_up only supports automatic indicators, not manual indicators.\n        self.settings.automatic_indicator_warm_up = True\n\n        for ticker in [\"KO\", \"PEP\"]:\n            equity = self.add_equity(ticker)\n            equity.beta = self.beta(equity, 60, Resolution.DAILY)\n            # Alternatively, use a manual indicator.\n            # equity.beta = Beta(60)\n            # self.warm_up_indicator(equity, equity.beta, Resolution.DAILY)\n            # self.register_indicator(equity, equity.beta, Resolution.DAILY)\n\n        self.schedule.on(\n            self.date_rules.week_start(),\n            self.time_rules.at(9, 0),\n            self._rebalance\n        )\n\n    def _rebalance(self) -> None:\n        for security in self.securities.values():\n            if not security.beta.is_ready:\n                continue\n            pair = self._get_pair(security)\n            if not pair:\n                continue\n\n            beta, intercept = pair.linear_regression.model.coef_, pair.linear_regression.model.intercept_\n            history = pair.history\n            if not history:\n                continue\n\n            prices = np.stack([history.high, history.low], axis=1).reshape(-1, 2)\n            residuals = prices - np.tile([beta, intercept], (len(prices), 1))\n            z_scores = (residuals - residuals.mean(axis=0)) / residuals.std(axis=0)\n\n            long = None\n            short = None\n            for ticker, z in pair.z_scores.items():\n                if abs(z) > 2.0:\n                    if z > 0:\n                        long = ticker\n                    else:\n                        short = ticker\n\n            if not long or not short:\n                continue\n\n            weight = 0.5\n            if self.portfolio[long].holding_quantity == 0:\n                self.set_holdings(long, weight)\n            if self.portfolio[short].holding_quantity == 0:\n                self.set_holdings(short, -weight)\n\n    def _get_pair(self, security: Equity) -> tuple[EdgeLinearRegressionModel, list['TradeBar']]:\n        pair = self.objects.get(security.id)\n        if not pair:\n            pair = self.add_pair(security, \"KO-PEP\")\n            self.set_holdings(pair.long, 1)\n            self.set_holdings(pair.short, -1)\n        return pair\n\n    class EdgeLinearRegressionModel(scipy.stats.linregress):\n        def __init__(self) -> None:\n            super().__init__()\n            self.model = LinearRegression()\n\n        def fit(self, x: npt.ArrayLike, y: npt.ArrayLike) -> 'EdgeLinearRegressionModel':\n            self.model.fit(x, y)\n            return self\n",
+    "source_sha256": "04a42da58c769dd4695a47802c077a4d8f473bbfe803320c123ad6473632ae66",
+    "started_at": "2026-11-12T23:55:17.348040+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39315156,
+    "compile_id": "8314d609ae1343ab5a001a86e475823a-383faccdc9a823c0914f9716b6143d54",
+    "compile_created": {
+      "compileId": "8314d609ae1343ab5a001a86e475823a-383faccdc9a823c0914f9716b6143d54",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39315156,
+      "signature": "383faccdc9a823c0914f9716b6143d54",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "8314d609ae1343ab5a001a86e475823a-383faccdc9a823c0914f9716b6143d54",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39315156, with CompileID: 8314d609ae1343ab5a001a86e475823a-383faccdc9a823c0914f9716b6143d54, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39315156, with CompileID: 8314d609ae1343ab5a001a86e475823a-383faccdc9a823c0914f9716b6143d54, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "72db6c7a626e494ac7e6bb0f156e1f9c",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v04",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315156,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "72db6c7a626e494ac7e6bb0f156e1f9c",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 20
+        },
+        "backtestStart": "2026-11-12 23:55:20",
+        "backtestEnd": "2026-11-12 23:55:20",
+        "created": "2026-11-12 23:55:20",
+        "snapshotId": 39315160,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v04",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315156,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "72db6c7a626e494ac7e6bb0f156e1f9c",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 20
+        },
+        "backtestStart": "2026-11-12 23:55:20",
+        "backtestEnd": "2026-11-12 23:55:20",
+        "created": "2026-11-12 23:55:20",
+        "snapshotId": 39315160,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;EdgeLinearRegressionModel&#039; is not defined\n  at EquityKinkedBetaStatArbAlgorithm\n    def _get_pair(self, security: Equity) -&gt; tuple[EdgeLinearRegressionModel, list[&#039;TradeBar&#039;]]:\n                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 64\n  at \n    class EquityKinkedBetaStatArbAlgorithm(QCAlgorithm):\n in main.py: line 7\n name &#039;EdgeLinearRegressionModel&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;EdgeLinearRegressionModel&#039; is not defined\n  at EquityKinkedBetaStatArbAlgorithm\n    def _get_pair(self, security: Equity) -&gt; tuple[EdgeLinearRegressionModel, list[&#039;TradeBar&#039;]]:\n                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 64\n  at \n    class EquityKinkedBetaStatArbAlgorithm(QCAlgorithm):\n in main.py: line 7\n name &#039;EdgeLinearRegressionModel&#039; is not defined",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'EdgeLinearRegressionModel' is not defined\n  at EquityKinkedBetaStatArbAlgorithm\n    def _get_pair(self, security: Equity) -> tuple[EdgeLinearRegressionModel, list['TradeBar']]:\n                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 64\n  at <module>\n    class EquityKinkedBetaStatArbAlgorithm(QCAlgorithm):\n in main.py: line 7\n name 'EdgeLinearRegressionModel' is not defined",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "6.6%",
+          "Used RAM (MB)": "266",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-72db6c7a626e494ac7e6bb0f156e1f9c",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:13"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;EdgeLinearRegressionModel&#039; is not defined\n  at EquityKinkedBetaStatArbAlgorithm\n    def _get_pair(self, security: Equity) -&gt; tuple[EdgeLinearRegressionModel, list[&#039;TradeBar&#039;]]:\n                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 64\n  at \n    class EquityKinkedBetaStatArbAlgorithm(QCAlgorithm):\n in main.py: line 7\n name &#039;EdgeLinearRegressionModel&#039; is not defined Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name &#039;EdgeLinearRegressionModel&#039; is not defined\n  at EquityKinkedBetaStatArbAlgorithm\n    def _get_pair(self, security: Equity) -&gt; tuple[EdgeLinearRegressionModel, list[&#039;TradeBar&#039;]]:\n                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 64\n  at \n    class EquityKinkedBetaStatArbAlgorithm(QCAlgorithm):\n in main.py: line 7\n name &#039;EdgeLinearRegressionModel&#039; is not defined",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): name 'EdgeLinearRegressionModel' is not defined\n  at EquityKinkedBetaStatArbAlgorithm\n    def _get_pair(self, security: Equity) -> tuple[EdgeLinearRegressionModel, list['TradeBar']]:\n                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 64\n  at <module>\n    class EquityKinkedBetaStatArbAlgorithm(QCAlgorithm):\n in main.py: line 7\n name 'EdgeLinearRegressionModel' is not defined",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:56:12.079686+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; UNKNOWN_API: add_pair, beta",
+  "total_orders": null
+}

@@ -1,0 +1,23 @@
+{
+  "prompt_id": "futures_v05",
+  "model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "output": "```python\n# QuantConnect LEAN Algorithm\n# ES (SP_500_E_MINI) continuous future with LAST_TRADING_DAY mapping\n# Strategy: Flat -> market order 1 of mapped contract\n# On symbol changed: liquidate old, re-enter same qty on new\n# Period: 2024-09-01 to 2024-12-31\n\nfrom AlgorithmImports import *\n\nclass EsContinuousLastTradingDayAlgorithm(QCAlgorithm):\n    def Initialize(self):\n        # Set start and end dates\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        self.SetCash(100000)\n\n        # Add continuous future with LAST_TRADING_DAY mapping\n        # BACKWARDS_RATIO, depth 0, extended hours, filter 0-92 days\n        self._es = self.AddFuture(\n            \"SP_500_E_MINI\",\n            Resolution.DAILY,\n            MarketDataMappingMethod.LAST_TRADING_DAY,\n            dataNormalizationMode=DataNormalizationMode.BACKWARDS_RATIO,\n            depth=0,\n            extendedMarketHours=True,\n            filter=FutureFilter(0, 92)\n        ).Symbol\n\n        # Track current position quantity\n        self._position_qty = 0\n\n        # Subscribe to symbol changed events\n        self._es.SymbolChanged += self.OnSymbolChanged\n\n    def OnSymbolChanged(self, sender, args):\n        \"\"\"\n        Handle symbol changed event:\n        - Liquidate old contract\n        - Re-enter same quantity on new contract\n        \"\"\"\n        old_symbol = args.OldSymbol\n        new_symbol = args.NewSymbol\n\n        # Liquidate old position\n        if self._position_qty != 0:\n            self.Liquidate(old_symbol)\n            self.Log(f\"Liquidated {self._position_qty} contracts of {old_symbol}\")\n\n        # Re-enter same quantity on new contract\n        if self._position_qty != 0:\n            self.MarketOrder(new_symbol, self._position_qty)\n            self.Log(f\"Entered {self._position_qty} contracts of {new_symbol}\")\n\n    def OnData(self, data: Slice):\n        \"\"\"\n        Main data handler:\n        - If flat, place market order for 1 contract of the mapped symbol\n        \"\"\"\n        # Check if we have data for our ES symbol\n        if not data.ContainsKey(self._es):\n            return\n\n        # Get the current mapped symbol (the actual contract)\n        current_symbol = self._es\n\n        # Check if we are flat\n        if self._position_qty == 0:\n            # Place market order for 1 contract\n            self.MarketOrder(current_symbol, 1)\n            self._position_qty = 1\n            self.Log(f\"Entered 1 contract of {current_symbol}\")\n\n    def OnOrderEvent(self, orderEvent: OrderEvent):\n        \"\"\"\n        Track position changes from order events\n        \"\"\"\n        if orderEvent.Symbol == self._es:\n            if orderEvent.Status == OrderStatus.FILLED:\n                self._position_qty += orderEvent.FillQuantity\n                self.Log(f\"Order filled: {orderEvent.FillQuantity} contracts, total position: {self._position_qty}\")\n```",
+  "generated_at": "2026-10-20T01:31:21.002024+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddFuture, Liquidate, Log, MarketOrder, SetCash, SetEndDate, SetStartDate"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "add_future"
+    }
+  ],
+  "note": "LEGACY_API: AddFuture, Liquidate, Log, MarketOrder, SetCash, SetEndDate, SetStartDate; PROMPT_MISS: add_future"
+}

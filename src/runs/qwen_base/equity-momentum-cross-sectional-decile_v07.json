@@ -1,0 +1,321 @@
+{
+  "prompt_id": "equity-momentum-cross-sectional-decile_v07",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport QuantConnect as QC\nfrom QuantConnect.Algorithm import QCAlgo\nfrom QuantConnect.Data.UniverseSelection import UniverseSelectionModel\nfrom QuantConnect.Data.Market import EquityPrice\nfrom QuantConnect.Util import DateTime\nfrom typing import List, Dict, Optional\n\n# Define the algorithm class\nclass CrossSectionalMomentumFactor(QCAlgo):\n    \"\"\"\n    Long-only cross-sectional momentum factor strategy on large-cap US equities.\n    \n    Strategy Details:\n    - Universe: S&P 500 constituents (Liquid Large-Cap US Equities)\n    - Factor: Trailing 12-month momentum (Price at t-12 / Price at t-1)\n    - Selection: Top 10% (Top Decile) of the universe by momentum score\n    - Rebalance: Monthly (1st trading day of the month)\n    - Period: 2022-01-01 to 2024-12-31\n    - Account: Standard Paper Account\n    \"\"\"\n\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        Sets up the universe selection model to filter for S&P 500 stocks.\n        \"\"\"\n        # Set the start and end dates for the backtest\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Set the cash balance (Standard Paper Account usually starts with $100k)\n        self.SetCash(100000)\n        \n        # Define the universe selection model\n        # We select stocks that are in the S&P 500 index\n        self.universe_selection = UniverseSelectionModel()\n        self.universe_selection.AddIndex(\"SPX\")\n        \n        # Set the universe selection model for the algorithm\n        self.SetUniverseSelection(self.universe_selection)\n        \n        # Subscribe to price data for the universe (will be filtered by the selection model)\n        # We need daily data to calculate monthly momentum\n        self.SetDataNormalizationMode(QC.DataNormalizationMode.Price)\n        \n        # Log initialization details\n        self.Log(\"Initializing Cross-Sectional Momentum Factor Strategy...\")\n        self.Log(\"Universe: S&P 500\")\n        self.Log(\"Factor: Trailing 12-Month Momentum\")\n        self.Log(\"Selection: Top Decile\")\n        self.Log(\"Rebalance: Monthly\")\n        self.Log(\"Period: 2022-01-01 to 2024-12-31\")\n\n    def OnSecuritiesEvent(self, securities: QC.Data.Universe.Universe):\n        \"\"\"\n        Called every day to update the universe and calculate the factor.\n        \n        Args:\n            securities: The list of securities available in the universe for the current day.\n        \"\"\"\n        # Get the current date\n        current_date = self.GetDate()\n        \n        # Check if it's the first trading day of the month for rebalancing\n        # We rebalance on the 1st of every month\n        if current_date.Day == 1:\n            self.Rebalance(securities)\n        else:\n            # On non-rebalance days, we typically hold the previous positions\n            # unless we want to monitor the factor. For this simple factor reference,\n            # we just ensure the universe is updated.\n            pass\n\n    def Rebalance(self, securities: QC.Data.Universe.Universe):\n        \"\"\"\n        Perform the monthly rebalance based on the cross-sectional momentum factor.\n        \n        Args:\n            securities: The list of securities available in the universe.\n        \"\"\"\n        self.Log(f\"Rebalancing on {self.GetDate()}...\")\n        \n        # Get the list of securities to trade\n        securities_to_trade = securities.GetSecurities()\n        \n        if not securities_to_trade:\n            self.Log(\"No securities available in the universe.\")\n            return\n\n        # Calculate momentum for each security\n        # Momentum = Price(t-12) / Price(t-1)\n        # We use the close price from 12 months ago and the close price from 1 month ago\n        # Since we are rebalancing monthly, we look at the price at the end of the previous month\n        # and the price 12 months prior to that.\n        \n        momentum_scores = []\n        \n        for security in securities_to_trade:\n            symbol = security.Symbol\n            \n            # Get the price history for this security\n            # We need at least 13 months of data to calculate trailing 12-month momentum\n            # However, since we are rebalancing monthly, we can use the current price \n            # and the price from 12 months ago.\n            \n            # Get the current price (today's close)\n            current_price = self.GetPrice(symbol).Close\n            \n            # Get the price from 12 months ago\n            # We need to look back 12 months from the current date\n            date_12_months_ago = self.GetDate().AddMonths(-12)\n            \n            # Retrieve the price from 12 months ago\n            # We use the GetHistory method to fetch the specific date\n            history = self.GetHistory(symbol, date_12_months_ago, QC.Data.Resolution.Daily, QC.Data.DataNormalizationMode.Price)\n            \n            if len(history) > 0:\n                price_12_months_ago = history[0].Close\n                # Calculate momentum\n                # Avoid division by zero\n                if price_12_months_ago != 0:\n                    momentum = current_price / price_12_months_ago\n                    momentum_scores.append((symbol, momentum))\n                else:\n                    self.Log(f\"Warning: Zero price for {symbol} 12 months ago.\")\n            else:\n                self.Log(f\"Warning: No price data found for {symbol} 12 months ago.\")\n                continue\n        \n        # Sort securities by momentum score in descending order\n        momentum_scores.sort(key=lambda x: x[1], reverse=True)\n        \n        # Select the top decile (top 10%)\n        # Calculate the number of stocks to select\n        total_stocks = len(momentum_scores)\n        if total_stocks == 0:\n            self.Log(\"No valid momentum scores calculated.\")\n            return\n            \n        # Calculate the cutoff index for the top decile\n        # We want the top 10%\n        top_decile_count = int(total_stocks * 0.1)\n        if top_decile_count == 0:\n            top_decile_count = 1\n            \n        selected_symbols = [score[0] for score in momentum_scores[:top_decile_count]]\n        \n        self.Log(f\"Selected {top_decile_count} stocks from {total_stocks} total.\")\n        self.Log(f\"Top stocks: {selected_symbols}\")\n        \n        # Execute long-only orders for the selected stocks\n        # We will allocate equal weight to each selected stock\n        # First, get the current cash balance\n        cash_balance = self.Portfolio.CashBalance\n        \n        if cash_balance > 0:\n            # Calculate the amount to invest per stock\n            # We assume we want to invest the entire cash balance\n            # In a real scenario, we might want to account for transaction costs or keep some cash\n            amount_per_stock = cash_balance / top_decile_count\n            \n            for symbol in selected_symbols:\n                # Check if we already own the stock\n                if symbol in self.Portfolio:\n                    current_position = self.Portfolio[symbol]\n                    if current_position.Quantity > 0:\n                        # Sell the existing position to flatten\n                        self.Liquidate(symbol)\n                    else:\n                        # If we have a short position (unlikely in long-only), liquidate it\n                        self.Liquidate(symbol)\n                \n                # Buy the stock\n                # We use Market order for simplicity in this reference\n                # In production, you might want to use Limit orders\n                self.SetHoldings(symbol, amount_per_stock)\n                \n                self.Log(f\"Buying {symbol} with ${amount_per_stock:.2f}\")\n        else:\n            self.Log(\"Insufficient cash to rebalance.\")\n\n    def OnData(self, data: QC.Data.Data):\n        \"\"\"\n        Called every data tick.\n        This method is primarily used for logging or additional data processing.\n        For this strategy, the logic is handled in OnSecuritiesEvent.\n        \"\"\"\n        pass\n```",
+  "generated_at": "2026-11-14T22:32:01.399327+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "GetDate, GetHistory, GetPrice, Liquidate, Log, Rebalance, SetCash, SetDataNormalizationMode, SetEndDate, SetHoldings"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import QuantConnect as QC\nfrom QuantConnect.Algorithm import QCAlgo\nfrom QuantConnect.Data.UniverseSelection import UniverseSelectionModel\nfrom QuantConnect.Data.Market import EquityPrice\nfrom QuantConnect.Util import DateTime\nfrom typing import List, Dict, Optional\n\n# Define the algorithm class\nclass CrossSectionalMomentumFactor(QCAlgo):\n    \"\"\"\n    Long-only cross-sectional momentum factor strategy on large-cap US equities.\n    \n    Strategy Details:\n    - Universe: S&P 500 constituents (Liquid Large-Cap US Equities)\n    - Factor: Trailing 12-month momentum (Price at t-12 / Price at t-1)\n    - Selection: Top 10% (Top Decile) of the universe by momentum score\n    - Rebalance: Monthly (1st trading day of the month)\n    - Period: 2022-01-01 to 2024-12-31\n    - Account: Standard Paper Account\n    \"\"\"\n\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        Sets up the universe selection model to filter for S&P 500 stocks.\n        \"\"\"\n        # Set the start and end dates for the backtest\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Set the cash balance (Standard Paper Account usually starts with $100k)\n        self.SetCash(100000)\n        \n        # Define the universe selection model\n        # We select stocks that are in the S&P 500 index\n        self.universe_selection = UniverseSelectionModel()\n        self.universe_selection.AddIndex(\"SPX\")\n        \n        # Set the universe selection model for the algorithm\n        self.SetUniverseSelection(self.universe_selection)\n        \n        # Subscribe to price data for the universe (will be filtered by the selection model)\n        # We need daily data to calculate monthly momentum\n        self.SetDataNormalizationMode(QC.DataNormalizationMode.Price)\n        \n        # Log initialization details\n        self.Log(\"Initializing Cross-Sectional Momentum Factor Strategy...\")\n        self.Log(\"Universe: S&P 500\")\n        self.Log(\"Factor: Trailing 12-Month Momentum\")\n        self.Log(\"Selection: Top Decile\")\n        self.Log(\"Rebalance: Monthly\")\n        self.Log(\"Period: 2022-01-01 to 2024-12-31\")\n\n    def OnSecuritiesEvent(self, securities: QC.Data.Universe.Universe):\n        \"\"\"\n        Called every day to update the universe and calculate the factor.\n        \n        Args:\n            securities: The list of securities available in the universe for the current day.\n        \"\"\"\n        # Get the current date\n        current_date = self.GetDate()\n        \n        # Check if it's the first trading day of the month for rebalancing\n        # We rebalance on the 1st of every month\n        if current_date.Day == 1:\n            self.Rebalance(securities)\n        else:\n            # On non-rebalance days, we typically hold the previous positions\n            # unless we want to monitor the factor. For this simple factor reference,\n            # we just ensure the universe is updated.\n            pass\n\n    def Rebalance(self, securities: QC.Data.Universe.Universe):\n        \"\"\"\n        Perform the monthly rebalance based on the cross-sectional momentum factor.\n        \n        Args:\n            securities: The list of securities available in the universe.\n        \"\"\"\n        self.Log(f\"Rebalancing on {self.GetDate()}...\")\n        \n        # Get the list of securities to trade\n        securities_to_trade = securities.GetSecurities()\n        \n        if not securities_to_trade:\n            self.Log(\"No securities available in the universe.\")\n            return\n\n        # Calculate momentum for each security\n        # Momentum = Price(t-12) / Price(t-1)\n        # We use the close price from 12 months ago and the close price from 1 month ago\n        # Since we are rebalancing monthly, we look at the price at the end of the previous month\n        # and the price 12 months prior to that.\n        \n        momentum_scores = []\n        \n        for security in securities_to_trade:\n            symbol = security.Symbol\n            \n            # Get the price history for this security\n            # We need at least 13 months of data to calculate trailing 12-month momentum\n            # However, since we are rebalancing monthly, we can use the current price \n            # and the price from 12 months ago.\n            \n            # Get the current price (today's close)\n            current_price = self.GetPrice(symbol).Close\n            \n            # Get the price from 12 months ago\n            # We need to look back 12 months from the current date\n            date_12_months_ago = self.GetDate().AddMonths(-12)\n            \n            # Retrieve the price from 12 months ago\n            # We use the GetHistory method to fetch the specific date\n            history = self.GetHistory(symbol, date_12_months_ago, QC.Data.Resolution.Daily, QC.Data.DataNormalizationMode.Price)\n            \n            if len(history) > 0:\n                price_12_months_ago = history[0].Close\n                # Calculate momentum\n                # Avoid division by zero\n                if price_12_months_ago != 0:\n                    momentum = current_price / price_12_months_ago\n                    momentum_scores.append((symbol, momentum))\n                else:\n                    self.Log(f\"Warning: Zero price for {symbol} 12 months ago.\")\n            else:\n                self.Log(f\"Warning: No price data found for {symbol} 12 months ago.\")\n                continue\n        \n        # Sort securities by momentum score in descending order\n        momentum_scores.sort(key=lambda x: x[1], reverse=True)\n        \n        # Select the top decile (top 10%)\n        # Calculate the number of stocks to select\n        total_stocks = len(momentum_scores)\n        if total_stocks == 0:\n            self.Log(\"No valid momentum scores calculated.\")\n            return\n            \n        # Calculate the cutoff index for the top decile\n        # We want the top 10%\n        top_decile_count = int(total_stocks * 0.1)\n        if top_decile_count == 0:\n            top_decile_count = 1\n            \n        selected_symbols = [score[0] for score in momentum_scores[:top_decile_count]]\n        \n        self.Log(f\"Selected {top_decile_count} stocks from {total_stocks} total.\")\n        self.Log(f\"Top stocks: {selected_symbols}\")\n        \n        # Execute long-only orders for the selected stocks\n        # We will allocate equal weight to each selected stock\n        # First, get the current cash balance\n        cash_balance = self.Portfolio.CashBalance\n        \n        if cash_balance > 0:\n            # Calculate the amount to invest per stock\n            # We assume we want to invest the entire cash balance\n            # In a real scenario, we might want to account for transaction costs or keep some cash\n            amount_per_stock = cash_balance / top_decile_count\n            \n            for symbol in selected_symbols:\n                # Check if we already own the stock\n                if symbol in self.Portfolio:\n                    current_position = self.Portfolio[symbol]\n                    if current_position.Quantity > 0:\n                        # Sell the existing position to flatten\n                        self.Liquidate(symbol)\n                    else:\n                        # If we have a short position (unlikely in long-only), liquidate it\n                        self.Liquidate(symbol)\n                \n                # Buy the stock\n                # We use Market order for simplicity in this reference\n                # In production, you might want to use Limit orders\n                self.SetHoldings(symbol, amount_per_stock)\n                \n                self.Log(f\"Buying {symbol} with ${amount_per_stock:.2f}\")\n        else:\n            self.Log(\"Insufficient cash to rebalance.\")\n\n    def OnData(self, data: QC.Data.Data):\n        \"\"\"\n        Called every data tick.\n        This method is primarily used for logging or additional data processing.\n        For this strategy, the logic is handled in OnSecuritiesEvent.\n        \"\"\"\n        pass\n",
+    "source_sha256": "278beb382f6bc16c560ac0fcd1403065eddb691fc59a64043519f57ec63b9076",
+    "started_at": "2026-11-14T22:32:01.402375+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Loader.TryCreatePythonAlgorithm():  System.Exception: AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location),  at <mod",
+    "project_id": 39413729,
+    "compile_id": "9a7f8ffd40208c5fa4761e3b62a070d2-8d9ca63ddb83a1efc3b8e32e01e347eb",
+    "compile_created": {
+      "compileId": "9a7f8ffd40208c5fa4761e3b62a070d2-8d9ca63ddb83a1efc3b8e32e01e347eb",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39413729,
+      "signature": "8d9ca63ddb83a1efc3b8e32e01e347eb",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "9a7f8ffd40208c5fa4761e3b62a070d2-8d9ca63ddb83a1efc3b8e32e01e347eb",
+      "state": "BuildSuccess",
+      "logs": [
+        "Warning main.py Line: 1 Column: 1 - Add 'from AlgorithmImports import *' at the top of the file. Without it, QuantConnect names such as QCAlgorithm and Resolution are undefined when the algorithm loads.",
+        "Warning main.py Line: 2 Column: 1 - Module \"QuantConnect.Algorithm\" has no attribute \"QCAlgo\"; maybe \"from AlgorithmImports import *\"?",
+        "Warning main.py Line: 3 Column: 1 - Module \"QuantConnect.Data.UniverseSelection\" has no attribute \"UniverseSelectionModel\"",
+        "Warning main.py Line: 3 Column: 1 - Name \"UniverseSelectionModel\" already defined (possibly by an import)",
+        "Warning main.py Line: 4 Column: 1 - Module \"QuantConnect.Data.Market\" has no attribute \"EquityPrice\"",
+        "Warning main.py Line: 5 Column: 1 - Module \"QuantConnect.Util\" has no attribute \"DateTime\"",
+        "Warning main.py Line: 5 Column: 1 - Name \"DateTime\" already defined (possibly by an import)",
+        "Warning main.py Line: 37 Column: 9 - \"UniverseSelectionModel\" has no attribute \"AddIndex\"; maybe \"index = self.add_index(\"SPX\")\"?",
+        "Warning main.py Line: 44 Column: 39 - \"DataNormalizationMode\" has no attribute \"Price\". Valid attributes are: [BACKWARDS_PANAMA_CANAL,FORWARD_PANAMA_CANAL,BACKWARDS_RATIO,SPLIT_ADJUSTED,TOTAL_RETURN,SCALED_RAW,ADJUSTED,RAW]",
+        "Warning main.py Line: 54 Column: 45 - Name \"QC.Data.Universe.Universe\" is not defined",
+        "Warning main.py Line: 74 Column: 37 - Name \"QC.Data.Universe.Universe\" is not defined",
+        "Warning main.py Line: 115 Column: 67 - Module has no attribute \"Resolution\"",
+        "Build Request Successful for Project ID: 39413729, with CompileID: 9a7f8ffd40208c5fa4761e3b62a070d2-8d9ca63ddb83a1efc3b8e32e01e347eb, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Warning main.py Line: 1 Column: 1 - Add 'from AlgorithmImports import *' at the top of the file. Without it, QuantConnect names such as QCAlgorithm and Resolution are undefined when the algorithm loads.",
+      "Warning main.py Line: 2 Column: 1 - Module \"QuantConnect.Algorithm\" has no attribute \"QCAlgo\"; maybe \"from AlgorithmImports import *\"?",
+      "Warning main.py Line: 3 Column: 1 - Module \"QuantConnect.Data.UniverseSelection\" has no attribute \"UniverseSelectionModel\"",
+      "Warning main.py Line: 3 Column: 1 - Name \"UniverseSelectionModel\" already defined (possibly by an import)",
+      "Warning main.py Line: 4 Column: 1 - Module \"QuantConnect.Data.Market\" has no attribute \"EquityPrice\"",
+      "Warning main.py Line: 5 Column: 1 - Module \"QuantConnect.Util\" has no attribute \"DateTime\"",
+      "Warning main.py Line: 5 Column: 1 - Name \"DateTime\" already defined (possibly by an import)",
+      "Warning main.py Line: 37 Column: 9 - \"UniverseSelectionModel\" has no attribute \"AddIndex\"; maybe \"index = self.add_index(\"SPX\")\"?",
+      "Warning main.py Line: 44 Column: 39 - \"DataNormalizationMode\" has no attribute \"Price\". Valid attributes are: [BACKWARDS_PANAMA_CANAL,FORWARD_PANAMA_CANAL,BACKWARDS_RATIO,SPLIT_ADJUSTED,TOTAL_RETURN,SCALED_RAW,ADJUSTED,RAW]",
+      "Warning main.py Line: 54 Column: 45 - Name \"QC.Data.Universe.Universe\" is not defined",
+      "Warning main.py Line: 74 Column: 37 - Name \"QC.Data.Universe.Universe\" is not defined",
+      "Warning main.py Line: 115 Column: 67 - Module has no attribute \"Resolution\"",
+      "Build Request Successful for Project ID: 39413729, with CompileID: 9a7f8ffd40208c5fa4761e3b62a070d2-8d9ca63ddb83a1efc3b8e32e01e347eb, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "4446a97aafef9e85c3268bd18b5f8163",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v07",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413729,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "4446a97aafef9e85c3268bd18b5f8163",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 17
+        },
+        "backtestStart": "2026-11-14 22:32:05",
+        "backtestEnd": "2026-11-14 22:32:05",
+        "created": "2026-11-14 22:32:05",
+        "snapshotId": 39413735,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v07",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413729,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "4446a97aafef9e85c3268bd18b5f8163",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 17
+        },
+        "backtestStart": "2026-11-14 22:32:05",
+        "backtestEnd": "2026-11-14 22:32:05",
+        "created": "2026-11-14 22:32:05",
+        "snapshotId": 39413735,
+        "status": "Runtime Error",
+        "error": "[ERROR] FATAL UNHANDLED EXCEPTION:Loader.TryCreatePythonAlgorithm():  System.Exception: AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location),  at <module>,    from QuantConnect.Algorithm import QCAlgo, in main.py: line 2, cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location),   at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper..ctor(String moduleName) in AlgorithmFactory/Python/Wrappers/AlgorithmPythonWrapper.cs:line 188,   at QuantConnect.AlgorithmFactory.Loader.TryCreatePythonAlgorithm(String assemblyPath, IAlgorithm& algorithmInstance, String& errorMessage) in AlgorithmFactory/Loader.cs:line 173,Engine.Run():  QuantConnect.Lean.Engine.Setup.AlgorithmSetupException: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.5%",
+          "Used RAM (MB)": "141",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-4446a97aafef9e85c3268bd18b5f8163",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "[ERROR] FATAL UNHANDLED EXCEPTION:Loader.TryCreatePythonAlgorithm():  System.Exception: AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location),  at <module>,    from QuantConnect.Algorithm import QCAlgo, in main.py: line 2, cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location),   at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper..ctor(String moduleName) in AlgorithmFactory/Python/Wrappers/AlgorithmPythonWrapper.cs:line 188,   at QuantConnect.AlgorithmFactory.Loader.TryCreatePythonAlgorithm(String assemblyPath, IAlgorithm& algorithmInstance, String& errorMessage) in AlgorithmFactory/Loader.cs:line 173,Engine.Run():  QuantConnect.Lean.Engine.Setup.AlgorithmSetupException: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:32:53.017275+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Loader.TryCreatePythonAlgorithm():  System.Exception: AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location),  at <mod",
+  "note": "runtime: [ERROR] FATAL UNHANDLED EXCEPTION:Loader.TryCreatePythonAlgorithm():  System.Exception: AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location),  at <mod; NO_ALGORITHM_CLASS; LEGACY_API: GetDate, GetHistory, GetPrice, Liquidate, Log, Rebalance, SetCash, SetDataNormalizationMode, SetEndDate, SetHoldings",
+  "total_orders": null
+}

@@ -1,0 +1,23 @@
+{
+  "prompt_id": "equity-bollinger-mean-reversion_v05",
+  "model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "output": "```python\n# QuantConnect LEAN Algorithm\n# SPY Bollinger Bands (20, 2) Daily Strategy\n\nfrom AlgorithmImports import *\n\nclass SPYBollingerStrategy(QCAlgorithm):\n\n    def Initialize(self):\n        # Set start and end dates\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        \n        # Set initial capital\n        self.SetCash(100_000)\n        \n        # Add SPY equity\n        self.spy = self.AddEquity(\"SPY\", Resolution.DAILY).Symbol\n        \n        # Set up Bollinger Bands indicator (20 period, 2 standard deviations)\n        self.bb = self.Indicator(self.spy, 20, Resolution.DAILY, 2)\n        \n        # Schedule daily check pre-open (9:00 AM ET, before market open at 9:30 AM)\n        self.Schedule.On(\n            self.DateRules.Every(self.spy),\n            self.TimeRules.BeforeMarketOpen(self.spy, 30),\n            self.OnPreOpenCheck\n        )\n        \n        # Log initialization\n        self.Log(\"SPY Bollinger Bands Strategy initialized\")\n\n    def OnPreOpenCheck(self):\n        \"\"\"\n        Daily pre-open check:\n        - If flat and price < lower band -> go 100% long\n        - If invested and price >= middle band -> liquidate\n        \"\"\"\n        # Get the latest close price (previous day's close since we're pre-open)\n        if not self.bb.IsReady:\n            self.Log(\"Bollinger Bands not ready yet\")\n            return\n        \n        # Get the most recent close price\n        price = self.Securities[self.spy].Price\n        \n        # Get Bollinger Bands values\n        lower_band = self.bb.LowerBand.Current.Value\n        middle_band = self.bb.MovingAverage.Current.Value\n        upper_band = self.bb.UpperBand.Current.Value\n        \n        self.Log(f\"Pre-open check: Price={price:.2f}, Lower={lower_band:.2f}, Middle={middle_band:.2f}, Upper={upper_band:.2f}\")\n        \n        # Check if we're flat\n        if self.Portfolio[self.spy].Quantity == 0:\n            # Flat and price < lower band -> go 100% long\n            if price < lower_band:\n                self.Log(f\"Signal: BUY - Price {price:.2f} < Lower Band {lower_band:.2f}\")\n                self.SetHoldings(self.spy, 1.0)\n        else:\n            # Invested and price >= middle band -> liquidate\n            if price >= middle_band:\n                self.Log(f\"Signal: SELL - Price {price:.2f} >= Middle Band {middle_band:.2f}\")\n                self.Liquidate(self.spy)\n\n    def OnOrderEvent(self, orderEvent):\n        \"\"\"Log order events\"\"\"\n        if orderEvent.Status == OrderStatus.Filled:\n            self.Log(f\"Order filled: {orderEvent.Symbol} {orderEvent.Direction} {orderEvent.FillQuantity} @ {orderEvent.FillPrice:.2f}\")\n```",
+  "generated_at": "2026-10-20T01:30:44.414251+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddEquity, Indicator, Liquidate, Log, SetCash, SetEndDate, SetHoldings, SetStartDate"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ".bb( / bollingerbands"
+    }
+  ],
+  "note": "LEGACY_API: AddEquity, Indicator, Liquidate, Log, SetCash, SetEndDate, SetHoldings, SetStartDate; PROMPT_MISS: .bb( / bollingerbands"
+}

@@ -1,0 +1,23 @@
+{
+  "prompt_id": "equity-bollinger-mean-reversion_v08",
+  "model": "qwen_base",
+  "model_id": "qwen/qwen3.8-27b",
+  "output": "```python\n# QuantConnect LEAN Algorithm - Bollinger Mean Reversion on SPY\n# Window: 2024-09-01 to 2024-12-31\n# Capital: 100,000\n# Indicator: Bollinger Bands, 20-period, 2 std devs, daily\n# Evaluation: once per trading day at 08:00\n# Rules:\n#   - Not invested and price < lower band -> 100% long\n#   - Invested and price >= middle band -> liquidate\n\nfrom AlgorithmImports import *\n\nclass BollingerMeanReversionAlgorithm(QCAlgorithm):\n\n    def Initialize(self):\n        # Set start/end dates\n        self.SetStartDate(2024, 9, 1)\n        self.SetEndDate(2024, 12, 31)\n        self.SetCash(100_000)\n\n        # Add SPY equity\n        self.spy = self.AddEquity(\"SPY\", Resolution.DAILY).Symbol\n\n        # Bollinger Bands: 20 period, 2 standard deviations\n        self.bb = self.Indicator(self.spy, 20, 20, Resolution.DAILY)\n\n        # Schedule evaluation once per trading day at 08:00\n        self.Schedule.On(\n            date_rules.EveryDay(),\n            time_rules.At(8, 0),\n            Action(self.OnDailyEvaluation)\n        )\n\n    def OnDailyEvaluation(self):\n        # Ensure indicator is ready\n        if not self.bb.IsReady:\n            return\n\n        # Get current price (use the close of the most recent daily bar)\n        price = self.Securities[self.spy].Price\n\n        lower_band = self.bb.LowerBand\n        middle_band = self.bb.MidPoint\n\n        # Rule 1: Not invested and price below lower band -> go 100% long\n        if not self.Portfolio[self.spy].Invested and price < lower_band:\n            self.SetHoldings(self.spy, 1.0)\n            self.Debug(f\"BUY: Price {price:.2f} < Lower Band {lower_band:.2f}\")\n\n        # Rule 2: Invested and price at or above middle band -> liquidate\n        elif self.Portfolio[self.spy].Invested and price >= middle_band:\n            self.Liquidate(self.spy)\n            self.Debug(f\"SELL: Price {price:.2f} >= Middle Band {middle_band:.2f}\")\n```",
+  "generated_at": "2026-10-20T01:34:32.292733+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "AddEquity, Debug, Indicator, Liquidate, SetCash, SetEndDate, SetHoldings, SetStartDate"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ".bb( / bollingerbands"
+    }
+  ],
+  "note": "LEGACY_API: AddEquity, Debug, Indicator, Liquidate, SetCash, SetEndDate, SetHoldings, SetStartDate; PROMPT_MISS: .bb( / bollingerbands"
+}

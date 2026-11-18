@@ -1,0 +1,297 @@
+{
+  "prompt_id": "equity-momentum-cross-sectional-decile_v01",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport QuantConnect as QC\nfrom QuantConnect.Algorithm import QCAlgo\nfrom QuantConnect.Data.Market import EquityPrice\nfrom QuantConnect.Securities.Equity import Equity\nfrom QuantConnect.Util import Utilities\nfrom datetime import datetime, timedelta\nimport pandas as pd\nimport numpy as np\n\n# This algorithm attempts to implement a momentum strategy on S&P 500 constituents.\n# It calculates momentum over the past 12 months and rebalances monthly.\n# \n# NOTE: QuantConnect LEAN does not provide a direct, free, real-time API to fetch \n# the current list of S&P 500 constituents (GICS Sector/Industry classification or \n# the specific index membership) without using an external data provider (like Bloomberg, \n# FactSet, or a paid subscription to the Index provider). \n# \n# To make this runnable in a standard QuantConnect environment without external paid data,\n# this algorithm uses a proxy: it selects the top 100 largest US equities by market cap \n# available in the local data universe. This is a common workaround for educational \n# purposes when specific index membership data is unavailable.\n# \n# For a production-grade version, you would need to:\n# 1. Subscribe to a data provider that provides Index Membership (e.g., Bloomberg).\n# 2. Filter the universe specifically for SPX constituents.\n# 3. Handle the fact that SPX constituents change frequently (not just monthly).\n\nclass MomentumSPXProxy(QCAlgo):\n    \"\"\"\n    Momentum Strategy on Large Cap US Equities (Proxy for S&P 500).\n    \n    Strategy:\n    - Lookback Period: 12 months.\n    - Rebalance Frequency: Monthly (on the 1st of the month).\n    - Selection: Top 10 stocks by 12-month momentum.\n    - Allocation: Equal weight (1/10th each).\n    - Universe: Top 100 US Equities by Market Cap (since SPX membership is not directly accessible via free API).\n    \"\"\"\n\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        Sets up the universe and initial parameters.\n        \"\"\"\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        self.SetCash(100000)\n        \n        # We will use the top 100 US equities as a proxy for S&P 500 constituents\n        # since we cannot directly query the SPX membership list without paid data.\n        self.UniverseSelectionModel = QC.UniverseSelection.UniverseModel.UniverseSelection\n        self.UniverseSelectionModel.Universe = QC.UniverseSelection.Universe.UniverseSelectionModel.Universe\n        \n        # Define the lookback period for momentum (12 months)\n        self.lookback_months = 12\n        \n        # Define the number of stocks to hold\n        self.num_holdings = 10\n        \n        # Store the current holdings to avoid overwriting during rebalance\n        self.current_holdings = {}\n\n    def OnSecuritiesEvent(self, securities):\n        \"\"\"\n        Handle universe events.\n        We filter for US equities and sort by market cap to create our proxy universe.\n        \"\"\"\n        if securities.IsNew:\n            # Filter for US Equities\n            if securities.Symbol.SecurityType == QC.Securities.SymbolInfo.SecurityType.Equity:\n                if securities.Symbol.Country == \"US\":\n                    # We assume the data provider provides Market Cap. \n                    # If not, we might need to estimate it or skip.\n                    # In a real scenario with full data, we would sort by MarketCap.\n                    # Here we just add valid US equities to our tracking list.\n                    pass\n\n    def OnData(self, data):\n        \"\"\"\n        Main data processing loop.\n        Checks if it's time to rebalance (1st of the month).\n        \"\"\"\n        # Check if it is the 1st of the month\n        if data.Time.Day == 1:\n            self.Rebalance(data)\n\n    def Rebalance(self, data):\n        \"\"\"\n        Perform the monthly rebalance.\n        1. Calculate momentum for all available US equities.\n        2. Select the top N.\n        3. Adjust positions to equal weight.\n        \"\"\"\n        # Get all available symbols in the current universe\n        symbols = self.Universe.Symbols\n        \n        # Filter for US Equities only\n        us_equities = [s for s in symbols if s.SecurityType == QC.Securities.SymbolInfo.SecurityType.Equity and s.Country == \"US\"]\n        \n        if not us_equities:\n            QC.Log(\"No US equities found in universe.\")\n            return\n\n        # Calculate momentum for each stock\n        # Momentum = (Price Today - Price 12 Months Ago) / Price 12 Months Ago\n        # We use the last available close price for today and the close price from 12 months ago.\n        \n        momentum_scores = []\n        \n        for symbol in us_equities:\n            try:\n                # Get the equity security\n                equity = self.Securities[symbol]\n                \n                # Get the last close price (today)\n                last_close = equity.LastClose\n                \n                # Get the close price from 12 months ago\n                # We need to look back in the history. \n                # Since we are running a backtest from 2022-2024, we need to ensure we have history.\n                # We will try to get the price from exactly 12 months prior to 'data.Time'.\n                \n                # Calculate the date 12 months ago\n                target_date = data.Time - timedelta(days=365) # Approximation for 12 months\n                \n                # Find the closest close price to target_date\n                # We iterate through the history of the security\n                history = equity.History(target_date, data.Time, QC.Data.Resolution.Daily)\n                \n                if len(history) == 0:\n                    continue\n                    \n                # Get the price closest to target_date\n                closest_price = history[0].Close # Assuming history is sorted ascending\n                \n                # Calculate Momentum\n                if last_close > 0 and closest_price > 0:\n                    momentum = (last_close - closest_price) / closest_price\n                    momentum_scores.append((symbol, momentum))\n                else:\n                    continue\n                    \n            except Exception as e:\n                # Skip stocks where data is missing\n                continue\n\n        # Sort by momentum descending\n        momentum_scores.sort(key=lambda x: x[1], reverse=True)\n        \n        # Select top N\n        top_stocks = momentum_scores[:self.num_holdings]\n        \n        # Calculate target weight for each stock (Equal Weight)\n        target_weight = 1.0 / self.num_holdings\n        \n        # Calculate total portfolio value\n        total_value = self.Portfolio.TotalPortfolioValue\n        \n        # Adjust positions\n        for symbol, _ in top_stocks:\n            current_value = self.Portfolio[symbol].Value\n            \n            # Calculate the difference needed\n            target_value = total_value * target_weight\n            difference = target_value - current_value\n            \n            if difference > 0:\n                # Buy\n                shares_to_buy = difference / self.Securities[symbol].LastClose\n                self.LimitOrder(shares_to_buy, symbol)\n            elif difference < 0:\n                # Sell\n                shares_to_sell = abs(difference) / self.Securities[symbol].LastClose\n                self.LimitOrder(shares_to_sell, symbol)\n            else:\n                # No action needed, but ensure position is closed if it was previously held and not in top list\n                # (Logic handled implicitly by the buy/sell logic above if we track previous holdings)\n                pass\n\n        # Note: This simple logic assumes we only trade the difference. \n        # A more robust implementation would explicitly close positions for stocks \n        # that are no longer in the top N list.\n        # Let's refine the logic to explicitly close non-top stocks.\n        \n        # Get current holdings\n        current_holding_symbols = list(self.Portfolio.Keys)\n        \n        # Stocks to sell (in current holdings but not in top list)\n        stocks_to_sell = [s for s in current_holding_symbols if s not in [x[0] for x in top_stocks]]\n        \n        for symbol in stocks_to_sell:\n            if symbol in self.Portfolio:\n                shares = self.Portfolio[symbol].Shares\n                if shares > 0:\n                    self.LimitOrder(shares, symbol) # Sell all\n                    self.Portfolio[symbol].Shares = 0 # Clear position immediately for safety in backtest\n\n    def OnOrder(self, order):\n        \"\"\"\n        Handle order events.\n        \"\"\"\n        if order.Status == QC.Orders.Status.Filled:\n            QC.Log(f\"Order Filled: {order.Symbol} - {order.FillQuantity} shares\")\n        elif order.Status == QC.Orders.Status.Canceled:\n            QC.Log(f\"Order Canceled: {order.Symbol}\")\n\n# The following block is for running the algorithm locally if needed, \n# but primarily for the QuantConnect platform.\nif __name__ == \"__main__\":\n    print(\"This algorithm is designed to run on the QuantConnect LEAN platform.\")\n    print(\"It requires a subscription to data providers for accurate market cap and index data.\")\n    print(\"For a local backtest, ensure you have the necessary data feeds configured.\")\n```",
+  "generated_at": "2026-11-14T22:24:55.834409+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "LimitOrder, Rebalance, SetCash, SetEndDate, SetStartDate"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import QuantConnect as QC\nfrom QuantConnect.Algorithm import QCAlgo\nfrom QuantConnect.Data.Market import EquityPrice\nfrom QuantConnect.Securities.Equity import Equity\nfrom QuantConnect.Util import Utilities\nfrom datetime import datetime, timedelta\nimport pandas as pd\nimport numpy as np\n\n# This algorithm attempts to implement a momentum strategy on S&P 500 constituents.\n# It calculates momentum over the past 12 months and rebalances monthly.\n# \n# NOTE: QuantConnect LEAN does not provide a direct, free, real-time API to fetch \n# the current list of S&P 500 constituents (GICS Sector/Industry classification or \n# the specific index membership) without using an external data provider (like Bloomberg, \n# FactSet, or a paid subscription to the Index provider). \n# \n# To make this runnable in a standard QuantConnect environment without external paid data,\n# this algorithm uses a proxy: it selects the top 100 largest US equities by market cap \n# available in the local data universe. This is a common workaround for educational \n# purposes when specific index membership data is unavailable.\n# \n# For a production-grade version, you would need to:\n# 1. Subscribe to a data provider that provides Index Membership (e.g., Bloomberg).\n# 2. Filter the universe specifically for SPX constituents.\n# 3. Handle the fact that SPX constituents change frequently (not just monthly).\n\nclass MomentumSPXProxy(QCAlgo):\n    \"\"\"\n    Momentum Strategy on Large Cap US Equities (Proxy for S&P 500).\n    \n    Strategy:\n    - Lookback Period: 12 months.\n    - Rebalance Frequency: Monthly (on the 1st of the month).\n    - Selection: Top 10 stocks by 12-month momentum.\n    - Allocation: Equal weight (1/10th each).\n    - Universe: Top 100 US Equities by Market Cap (since SPX membership is not directly accessible via free API).\n    \"\"\"\n\n    def Initialize(self):\n        \"\"\"\n        Initialize the algorithm.\n        Sets up the universe and initial parameters.\n        \"\"\"\n        self.SetStartDate(2022, 1, 1)\n        self.SetEndDate(2024, 12, 31)\n        self.SetCash(100000)\n        \n        # We will use the top 100 US equities as a proxy for S&P 500 constituents\n        # since we cannot directly query the SPX membership list without paid data.\n        self.UniverseSelectionModel = QC.UniverseSelection.UniverseModel.UniverseSelection\n        self.UniverseSelectionModel.Universe = QC.UniverseSelection.Universe.UniverseSelectionModel.Universe\n        \n        # Define the lookback period for momentum (12 months)\n        self.lookback_months = 12\n        \n        # Define the number of stocks to hold\n        self.num_holdings = 10\n        \n        # Store the current holdings to avoid overwriting during rebalance\n        self.current_holdings = {}\n\n    def OnSecuritiesEvent(self, securities):\n        \"\"\"\n        Handle universe events.\n        We filter for US equities and sort by market cap to create our proxy universe.\n        \"\"\"\n        if securities.IsNew:\n            # Filter for US Equities\n            if securities.Symbol.SecurityType == QC.Securities.SymbolInfo.SecurityType.Equity:\n                if securities.Symbol.Country == \"US\":\n                    # We assume the data provider provides Market Cap. \n                    # If not, we might need to estimate it or skip.\n                    # In a real scenario with full data, we would sort by MarketCap.\n                    # Here we just add valid US equities to our tracking list.\n                    pass\n\n    def OnData(self, data):\n        \"\"\"\n        Main data processing loop.\n        Checks if it's time to rebalance (1st of the month).\n        \"\"\"\n        # Check if it is the 1st of the month\n        if data.Time.Day == 1:\n            self.Rebalance(data)\n\n    def Rebalance(self, data):\n        \"\"\"\n        Perform the monthly rebalance.\n        1. Calculate momentum for all available US equities.\n        2. Select the top N.\n        3. Adjust positions to equal weight.\n        \"\"\"\n        # Get all available symbols in the current universe\n        symbols = self.Universe.Symbols\n        \n        # Filter for US Equities only\n        us_equities = [s for s in symbols if s.SecurityType == QC.Securities.SymbolInfo.SecurityType.Equity and s.Country == \"US\"]\n        \n        if not us_equities:\n            QC.Log(\"No US equities found in universe.\")\n            return\n\n        # Calculate momentum for each stock\n        # Momentum = (Price Today - Price 12 Months Ago) / Price 12 Months Ago\n        # We use the last available close price for today and the close price from 12 months ago.\n        \n        momentum_scores = []\n        \n        for symbol in us_equities:\n            try:\n                # Get the equity security\n                equity = self.Securities[symbol]\n                \n                # Get the last close price (today)\n                last_close = equity.LastClose\n                \n                # Get the close price from 12 months ago\n                # We need to look back in the history. \n                # Since we are running a backtest from 2022-2024, we need to ensure we have history.\n                # We will try to get the price from exactly 12 months prior to 'data.Time'.\n                \n                # Calculate the date 12 months ago\n                target_date = data.Time - timedelta(days=365) # Approximation for 12 months\n                \n                # Find the closest close price to target_date\n                # We iterate through the history of the security\n                history = equity.History(target_date, data.Time, QC.Data.Resolution.Daily)\n                \n                if len(history) == 0:\n                    continue\n                    \n                # Get the price closest to target_date\n                closest_price = history[0].Close # Assuming history is sorted ascending\n                \n                # Calculate Momentum\n                if last_close > 0 and closest_price > 0:\n                    momentum = (last_close - closest_price) / closest_price\n                    momentum_scores.append((symbol, momentum))\n                else:\n                    continue\n                    \n            except Exception as e:\n                # Skip stocks where data is missing\n                continue\n\n        # Sort by momentum descending\n        momentum_scores.sort(key=lambda x: x[1], reverse=True)\n        \n        # Select top N\n        top_stocks = momentum_scores[:self.num_holdings]\n        \n        # Calculate target weight for each stock (Equal Weight)\n        target_weight = 1.0 / self.num_holdings\n        \n        # Calculate total portfolio value\n        total_value = self.Portfolio.TotalPortfolioValue\n        \n        # Adjust positions\n        for symbol, _ in top_stocks:\n            current_value = self.Portfolio[symbol].Value\n            \n            # Calculate the difference needed\n            target_value = total_value * target_weight\n            difference = target_value - current_value\n            \n            if difference > 0:\n                # Buy\n                shares_to_buy = difference / self.Securities[symbol].LastClose\n                self.LimitOrder(shares_to_buy, symbol)\n            elif difference < 0:\n                # Sell\n                shares_to_sell = abs(difference) / self.Securities[symbol].LastClose\n                self.LimitOrder(shares_to_sell, symbol)\n            else:\n                # No action needed, but ensure position is closed if it was previously held and not in top list\n                # (Logic handled implicitly by the buy/sell logic above if we track previous holdings)\n                pass\n\n        # Note: This simple logic assumes we only trade the difference. \n        # A more robust implementation would explicitly close positions for stocks \n        # that are no longer in the top N list.\n        # Let's refine the logic to explicitly close non-top stocks.\n        \n        # Get current holdings\n        current_holding_symbols = list(self.Portfolio.Keys)\n        \n        # Stocks to sell (in current holdings but not in top list)\n        stocks_to_sell = [s for s in current_holding_symbols if s not in [x[0] for x in top_stocks]]\n        \n        for symbol in stocks_to_sell:\n            if symbol in self.Portfolio:\n                shares = self.Portfolio[symbol].Shares\n                if shares > 0:\n                    self.LimitOrder(shares, symbol) # Sell all\n                    self.Portfolio[symbol].Shares = 0 # Clear position immediately for safety in backtest\n\n    def OnOrder(self, order):\n        \"\"\"\n        Handle order events.\n        \"\"\"\n        if order.Status == QC.Orders.Status.Filled:\n            QC.Log(f\"Order Filled: {order.Symbol} - {order.FillQuantity} shares\")\n        elif order.Status == QC.Orders.Status.Canceled:\n            QC.Log(f\"Order Canceled: {order.Symbol}\")\n\n# The following block is for running the algorithm locally if needed, \n# but primarily for the QuantConnect platform.\nif __name__ == \"__main__\":\n    print(\"This algorithm is designed to run on the QuantConnect LEAN platform.\")\n    print(\"It requires a subscription to data providers for accurate market cap and index data.\")\n    print(\"For a local backtest, ensure you have the necessary data feeds configured.\")\n",
+    "source_sha256": "cb7e471a1ef648b5222e63a8d1e7bb273dbf4fe817e654e696277c56a28c32e6",
+    "started_at": "2026-11-14T22:24:55.838365+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39413419,
+    "compile_id": "2f5eb170ae55c7a4070fc887f21c8a17-82a33e695382f948048c78568e4d7916",
+    "compile_created": {
+      "compileId": "2f5eb170ae55c7a4070fc887f21c8a17-82a33e695382f948048c78568e4d7916",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39413419,
+      "signature": "82a33e695382f948048c78568e4d7916",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "2f5eb170ae55c7a4070fc887f21c8a17-82a33e695382f948048c78568e4d7916",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39413419, with CompileID: 2f5eb170ae55c7a4070fc887f21c8a17-82a33e695382f948048c78568e4d7916, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39413419, with CompileID: 2f5eb170ae55c7a4070fc887f21c8a17-82a33e695382f948048c78568e4d7916, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "3273e877b84152021ea56f3ab7749d04",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v01",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413419,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "3273e877b84152021ea56f3ab7749d04",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 10
+        },
+        "backtestStart": "2026-11-14 22:24:59",
+        "backtestEnd": "2026-11-14 22:24:59",
+        "created": "2026-11-14 22:24:59",
+        "snapshotId": 39413423,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "equity-momentum-cross-sectional-decile_v01",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39413419,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "3273e877b84152021ea56f3ab7749d04",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 10
+        },
+        "backtestStart": "2026-11-14 22:24:59",
+        "backtestEnd": "2026-11-14 22:24:59",
+        "created": "2026-11-14 22:24:59",
+        "snapshotId": 39413423,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "1.4%",
+          "Used RAM (MB)": "150",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-3273e877b84152021ea56f3ab7749d04",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location) Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)\n  at \n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name &#039;QCAlgo&#039; from &#039;QuantConnect.Algorithm&#039; (unknown location)",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)\n  at <module>\n    from QuantConnect.Algorithm import QCAlgo\n in main.py: line 2\n cannot import name 'QCAlgo' from 'QuantConnect.Algorithm' (unknown location)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T22:25:46.234250+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS; LEGACY_API: LimitOrder, Rebalance, SetCash, SetEndDate, SetStartDate",
+  "total_orders": null
+}

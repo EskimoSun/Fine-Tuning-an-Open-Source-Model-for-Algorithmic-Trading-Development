@@ -1,0 +1,331 @@
+{
+  "prompt_id": "futures_v01",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass FutureContractRollingAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # Create the SPX Future symbol.\n        self._symbol = Symbol.create_future(\"SPX\")\n        # Set the data normalization mode as raw for accuracy in filtering.\n        self._symbol.data_normalization_mode = DataNormalizationMode.RAW\n        # You can also create the symbol with the market hours of the underlying index.\n        # self._symbol = Symbol.future(\"SPX\", Market.USA())\n        # Add the FOP price dataset for daily SPX Future data.\n        self.add_future(self._symbol, FOPPriceDataset)\n        # Set the minimum time in universe to filter the expired contracts.\n        self.universe_settings.minimum_time_in_universe = timedelta(hours=1)\n        # Create EMA indicators for trend detection.\n        self._price_ema = ExponentialMovingAverage(10)\n        self._volume_ema = ExponentialMovingAverage(10)\n        # Warm up for immediate usage of indicators.\n        self.set_warm_up(2, Resolution.DAILY)\n\n    def on_data(self, slice: Slice) -> None:\n        # Get the current contract and its price.\n        contract = slice.get_contract(self._symbol)\n        if not contract:\n            return\n        # Skip if market is closed to avoid invalid indicator values.\n        if not self.is_market_open(self._symbol):\n            return\n        # Update indicators with the current bar data.\n        bar = slice.bars.get(self._symbol)\n        if not bar:\n            return\n        self._price_ema.update(bar.close)\n        self._volume_ema.update(bar.volume)\n        # Check if the current contract has expired to avoid trading invalid contracts.\n        if contract.expiry < self.time + timedelta(1):\n            self.liquidate(self._symbol, \"Expired contract\")\n            return\n        # Buy if price EMA is above volume EMA.\n        if not self._symbol.invested and self._price_ema.current.value > self._volume_ema.current.value:\n            self.set_holdings(self._symbol, 1)\n        # Sell if price EMA is below volume EMA.\n        elif self._symbol.invested and self._price_ema.current.value < self._volume_ema.current.value:\n            self.liquidate(self._symbol, \"Price EMA below volume EMA\")\n```",
+  "generated_at": "2026-11-13T00:08:51.221439+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "UNKNOWN_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "is_market_open"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\nclass FutureContractRollingAlgorithm(QCAlgorithm):\n    def initialize(self) -> None:\n        self.set_start_date(2024, 9, 1)\n        self.set_end_date(2024, 12, 31)\n        # Create the SPX Future symbol.\n        self._symbol = Symbol.create_future(\"SPX\")\n        # Set the data normalization mode as raw for accuracy in filtering.\n        self._symbol.data_normalization_mode = DataNormalizationMode.RAW\n        # You can also create the symbol with the market hours of the underlying index.\n        # self._symbol = Symbol.future(\"SPX\", Market.USA())\n        # Add the FOP price dataset for daily SPX Future data.\n        self.add_future(self._symbol, FOPPriceDataset)\n        # Set the minimum time in universe to filter the expired contracts.\n        self.universe_settings.minimum_time_in_universe = timedelta(hours=1)\n        # Create EMA indicators for trend detection.\n        self._price_ema = ExponentialMovingAverage(10)\n        self._volume_ema = ExponentialMovingAverage(10)\n        # Warm up for immediate usage of indicators.\n        self.set_warm_up(2, Resolution.DAILY)\n\n    def on_data(self, slice: Slice) -> None:\n        # Get the current contract and its price.\n        contract = slice.get_contract(self._symbol)\n        if not contract:\n            return\n        # Skip if market is closed to avoid invalid indicator values.\n        if not self.is_market_open(self._symbol):\n            return\n        # Update indicators with the current bar data.\n        bar = slice.bars.get(self._symbol)\n        if not bar:\n            return\n        self._price_ema.update(bar.close)\n        self._volume_ema.update(bar.volume)\n        # Check if the current contract has expired to avoid trading invalid contracts.\n        if contract.expiry < self.time + timedelta(1):\n            self.liquidate(self._symbol, \"Expired contract\")\n            return\n        # Buy if price EMA is above volume EMA.\n        if not self._symbol.invested and self._price_ema.current.value > self._volume_ema.current.value:\n            self.set_holdings(self._symbol, 1)\n        # Sell if price EMA is below volume EMA.\n        elif self._symbol.invested and self._price_ema.current.value < self._volume_ema.current.value:\n            self.liquidate(self._symbol, \"Price EMA below volume EMA\")\n",
+    "source_sha256": "760e4cb250e007948030655292ae19f5e714fedb9ecf168638de213ac0c8a3a1",
+    "started_at": "2026-11-13T00:08:51.222613+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [],
+    "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the ex",
+    "project_id": 39315697,
+    "compile_id": "f8016df2ee0cbcbc2213fcab07617b73-1434cb49767ebd4aa6a319966a70532a",
+    "compile_created": {
+      "compileId": "f8016df2ee0cbcbc2213fcab07617b73-1434cb49767ebd4aa6a319966a70532a",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39315697,
+      "signature": "1434cb49767ebd4aa6a319966a70532a",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "f8016df2ee0cbcbc2213fcab07617b73-1434cb49767ebd4aa6a319966a70532a",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39315697, with CompileID: f8016df2ee0cbcbc2213fcab07617b73-1434cb49767ebd4aa6a319966a70532a, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39315697, with CompileID: f8016df2ee0cbcbc2213fcab07617b73-1434cb49767ebd4aa6a319966a70532a, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "3ae007d4785b054307a1ecbef6b7f821",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v01",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315697,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "3ae007d4785b054307a1ecbef6b7f821",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 10
+        },
+        "backtestStart": "2026-11-13 00:08:55",
+        "backtestEnd": "2026-11-13 00:08:55",
+        "created": "2026-11-13 00:08:55",
+        "snapshotId": 39315701,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-15T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v01",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315697,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "3ae007d4785b054307a1ecbef6b7f821",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 10
+        },
+        "backtestStart": "2026-11-13 00:08:55",
+        "backtestEnd": "2026-11-13 00:08:55",
+        "created": "2026-11-13 00:08:55",
+        "snapshotId": 39315701,
+        "status": "Runtime Error",
+        "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the create_future method. Please checkout the API documentation. The expected signature is:\n  create_future(ticker: str, market: str, expiry: datetime, alias: str = None)\n  at initialize\n    self._symbol = Symbol.create_future(&quot;SPX&quot;)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 10\n No method matches given arguments for create_future: (). The expected signature is:\n  create_future(ticker: str, market: str, expiry: datetime, alias: str = None)",
+        "stacktrace": "Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the create_future method. Please checkout the API documentation. The expected signature is:\n  create_future(ticker: str, market: str, expiry: datetime, alias: str = None)\n  at initialize\n    self._symbol = Symbol.create_future(\"SPX\")\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 10\n No method matches given arguments for create_future: (<class 'str'>). The expected signature is:\n  create_future(ticker: str, market: str, expiry: datetime, alias: str = None)",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-15T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "8.4%",
+          "Used RAM (MB)": "251",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-3ae007d4785b054307a1ecbef6b7f821",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:14"
+        }
+      },
+      "success": true
+    },
+    "error": "2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the create_future method. Please checkout the API documentation. The expected signature is:\n  create_future(ticker: str, market: str, expiry: datetime, alias: str = None)\n  at initialize\n    self._symbol = Symbol.create_future(&quot;SPX&quot;)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 10\n No method matches given arguments for create_future: (). The expected signature is:\n  create_future(ticker: str, market: str, expiry: datetime, alias: str = None)",
+    "stacktrace": "Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the create_future method. Please checkout the API documentation. The expected signature is:\n  create_future(ticker: str, market: str, expiry: datetime, alias: str = None)\n  at initialize\n    self._symbol = Symbol.create_future(\"SPX\")\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 10\n No method matches given arguments for create_future: (<class 'str'>). The expected signature is:\n  create_future(ticker: str, market: str, expiry: datetime, alias: str = None)",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-13T00:09:46.319156+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the ex",
+  "note": "runtime: 2024-09-01 00:00:00 During the algorithm initialization, the following exception has occurred: Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the ex; UNKNOWN_API: is_market_open",
+  "total_orders": null
+}

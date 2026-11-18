@@ -1,0 +1,315 @@
+{
+  "prompt_id": "futures_v03",
+  "model": "qwen_base",
+  "base_model": "qwen_base",
+  "model_id": "Qwen/Qwen3.5-9B",
+  "system_prompt": "v1",
+  "output": "```python\nimport datetime\nimport QuantConnect as QC\n\n# Initialize the algorithm\nclass EsRoll(QC.Algorithm.Algorithm):\n    \"\"\"\n    Algorithm to trade the E-mini S&P 500 continuous future.\n    Implements last-trading-day mapping, backwards-ratio normalization,\n    extended hours, and automatic rollover tagging.\n    \n    Strategy:\n    - When no position is held, buy 1 contract of the currently mapped month.\n    - When the continuous contract rolls to a new month, sell the old contract\n      and buy the new one, tagging these orders with 'Rollover'.\n    - Date Range: September 1, 2024 to December 31, 2024.\n    \"\"\"\n\n    def __init__(self):\n        super().__init__()\n        self.symbol = None\n        self.position = None\n        self.initial_capital = 100000.0  # Starting capital\n        \n        # Define the date range\n        self.start_date = datetime.datetime(2024, 9, 1)\n        self.end_date = datetime.datetime(2024, 12, 31)\n\n    def OnInitialize(self):\n        \"\"\"\n        Initialize the algorithm by setting up the symbol and parameters.\n        \"\"\"\n        # Set the initial capital\n        self.SetInitialCapital(self.initial_capital)\n        \n        # Define the symbol for E-mini S&P 500 continuous future\n        # 'ES' is the symbol, 'C' indicates continuous contract\n        # QuantConnect automatically handles last-trading-day mapping and \n        # backwards-ratio normalization for continuous contracts.\n        self.symbol = QC.Symbol(\"ES\", QC.DataNormalizationMode.BackwardsRatio)\n        \n        # Set the trading session to Extended Hours\n        self.SetTradingSession(QC.TradingSessionType.ExtendedHours)\n        \n        # Set the date range for the algorithm\n        self.SetStartDate(self.start_date)\n        self.SetEndDate(self.end_date)\n        \n        # Log initialization details\n        self.Log(f\"Initialized EsRoll algorithm.\")\n        self.Log(f\"Symbol: {self.symbol}\")\n        self.Log(f\"Date Range: {self.start_date} to {self.end_date}\")\n        self.Log(f\"Trading Session: Extended Hours\")\n        \n        # Check if we have a position initially\n        if self.Positions.ContainsKey(self.symbol):\n            self.Log(\"Error: Algorithm started with an existing position.\")\n        else:\n            self.Log(\"No initial position found. Waiting for market open.\")\n\n    def OnData(self, data):\n        \"\"\"\n        Handle incoming market data.\n        Checks for rollover events and manages positions accordingly.\n        \"\"\"\n        # Check if we have a position in the ES contract\n        if self.symbol not in self.Positions:\n            # No position held\n            # Check if we are at the start of the trading day or if it's the first bar\n            # Since we are in extended hours, we might get data before the official open.\n            # We will place a market order to buy 1 contract.\n            self.Log(\"No position held. Placing buy order for 1 contract.\")\n            self.MarketOrder(self.symbol, 1)\n        else:\n            # We have a position\n            # Check for rollover conditions\n            # A rollover typically happens when the current contract's last trading day passes\n            # and the continuous contract switches to the next month.\n            # QuantConnect handles the mapping internally, but we can detect the rollover\n            # by checking if the symbol's underlying contract month has changed.\n            \n            # Get the current contract month from the symbol\n            # Note: The symbol object itself doesn't directly expose the current month \n            # in a simple property, but we can infer it from the data or use the \n            # underlying contract information if available.\n            # However, a more robust way in LEAN is to check the LastTradeDate or \n            # rely on the fact that the continuous contract updates its mapping.\n            \n            # For this specific requirement, we will assume that if the continuous \n            # contract has rolled (which LEAN handles automatically for continuous symbols),\n            # we need to sell the old and buy the new.\n            # Since the symbol is continuous, the 'Position' is technically in the \n            # continuous contract, but the underlying contract changes.\n            \n            # To detect the rollover explicitly as requested:\n            # We can check the current date against the last trading day of the current month.\n            # However, a simpler approach for the 'Rollover' tag is to check if the \n            # underlying contract month has changed since the last trade.\n            \n            # Let's implement a check based on the current date and the known last trading days\n            # for E-mini S&P 500.\n            # Last trading day for March is the third Friday of March.\n            # Last trading day for June is the third Friday of June.\n            # Last trading day for September is the third Friday of September.\n            # Last trading day for December is the third Friday of December.\n            \n            current_date = self.Time\n            \n            # Determine the current contract month based on the date\n            current_month = current_date.month\n            \n            # Define last trading days for the relevant months in 2024\n            # March 2024: 15th\n            # June 2024: 21st\n            # September 2024: 20th\n            # December 2024: 20th\n            \n            last_trading_days = {\n                3: datetime.datetime(2024, 3, 15),\n                6: datetime.datetime(2024, 6, 21),\n                9: datetime.datetime(2024, 9, 20),\n                12: datetime.datetime(2024, 12, 20)\n            }\n            \n            # Check if we are past the last trading day of the current month\n            # and the next month is the new contract month.\n            # Note: This logic is simplified. In reality, the continuous contract \n            # switches exactly at the open of the next day after the last trading day.\n            \n            if current_month in last_trading_days:\n                ltd = last_trading_days[current_month]\n                if current_date > ltd:\n                    # We are past the last trading day of the current month.\n                    # This indicates a rollover has occurred or is occurring.\n                    # We need to sell the current position and buy the new contract.\n                    # Since the symbol is continuous, we are effectively selling the \n                    # old underlying contract and buying the new one.\n                    \n                    self.Log(\"Rollover detected. Selling old contract and buying new one.\")\n                    \n                    # Sell the current position\n                    self.MarketOrder(self.symbol, -self.Positions[self.symbol].Quantity)\n                    \n                    # Buy the new contract (1 contract)\n                    self.MarketOrder(self.symbol, 1)\n                    \n                    # Tag the orders with 'Rollover'\n                    # Note: In LEAN, we cannot retroactively tag orders that have already been placed.\n                    # However, we can tag the new order we are placing now.\n                    # For the sell order, we can't tag it retroactively, but we can log it.\n                    # To tag the new buy order:\n                    self.SetOrderTag(\"Rollover\")\n                    \n                    # Since we placed two orders in sequence, we need to ensure the tag applies to the buy.\n                    # The SetOrderTag method sets the tag for the next order.\n                    # We need to place the sell order first, then set the tag for the buy order.\n                    # But we already placed the sell order above.\n                    # Let's restructure the order placement to tag correctly.\n                    \n                    # Correct approach:\n                    # 1. Place sell order without tag (or with a specific tag if needed).\n                    # 2. Set tag to 'Rollover'.\n                    # 3. Place buy order.\n                    \n                    # Re-doing the order placement with correct tagging:\n                    # Sell the old contract\n                    self.MarketOrder(self.symbol, -self.Positions[self.symbol].Quantity)\n                    \n                    # Set the tag for the next order\n                    self.SetOrderTag(\"Rollover\")\n                    \n                    # Buy the new contract\n                    self.MarketOrder(self.symbol, 1)\n                    \n                    self.Log(\"Orders tagged with 'Rollover' placed.\")\n            else:\n                # Not a rollover month, just maintain position if needed\n                # The strategy says \"Whenever I have no position, buy one contract\".\n                # If we have a position, we hold it.\n                pass\n\n    def OnOrderEvent(self, order):\n        \"\"\"\n        Handle order events.\n        Logs order details, especially those tagged with 'Rollover'.\n        \"\"\"\n        if order.Status == QC.OrderStatus.Filled:\n            if order.Tags and \"Rollover\" in order.Tags:\n                self.Log(f\"Rollover Order Filled: {order.Symbol} {order.Quantity} @ {order.FillPrice}\")\n            else:\n                self.Log(f\"Order Filled: {order.Symbol} {order.Quantity} @ {order.FillPrice}\")\n        elif order.Status == QC.OrderStatus.Canceled:\n            self.Log(f\"Order Canceled: {order.Symbol} {order.Quantity}\")\n        elif order.Status == QC.OrderStatus.Rejected:\n            self.Log(f\"Order Rejected: {order.Symbol} {order.Quantity} - {order.RejectReason}\")\n```",
+  "generated_at": "2026-11-14T23:38:48.387808+00:00",
+  "has_code": true,
+  "static_findings": [
+    {
+      "code": "NO_ALGORITHM_CLASS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": ""
+    },
+    {
+      "code": "LEGACY_API",
+      "stage": "static",
+      "severity": "warning",
+      "detail": "Log, MarketOrder, SetEndDate, SetInitialCapital, SetOrderTag, SetStartDate, SetTradingSession"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "add_future"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "sp_500_e_mini"
+    },
+    {
+      "code": "PROMPT_MISS",
+      "stage": "static",
+      "severity": "fail",
+      "detail": "symbol_changed / symbolchanged"
+    }
+  ],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "import datetime\nimport QuantConnect as QC\n\n# Initialize the algorithm\nclass EsRoll(QC.Algorithm.Algorithm):\n    \"\"\"\n    Algorithm to trade the E-mini S&P 500 continuous future.\n    Implements last-trading-day mapping, backwards-ratio normalization,\n    extended hours, and automatic rollover tagging.\n    \n    Strategy:\n    - When no position is held, buy 1 contract of the currently mapped month.\n    - When the continuous contract rolls to a new month, sell the old contract\n      and buy the new one, tagging these orders with 'Rollover'.\n    - Date Range: September 1, 2024 to December 31, 2024.\n    \"\"\"\n\n    def __init__(self):\n        super().__init__()\n        self.symbol = None\n        self.position = None\n        self.initial_capital = 100000.0  # Starting capital\n        \n        # Define the date range\n        self.start_date = datetime.datetime(2024, 9, 1)\n        self.end_date = datetime.datetime(2024, 12, 31)\n\n    def OnInitialize(self):\n        \"\"\"\n        Initialize the algorithm by setting up the symbol and parameters.\n        \"\"\"\n        # Set the initial capital\n        self.SetInitialCapital(self.initial_capital)\n        \n        # Define the symbol for E-mini S&P 500 continuous future\n        # 'ES' is the symbol, 'C' indicates continuous contract\n        # QuantConnect automatically handles last-trading-day mapping and \n        # backwards-ratio normalization for continuous contracts.\n        self.symbol = QC.Symbol(\"ES\", QC.DataNormalizationMode.BackwardsRatio)\n        \n        # Set the trading session to Extended Hours\n        self.SetTradingSession(QC.TradingSessionType.ExtendedHours)\n        \n        # Set the date range for the algorithm\n        self.SetStartDate(self.start_date)\n        self.SetEndDate(self.end_date)\n        \n        # Log initialization details\n        self.Log(f\"Initialized EsRoll algorithm.\")\n        self.Log(f\"Symbol: {self.symbol}\")\n        self.Log(f\"Date Range: {self.start_date} to {self.end_date}\")\n        self.Log(f\"Trading Session: Extended Hours\")\n        \n        # Check if we have a position initially\n        if self.Positions.ContainsKey(self.symbol):\n            self.Log(\"Error: Algorithm started with an existing position.\")\n        else:\n            self.Log(\"No initial position found. Waiting for market open.\")\n\n    def OnData(self, data):\n        \"\"\"\n        Handle incoming market data.\n        Checks for rollover events and manages positions accordingly.\n        \"\"\"\n        # Check if we have a position in the ES contract\n        if self.symbol not in self.Positions:\n            # No position held\n            # Check if we are at the start of the trading day or if it's the first bar\n            # Since we are in extended hours, we might get data before the official open.\n            # We will place a market order to buy 1 contract.\n            self.Log(\"No position held. Placing buy order for 1 contract.\")\n            self.MarketOrder(self.symbol, 1)\n        else:\n            # We have a position\n            # Check for rollover conditions\n            # A rollover typically happens when the current contract's last trading day passes\n            # and the continuous contract switches to the next month.\n            # QuantConnect handles the mapping internally, but we can detect the rollover\n            # by checking if the symbol's underlying contract month has changed.\n            \n            # Get the current contract month from the symbol\n            # Note: The symbol object itself doesn't directly expose the current month \n            # in a simple property, but we can infer it from the data or use the \n            # underlying contract information if available.\n            # However, a more robust way in LEAN is to check the LastTradeDate or \n            # rely on the fact that the continuous contract updates its mapping.\n            \n            # For this specific requirement, we will assume that if the continuous \n            # contract has rolled (which LEAN handles automatically for continuous symbols),\n            # we need to sell the old and buy the new.\n            # Since the symbol is continuous, the 'Position' is technically in the \n            # continuous contract, but the underlying contract changes.\n            \n            # To detect the rollover explicitly as requested:\n            # We can check the current date against the last trading day of the current month.\n            # However, a simpler approach for the 'Rollover' tag is to check if the \n            # underlying contract month has changed since the last trade.\n            \n            # Let's implement a check based on the current date and the known last trading days\n            # for E-mini S&P 500.\n            # Last trading day for March is the third Friday of March.\n            # Last trading day for June is the third Friday of June.\n            # Last trading day for September is the third Friday of September.\n            # Last trading day for December is the third Friday of December.\n            \n            current_date = self.Time\n            \n            # Determine the current contract month based on the date\n            current_month = current_date.month\n            \n            # Define last trading days for the relevant months in 2024\n            # March 2024: 15th\n            # June 2024: 21st\n            # September 2024: 20th\n            # December 2024: 20th\n            \n            last_trading_days = {\n                3: datetime.datetime(2024, 3, 15),\n                6: datetime.datetime(2024, 6, 21),\n                9: datetime.datetime(2024, 9, 20),\n                12: datetime.datetime(2024, 12, 20)\n            }\n            \n            # Check if we are past the last trading day of the current month\n            # and the next month is the new contract month.\n            # Note: This logic is simplified. In reality, the continuous contract \n            # switches exactly at the open of the next day after the last trading day.\n            \n            if current_month in last_trading_days:\n                ltd = last_trading_days[current_month]\n                if current_date > ltd:\n                    # We are past the last trading day of the current month.\n                    # This indicates a rollover has occurred or is occurring.\n                    # We need to sell the current position and buy the new contract.\n                    # Since the symbol is continuous, we are effectively selling the \n                    # old underlying contract and buying the new one.\n                    \n                    self.Log(\"Rollover detected. Selling old contract and buying new one.\")\n                    \n                    # Sell the current position\n                    self.MarketOrder(self.symbol, -self.Positions[self.symbol].Quantity)\n                    \n                    # Buy the new contract (1 contract)\n                    self.MarketOrder(self.symbol, 1)\n                    \n                    # Tag the orders with 'Rollover'\n                    # Note: In LEAN, we cannot retroactively tag orders that have already been placed.\n                    # However, we can tag the new order we are placing now.\n                    # For the sell order, we can't tag it retroactively, but we can log it.\n                    # To tag the new buy order:\n                    self.SetOrderTag(\"Rollover\")\n                    \n                    # Since we placed two orders in sequence, we need to ensure the tag applies to the buy.\n                    # The SetOrderTag method sets the tag for the next order.\n                    # We need to place the sell order first, then set the tag for the buy order.\n                    # But we already placed the sell order above.\n                    # Let's restructure the order placement to tag correctly.\n                    \n                    # Correct approach:\n                    # 1. Place sell order without tag (or with a specific tag if needed).\n                    # 2. Set tag to 'Rollover'.\n                    # 3. Place buy order.\n                    \n                    # Re-doing the order placement with correct tagging:\n                    # Sell the old contract\n                    self.MarketOrder(self.symbol, -self.Positions[self.symbol].Quantity)\n                    \n                    # Set the tag for the next order\n                    self.SetOrderTag(\"Rollover\")\n                    \n                    # Buy the new contract\n                    self.MarketOrder(self.symbol, 1)\n                    \n                    self.Log(\"Orders tagged with 'Rollover' placed.\")\n            else:\n                # Not a rollover month, just maintain position if needed\n                # The strategy says \"Whenever I have no position, buy one contract\".\n                # If we have a position, we hold it.\n                pass\n\n    def OnOrderEvent(self, order):\n        \"\"\"\n        Handle order events.\n        Logs order details, especially those tagged with 'Rollover'.\n        \"\"\"\n        if order.Status == QC.OrderStatus.Filled:\n            if order.Tags and \"Rollover\" in order.Tags:\n                self.Log(f\"Rollover Order Filled: {order.Symbol} {order.Quantity} @ {order.FillPrice}\")\n            else:\n                self.Log(f\"Order Filled: {order.Symbol} {order.Quantity} @ {order.FillPrice}\")\n        elif order.Status == QC.OrderStatus.Canceled:\n            self.Log(f\"Order Canceled: {order.Symbol} {order.Quantity}\")\n        elif order.Status == QC.OrderStatus.Rejected:\n            self.Log(f\"Order Rejected: {order.Symbol} {order.Quantity} - {order.RejectReason}\")\n",
+    "source_sha256": "ca99314026d1ba134db068ec4f2fb8d29c529ba8d14ef7d0f845f08e240edd61",
+    "started_at": "2026-11-14T23:38:48.390840+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {},
+    "logs": [],
+    "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+    "project_id": 39416484,
+    "compile_id": "49887527dca5a547c13e2e7bf33fae9b-772721876d762bb4d098455059a26639",
+    "compile_created": {
+      "compileId": "49887527dca5a547c13e2e7bf33fae9b-772721876d762bb4d098455059a26639",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39416484,
+      "signature": "772721876d762bb4d098455059a26639",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "49887527dca5a547c13e2e7bf33fae9b-772721876d762bb4d098455059a26639",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39416484, with CompileID: 49887527dca5a547c13e2e7bf33fae9b-772721876d762bb4d098455059a26639, Lean Version: 2.5.0.0.18263"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39416484, with CompileID: 49887527dca5a547c13e2e7bf33fae9b-772721876d762bb4d098455059a26639, Lean Version: 2.5.0.0.18263"
+    ],
+    "backtest_id": "14e00d54114893e023eb885eafc98638",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39416484,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "14e00d54114893e023eb885eafc98638",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 0
+        },
+        "backtestStart": "2026-11-14 23:38:51",
+        "backtestEnd": "2026-11-14 23:38:51",
+        "created": "2026-11-14 23:38:51",
+        "snapshotId": 39416491,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": null,
+        "name": "futures_v03",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39416484,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "14e00d54114893e023eb885eafc98638",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 0
+        },
+        "backtestStart": "2026-11-14 23:38:51",
+        "backtestEnd": "2026-11-14 23:38:51",
+        "created": "2026-11-14 23:38:51",
+        "snapshotId": 39416491,
+        "status": "Runtime Error",
+        "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at \n    class EsRoll(QC.Algorithm.Algorithm):\n                 ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 5\n Algorithm Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at \n    class EsRoll(QC.Algorithm.Algorithm):\n                 ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 5\n Algorithm",
+        "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at <module>\n    class EsRoll(QC.Algorithm.Algorithm):\n                 ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 5\n Algorithm",
+        "progress": 1,
+        "hasInitializeError": true,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-16T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null,
+        "serverStatistics": {
+          "CPU Usage": "75.2%",
+          "Used RAM (MB)": "152",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-14e00d54114893e023eb885eafc98638",
+          "LEAN Version": "v2.5.0.0.18263",
+          "Up Time": "0d 00:00:10"
+        }
+      },
+      "success": true
+    },
+    "error": "Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at \n    class EsRoll(QC.Algorithm.Algorithm):\n                 ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 5\n Algorithm Stack Trace: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at \n    class EsRoll(QC.Algorithm.Algorithm):\n                 ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 5\n Algorithm",
+    "stacktrace": "During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/main.pyc. AlgorithmPythonWrapper(): Algorithm\n  at <module>\n    class EsRoll(QC.Algorithm.Algorithm):\n                 ^^^^^^^^^^^^^^^^^^^^^^\n in main.py: line 5\n Algorithm",
+    "has_initialize_error": true,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-14T23:39:39.113700+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai",
+  "note": "runtime: Algorithm.Initialize() Error: During the algorithm initialization, the following exception has occurred: Loader.TryCreatePythonAlgorithm(): Unable to import python module ./cache/algorithm/project/mai; NO_ALGORITHM_CLASS; LEGACY_API: Log, MarketOrder, SetEndDate, SetInitialCapital, SetOrderTag, SetStartDate, SetTradingSession; PROMPT_MISS: add_future; PROMPT_MISS: sp_500_e_mini; PROMPT_MISS: symbol_changed / symbolchanged",
+  "total_orders": null
+}

@@ -1,0 +1,341 @@
+{
+  "prompt_id": "equity-pairs-trading-cointegration_v02",
+  "model": "qwen_tuned",
+  "base_model": "qwen_tuned",
+  "model_id": "jared-309b/qwen35-4b-finetuned-v1-final",
+  "system_prompt": "v1",
+  "output": "```python\n# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass CocaColaPepsiPairTradingAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100_000)\n        # Trade KO and PEP as a pair.\n        self._ko = self.add_equity(\"KO\", Resolution.MINUTE).symbol\n        self._pep = self.add_equity(\"PEP\", Resolution.MINUTE).symbol\n        # Rebalance the pair every day at 10am.\n        self.schedule.on(\n            self.date_rules.every_day(self._ko),\n            self.time_rules.at(10, 0),\n            self._rebalance\n        )\n        # Warm up the indicators with daily data.\n        self.set_warm_up(2, Resolution.DAILY)\n\n    def _rebalance(self) -> None:\n        if not self._ko.invested and not self._pep.invested:\n            self._fit_indicators()\n        # If either asset is not tradable (e.g. market closed), skip trading.\n        if not (self.securities[self._ko].is_trading and self.securities[self._pep].is_trading):\n            return\n        # Calculate the z-score of the spread.\n        z_score = self._get_z_score()\n        # If the z-score is outside of 2 standard deviations, trade.\n        if z_score < -2:\n            self.set_holdings(self._ko, 0.5, True)\n            self.set_holdings(self._pep, -0.5, True)\n        elif z_score > 2:\n            self.set_holdings(self._ko, -0.5, True)\n            self.set_holdings(self._pep, 0.5, True)\n        else:\n            self.liquidate()\n\n    def _fit_indicators(self) -> None:\n        # Fit OLS regression of KO on PEP to model the spread.\n        regression = LinearRegression()\n        history = self.history[DataNormalizationMode.RAW](self._pep, 60, Resolution.DAILY)\n        for data_point in history:\n            regression.train(data_point.time, data_point.end_time, data_point.close)\n        self._regression = regression\n        # Use the fitted model to create a stationary spread indicator.\n        self._spread = IndicatorExtensions.of(\n            IndicatorExtensions.linear_combination(self._pep, -1),\n            self._regression\n        )\n        # Use the fitted model to create a z-score indicator for trading signals.\n        self._z_score = IndicatorExtensions.z_score(self._spread, 60)\n        # Warm up the z-score indicator using helper method.\n        warm_up_history = self.history(self._pep, 60, Resolution.DAILY)\n        for data_point in warm_up_history:\n            self._z_score.update(data_point.time, data_point.end_time, data_point.close)\n\n    def _get_z_score(self) -> float:\n        # Get the current z-score value for the pair.\n        z_score = self._z_score.current.value\n        if not self.is_warming_up and not self._ko.invested and not self._pep.invested:\n            self.plot(\"Z-Score\", \"Z-Score\", z_score)\n        return z_score\n```",
+  "generated_at": "2026-11-12T23:53:46.413471+00:00",
+  "has_code": true,
+  "static_findings": [],
+  "qc_evaluation": {
+    "status": "runtime_error",
+    "stage": "finished",
+    "source": "# region imports\nfrom AlgorithmImports import *\n# endregion\n\n\nclass CocaColaPepsiPairTradingAlgorithm(QCAlgorithm):\n\n    def initialize(self) -> None:\n        self.set_start_date(2022, 1, 1)\n        self.set_end_date(2024, 12, 31)\n        self.set_cash(100_000)\n        # Trade KO and PEP as a pair.\n        self._ko = self.add_equity(\"KO\", Resolution.MINUTE).symbol\n        self._pep = self.add_equity(\"PEP\", Resolution.MINUTE).symbol\n        # Rebalance the pair every day at 10am.\n        self.schedule.on(\n            self.date_rules.every_day(self._ko),\n            self.time_rules.at(10, 0),\n            self._rebalance\n        )\n        # Warm up the indicators with daily data.\n        self.set_warm_up(2, Resolution.DAILY)\n\n    def _rebalance(self) -> None:\n        if not self._ko.invested and not self._pep.invested:\n            self._fit_indicators()\n        # If either asset is not tradable (e.g. market closed), skip trading.\n        if not (self.securities[self._ko].is_trading and self.securities[self._pep].is_trading):\n            return\n        # Calculate the z-score of the spread.\n        z_score = self._get_z_score()\n        # If the z-score is outside of 2 standard deviations, trade.\n        if z_score < -2:\n            self.set_holdings(self._ko, 0.5, True)\n            self.set_holdings(self._pep, -0.5, True)\n        elif z_score > 2:\n            self.set_holdings(self._ko, -0.5, True)\n            self.set_holdings(self._pep, 0.5, True)\n        else:\n            self.liquidate()\n\n    def _fit_indicators(self) -> None:\n        # Fit OLS regression of KO on PEP to model the spread.\n        regression = LinearRegression()\n        history = self.history[DataNormalizationMode.RAW](self._pep, 60, Resolution.DAILY)\n        for data_point in history:\n            regression.train(data_point.time, data_point.end_time, data_point.close)\n        self._regression = regression\n        # Use the fitted model to create a stationary spread indicator.\n        self._spread = IndicatorExtensions.of(\n            IndicatorExtensions.linear_combination(self._pep, -1),\n            self._regression\n        )\n        # Use the fitted model to create a z-score indicator for trading signals.\n        self._z_score = IndicatorExtensions.z_score(self._spread, 60)\n        # Warm up the z-score indicator using helper method.\n        warm_up_history = self.history(self._pep, 60, Resolution.DAILY)\n        for data_point in warm_up_history:\n            self._z_score.update(data_point.time, data_point.end_time, data_point.close)\n\n    def _get_z_score(self) -> float:\n        # Get the current z-score value for the pair.\n        z_score = self._z_score.current.value\n        if not self.is_warming_up and not self._ko.invested and not self._pep.invested:\n            self.plot(\"Z-Score\", \"Z-Score\", z_score)\n        return z_score\n",
+    "source_sha256": "9604ac1e122c120c1d49fbfe8a8ab185a987ff62bd8a0adbc8d10f27d03d4238",
+    "started_at": "2026-11-12T23:53:46.417218+00:00",
+    "compile_errors": 0,
+    "runtime_errors": 1,
+    "statistics": {},
+    "runtime_statistics": {
+      "Equity": "$100,000.00",
+      "Fees": "-$0.00",
+      "Holdings": "$0.00",
+      "Net Profit": "$0.00",
+      "Probabilistic Sharpe Ratio": "0%",
+      "Return": "0.00 %",
+      "Unrealized": "$0.00",
+      "Volume": "$0.00"
+    },
+    "logs": [
+      "2021-12-30 00:00:00 Launching analysis for f53ce12c7079543bd469ed49c8f37f2e with LEAN Engine v2.5.0.0.18255",
+      "2021-12-30 00:00:00 Algorithm starting warm up...",
+      "2021-12-30 16:00:00 Runtime Error: 'Symbol' object has no attribute 'invested'\n  at _rebalance\n    if not self._ko.invested and not self._pep.invested:\n           ^^^^^^^^^^^^^^^^^\n in main.py: line 25\n",
+      "2021-12-30 16:00:00 Algorithm Id:(f53ce12c7079543bd469ed49c8f37f2e) completed in 10.28 seconds at 0k data points per second. Processing total of 5 data points."
+    ],
+    "qc_note": "runtime: 2021-12-30 16:00:00 Runtime Error: &#039;Symbol&#039; object has no attribute &#039;invested&#039;\n  at _rebalance\n    if not self._ko.invested and not self._pep.invested:\n           ^^^^^^^^^^^^^^^^^",
+    "project_id": 39315109,
+    "compile_id": "bc7283ea47ae8378970340ba0b8bcf9d-cd760796b323af0e2956bb55adb04308",
+    "compile_created": {
+      "compileId": "bc7283ea47ae8378970340ba0b8bcf9d-cd760796b323af0e2956bb55adb04308",
+      "state": "InQueue",
+      "parameters": [],
+      "projectId": 39315109,
+      "signature": "cd760796b323af0e2956bb55adb04308",
+      "signatureOrder": [
+        "project/main.py"
+      ],
+      "success": true
+    },
+    "compilation": {
+      "compileId": "bc7283ea47ae8378970340ba0b8bcf9d-cd760796b323af0e2956bb55adb04308",
+      "state": "BuildSuccess",
+      "logs": [
+        "Build Request Successful for Project ID: 39315109, with CompileID: bc7283ea47ae8378970340ba0b8bcf9d-cd760796b323af0e2956bb55adb04308, Lean Version: 2.5.0.0.18255"
+      ],
+      "success": true
+    },
+    "compile_logs": [
+      "Build Request Successful for Project ID: 39315109, with CompileID: bc7283ea47ae8378970340ba0b8bcf9d-cd760796b323af0e2956bb55adb04308, Lean Version: 2.5.0.0.18255"
+    ],
+    "backtest_id": "f53ce12c7079543bd469ed49c8f37f2e",
+    "backtest_created": {
+      "backtest": {
+        "note": null,
+        "name": "equity-pairs-trading-cointegration_v02",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315109,
+        "completed": false,
+        "optimizationId": null,
+        "backtestId": "f53ce12c7079543bd469ed49c8f37f2e",
+        "tradeableDates": 0,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 21
+        },
+        "backtestStart": "2026-11-12 23:53:49",
+        "backtestEnd": "2026-11-12 23:53:49",
+        "created": "2026-11-12 23:53:49",
+        "snapshotId": 39315112,
+        "status": "In Queue...",
+        "error": null,
+        "stacktrace": null,
+        "progress": 0,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {},
+        "statistics": {},
+        "totalPerformance": null,
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": null
+      },
+      "debugging": false,
+      "success": true
+    },
+    "raw_backtest": {
+      "backtest": {
+        "note": "",
+        "name": "equity-pairs-trading-cointegration_v02",
+        "organizationId": "e7031ca9f496b36b689059b081c1d38e",
+        "projectId": 39315109,
+        "completed": true,
+        "optimizationId": null,
+        "backtestId": "f53ce12c7079543bd469ed49c8f37f2e",
+        "tradeableDates": 753,
+        "researchGuide": {
+          "minutes": 1,
+          "backtestCount": 1,
+          "parameters": 21
+        },
+        "backtestStart": "2022-01-01 00:00:00",
+        "backtestEnd": "2024-12-31 23:59:59",
+        "created": "2026-11-12 23:53:49",
+        "snapshotId": 39315112,
+        "status": "Runtime Error",
+        "error": "2021-12-30 16:00:00 Runtime Error: &#039;Symbol&#039; object has no attribute &#039;invested&#039;\n  at _rebalance\n    if not self._ko.invested and not self._pep.invested:\n           ^^^^^^^^^^^^^^^^^\n in main.py: line 25\n",
+        "stacktrace": "'Symbol' object has no attribute 'invested'\n  at _rebalance\n    if not self._ko.invested and not self._pep.invested:\n           ^^^^^^^^^^^^^^^^^\n in main.py: line 25\n",
+        "progress": 1,
+        "hasInitializeError": false,
+        "charts": {
+          "Strategy Equity": {
+            "name": "Strategy Equity"
+          },
+          "Benchmark": {
+            "name": "Benchmark"
+          },
+          "Portfolio Margin": {
+            "name": "Portfolio Margin"
+          },
+          "Assets Sales Volume": {
+            "name": "Assets Sales Volume"
+          }
+        },
+        "parameterSet": [],
+        "rollingWindow": null,
+        "runtimeStatistics": {
+          "Equity": "$100,000.00",
+          "Fees": "-$0.00",
+          "Holdings": "$0.00",
+          "Net Profit": "$0.00",
+          "Probabilistic Sharpe Ratio": "0%",
+          "Return": "0.00 %",
+          "Unrealized": "$0.00",
+          "Volume": "$0.00"
+        },
+        "statistics": {},
+        "totalPerformance": {
+          "tradeStatistics": {
+            "startDateTime": null,
+            "endDateTime": null,
+            "totalNumberOfTrades": 0,
+            "numberOfWinningTrades": 0,
+            "numberOfLosingTrades": 0,
+            "totalProfitLoss": "0",
+            "totalProfit": "0",
+            "totalLoss": "0",
+            "largestProfit": "0",
+            "largestLoss": "0",
+            "averageProfitLoss": "0",
+            "averageProfit": "0",
+            "averageLoss": "0",
+            "averageTradeDuration": "00:00:00",
+            "averageWinningTradeDuration": "00:00:00",
+            "averageLosingTradeDuration": "00:00:00",
+            "medianTradeDuration": "00:00:00",
+            "medianWinningTradeDuration": "00:00:00",
+            "medianLosingTradeDuration": "00:00:00",
+            "maxConsecutiveWinningTrades": 0,
+            "maxConsecutiveLosingTrades": 0,
+            "profitLossRatio": "0",
+            "winLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "averageMAE": "0",
+            "averageMFE": "0",
+            "largestMAE": "0",
+            "largestMFE": "0",
+            "maximumClosedTradeDrawdown": "0",
+            "maximumIntraTradeDrawdown": "0",
+            "profitLossStandardDeviation": "0",
+            "profitLossDownsideDeviation": "0",
+            "profitFactor": "0",
+            "sharpeRatio": "0",
+            "sortinoRatio": "0",
+            "profitToMaxDrawdownRatio": "0",
+            "maximumEndTradeDrawdown": "0",
+            "averageEndTradeDrawdown": "0",
+            "maximumDrawdownDuration": "00:00:00",
+            "totalFees": "0"
+          },
+          "portfolioStatistics": {
+            "averageWinRate": "0",
+            "averageLossRate": "0",
+            "profitLossRatio": "0",
+            "winRate": "0",
+            "lossRate": "0",
+            "expectancy": "0",
+            "startEquity": "0",
+            "endEquity": "0",
+            "compoundingAnnualReturn": "0",
+            "drawdown": "0",
+            "totalNetProfit": "0",
+            "sharpeRatio": "0",
+            "probabilisticSharpeRatio": "0",
+            "sortinoRatio": "0",
+            "alpha": "0",
+            "beta": "0",
+            "annualStandardDeviation": "0",
+            "annualVariance": "0",
+            "informationRatio": "0",
+            "trackingError": "0",
+            "treynorRatio": "0",
+            "portfolioTurnover": "0",
+            "valueAtRisk99": "0",
+            "valueAtRisk95": "0",
+            "drawdownRecovery": "0"
+          },
+          "closedTrades": []
+        },
+        "nodeName": "B8-16 node 9045b97c",
+        "outOfSampleMaxEndDate": "2026-08-14T00:00:00Z",
+        "outOfSampleDays": 90,
+        "analysis": [
+          {
+            "name": "PortfolioValueIsNotPositiveAnalysis",
+            "issue": "The portfolio equity dropped to zero or below.",
+            "sample": true,
+            "solutions": [
+              "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
+              "Reduce position sizes.",
+              "If you disabled margin calls, re-enable them. Margin calls may reduce your holdings enough to avoid the error.",
+              "Investigate if it's a data issue with one of the portfolio holdings that's cause the portfolio value to drop to <= 0."
+            ]
+          },
+          {
+            "name": "AlgorithmSpeedAnalysis / SlowExecution",
+            "issue": "The algorithm is running below 40k data points per second.",
+            "sample": "The algorithm executed at only 0k data points per second over the whole 10s run.",
+            "solutions": [
+              "Review the algorithm code for inefficiencies.",
+              "To see where the execution time is spent, set the `performance_sample_period` setting, like `self.settings.performance_sample_period = timedelta(days=1)`, and rerun to get a \"Performance\" time-breakdown chart.",
+              "If there is a universe, reduce its size.",
+              "Reduce the data resolution.",
+              "If the algorithm is training a model, reduce the amount of training data or reduce the number of epochs in the training process."
+            ]
+          },
+          {
+            "name": "StatisticalSignificanceOfDailyReturnsAnalysis",
+            "issue": "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.",
+            "sample": {
+              "pValue": 0.5
+            },
+            "solutions": [
+              "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark."
+            ]
+          }
+        ],
+        "serverStatistics": {
+          "CPU Usage": "33.3%",
+          "Used RAM (MB)": "273",
+          "Total RAM (MB)": "16384",
+          "Hostname": "BACKTESTING-com-f53ce12c7079543bd469ed49c8f37f2e",
+          "LEAN Version": "v2.5.0.0.18255",
+          "Up Time": "0d 00:00:14"
+        }
+      },
+      "success": true
+    },
+    "error": "2021-12-30 16:00:00 Runtime Error: &#039;Symbol&#039; object has no attribute &#039;invested&#039;\n  at _rebalance\n    if not self._ko.invested and not self._pep.invested:\n           ^^^^^^^^^^^^^^^^^\n in main.py: line 25\n",
+    "stacktrace": "'Symbol' object has no attribute 'invested'\n  at _rebalance\n    if not self._ko.invested and not self._pep.invested:\n           ^^^^^^^^^^^^^^^^^\n in main.py: line 25\n",
+    "has_initialize_error": false,
+    "trade_statistics": {
+      "startDateTime": null,
+      "endDateTime": null,
+      "totalNumberOfTrades": 0,
+      "numberOfWinningTrades": 0,
+      "numberOfLosingTrades": 0,
+      "totalProfitLoss": "0",
+      "totalProfit": "0",
+      "totalLoss": "0",
+      "largestProfit": "0",
+      "largestLoss": "0",
+      "averageProfitLoss": "0",
+      "averageProfit": "0",
+      "averageLoss": "0",
+      "averageTradeDuration": "00:00:00",
+      "averageWinningTradeDuration": "00:00:00",
+      "averageLosingTradeDuration": "00:00:00",
+      "medianTradeDuration": "00:00:00",
+      "medianWinningTradeDuration": "00:00:00",
+      "medianLosingTradeDuration": "00:00:00",
+      "maxConsecutiveWinningTrades": 0,
+      "maxConsecutiveLosingTrades": 0,
+      "profitLossRatio": "0",
+      "winLossRatio": "0",
+      "winRate": "0",
+      "lossRate": "0",
+      "averageMAE": "0",
+      "averageMFE": "0",
+      "largestMAE": "0",
+      "largestMFE": "0",
+      "maximumClosedTradeDrawdown": "0",
+      "maximumIntraTradeDrawdown": "0",
+      "profitLossStandardDeviation": "0",
+      "profitLossDownsideDeviation": "0",
+      "profitFactor": "0",
+      "sharpeRatio": "0",
+      "sortinoRatio": "0",
+      "profitToMaxDrawdownRatio": "0",
+      "maximumEndTradeDrawdown": "0",
+      "averageEndTradeDrawdown": "0",
+      "maximumDrawdownDuration": "00:00:00",
+      "totalFees": "0"
+    },
+    "total_orders": null,
+    "finished_at": "2026-11-12T23:54:13.072814+00:00"
+  },
+  "compile_errors": 0,
+  "runtime_errors": 1,
+  "statistics": {},
+  "qc_note": "runtime: 2021-12-30 16:00:00 Runtime Error: &#039;Symbol&#039; object has no attribute &#039;invested&#039;\n  at _rebalance\n    if not self._ko.invested and not self._pep.invested:\n           ^^^^^^^^^^^^^^^^^",
+  "note": "runtime: 2021-12-30 16:00:00 Runtime Error: &#039;Symbol&#039; object has no attribute &#039;invested&#039;\n  at _rebalance\n    if not self._ko.invested and not self._pep.invested:\n           ^^^^^^^^^^^^^^^^^",
+  "total_orders": null
+}
